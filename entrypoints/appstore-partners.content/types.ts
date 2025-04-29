@@ -32,16 +32,16 @@ export type App = {
 
 export type SummaryCardProps = {
   app: App;
-  isActive: boolean;
-}
+  className?: string;
+};
 
-export type SortableHeaderProps {
+export type SortableHeaderProps = {
   label: string;
   column: keyof App;
-  align?: string;
+  align?: 'left' | 'center' | 'right';
   sortState: {
     column: keyof App | null;
     direction: 'asc' | 'desc' | null;
   };
   onSort: (column: keyof App, direction: 'asc' | 'desc') => void;
-}
+};

@@ -1,68 +1,70 @@
 import { useEffect, useState } from 'preact/hooks';
 import { fetchAppData, downloadCSV, getResourceIcon } from './utils';
 import type { App, SortableHeaderProps, SummaryCardProps } from './types';
+import styles from './App.module.css';
 
 import builtForShopifyIcon from '@/assets/icon-built-for-shopify.svg';
 import exportIcon from '@/assets/icon-export.svg';
 
-import './App.css';
 
 const SortableHeader = ({ label, column, align = 'left', sortState, onSort }: SortableHeaderProps) => {
   return (
     <th
-      className={`sortable ${sortState.column === column ? 'sortable--active' : ''}`}
+      className={`${styles.sortable} ${sortState.column === column ? styles.sortableActive : ''}`}
       style={{ textAlign: align }}
       onClick={() => onSort(column, sortState.direction === 'asc' ? 'desc' : 'asc')}
     >
       <div style={{ display: 'inline-flex', alignItems: 'center' }}>
         <span>{label}</span>
-        <span className={`sort-icon ${sortState.column === column ? sortState.direction : 'both'}`}></span>
+        <span className={sortState.column === column ?
+          (sortState.direction === 'asc' ? styles.sortIconAsc : styles.sortIconDesc) :
+          styles.sortIconBoth}></span>
       </div>
     </th>
   );
 };
 
-const SummaryCard = ({ app, isActive }: SummaryCardProps) => {
+const SummaryCard = ({ app, className }: SummaryCardProps) => {
   return (
-    <div className={`shopkeeper-summary-card ${isActive ? 'active' : ''}`}>
-      <div className="shopkeeper-summary-header">
-        <img src={app.iconUrl} alt={`${app.name} icon`} className="shopkeeper-summary-icon" />
-        <div className="shopkeeper-summary-app-name">{app.name}</div>
+    <div className={className}>
+      <div className={styles.summaryHeader}>
+        <img src={app.iconUrl} alt={`${app.name} icon`} className={styles.summaryIcon} />
+        <div className={styles.summaryAppName}>{app.name}</div>
       </div>
-      <div className="shopkeeper-summary-section">
-        <div className="shopkeeper-summary-section-title">App Details</div>
-        <div className="shopkeeper-summary-detail">
-          <div className="shopkeeper-summary-detail-label">Launched:</div>
-          <div className="shopkeeper-summary-detail-value">{app.launchDate}</div>
+      <div className={styles.summarySection}>
+        <div className={styles.summarySectionTitle}>App Details</div>
+        <div className={styles.summaryDetail}>
+          <div className={styles.summaryDetailLabel}>Launched:</div>
+          <div className={styles.summaryDetailValue}>{app.launchDate}</div>
         </div>
         {app.detailedAge && (
-          <div className="shopkeeper-summary-detail">
-            <div className="shopkeeper-summary-detail-label">Age:</div>
-            <div className="shopkeeper-summary-detail-value">{app.detailedAge}</div>
+          <div className={styles.summaryDetail}>
+            <div className={styles.summaryDetailLabel}>Age:</div>
+            <div className={styles.summaryDetailValue}>{app.detailedAge}</div>
           </div>
         )}
         {app.rating && app.rating !== 'N/A' && (
-          <div className="shopkeeper-summary-detail">
-            <div className="shopkeeper-summary-detail-label">Rating:</div>
-            <div className="shopkeeper-summary-detail-value">
+          <div className={styles.summaryDetail}>
+            <div className={styles.summaryDetailLabel}>Rating:</div>
+            <div className={styles.summaryDetailValue}>
               {app.rating} ({app.reviewCount.toLocaleString()} reviews)
             </div>
           </div>
         )}
         {app.pricing && (
-          <div className="shopkeeper-summary-detail">
-            <div className="shopkeeper-summary-detail-label">Pricing:</div>
-            <div className="shopkeeper-summary-detail-value">{app.pricing}</div>
+          <div className={styles.summaryDetail}>
+            <div className={styles.summaryDetailLabel}>Pricing:</div>
+            <div className={styles.summaryDetailValue}>{app.pricing}</div>
           </div>
         )}
       </div>
       {app.developer && (app.developer.website || app.developer.address) && (
-        <div className="shopkeeper-summary-section">
-          <div className="shopkeeper-summary-section-title">Developer</div>
+        <div className={styles.summarySection}>
+          <div className={styles.summarySectionTitle}>Developer</div>
           {app.developer.website && (
-            <div className="shopkeeper-summary-detail">
-              <div className="shopkeeper-summary-detail-label">Website:</div>
-              <div className="shopkeeper-summary-detail-value">
+            <div className={styles.summaryDetail}>
+              <div className={styles.summaryDetailLabel}>Website:</div>
+              <div className={styles.summaryDetailValue}>
                 <a href={app.developer.website} target="_blank" style={{ color: 'rgb(44, 110, 203)', textDecoration: 'none' }}>
                   {app.developer.website}
                 </a>
@@ -70,19 +72,19 @@ const SummaryCard = ({ app, isActive }: SummaryCardProps) => {
             </div>
           )}
           {app.developer.address && (
-            <div className="shopkeeper-summary-detail">
-              <div className="shopkeeper-summary-detail-label">Address:</div>
-              <div className="shopkeeper-summary-detail-value">{app.developer.address}</div>
+            <div className={styles.summaryDetail}>
+              <div className={styles.summaryDetailLabel}>Address:</div>
+              <div className={styles.summaryDetailValue}>{app.developer.address}</div>
             </div>
           )}
         </div>
       )}
-      <div className="shopkeeper-summary-section">
-        <div className="shopkeeper-summary-section-title">Resources</div>
-        <div className="shopkeeper-summary-resources">
+      <div className={styles.summarySection}>
+        <div className={styles.summarySectionTitle}>Resources</div>
+        <div className={styles.summaryResources}>
           {app.resources.map((resource) => (
-            <a href={resource.url} target="_blank" className="shopkeeper-summary-resource-link">
-              <span className="shopkeeper-summary-resource-icon">
+            <a href={resource.url} target="_blank" className={styles.summaryResourceLink}>
+              <span className={styles.summaryResourceIcon}>
                 <img src={getResourceIcon(resource)} alt={resource.title} />
               </span>
               <span>{resource.title}</span>
@@ -232,23 +234,23 @@ function App() {
   };
 
   if (isLoading) {
-    return <div className="shopkeeper-container">Loading...</div>;
+    return <div className={styles.container}>Loading...</div>;
   }
 
   if (error) {
-    return <div className="shopkeeper-container">Error: {error}</div>;
+    return <div className={styles.container}>Error: {error}</div>;
   }
 
   return (
-    <div className="shopkeeper-container">
-      <div className="shopkeeper-button-container">
-        <button className="shopkeeper-export-button" onClick={() => downloadCSV(apps)}>
+    <div className={styles.container}>
+      <div className={styles.exportButtonContainer}>
+        <button className={styles.exportButton} onClick={() => downloadCSV(apps)}>
           <img src={exportIcon} alt="Export to CSV" />
           Export to CSV
         </button>
       </div>
-      <div className="shopkeeper-table-container">
-        <table className="shopkeeper-table">
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
           <thead>
             <tr>
               <th style={{ width: '50px' }}></th>
@@ -272,7 +274,7 @@ function App() {
                       }}
                     />
                   ) : (
-                    <img src={app.iconUrl} alt={`${app.name} icon`} className="app-icon" style={{ width: '40px', height: '40px' }} />
+                    <img src={app.iconUrl} alt={`${app.name} icon`} className={styles.appIcon} />
                   )}
                 </td>
                 <td
@@ -280,26 +282,28 @@ function App() {
                   onMouseLeave={() => setActiveSummaryCard(null)}
                   style={{ position: 'relative' }}
                 >
-                  <a href={app.link} className="app-name">
+                  <a href={app.link} className={styles.appName}>
                     {app.name}
                   </a>
-                  <div className="app-description">{app.description}</div>
-                  <SummaryCard app={app} isActive={activeSummaryCard === app.handle} />
+                  <div className={styles.appDescription}>{app.description}</div>
+                  <SummaryCard app={app} className={activeSummaryCard === app.handle ? styles.summaryCardActive : styles.summaryCard} />
                 </td>
                 <td style={{ textAlign: 'center' }}>
-                  <div className="rating-container">{app.rating}</div>
+                  <div className={styles.ratingContainer}>{app.rating}</div>
                 </td>
                 <td style={{ textAlign: 'center' }}>{app.reviewCount.toLocaleString()}</td>
                 <td>{app.pricing}</td>
                 <td>
                   <span style={{ marginBottom: '2px' }}>{app.age}</span>
-                  <div className="app-description">{app.launchDate}</div>
+                  <div className={styles.appDescription}>{app.launchDate}</div>
                 </td>
                 <td style={{ textAlign: 'center' }}>
-                  <span className={app.isInstalled ? 'status-success' : 'status-neutral'}>{app.isInstalled ? '✓' : '—'}</span>
+                  <span className={app.isInstalled ? styles.statusSuccess : styles.statusNeutral}>
+                    {app.isInstalled ? '✓' : '—'}
+                  </span>
                 </td>
                 <td style={{ textAlign: 'center' }}>
-                  <span className={app.isBuiltForShopify ? 'shopify-badge' : 'status-neutral'}>
+                  <span className={app.isBuiltForShopify ? styles.shopifyBadge : styles.statusNeutral}>
                     {app.isBuiltForShopify ? <img src={builtForShopifyIcon} alt="Built for Shopify" /> : '—'}
                   </span>
                 </td>

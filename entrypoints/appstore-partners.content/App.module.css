@@ -1,30 +1,68 @@
-.shopkeeper-container {
+.container {
   margin: 20px 0;
 }
 
-.shopkeeper-table-container {
+
+/* Export button */
+.exportButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.exportButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: #ffffff;
+  border: 1px solid #c9cccf;
+  border-radius: 4px;
+  color: #2c6ecb;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  height: 36px;
+}
+
+.exportButton:hover {
+  background-color: #f6f6f7;
+  border-color: #aeb4b9;
+}
+
+.exportButton:active {
+  background-color: #ebebeb;
+}
+
+.exportButton img {
+  margin-right: 8px;
+  fill: #2c6ecb;
+}
+
+.tableContainer {
   font-family: "Inter var", Helvetica, Arial, sans-serif;
   border-radius: 8px;
   box-shadow: 0 0 0 1px rgba(63, 63, 68, 0.05),
     0 1px 3px 0 rgba(63, 63, 68, 0.15);
   color: #202223;
   background-color: #ffffff;
-  position: relative; /* For positioning summary cards */
+  position: relative;
 }
 
-.shopkeeper-table {
+.table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
 /* Header styles */
-.shopkeeper-table thead {
+.table thead {
   background-color: #f6f6f7;
   border-bottom: 1px solid #e1e3e5;
 }
 
-.shopkeeper-table th {
+.table th {
   padding: 16px;
   font-weight: 600;
   text-align: left;
@@ -36,28 +74,28 @@
 }
 
 /* Row styles */
-.shopkeeper-table tr {
+.table tr {
   border-bottom: 1px solid #e1e3e5;
-  position: relative; /* For positioning summary cards */
+  position: relative;
 }
 
-.shopkeeper-table tr:last-child {
+.table tr:last-child {
   border-bottom: none;
 }
 
-.shopkeeper-table tr:hover {
+.table tr:hover {
   background-color: #f9fafb;
 }
 
 /* Cell styles */
-.shopkeeper-table td {
+.table td {
   position: relative;
   padding: 16px;
   vertical-align: top;
 }
 
 /* App name and description */
-.shopkeeper-table .app-name {
+.appName {
   color: #2c6ecb;
   font-weight: 500;
   text-decoration: none;
@@ -65,12 +103,12 @@
   margin-bottom: 4px;
 }
 
-.shopkeeper-table .app-name:hover {
+.appName:hover {
   color: #084e8a;
   text-decoration: underline;
 }
 
-.shopkeeper-table .app-description {
+.appDescription {
   color: #6d7175;
   font-size: 13px;
   line-height: 1.5;
@@ -81,30 +119,30 @@
 }
 
 /* Rating styles */
-.shopkeeper-table .rating-container {
+.ratingContainer {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.shopkeeper-table .star-icon {
+.starIcon {
   width: 12px;
   height: 12px;
   margin-left: 4px;
 }
 
 /* Status indicators */
-.shopkeeper-table .status-success {
+.statusSuccess {
   color: #008060;
   font-weight: 500;
 }
 
-.shopkeeper-table .status-neutral {
+.statusNeutral {
   color: #6d7175;
 }
 
 /* Sort indicators */
-.sort-icon {
+.sortIcon {
   display: inline-block;
   width: 0;
   height: 0;
@@ -114,24 +152,27 @@
   transition: opacity 0.2s ease;
 }
 
-.sort-icon.asc {
+.sortIconAsc {
+  composes: sortIcon;
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-bottom: 4px solid #6d7175;
 }
 
-.sort-icon.desc {
+.sortIconDesc {
+  composes: sortIcon;
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 4px solid #6d7175;
 }
 
-.sort-icon.both {
+.sortIconBoth {
+  composes: sortIcon;
   height: 10px;
   position: relative;
 }
 
-.sort-icon.both::before {
+.sortIconBoth::before {
   content: "";
   position: absolute;
   top: 0;
@@ -141,7 +182,7 @@
   border-bottom: 4px solid #6d7175;
 }
 
-.sort-icon.both::after {
+.sortIconBoth::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -162,79 +203,47 @@
   background-color: #ebebeb;
 }
 
-.sortable:hover .sort-icon {
+.sortable:hover .sortIcon {
   opacity: 1;
 }
 
-.sortable .sort-icon.asc,
-.sortable .sort-icon.desc {
+.sortable .sortIcon.asc,
+.sortable .sortIcon.desc {
   opacity: 1;
 }
 
 /* Icons and badges */
-.shopkeeper-table figure {
+.figure {
   width: 40px;
   height: 40px;
 }
 
-.shopkeeper-table .app-icon {
+.appIcon {
   width: 40px;
   height: 40px;
   border-radius: 8px;
   object-fit: cover;
 }
 
-.shopkeeper-table .shopify-badge {
+.shopifyBadge {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.shopkeeper-table .shopify-badge img {
+.shopifyBadge img {
   vertical-align: middle;
   height: 1em;
   width: 1em;
 }
 
-/* Export button */
-.shopkeeper-export-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  background-color: #ffffff;
-  border: 1px solid #c9cccf;
-  border-radius: 4px;
-  color: #2c6ecb;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-  height: 36px;
-}
-
-.shopkeeper-export-button:hover {
-  background-color: #f6f6f7;
-  border-color: #aeb4b9;
-}
-
-.shopkeeper-export-button:active {
-  background-color: #ebebeb;
-}
-
-.shopkeeper-export-button img {
-  margin-right: 8px;
-  fill: #2c6ecb;
-}
-
-.shopkeeper-button-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 16px;
-}
-
 /* Link icons */
-.shopkeeper-link-icon {
+.linksContainer {
+  display: flex;
+  gap: 8px;
+}
+
+.linkIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -245,27 +254,20 @@
   transition: background-color 0.2s ease;
 }
 
-.shopkeeper-link-icon:hover {
+.linkIcon:hover {
   background-color: #ebebeb;
 }
 
-.shopkeeper-link-icon svg {
+.linkIcon svg {
   width: 16px;
   height: 16px;
-  fill: #2c6ecb;
 }
 
-.shopkeeper-links-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-/* Summary Card Styles */
-.shopkeeper-summary-card {
+/* Summary card styles */
+.summaryCard {
   position: absolute;
-  left: 95%;
   top: 0;
+  left: 95%;
   width: 330px;
   background-color: white;
   border-radius: 8px;
@@ -278,18 +280,19 @@
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
   transform: translateY(10px);
-  pointer-events: none; /* Initially none to allow hover on elements behind it */
+  pointer-events: none;
 }
 
-.shopkeeper-summary-card.active {
+.summaryCardActive {
+  composes: summaryCard;
   display: block;
   opacity: 1;
   transform: translateY(0);
-  pointer-events: auto; /* Enable interactions when visible */
+  pointer-events: auto;
 }
 
-.shopkeeper-summary-card::before {
-  content: "";
+.summaryCardActive::before {
+  content: '';
   position: absolute;
   top: 20px;
   left: -8px;
@@ -300,20 +303,21 @@
   box-shadow: -2px 2px 3px rgba(0, 0, 0, 0.05);
 }
 
-.shopkeeper-summary-header {
+.summaryHeader {
   display: flex;
   align-items: center;
   margin-bottom: 12px;
 }
 
-.shopkeeper-summary-icon {
+.summaryIcon {
   width: 32px;
   height: 32px;
   border-radius: 6px;
   margin-right: 12px;
+  object-fit: cover;
 }
 
-.shopkeeper-summary-app-name {
+.summaryAppName {
   font-weight: 600;
   font-size: 16px;
   color: #202223;
@@ -322,11 +326,11 @@
   text-overflow: ellipsis;
 }
 
-.shopkeeper-summary-section {
+.summarySection {
   margin-bottom: 12px;
 }
 
-.shopkeeper-summary-section-title {
+.summarySectionTitle {
   font-weight: 600;
   margin-bottom: 4px;
   color: #202223;
@@ -334,31 +338,31 @@
   padding-bottom: 4px;
 }
 
-.shopkeeper-summary-detail {
+.summaryDetail {
   display: flex;
   margin-bottom: 6px;
 }
 
-.shopkeeper-summary-detail-label {
+.summaryDetailLabel {
   width: 90px;
   color: #6d7175;
   font-size: 13px;
 }
 
-.shopkeeper-summary-detail-value {
+.summaryDetailValue {
   flex: 1;
   color: #202223;
   word-break: break-word;
 }
 
-.shopkeeper-summary-resources {
+.summaryResources {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
 }
 
-.shopkeeper-summary-resource-link {
+.summaryResourceLink {
   display: flex;
   align-items: center;
   background-color: #f6f6f7;
@@ -370,11 +374,11 @@
   transition: background-color 0.2s ease;
 }
 
-.shopkeeper-summary-resource-link:hover {
+.summaryResourceLink:hover {
   background-color: #ebebeb;
 }
 
-.shopkeeper-summary-resource-icon {
+.summaryResourceIcon {
   width: 16px;
   height: 16px;
   margin-right: 6px;
