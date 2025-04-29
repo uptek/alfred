@@ -1,0 +1,382 @@
+.shopkeeper-container {
+  margin: 20px 0;
+}
+
+.shopkeeper-table-container {
+  font-family: "Inter var", Helvetica, Arial, sans-serif;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(63, 63, 68, 0.05),
+    0 1px 3px 0 rgba(63, 63, 68, 0.15);
+  color: #202223;
+  background-color: #ffffff;
+  position: relative; /* For positioning summary cards */
+}
+
+.shopkeeper-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+/* Header styles */
+.shopkeeper-table thead {
+  background-color: #f6f6f7;
+  border-bottom: 1px solid #e1e3e5;
+}
+
+.shopkeeper-table th {
+  padding: 16px;
+  font-weight: 600;
+  text-align: left;
+  color: #6d7175;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Row styles */
+.shopkeeper-table tr {
+  border-bottom: 1px solid #e1e3e5;
+  position: relative; /* For positioning summary cards */
+}
+
+.shopkeeper-table tr:last-child {
+  border-bottom: none;
+}
+
+.shopkeeper-table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Cell styles */
+.shopkeeper-table td {
+  position: relative;
+  padding: 16px;
+  vertical-align: top;
+}
+
+/* App name and description */
+.shopkeeper-table .app-name {
+  color: #2c6ecb;
+  font-weight: 500;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.shopkeeper-table .app-name:hover {
+  color: #084e8a;
+  text-decoration: underline;
+}
+
+.shopkeeper-table .app-description {
+  color: #6d7175;
+  font-size: 13px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Rating styles */
+.shopkeeper-table .rating-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shopkeeper-table .star-icon {
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+}
+
+/* Status indicators */
+.shopkeeper-table .status-success {
+  color: #008060;
+  font-weight: 500;
+}
+
+.shopkeeper-table .status-neutral {
+  color: #6d7175;
+}
+
+/* Sort indicators */
+.sort-icon {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 8px;
+  vertical-align: middle;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.sort-icon.asc {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid #6d7175;
+}
+
+.sort-icon.desc {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #6d7175;
+}
+
+.sort-icon.both {
+  height: 10px;
+  position: relative;
+}
+
+.sort-icon.both::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid #6d7175;
+}
+
+.sort-icon.both::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #6d7175;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.sortable:hover {
+  background-color: #ebebeb;
+}
+
+.sortable:hover .sort-icon {
+  opacity: 1;
+}
+
+.sortable .sort-icon.asc,
+.sortable .sort-icon.desc {
+  opacity: 1;
+}
+
+/* Icons and badges */
+.shopkeeper-table figure {
+  width: 40px;
+  height: 40px;
+}
+
+.shopkeeper-table .app-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.shopkeeper-table .shopify-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shopkeeper-table .shopify-badge img {
+  vertical-align: middle;
+  height: 1em;
+  width: 1em;
+}
+
+/* Export button */
+.shopkeeper-export-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: #ffffff;
+  border: 1px solid #c9cccf;
+  border-radius: 4px;
+  color: #2c6ecb;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  height: 36px;
+}
+
+.shopkeeper-export-button:hover {
+  background-color: #f6f6f7;
+  border-color: #aeb4b9;
+}
+
+.shopkeeper-export-button:active {
+  background-color: #ebebeb;
+}
+
+.shopkeeper-export-button img {
+  margin-right: 8px;
+  fill: #2c6ecb;
+}
+
+.shopkeeper-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+/* Link icons */
+.shopkeeper-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-color: #f6f6f7;
+  transition: background-color 0.2s ease;
+}
+
+.shopkeeper-link-icon:hover {
+  background-color: #ebebeb;
+}
+
+.shopkeeper-link-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: #2c6ecb;
+}
+
+.shopkeeper-links-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Summary Card Styles */
+.shopkeeper-summary-card {
+  position: absolute;
+  left: 95%;
+  top: 0;
+  width: 330px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  padding: 16px;
+  display: none;
+  margin-left: 20px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(10px);
+  pointer-events: none; /* Initially none to allow hover on elements behind it */
+}
+
+.shopkeeper-summary-card.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto; /* Enable interactions when visible */
+}
+
+.shopkeeper-summary-card::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: -8px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  transform: rotate(45deg);
+  box-shadow: -2px 2px 3px rgba(0, 0, 0, 0.05);
+}
+
+.shopkeeper-summary-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.shopkeeper-summary-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  margin-right: 12px;
+}
+
+.shopkeeper-summary-app-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #202223;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shopkeeper-summary-section {
+  margin-bottom: 12px;
+}
+
+.shopkeeper-summary-section-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #202223;
+  border-bottom: 1px solid #e1e3e5;
+  padding-bottom: 4px;
+}
+
+.shopkeeper-summary-detail {
+  display: flex;
+  margin-bottom: 6px;
+}
+
+.shopkeeper-summary-detail-label {
+  width: 90px;
+  color: #6d7175;
+  font-size: 13px;
+}
+
+.shopkeeper-summary-detail-value {
+  flex: 1;
+  color: #202223;
+  word-break: break-word;
+}
+
+.shopkeeper-summary-resources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.shopkeeper-summary-resource-link {
+  display: flex;
+  align-items: center;
+  background-color: #f6f6f7;
+  padding: 6px 10px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #2c6ecb;
+  font-size: 13px;
+  transition: background-color 0.2s ease;
+}
+
+.shopkeeper-summary-resource-link:hover {
+  background-color: #ebebeb;
+}
+
+.shopkeeper-summary-resource-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  fill: #2c6ecb;
+}

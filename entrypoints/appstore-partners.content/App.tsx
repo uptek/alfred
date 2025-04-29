@@ -1,34 +1,314 @@
-import { useState } from "preact/hooks";
-import reactLogo from "@/assets/typescript.svg";
-import wxtLogo from "@/public/wxt.svg";
-import "./App.css";
+import { useEffect, useState } from 'preact/hooks';
+import { fetchAppData, downloadCSV, getResourceIcon } from './utils';
+import type { App, SortableHeaderProps, SummaryCardProps } from './types';
+
+import builtForShopifyIcon from '@/assets/icon-built-for-shopify.svg';
+import exportIcon from '@/assets/icon-export.svg';
+
+import './App.css';
+
+const SortableHeader = ({ label, column, align = 'left', sortState, onSort }: SortableHeaderProps) => {
+  return (
+    <th
+      className={`sortable ${sortState.column === column ? 'sortable--active' : ''}`}
+      style={{ textAlign: align }}
+      onClick={() => onSort(column, sortState.direction === 'asc' ? 'desc' : 'asc')}
+    >
+      <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <span>{label}</span>
+        <span className={`sort-icon ${sortState.column === column ? sortState.direction : 'both'}`}></span>
+      </div>
+    </th>
+  );
+};
+
+const SummaryCard = ({ app, isActive }: SummaryCardProps) => {
+  return (
+    <div className={`shopkeeper-summary-card ${isActive ? 'active' : ''}`}>
+      <div className="shopkeeper-summary-header">
+        <img src={app.iconUrl} alt={`${app.name} icon`} className="shopkeeper-summary-icon" />
+        <div className="shopkeeper-summary-app-name">{app.name}</div>
+      </div>
+      <div className="shopkeeper-summary-section">
+        <div className="shopkeeper-summary-section-title">App Details</div>
+        <div className="shopkeeper-summary-detail">
+          <div className="shopkeeper-summary-detail-label">Launched:</div>
+          <div className="shopkeeper-summary-detail-value">{app.launchDate}</div>
+        </div>
+        {app.detailedAge && (
+          <div className="shopkeeper-summary-detail">
+            <div className="shopkeeper-summary-detail-label">Age:</div>
+            <div className="shopkeeper-summary-detail-value">{app.detailedAge}</div>
+          </div>
+        )}
+        {app.rating && app.rating !== 'N/A' && (
+          <div className="shopkeeper-summary-detail">
+            <div className="shopkeeper-summary-detail-label">Rating:</div>
+            <div className="shopkeeper-summary-detail-value">
+              {app.rating} ({app.reviewCount.toLocaleString()} reviews)
+            </div>
+          </div>
+        )}
+        {app.pricing && (
+          <div className="shopkeeper-summary-detail">
+            <div className="shopkeeper-summary-detail-label">Pricing:</div>
+            <div className="shopkeeper-summary-detail-value">{app.pricing}</div>
+          </div>
+        )}
+      </div>
+      {app.developer && (app.developer.website || app.developer.address) && (
+        <div className="shopkeeper-summary-section">
+          <div className="shopkeeper-summary-section-title">Developer</div>
+          {app.developer.website && (
+            <div className="shopkeeper-summary-detail">
+              <div className="shopkeeper-summary-detail-label">Website:</div>
+              <div className="shopkeeper-summary-detail-value">
+                <a href={app.developer.website} target="_blank" style={{ color: 'rgb(44, 110, 203)', textDecoration: 'none' }}>
+                  {app.developer.website}
+                </a>
+              </div>
+            </div>
+          )}
+          {app.developer.address && (
+            <div className="shopkeeper-summary-detail">
+              <div className="shopkeeper-summary-detail-label">Address:</div>
+              <div className="shopkeeper-summary-detail-value">{app.developer.address}</div>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="shopkeeper-summary-section">
+        <div className="shopkeeper-summary-section-title">Resources</div>
+        <div className="shopkeeper-summary-resources">
+          {app.resources.map((resource) => (
+            <a href={resource.url} target="_blank" className="shopkeeper-summary-resource-link">
+              <span className="shopkeeper-summary-resource-icon">
+                <img src={getResourceIcon(resource)} alt={resource.title} />
+              </span>
+              <span>{resource.title}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [apps, setApps] = useState<App[]>([]);
+  const [sortState, setSortState] = useState<{
+    column: keyof App | null;
+    direction: 'asc' | 'desc' | null;
+  }>({ column: null, direction: null });
+  const [activeSummaryCard, setActiveSummaryCard] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Find all app cards on the page
+        const appCards = document.querySelectorAll(`[data-controller="app-card"]`);
+        if (!appCards || appCards.length === 0) {
+          setError('No app cards found on the page');
+          return;
+        }
+
+        const appDataPromises = Array.from(appCards).map(async (card, index) => {
+          // Extract app data from attributes
+          const name = card.getAttribute('data-app-card-name-value') || '';
+          const handle = card.getAttribute('data-app-card-handle-value') || '';
+          const iconUrl = card.getAttribute('data-app-card-icon-url-value') || '';
+          const link = card.getAttribute('data-app-card-app-link-value') || '';
+
+          // Fetch additional app data
+          const appData = link
+            ? await fetchAppData(link)
+            : {
+                launchDate: null,
+                age: null,
+                detailedAge: null,
+                developer: { website: null, address: null },
+                resources: [],
+              };
+
+          // Extract UI elements
+          const iconFigure = card.querySelector('figure') as HTMLElement | null;
+          const infoRow = card.querySelector('div > div > div:nth-child(1) > div:nth-child(2)');
+          const descriptionElement = card.querySelector('div > div > div:nth-child(1) > div:nth-child(3)');
+          const installedElement = card.querySelector('div > div > div:nth-child(1) > div.tw-text-notifications-success-primary');
+          const builtForShopifyElement = card.querySelector('.built-for-shopify-badge');
+
+          // Extract rating, reviews, and pricing
+          let rating = '—';
+          let reviewCount = 0;
+          let pricing = '—';
+
+          if (infoRow) {
+            const spansRow = infoRow.querySelector('div.tw-relative.tw-flex.tw-items-center');
+            if (spansRow) {
+              const spans = spansRow.querySelectorAll('span');
+              if (spans.length > 0 && !spans[0].classList.contains('tw-overflow-hidden')) {
+                const firstSpan = spans[0];
+                const firstTextNode = Array.from(firstSpan.childNodes).find((n: any) => n.nodeType === Node.TEXT_NODE);
+                rating = firstTextNode ? (firstTextNode as any).textContent?.trim() || 'N/A' : firstSpan.textContent?.trim() || 'N/A';
+              }
+              for (const span of spans) {
+                if (span.classList.contains('tw-overflow-hidden')) {
+                  pricing = span.textContent?.trim() || 'N/A';
+                } else if (span.hasAttribute('aria-hidden') && /^\(.*\)$/.test(span.textContent?.trim() || '')) {
+                  reviewCount = parseInt((span.textContent || '').replace(/[(),]/g, '').trim().replace(/,/g, ''), 10) || 0;
+                }
+              }
+            }
+          }
+
+          return {
+            index,
+            data: {
+              name,
+              handle,
+              iconUrl,
+              link,
+              iconFigure: iconFigure ? (iconFigure.cloneNode(true) as HTMLElement) : null,
+              rating,
+              reviewCount,
+              pricing,
+              description: descriptionElement?.textContent?.trim() || '',
+              isInstalled: installedElement !== null,
+              isBuiltForShopify: builtForShopifyElement !== null,
+              launchDate: appData.launchDate,
+              age: appData.age,
+              detailedAge: appData.detailedAge,
+              developer: appData.developer,
+              resources: appData.resources,
+            },
+          };
+        });
+
+        const results = await Promise.all(appDataPromises);
+        results.sort((a, b) => a.index - b.index);
+        setApps(results.map((result) => result.data));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching app data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApps();
+  }, []);
+
+  const handleSort = (column: keyof App, direction: 'asc' | 'desc') => {
+    setSortState({ column, direction });
+    const sortedData = [...apps].sort((a, b) => {
+      let aValue: any = a[column];
+      let bValue: any = b[column];
+
+      // Handle special cases
+      if (column === 'rating') {
+        aValue = parseFloat(a.rating) || 0;
+        bValue = parseFloat(b.rating) || 0;
+      } else if (column === 'isInstalled' || column === 'isBuiltForShopify') {
+        aValue = a[column] ? 1 : 0;
+        bValue = b[column] ? 1 : 0;
+      } else if (column === 'age') {
+        // Parse dates for comparison
+        const aDate = a.launchDate ? new Date(a.launchDate) : new Date(0);
+        const bDate = b.launchDate ? new Date(b.launchDate) : new Date(0);
+        aValue = aDate.getTime();
+        bValue = bDate.getTime();
+      }
+
+      // Sort based on direction
+      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    setApps(sortedData);
+  };
+
+  if (isLoading) {
+    return <div className="shopkeeper-container">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="shopkeeper-container">Error: {error}</div>;
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://wxt.dev" target="_blank">
-          <img src={wxtLogo} className="logo" alt="WXT logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>WXT + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div className="shopkeeper-container">
+      <div className="shopkeeper-button-container">
+        <button className="shopkeeper-export-button" onClick={() => downloadCSV(apps)}>
+          <img src={exportIcon} alt="Export to CSV" />
+          Export to CSV
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
       </div>
-      <p className="read-the-docs">
-        Click on the WXT and React logos to learn more
-      </p>
-    </>
+      <div className="shopkeeper-table-container">
+        <table className="shopkeeper-table">
+          <thead>
+            <tr>
+              <th style={{ width: '50px' }}></th>
+              <SortableHeader label="Name" column="name" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Rating" column="rating" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Reviews" column="reviewCount" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Pricing" column="pricing" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Age" column="age" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Installed" column="isInstalled" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Built for Shopify" column="isBuiltForShopify" sortState={sortState} onSort={handleSort} />
+            </tr>
+          </thead>
+          <tbody>
+            {apps.map((app) => (
+              <tr key={app.handle}>
+                <td>
+                  {app.iconFigure ? (
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: app.iconFigure.outerHTML,
+                      }}
+                    />
+                  ) : (
+                    <img src={app.iconUrl} alt={`${app.name} icon`} className="app-icon" style={{ width: '40px', height: '40px' }} />
+                  )}
+                </td>
+                <td
+                  onMouseEnter={() => setActiveSummaryCard(app.handle)}
+                  onMouseLeave={() => setActiveSummaryCard(null)}
+                  style={{ position: 'relative' }}
+                >
+                  <a href={app.link} className="app-name">
+                    {app.name}
+                  </a>
+                  <div className="app-description">{app.description}</div>
+                  <SummaryCard app={app} isActive={activeSummaryCard === app.handle} />
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <div className="rating-container">{app.rating}</div>
+                </td>
+                <td style={{ textAlign: 'center' }}>{app.reviewCount.toLocaleString()}</td>
+                <td>{app.pricing}</td>
+                <td>
+                  <span style={{ marginBottom: '2px' }}>{app.age}</span>
+                  <div className="app-description">{app.launchDate}</div>
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <span className={app.isInstalled ? 'status-success' : 'status-neutral'}>{app.isInstalled ? '✓' : '—'}</span>
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <span className={app.isBuiltForShopify ? 'shopify-badge' : 'status-neutral'}>
+                    {app.isBuiltForShopify ? <img src={builtForShopifyIcon} alt="Built for Shopify" /> : '—'}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
