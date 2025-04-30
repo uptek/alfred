@@ -1,6 +1,5 @@
 {
-  "name": "wxt-starter",
-  "description": "manifest.json description",
+  "name": "shopkeeper",
   "private": true,
   "version": "0.0.0",
   "type": "module",
