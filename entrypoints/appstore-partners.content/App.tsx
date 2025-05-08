@@ -6,7 +6,6 @@ import styles from './App.module.css';
 import builtForShopifyIcon from '@/assets/icon-built-for-shopify.svg';
 import exportIcon from '@/assets/icon-export.svg';
 
-
 const SortableHeader = ({ label, column, align = 'left', sortState, onSort }: SortableHeaderProps) => {
   return (
     <th
