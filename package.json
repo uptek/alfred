@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "bun@1.2.13",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
@@ -17,7 +18,8 @@
     "@preact/preset-vite": "^2.10.1",
     "@wxt-dev/auto-icons": "^1.0.2",
     "typescript": "^5.8.3",
-    "wxt": "^0.20.0"
+    "wxt": "^0.20.0",
+    "@types/uuid": "^10.0.0"
   },
   "dependencies": {
     "preact": "^10.26.5"

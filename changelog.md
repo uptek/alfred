@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3
+@ 2025-05-17
+- Add context menu to open current page in admin
+- Add context menu to open current page in customizer
+
 ## 1.0.1
 @ 2025-05-09
 - Add @wxt-dev/auto-icons

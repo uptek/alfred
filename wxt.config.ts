@@ -5,12 +5,20 @@ import preact from '@preact/preset-vite';
 export default defineConfig({
   modules: ['@wxt-dev/auto-icons'],
   manifest: {
-    name: 'Shopkeeper',
+    name: 'Shopkeeper for Shopify',
     description: 'Make Shopify great again!',
-    version: '1.0.1',
+    version: '1.0.2',
     action: {
       default_title: 'Shopkeeper',
     },
+    permissions: [
+      'contextMenus',
+      'scripting',
+      'tabs'
+    ],
+    host_permissions: [
+      "<all_urls>"
+    ]
   },
   vite: () => ({
     plugins: [preact()],

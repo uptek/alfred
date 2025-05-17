@@ -1,0 +1,9 @@
+{
+  "package_manager": "bun",
+  "rules": {
+    "use_bun_for_package_management": {
+      "description": "Always use bunjs as the package manager for this project",
+      "severity": "error"
+    }
+  }
+}
