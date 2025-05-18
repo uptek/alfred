@@ -15,9 +15,9 @@ const SortableHeader = ({ label, column, align = 'left', sortState, onSort }: So
     >
       <div style={{ display: 'inline-flex', alignItems: 'center' }}>
         <span>{label}</span>
-        <span className={sortState.column === column ?
-          (sortState.direction === 'asc' ? styles.sortIconAsc : styles.sortIconDesc) :
-          styles.sortIconBoth}></span>
+        <span
+          className={sortState.column === column ? (sortState.direction === 'asc' ? styles.sortIconAsc : styles.sortIconDesc) : styles.sortIconBoth}
+        ></span>
       </div>
     </th>
   );
@@ -118,23 +118,13 @@ function App() {
           return;
         }
 
-        const appDataPromises = Array.from(appCards).map(async (card, index) => {
-          // Extract app data from attributes
+        // Process all cards and create initial apps data
+        const initialApps = Array.from(appCards).map((card) => {
+          // Extract all the synchronous data as before
           const name = card.getAttribute('data-app-card-name-value') || '';
           const handle = card.getAttribute('data-app-card-handle-value') || '';
           const iconUrl = card.getAttribute('data-app-card-icon-url-value') || '';
           const link = card.getAttribute('data-app-card-app-link-value') || '';
-
-          // Fetch additional app data
-          const appData = link
-            ? await fetchAppData(link)
-            : {
-                launchDate: null,
-                age: null,
-                detailedAge: null,
-                developer: { website: null, address: null },
-                resources: [],
-              };
 
           // Extract UI elements
           const iconFigure = card.querySelector('figure') as HTMLElement | null;
@@ -168,34 +158,56 @@ function App() {
           }
 
           return {
-            index,
-            data: {
-              name,
-              handle,
-              iconUrl,
-              link,
-              iconFigure: iconFigure ? (iconFigure.cloneNode(true) as HTMLElement) : null,
-              rating,
-              reviewCount,
-              pricing,
-              description: descriptionElement?.textContent?.trim() || '',
-              isInstalled: installedElement !== null,
-              isBuiltForShopify: builtForShopifyElement !== null,
-              launchDate: appData.launchDate,
-              age: appData.age,
-              detailedAge: appData.detailedAge,
-              developer: appData.developer,
-              resources: appData.resources,
-            },
+            name,
+            handle,
+            iconUrl,
+            link,
+            iconFigure: iconFigure ? (iconFigure.cloneNode(true) as HTMLElement) : null,
+            rating,
+            reviewCount,
+            pricing,
+            description: descriptionElement?.textContent?.trim() || '',
+            isInstalled: installedElement !== null,
+            isBuiltForShopify: builtForShopifyElement !== null,
+            launchDate: null,
+            age: null,
+            detailedAge: null,
+            developer: { website: null, address: null },
+            resources: [],
           };
         });
 
-        const results = await Promise.all(appDataPromises);
-        results.sort((a, b) => a.index - b.index);
-        setApps(results.map((result) => result.data));
+        // Set initial app data with one state update
+        setApps(initialApps);
+
+        // Set loading to false after initial data is loaded
+        setIsLoading(false);
+
+        // Add delay function
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Fetch additional data for each app individually with a delay between each
+        for (const app of initialApps) {
+          try {
+            const appData = await fetchAppData(app.link);
+
+            // Update state immediately after each app's data is fetched
+            setApps(currentApps =>
+              currentApps.map(currentApp =>
+                currentApp.handle === app.handle
+                  ? { ...currentApp, ...appData }
+                  : currentApp
+              )
+            );
+
+            // Wait 2 seconds before fetching the next app
+            await delay(250);
+          } catch (error) {
+            console.error(`Error fetching additional data for ${app.name}:`, error);
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred while fetching app data');
-      } finally {
         setIsLoading(false);
       }
     };
@@ -238,6 +250,10 @@ function App() {
 
   if (error) {
     return <div className={styles.container}>Error: {error}</div>;
+  }
+
+  if (apps.length === 0) {
+    return <></>;
   }
 
   return (
@@ -297,9 +313,7 @@ function App() {
                   <div className={styles.appDescription}>{app.launchDate}</div>
                 </td>
                 <td style={{ textAlign: 'center' }}>
-                  <span className={app.isInstalled ? styles.statusSuccess : styles.statusNeutral}>
-                    {app.isInstalled ? '✓' : '—'}
-                  </span>
+                  <span className={app.isInstalled ? styles.statusSuccess : styles.statusNeutral}>{app.isInstalled ? '✓' : '—'}</span>
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <span className={app.isBuiltForShopify ? styles.shopifyBadge : styles.statusNeutral}>
