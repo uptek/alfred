@@ -1,29 +1,28 @@
-import { ContextMenu } from '../../utils/contextMenu';
+import { create, removeAll } from '../../utils/contextMenu';
+import { Browser } from 'wxt/browser';
 
 export const registerActions = async () => {
-  const contextMenu = new ContextMenu();
-
   // Remove all context menus
-  await contextMenu.removeAll();
+  await removeAll();
 
   // Create Shopkeeper menu
-  const shopkeeperMenuId = contextMenu.create({
+  const shopkeeperMenuId = create({
+    id: 'main',
     title: 'Shopkeeper',
   });
 
   // Open in Admin
-  contextMenu.create(
+  create(
     {
+      id: 'open-in-admin',
       title: 'Open in Admin',
       parentId: shopkeeperMenuId,
     },
-    async (info, tab) => {
-      if (!tab || !tab.id) return;
-
+    async (info, tab: Browser.tabs.Tab) => {
       try {
         // Execute script in the current tab to get the necessary information
         const results = await browser.scripting.executeScript({
-          target: { tabId: tab.id },
+          target: { tabId: tab.id! },
           func: () => {
             return {
               __st: window.__st,
@@ -41,13 +40,19 @@ export const registerActions = async () => {
         }
 
         const shopName = data.shopify.shop.replace('.myshopify.com', '');
-        const { rtyp, rid } = data.__st;
+        const { p, rid } = data.__st;
+        let url = '';
 
-        if (['product', 'collection', 'page', 'article'].includes(rtyp)) {
-          const url = `https://admin.shopify.com/store/${shopName}/${rtyp}s/${rid}`;
-          await browser.tabs.create({ url: url });
+        if (['home', 'cart'].includes(p)) {
+          url = `https://admin.shopify.com/store/${shopName}`;
+        } else if (['product', 'collection', 'page', 'article'].includes(p)) {
+          url = `https://admin.shopify.com/store/${shopName}/${p}s/${rid}`;
         } else {
-          alert('Unsupported resource type');
+          console.error('Unsupported resource type');
+        }
+
+        if (url) {
+          await browser.tabs.create({ url });
         }
       } catch (error) {
         console.error('Error opening in admin:', error);
@@ -56,18 +61,17 @@ export const registerActions = async () => {
   );
 
   // Create Open in Customizer
-  contextMenu.create(
+  create(
     {
+      id: 'open-in-customizer',
       title: 'Open in Customizer',
       parentId: shopkeeperMenuId,
     },
-    async (info, tab) => {
-      if (!tab || !tab.id) return;
-
+    async (info, tab: Browser.tabs.Tab) => {
       try {
         // Execute script in the current tab to get the necessary information
         const results = await browser.scripting.executeScript({
-          target: { tabId: tab.id },
+          target: { tabId: tab.id! },
           func: () => {
             return {
               shopify: window.Shopify as Window['Shopify'],
@@ -85,7 +89,6 @@ export const registerActions = async () => {
 
         const shopName = data.shopify.shop.replace('.myshopify.com', '');
         const themeId = data.shopify.theme?.id;
-
         const previewPath = encodeURIComponent(data.pathname);
         const customizerUrl = `https://admin.shopify.com/store/${shopName}/themes/${themeId}/editor?previewPath=${previewPath}`;
 

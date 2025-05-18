@@ -24,6 +24,9 @@ export default defineConfig({
     plugins: [preact()],
   }),
   webExt: {
-    chromiumArgs: ['--user-data-dir=./.wxt/chrome-data'],
+    chromiumArgs: [
+      '--user-data-dir=./.wxt/chrome-data',
+      '--disable-infobars'
+    ]
   }
 });

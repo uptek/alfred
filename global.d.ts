@@ -20,8 +20,8 @@ declare namespace ContextMenu {
 
 interface Window {
   __st: {
-    rtyp: string;
     rid: number;
+    p: string;
   };
 
   Shopify: {
