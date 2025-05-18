@@ -1,6 +1,6 @@
 import { ContextMenu } from '../../utils/contextMenu';
 
-export const registerContextMenus = async () => {
+export const registerActions = async () => {
   const contextMenu = new ContextMenu();
 
   // Remove all context menus
