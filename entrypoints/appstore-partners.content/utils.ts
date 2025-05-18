@@ -4,7 +4,6 @@ import tutorialIcon from "@/assets/icon-tutorial.svg";
 import demoIcon from "@/assets/icon-demo.svg";
 import docsIcon from "@/assets/icon-docs.svg";
 import supportIcon from "@/assets/icon-support.svg";
-
 import type { AppRaw, App, Resource } from "./types";
 
 /**

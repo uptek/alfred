@@ -1,9 +1,9 @@
-export interface Resource {
+export type Resource = {
   title: string;
   url: string;
 }
 
-export interface Developer {
+export type Developer = {
   website: string | null;
   address: string | null;
 }

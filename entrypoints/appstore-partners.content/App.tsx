@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { fetchAppData, downloadCSV, getResourceIcon } from './utils';
 import type { App, SortableHeaderProps, SummaryCardProps } from './types';
-import styles from './App.module.css';
 
+import styles from './App.module.css';
 import builtForShopifyIcon from '@/assets/icon-built-for-shopify.svg';
 import exportIcon from '@/assets/icon-export.svg';
 
