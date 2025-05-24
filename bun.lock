@@ -4,13 +4,13 @@
     "": {
       "name": "wxt-starter",
       "dependencies": {
-        "preact": "^10.26.5",
+        "preact": "^10.26.6",
       },
       "devDependencies": {
         "@preact/preset-vite": "^2.10.1",
         "@wxt-dev/auto-icons": "^1.0.2",
         "typescript": "^5.8.3",
-        "wxt": "^0.20.0",
+        "wxt": "^0.20.6",
       },
     },
   },
