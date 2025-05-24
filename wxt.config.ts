@@ -11,14 +11,8 @@ export default defineConfig({
     action: {
       default_title: 'Shopkeeper',
     },
-    permissions: [
-      'contextMenus',
-      'scripting',
-      'tabs'
-    ],
-    host_permissions: [
-      "<all_urls>"
-    ]
+    permissions: ['contextMenus', 'scripting', 'tabs', 'activeTab'],
+    host_permissions: ['<all_urls>'],
   },
   vite: () => ({
     plugins: [preact()],
@@ -26,7 +20,9 @@ export default defineConfig({
   webExt: {
     chromiumArgs: [
       '--user-data-dir=./.wxt/chrome-data',
-      '--disable-infobars'
-    ]
-  }
+      '--disable-infobars',
+      'https://example.com',
+      'https://theme-dawn-demo.myshopify.com/',
+    ],
+  },
 });

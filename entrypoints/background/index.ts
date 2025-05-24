@@ -1,5 +1,5 @@
-import { registerActions } from "./actions";
+import { registerActions } from './actions';
 
 export default defineBackground(() => {
-  registerActions();
+  registerActions()
 });

@@ -3,6 +3,7 @@ import { type Browser } from 'wxt/browser';
 // State to be shared across functions
 const menus: Map<string, ContextMenu.ClickHandler> = new Map();
 let initialized = false;
+const contexts = ['page', 'selection', 'image', 'video', 'audio', 'link', 'editable', 'frame'];
 
 /**
  * Initialize the context menu manager
@@ -24,17 +25,14 @@ function initialize(): void {
 /**
  * Create a new context menu item
  */
-export function create(
-  options: ContextMenu.Options,
-  handler?: ContextMenu.ClickHandler
-): string {
+export function create(options: ContextMenu.Options, handler?: ContextMenu.ClickHandler): string {
   if (!initialized) initialize();
 
   const id = options.id;
   const menuOptions = {
     id,
     title: options.title,
-    contexts: options.contexts || ['all'],
+    contexts: options.contexts || contexts,
     parentId: options.parentId,
     type: options.type || 'normal',
     documentUrlPatterns: options.documentUrlPatterns,
@@ -139,7 +137,7 @@ export function createSeparator(id: string, parentId?: string): string {
   const options = {
     id,
     type: 'separator',
-    contexts: ['all']
+    contexts: contexts,
   } as Browser.contextMenus.CreateProperties;
 
   if (parentId) {

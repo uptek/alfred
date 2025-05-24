@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "packageManager": "bun@1.2.13",
+  "packageManager": "bun@1.2.14",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
