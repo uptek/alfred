@@ -17,10 +17,10 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
     "@wxt-dev/auto-icons": "^1.0.2",
-    "wxt": "^0.20.0",
+    "wxt": "^0.20.6",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "preact": "^10.26.5"
+    "preact": "^10.26.6"
   }
 }
