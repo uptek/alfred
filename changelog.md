@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+@ 2025-06-01
+- Add context menu to copy product JSON
+
 ## 1.0.3
 @ 2025-05-25
 - Register context menu items on service worker startup

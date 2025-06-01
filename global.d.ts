@@ -45,7 +45,6 @@ declare global {
 }
 
 type StorefrontData = {
-  isShopify: boolean;
   __st: __st;
   shopify: Shopify;
   shopName: string;
