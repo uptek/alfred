@@ -1,5 +1,5 @@
-import { registerActions } from './actions';
+import { registerShortcuts } from './shortcuts';
 
 export default defineBackground(() => {
-  registerActions()
+  registerShortcuts()
 });

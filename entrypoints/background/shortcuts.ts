@@ -1,6 +1,6 @@
 import { create, removeAll } from '@/utils/contextMenu';
 
-export const registerActions = async () => {
+export const registerShortcuts = async () => {
   // Remove all context menus
   await removeAll();
 
