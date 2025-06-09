@@ -4,7 +4,7 @@ declare namespace ContextMenu {
   type ContextType = chrome.contextMenus.ContextType | 'all';
 
   interface Options {
-    id?: string;
+    id: string;
     title: string;
     contexts?: ContextType[];
     parentId?: string;

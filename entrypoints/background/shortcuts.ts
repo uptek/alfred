@@ -75,6 +75,22 @@ export const registerShortcuts = async () => {
       }
     }
   );
+
+  // Copy Cart JSON
+  create(
+    {
+      id: 'copy-cart-json',
+      title: 'Copy Cart JSON',
+      parentId: shopkeeperMenuId,
+    },
+    async (info, tab: Browser.tabs.Tab) => {
+      try {
+        await copyCartJson(tab);
+      } catch (error) {
+        console.error('Error copying cart JSON:', error);
+      }
+    }
+  );
 };
 
 /**
@@ -88,14 +104,14 @@ const extractStorefrontData = async (tab: Browser.tabs.Tab): Promise<StorefrontD
     func: () => {
       try {
         // Check if this is a Shopify store
-        if (!window.Shopify || !window.__st) {
+        if (!(window as any).Shopify || !(window as any).__st) {
           console.warn('Not a Shopify store');
           return null;
         }
 
         return {
-          __st: window.__st,
-          shopify: window.Shopify,
+          __st: (window as any).__st,
+          shopify: (window as any).Shopify,
           pathname: window.location.pathname,
         };
       } catch (error) {
@@ -171,7 +187,7 @@ const copyProductJson = async (tab: Browser.tabs.Tab): Promise<void> => {
     func: async () => {
       try {
         // Check if this is a Shopify store
-        if (!window.Shopify) {
+        if (!(window as any).Shopify) {
           console.warn('Not a Shopify store');
           return false;
         }
@@ -189,14 +205,89 @@ const copyProductJson = async (tab: Browser.tabs.Tab): Promise<void> => {
         const response = await fetch(jsonUrl);
 
         if (!response.ok) {
-          console.warn('Definitly not a Shopify store');
+          console.warn('Definitely not a Shopify store');
           return false;
 
           // throw new Error(`Failed to fetch product JSON: ${response.status}`);
         }
 
         const productData = await response.json();
-        await navigator.clipboard.writeText(JSON.stringify(productData, null, 2));
+
+        // Focus the document before writing to clipboard
+        if (!document.hasFocus()) {
+          window.focus();
+        }
+
+        // Use a fallback method if clipboard.writeText fails
+        try {
+          await navigator.clipboard.writeText(JSON.stringify(productData, null, 2));
+        } catch (clipboardError) {
+          // Fallback: Create a textarea, select it, and use document.execCommand
+          const textArea = document.createElement('textarea');
+          textArea.value = JSON.stringify(productData, null, 2);
+          textArea.style.position = 'fixed';
+          textArea.style.opacity = '0';
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+        }
+
+        return true;
+      } catch (error) {
+        console.error(error);
+        return false;
+      }
+    },
+    world: 'MAIN',
+  });
+};
+
+/**
+ * Copy the cart JSON to the clipboard
+ * @param {Browser.tabs.Tab} tab - The current tab
+ * @returns {Promise<void>}
+ */
+const copyCartJson = async (tab: Browser.tabs.Tab): Promise<void> => {
+  await browser.scripting.executeScript({
+    target: { tabId: tab.id! },
+    func: async () => {
+      try {
+        // Check if this is a Shopify store
+        if (!(window as any).Shopify) {
+          console.warn('Not a Shopify store');
+          return false;
+        }
+
+        // Fetch cart data using Shopify's cart.js API
+        const response = await fetch('/cart.js');
+
+        if (!response.ok) {
+          console.warn('Definitely not a Shopify store');
+          return false;
+        }
+
+        const cartData = await response.json();
+
+        // Focus the document before writing to clipboard
+        if (!document.hasFocus()) {
+          window.focus();
+        }
+
+        // Use a fallback method if clipboard.writeText fails
+        try {
+          await navigator.clipboard.writeText(JSON.stringify(cartData, null, 2));
+        } catch (clipboardError) {
+          // Fallback: Create a textarea, select it, and use document.execCommand
+          const textArea = document.createElement('textarea');
+          textArea.value = JSON.stringify(cartData, null, 2);
+          textArea.style.position = 'fixed';
+          textArea.style.opacity = '0';
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+        }
 
         return true;
       } catch (error) {
