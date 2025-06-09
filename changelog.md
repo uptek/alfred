@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5
+@ 2025-06-09
+- Add context menu to copy cart JSON
+- Add fallback for copying to clipboard
+- Improve Shopify detection by checking for `window.__st`
+
 ## 1.0.4
 @ 2025-06-01
 - Add context menu to copy product JSON
