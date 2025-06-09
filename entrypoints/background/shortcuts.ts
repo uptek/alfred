@@ -187,7 +187,7 @@ const copyProductJson = async (tab: Browser.tabs.Tab): Promise<void> => {
     func: async () => {
       try {
         // Check if this is a Shopify store
-        if (!(window as any).Shopify) {
+        if (!(window as any).Shopify || !(window as any).__st) {
           console.warn('Not a Shopify store');
           return false;
         }
@@ -254,7 +254,7 @@ const copyCartJson = async (tab: Browser.tabs.Tab): Promise<void> => {
     func: async () => {
       try {
         // Check if this is a Shopify store
-        if (!(window as any).Shopify) {
+        if (!(window as any).Shopify || !(window as any).__st) {
           console.warn('Not a Shopify store');
           return false;
         }
