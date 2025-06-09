@@ -88,7 +88,7 @@ const extractStorefrontData = async (tab: Browser.tabs.Tab): Promise<StorefrontD
     func: () => {
       try {
         // Check if this is a Shopify store
-        if (!window.Shopify) {
+        if (!window.Shopify || !window.__st) {
           console.warn('Not a Shopify store');
           return null;
         }
@@ -189,7 +189,10 @@ const copyProductJson = async (tab: Browser.tabs.Tab): Promise<void> => {
         const response = await fetch(jsonUrl);
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch product JSON: ${response.status}`);
+          console.warn('Definitly not a Shopify store');
+          return false;
+
+          // throw new Error(`Failed to fetch product JSON: ${response.status}`);
         }
 
         const productData = await response.json();
