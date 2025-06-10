@@ -84,6 +84,31 @@ export default defineUnlistedScript(() => {
     },
 
     /**
+     * Open the current page in the customizer
+     * @returns {Promise<boolean>}
+     */
+    openInCustomizer: async (): Promise<boolean> => {
+      try {
+        // Check if this is a Shopify store
+        if (!(window as any).Shopkeeper.isShopify()) {
+          console.warn('Not a Shopify store');
+          return false;
+        }
+
+        const themeId = (window as any).Shopify.theme.id;
+        const shopName = (window as any).Shopkeeper.getShopName();
+        const previewPath = encodeURIComponent(window.location.pathname);
+        const customizerUrl = `https://admin.shopify.com/store/${shopName}/themes/${themeId}/editor?previewPath=${previewPath}`;
+
+        window.open(customizerUrl, '_blank');
+        return true;
+      } catch (error) {
+        console.error('Error opening in customizer:', error);
+        return false;
+      }
+    },
+
+    /**
      * Fetch and copy product JSON to clipboard
      * @returns {Promise<boolean>}
      */

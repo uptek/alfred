@@ -44,15 +44,13 @@ export const registerShortcuts = async () => {
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
-        const data = await extractStorefrontData(tab);
-
-        if (!data) {
-          // NOT SHOPIFY
-          return;
-        }
-
-        const customizerUrl = createCustomizerUrl(data);
-        await browser.tabs.create({ url: customizerUrl });
+        await browser.scripting.executeScript({
+          target: { tabId: tab.id! },
+          func: async () => {
+            return await (window as any).Shopkeeper.openInCustomizer();
+          },
+          world: 'MAIN',
+        });
       } catch (error) {
         console.error('Error opening customizer:', error);
       }
@@ -102,21 +100,4 @@ export const registerShortcuts = async () => {
       }
     }
   );
-};
-
-/**
- * Create a Customizer URL to open the current page in the customizer
- * @param {StorefrontData} data - The storefront data
- * @returns {string} The customizer url
- */
-const createCustomizerUrl = (data: StorefrontData): string => {
-  const {
-    shopify: {
-      theme: { id },
-    },
-    shopName,
-  } = data;
-
-  const previewPath = encodeURIComponent(data.pathname);
-  return `https://admin.shopify.com/store/${shopName}/themes/${id}/editor?previewPath=${previewPath}`;
 };
