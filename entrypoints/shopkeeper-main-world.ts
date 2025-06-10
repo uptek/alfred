@@ -3,13 +3,24 @@ export default defineUnlistedScript(() => {
   (window as any).Shopkeeper = {
     /**
      * Check if the current page is a Shopify store
+     * @returns {boolean}
      */
     isShopify: () => {
       return !!(window as any).Shopify && !!(window as any).__st;
     },
 
     /**
+     * Get the shop name from the Shopify domain
+     * @returns {string} Shop name
+     */
+    getShopName: () => {
+      return (window as any).Shopify.shop.replace('.myshopify.com', '');
+    },
+
+    /**
      * Write text to clipboard with fallback method
+     * @param {string} text - The text to write to clipboard
+     * @returns {Promise<boolean>}
      */
     writeToClipboard: async (text: string): Promise<boolean> => {
       try {
@@ -41,7 +52,40 @@ export default defineUnlistedScript(() => {
     },
 
     /**
+     * Open the current page in the admin editor
+     * @returns {Promise<boolean>}
+     */
+    openInAdmin: async (): Promise<boolean> => {
+      try {
+        // Check if this is a Shopify store
+        if (!(window as any).Shopkeeper.isShopify()) {
+          console.warn('Not a Shopify store');
+          return false;
+        }
+
+        const shopName = (window as any).Shopkeeper.getShopName();
+        const { p, rid } = (window as any).__st;
+        let url = '';
+
+        if (['home', 'cart'].includes(p)) {
+          url = `https://admin.shopify.com/store/${shopName}`;
+        } else if (['product', 'collection', 'page', 'article'].includes(p)) {
+          url = `https://admin.shopify.com/store/${shopName}/${p}s/${rid}`;
+        } else {
+          throw new Error('Unsupported resource type');
+        }
+
+        window.open(url, '_blank');
+        return true;
+      } catch (error) {
+        console.error('Error opening in admin:', error);
+        return false;
+      }
+    },
+
+    /**
      * Fetch and copy product JSON to clipboard
+     * @returns {Promise<boolean>}
      */
     copyProductJson: async (): Promise<boolean> => {
       try {
@@ -78,6 +122,7 @@ export default defineUnlistedScript(() => {
 
     /**
      * Fetch and copy cart JSON to clipboard
+     * @returns {Promise<boolean>}
      */
     copyCartJson: async (): Promise<boolean> => {
       try {
