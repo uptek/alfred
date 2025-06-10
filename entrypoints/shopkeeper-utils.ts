@@ -1,0 +1,106 @@
+export default defineUnlistedScript(() => {
+  // Define shopkeeper utils in the global scope
+  (window as any).Shopkeeper = {
+    /**
+     * Check if the current page is a Shopify store
+     */
+    isShopify: () => {
+      return !!(window as any).Shopify && !!(window as any).__st;
+    },
+
+    /**
+     * Write text to clipboard with fallback method
+     */
+    writeToClipboard: async (text: string): Promise<boolean> => {
+      try {
+        // Focus the document before writing to clipboard
+        if (!document.hasFocus()) {
+          window.focus();
+        }
+
+        // Use a fallback method if clipboard.writeText fails
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (clipboardError) {
+          // Fallback: Create a textarea, select it, and use document.execCommand
+          const textArea = document.createElement('textarea');
+          textArea.value = text;
+          textArea.style.position = 'fixed';
+          textArea.style.opacity = '0';
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          return true;
+        }
+      } catch (error) {
+        console.error('Error writing to clipboard:', error);
+        return false;
+      }
+    },
+
+    /**
+     * Fetch and copy product JSON to clipboard
+     */
+    copyProductJson: async (): Promise<boolean> => {
+      try {
+        // Check if this is a Shopify store
+        if (!(window as any).Shopkeeper.isShopify()) {
+          console.warn('Not a Shopify store');
+          return false;
+        }
+
+        // Check if this is a product page
+        if (!window.location.pathname.includes('/products/')) {
+          console.warn('Not a product page');
+          return false;
+        }
+
+        const url = new URL(window.location.href);
+        const pathname = url.pathname.replace(/\/$/, '');
+        const jsonUrl = `${url.origin}${pathname}.js`;
+
+        const response = await fetch(jsonUrl);
+
+        if (!response.ok) {
+          console.warn('Failed to fetch product JSON');
+          return false;
+        }
+
+        const productData = await response.json();
+        return await (window as any).Shopkeeper.writeToClipboard(JSON.stringify(productData, null, 2));
+      } catch (error) {
+        console.error('Error copying product JSON:', error);
+        return false;
+      }
+    },
+
+    /**
+     * Fetch and copy cart JSON to clipboard
+     */
+    copyCartJson: async (): Promise<boolean> => {
+      try {
+        // Check if this is a Shopify store
+        if (!(window as any).Shopkeeper.isShopify()) {
+          console.warn('Not a Shopify store');
+          return false;
+        }
+
+        // Fetch cart data using Shopify's cart.js API
+        const response = await fetch('/cart.js');
+
+        if (!response.ok) {
+          console.warn('Failed to fetch cart JSON');
+          return false;
+        }
+
+        const cartData = await response.json();
+        return await (window as any).Shopkeeper.writeToClipboard(JSON.stringify(cartData, null, 2));
+      } catch (error) {
+        console.error('Error copying cart JSON:', error);
+        return false;
+      }
+    },
+  };
+});

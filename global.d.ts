@@ -37,13 +37,6 @@ type Shopify = {
   };
 };
 
-declare global {
-  interface Window {
-    __st?: __st;
-    Shopify?: Shopify;
-  }
-}
-
 type StorefrontData = {
   __st: __st;
   shopify: Shopify;

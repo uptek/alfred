@@ -69,7 +69,13 @@ export const registerShortcuts = async () => {
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
-        await copyProductJson(tab);
+        await browser.scripting.executeScript({
+          target: { tabId: tab.id! },
+          func: async () => {
+            return await (window as any).Shopkeeper.copyProductJson();
+          },
+          world: 'MAIN',
+        });
       } catch (error) {
         console.error('Error copying product JSON:', error);
       }
@@ -85,7 +91,13 @@ export const registerShortcuts = async () => {
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
-        await copyCartJson(tab);
+        await browser.scripting.executeScript({
+          target: { tabId: tab.id! },
+          func: async () => {
+            return await (window as any).Shopkeeper.copyCartJson();
+          },
+          world: 'MAIN',
+        });
       } catch (error) {
         console.error('Error copying cart JSON:', error);
       }
@@ -174,127 +186,4 @@ const createCustomizerUrl = (data: StorefrontData): string => {
 
   const previewPath = encodeURIComponent(data.pathname);
   return `https://admin.shopify.com/store/${shopName}/themes/${id}/editor?previewPath=${previewPath}`;
-};
-
-/**
- * Copy the product JSON to the clipboard
- * @param {Browser.tabs.Tab} tab - The current tab
- * @returns {Promise<void>}
- */
-const copyProductJson = async (tab: Browser.tabs.Tab): Promise<void> => {
-  await browser.scripting.executeScript({
-    target: { tabId: tab.id! },
-    func: async () => {
-      try {
-        // Check if this is a Shopify store
-        if (!(window as any).Shopify || !(window as any).__st) {
-          console.warn('Not a Shopify store');
-          return false;
-        }
-
-        // Check if this is a product page
-        if (!window.location.pathname.includes('/products/')) {
-          console.warn('Not a product page');
-          return false;
-        }
-
-        const url = new URL(window.location.href);
-        const pathname = url.pathname.replace(/\/$/, '');
-        const jsonUrl = `${url.origin}${pathname}.js`;
-
-        const response = await fetch(jsonUrl);
-
-        if (!response.ok) {
-          console.warn('Definitely not a Shopify store');
-          return false;
-
-          // throw new Error(`Failed to fetch product JSON: ${response.status}`);
-        }
-
-        const productData = await response.json();
-
-        // Focus the document before writing to clipboard
-        if (!document.hasFocus()) {
-          window.focus();
-        }
-
-        // Use a fallback method if clipboard.writeText fails
-        try {
-          await navigator.clipboard.writeText(JSON.stringify(productData, null, 2));
-        } catch (clipboardError) {
-          // Fallback: Create a textarea, select it, and use document.execCommand
-          const textArea = document.createElement('textarea');
-          textArea.value = JSON.stringify(productData, null, 2);
-          textArea.style.position = 'fixed';
-          textArea.style.opacity = '0';
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textArea);
-        }
-
-        return true;
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
-    },
-    world: 'MAIN',
-  });
-};
-
-/**
- * Copy the cart JSON to the clipboard
- * @param {Browser.tabs.Tab} tab - The current tab
- * @returns {Promise<void>}
- */
-const copyCartJson = async (tab: Browser.tabs.Tab): Promise<void> => {
-  await browser.scripting.executeScript({
-    target: { tabId: tab.id! },
-    func: async () => {
-      try {
-        // Check if this is a Shopify store
-        if (!(window as any).Shopify || !(window as any).__st) {
-          console.warn('Not a Shopify store');
-          return false;
-        }
-
-        // Fetch cart data using Shopify's cart.js API
-        const response = await fetch('/cart.js');
-
-        if (!response.ok) {
-          console.warn('Definitely not a Shopify store');
-          return false;
-        }
-
-        const cartData = await response.json();
-
-        // Focus the document before writing to clipboard
-        if (!document.hasFocus()) {
-          window.focus();
-        }
-
-        // Use a fallback method if clipboard.writeText fails
-        try {
-          await navigator.clipboard.writeText(JSON.stringify(cartData, null, 2));
-        } catch (clipboardError) {
-          // Fallback: Create a textarea, select it, and use document.execCommand
-          const textArea = document.createElement('textarea');
-          textArea.value = JSON.stringify(cartData, null, 2);
-          textArea.style.position = 'fixed';
-          textArea.style.opacity = '0';
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textArea);
-        }
-
-        return true;
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
-    },
-    world: 'MAIN',
-  });
 };
