@@ -15,7 +15,7 @@ export default defineConfig({
     host_permissions: ['<all_urls>'],
     web_accessible_resources: [
       {
-        resources: ['shopkeeper-utils.js'],
+        resources: ['shopkeeper-main-world.js'],
         matches: ['<all_urls>'],
       },
     ],
