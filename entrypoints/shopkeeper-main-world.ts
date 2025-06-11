@@ -172,5 +172,30 @@ export default defineUnlistedScript(() => {
         return false;
       }
     },
+
+    /**
+     * Copy theme preview URL to clipboard
+     * @returns {Promise<boolean>}
+     */
+    copyThemePreviewUrl: async (): Promise<boolean> => {
+      try {
+        // Check if this is a Shopify store
+        if (!(window as any).Shopkeeper.isShopify()) {
+          console.warn('Not a Shopify store');
+          return false;
+        }
+
+        const themeId = (window as any).Shopify.theme.id;
+        const url = new URL(window.location.href);
+
+        // Add or update the preview_theme_id parameter
+        url.searchParams.set('preview_theme_id', themeId);
+
+        return await (window as any).Shopkeeper.writeToClipboard(url.toString());
+      } catch (error) {
+        console.error('Error copying preview URL:', error);
+        return false;
+      }
+    },
   };
 });

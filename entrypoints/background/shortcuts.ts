@@ -100,4 +100,26 @@ export const registerShortcuts = async () => {
       }
     }
   );
+
+  // Copy Theme Preview URL
+  create(
+    {
+      id: 'copy-theme-preview-url',
+      title: 'Copy Theme Preview URL',
+      parentId: shopkeeperMenuId,
+    },
+    async (info, tab: Browser.tabs.Tab) => {
+      try {
+        await browser.scripting.executeScript({
+          target: { tabId: tab.id! },
+          func: async () => {
+            return await (window as any).Shopkeeper.copyThemePreviewUrl();
+          },
+          world: 'MAIN',
+        });
+      } catch (error) {
+        console.error('Error copying theme preview URL:', error);
+      }
+    }
+  );
 };

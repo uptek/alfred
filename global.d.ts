@@ -17,29 +17,3 @@ declare namespace ContextMenu {
 
   type ClickHandler = (info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => void;
 }
-
-type __st = {
-  rid: number;
-  p: string;
-};
-
-type Shopify = {
-  shop: string;
-  theme: {
-    handle: string;
-    id: number;
-    name: string;
-    role: string;
-    schema_name: string;
-    schema_version: string;
-    style: { id: number | null; handle: string | null };
-    theme_store_id: number;
-  };
-};
-
-type StorefrontData = {
-  __st: __st;
-  shopify: Shopify;
-  shopName: string;
-  pathname: string;
-};
