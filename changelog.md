@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.6
+@ 2025-06-12
+- New Shortcut: Copy Theme Preview URL
+- Fix: Run main.content at document_start to avoid race condition
+
 ## 1.0.5
 @ 2025-06-09
 - Add context menu to copy cart JSON
