@@ -197,5 +197,34 @@ export default defineUnlistedScript(() => {
         return false;
       }
     },
+
+    /**
+     * Clear the shopping cart
+     * @returns {Promise<boolean>}
+     */
+    clearCart: async (): Promise<boolean> => {
+      try {
+        // Check if this is a Shopify store
+        if (!(window as any).Shopkeeper.isShopify()) {
+          console.warn('Not a Shopify store');
+          return false;
+        }
+
+        // Clear cart
+        const response = await fetch('/cart/clear');
+
+        if (!response.ok) {
+          console.warn('Failed to clear cart');
+          return false;
+        }
+
+        // Reload the page to reflect the empty cart
+        window.location.reload();
+        return true;
+      } catch (error) {
+        console.error('Error clearing cart:', error);
+        return false;
+      }
+    },
   };
 });

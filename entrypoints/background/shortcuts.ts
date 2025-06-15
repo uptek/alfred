@@ -122,4 +122,26 @@ export const registerShortcuts = async () => {
       }
     }
   );
+
+  // Clear Cart
+  create(
+    {
+      id: 'clear-cart',
+      title: 'Clear Cart',
+      parentId: shopkeeperMenuId,
+    },
+    async (info, tab: Browser.tabs.Tab) => {
+      try {
+        await browser.scripting.executeScript({
+          target: { tabId: tab.id! },
+          func: async () => {
+            return await (window as any).Shopkeeper.clearCart();
+          },
+          world: 'MAIN',
+        });
+      } catch (error) {
+        console.error('Error clearing cart:', error);
+      }
+    }
+  );
 };

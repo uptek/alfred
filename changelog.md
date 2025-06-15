@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.7
+@ 2025-06-15
+- New Shortcut: Clear Cart
+
 ## 1.0.6
 @ 2025-06-12
 - New Shortcut: Copy Theme Preview URL
