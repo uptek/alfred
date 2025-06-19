@@ -7,10 +7,10 @@ export const registerShortcuts = async () => {
   // Remove all context menus
   await removeAll();
 
-  // Create Shopkeeper menu
-  const shopkeeperMenuId = create({
+  // Create Alfred menu
+  const alfredMenuId = create({
     id: 'main',
-    title: 'Shopkeeper',
+    title: 'Alfred',
   });
 
   // Open in Admin
@@ -18,14 +18,14 @@ export const registerShortcuts = async () => {
     {
       id: 'open-in-admin',
       title: 'Open in Admin',
-      parentId: shopkeeperMenuId,
+      parentId: alfredMenuId,
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
         await browser.scripting.executeScript({
           target: { tabId: tab.id! },
           func: async () => {
-            return await (window as any).Shopkeeper.openInAdmin();
+            return await (window as any).Alfred.openInAdmin();
           },
           world: 'MAIN',
         });
@@ -40,14 +40,14 @@ export const registerShortcuts = async () => {
     {
       id: 'open-in-customizer',
       title: 'Open in Customizer',
-      parentId: shopkeeperMenuId,
+      parentId: alfredMenuId,
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
         await browser.scripting.executeScript({
           target: { tabId: tab.id! },
           func: async () => {
-            return await (window as any).Shopkeeper.openInCustomizer();
+            return await (window as any).Alfred.openInCustomizer();
           },
           world: 'MAIN',
         });
@@ -62,14 +62,14 @@ export const registerShortcuts = async () => {
     {
       id: 'copy-product-json',
       title: 'Copy Product JSON',
-      parentId: shopkeeperMenuId,
+      parentId: alfredMenuId,
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
         await browser.scripting.executeScript({
           target: { tabId: tab.id! },
           func: async () => {
-            return await (window as any).Shopkeeper.copyProductJson();
+            return await (window as any).Alfred.copyProductJson();
           },
           world: 'MAIN',
         });
@@ -84,14 +84,14 @@ export const registerShortcuts = async () => {
     {
       id: 'copy-cart-json',
       title: 'Copy Cart JSON',
-      parentId: shopkeeperMenuId,
+      parentId: alfredMenuId,
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
         await browser.scripting.executeScript({
           target: { tabId: tab.id! },
           func: async () => {
-            return await (window as any).Shopkeeper.copyCartJson();
+            return await (window as any).Alfred.copyCartJson();
           },
           world: 'MAIN',
         });
@@ -106,14 +106,14 @@ export const registerShortcuts = async () => {
     {
       id: 'copy-theme-preview-url',
       title: 'Copy Theme Preview URL',
-      parentId: shopkeeperMenuId,
+      parentId: alfredMenuId,
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
         await browser.scripting.executeScript({
           target: { tabId: tab.id! },
           func: async () => {
-            return await (window as any).Shopkeeper.copyThemePreviewUrl();
+            return await (window as any).Alfred.copyThemePreviewUrl();
           },
           world: 'MAIN',
         });
@@ -128,14 +128,14 @@ export const registerShortcuts = async () => {
     {
       id: 'clear-cart',
       title: 'Clear Cart',
-      parentId: shopkeeperMenuId,
+      parentId: alfredMenuId,
     },
     async (info, tab: Browser.tabs.Tab) => {
       try {
         await browser.scripting.executeScript({
           target: { tabId: tab.id! },
           func: async () => {
-            return await (window as any).Shopkeeper.clearCart();
+            return await (window as any).Alfred.clearCart();
           },
           world: 'MAIN',
         });

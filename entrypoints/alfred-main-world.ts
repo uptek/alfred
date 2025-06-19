@@ -1,6 +1,6 @@
 export default defineUnlistedScript(() => {
-  // Define shopkeeper utils in the global scope
-  (window as any).Shopkeeper = {
+  // Define alfred utils in the global scope
+  (window as any).Alfred = {
     /**
      * Check if the current page is a Shopify store
      * @returns {boolean}
@@ -58,12 +58,12 @@ export default defineUnlistedScript(() => {
     openInAdmin: async (): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
-        if (!(window as any).Shopkeeper.isShopify()) {
+        if (!(window as any).Alfred.isShopify()) {
           console.warn('Not a Shopify store');
           return false;
         }
 
-        const shopName = (window as any).Shopkeeper.getShopName();
+        const shopName = (window as any).Alfred.getShopName();
         const { p, rid } = (window as any).__st;
         let url = '';
 
@@ -90,13 +90,13 @@ export default defineUnlistedScript(() => {
     openInCustomizer: async (): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
-        if (!(window as any).Shopkeeper.isShopify()) {
+        if (!(window as any).Alfred.isShopify()) {
           console.warn('Not a Shopify store');
           return false;
         }
 
         const themeId = (window as any).Shopify.theme.id;
-        const shopName = (window as any).Shopkeeper.getShopName();
+        const shopName = (window as any).Alfred.getShopName();
         const previewPath = encodeURIComponent(window.location.pathname);
         const customizerUrl = `https://admin.shopify.com/store/${shopName}/themes/${themeId}/editor?previewPath=${previewPath}`;
 
@@ -115,7 +115,7 @@ export default defineUnlistedScript(() => {
     copyProductJson: async (): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
-        if (!(window as any).Shopkeeper.isShopify()) {
+        if (!(window as any).Alfred.isShopify()) {
           console.warn('Not a Shopify store');
           return false;
         }
@@ -138,7 +138,7 @@ export default defineUnlistedScript(() => {
         }
 
         const productData = await response.json();
-        return await (window as any).Shopkeeper.writeToClipboard(JSON.stringify(productData, null, 2));
+        return await (window as any).Alfred.writeToClipboard(JSON.stringify(productData, null, 2));
       } catch (error) {
         console.error('Error copying product JSON:', error);
         return false;
@@ -152,7 +152,7 @@ export default defineUnlistedScript(() => {
     copyCartJson: async (): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
-        if (!(window as any).Shopkeeper.isShopify()) {
+        if (!(window as any).Alfred.isShopify()) {
           console.warn('Not a Shopify store');
           return false;
         }
@@ -166,7 +166,7 @@ export default defineUnlistedScript(() => {
         }
 
         const cartData = await response.json();
-        return await (window as any).Shopkeeper.writeToClipboard(JSON.stringify(cartData, null, 2));
+        return await (window as any).Alfred.writeToClipboard(JSON.stringify(cartData, null, 2));
       } catch (error) {
         console.error('Error copying cart JSON:', error);
         return false;
@@ -180,7 +180,7 @@ export default defineUnlistedScript(() => {
     copyThemePreviewUrl: async (): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
-        if (!(window as any).Shopkeeper.isShopify()) {
+        if (!(window as any).Alfred.isShopify()) {
           console.warn('Not a Shopify store');
           return false;
         }
@@ -191,7 +191,7 @@ export default defineUnlistedScript(() => {
         // Add or update the preview_theme_id parameter
         url.searchParams.set('preview_theme_id', themeId);
 
-        return await (window as any).Shopkeeper.writeToClipboard(url.toString());
+        return await (window as any).Alfred.writeToClipboard(url.toString());
       } catch (error) {
         console.error('Error copying preview URL:', error);
         return false;
@@ -205,7 +205,7 @@ export default defineUnlistedScript(() => {
     clearCart: async (): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
-        if (!(window as any).Shopkeeper.isShopify()) {
+        if (!(window as any).Alfred.isShopify()) {
           console.warn('Not a Shopify store');
           return false;
         }

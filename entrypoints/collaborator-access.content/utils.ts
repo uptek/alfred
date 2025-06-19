@@ -1,7 +1,7 @@
 import { getItem, setItem } from '@/utils/storage';
 import type { PermissionPreset, PresetStorageData } from './types';
 
-const STORAGE_KEY = 'shopkeeper:permission-presets';
+const STORAGE_KEY = 'alfred:permission-presets';
 
 /**
  * Retrieves all permission presets from browser storage.

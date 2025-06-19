@@ -310,7 +310,7 @@ export const downloadCSV = (apps: App[]) => {
   // Generate filename
   const pageTitle = getPageTitle();
   const date = new Date().toISOString().split("T")[0];
-  const filename = `shopkeeper-${pageTitle}-${date}.csv`;
+  const filename = `shopify-alfred-${pageTitle}-${date}.csv`;
 
   // Setup the link properties
   link.setAttribute("href", url);
