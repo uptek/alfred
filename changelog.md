@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.8
+@ 2025-06-19
+- Rename extension to Alfred
+- Add collaborator permissions presets
+
 ## 1.0.7
 @ 2025-06-15
 - New Shortcut: Clear Cart
