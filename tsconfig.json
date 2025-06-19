@@ -4,6 +4,6 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "types": ["preact"]
+    "types": ["preact", "@shopify/app-bridge-ui-types"]
   }
 }

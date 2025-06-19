@@ -8,6 +8,7 @@
       },
       "devDependencies": {
         "@preact/preset-vite": "^2.10.1",
+        "@shopify/app-bridge-ui-types": "^0.1.1",
         "@wxt-dev/auto-icons": "^1.0.2",
         "typescript": "^5.8.3",
         "wxt": "^0.20.7",
@@ -232,6 +233,8 @@
     "@rollup/rollup-win32-ia32-msvc": ["@rollup/rollup-win32-ia32-msvc@4.42.0", "", { "os": "win32", "cpu": "ia32" }, "sha512-F+5J9pelstXKwRSDq92J0TEBXn2nfUrQGg+HK1+Tk7VOL09e0gBqUHugZv7SW4MGrYj41oNCUe3IKCDGVlis2g=="],
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.42.0", "", { "os": "win32", "cpu": "x64" }, "sha512-LpHiJRwkaVz/LqjHjK8LCi8osq7elmpwujwbXKNW88bM8eeGxavJIKKjkjpMHAh/2xfnrt1ZSnhTv41WYUHYmA=="],
+
+    "@shopify/app-bridge-ui-types": ["@shopify/app-bridge-ui-types@0.1.1", "", {}, "sha512-LUyN11PoTtYQ0iMJWMWHVKwOkV7TrdsVP3vBf7oGUID/9vlBBuLht2LP3L0t6B0lwENv7/c3oXRKX5oA9+KFHQ=="],
 
     "@types/estree": ["@types/estree@1.0.7", "", {}, "sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ=="],
 

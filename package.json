@@ -1,24 +1,25 @@
 {
   "name": "shopkeeper",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.7",
   "type": "module",
   "packageManager": "bun@1.2.14",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
-    "build": "wxt build",
+    "build": "rm -rf .output && wxt build",
     "build:firefox": "wxt build -b firefox",
-    "zip": "wxt zip",
+    "zip": "rm -rf .output && wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
+    "@shopify/app-bridge-ui-types": "^0.1.1",
     "@wxt-dev/auto-icons": "^1.0.2",
-    "wxt": "^0.20.7",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wxt": "^0.20.7"
   },
   "dependencies": {
     "preact": "^10.26.8"

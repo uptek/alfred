@@ -1,29 +1,35 @@
 import { createIntegratedUi } from "#imports";
-import { render } from "preact";
-import { waitForElement } from "@/utils/helpers";
-import App from "./App.tsx";
+import { render } from 'preact';
+import { waitForElement } from '@/utils/helpers';
+import App from './App.tsx';
 
 export default defineContentScript({
-  matches: ["*://apps.shopify.com/partners/*"],
+  matches: ['*://partners.shopify.com/*/stores/new*'],
   async main(ctx) {
+    // Only run on managed store type pages
+    if (!window.location.search.includes('store_type=managed_store')) {
+      return;
+    }
+
+    // Inject Shopify Polaris
+    await injectScript('/libs/shopify-polaris-web-components.js', {
+      keepInDom: true,
+    });
+
     const ui = await createIntegratedUi(ctx, {
       position: "inline",
       anchor: "body",
       append: "first",
       onMount: async (container) => {
         const target = await waitForElement(
-          "#PartnersShow > main > div > section > div:nth-child(1)"
+          "#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) > .Polaris-Card > .Polaris-Card__Section:nth-child(2)"
         );
 
         if (!target) {
           return;
         }
 
-        if (target.nextSibling) {
-          target.parentNode?.insertBefore(container, target.nextSibling);
-        } else {
-          target.parentNode?.appendChild(container);
-        }
+        target.insertAdjacentElement("afterend", container);
 
         render(<App />, container);
         return { container };

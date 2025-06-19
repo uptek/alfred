@@ -95,7 +95,7 @@ const SummaryCard = ({ app, className }: SummaryCardProps) => {
   );
 };
 
-function App() {
+export default function App() {
   const [apps, setApps] = useState<App[]>([]);
   const [sortState, setSortState] = useState<{
     column: keyof App | null;
@@ -328,5 +328,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
