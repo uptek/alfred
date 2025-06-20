@@ -59,7 +59,7 @@ export default function App() {
     };
   }, [presets]);
 
-  const handleApplyPreset = () => {
+  const handleApplyPreset = async () => {
     if (!selectedPreset) {
       alert('Please select a preset to apply.');
       return;
@@ -82,6 +82,16 @@ export default function App() {
         }, index * 50); // 50ms delay between each click
       });
     }, 100);
+
+    // Update the lastUsed timestamp
+    const updatedPreset = { ...selectedPreset, lastUsed: Date.now() };
+    await savePreset(updatedPreset);
+
+    // Update local state
+    setPresets(prevPresets =>
+      prevPresets.map(p => p.id === updatedPreset.id ? updatedPreset : p)
+    );
+    setSelectedPreset(updatedPreset);
   };
 
   const handleEditPreset = async (preset: PermissionPreset) => {

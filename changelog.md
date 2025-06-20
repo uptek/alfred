@@ -3,7 +3,7 @@
 ## 1.0.8
 @ 2025-06-19
 - Rename extension to Alfred
-- Add collaborator permissions presets
+- Add collaborator permission presets
 
 ## 1.0.7
 @ 2025-06-15
