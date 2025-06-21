@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+@ 2025-06-21
+- Add custom message support in permission presets
+
 ## 1.0.8
 @ 2025-06-19
 - Rename extension to Alfred
