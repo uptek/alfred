@@ -97,3 +97,38 @@ export const waitForElement = (
     checkElement();
   });
 };
+
+/**
+ * Generate or retrieve a persistent anonymous user ID
+ * @returns Promise that resolves to the user ID
+ */
+export async function getUserId(): Promise<string> {
+  try {
+    const userId = await storage.getItem<string>('local:user_id');
+    if (userId) {
+      return userId;
+    }
+
+    // Generate new UUID
+    const newUserId = crypto.randomUUID();
+    await storage.setItem('local:user_id', newUserId);
+    return newUserId;
+  } catch (error) {
+    console.error('Failed to get user ID:', error);
+    // Fallback to session-based ID
+    return crypto.randomUUID();
+  }
+}
+
+/**
+ * Get extension version
+ * @returns Promise that resolves to the version or null
+ */
+export async function getVersion(): Promise<string | null> {
+  try {
+    const manifest = browser.runtime.getManifest();
+    return manifest.version || null;
+  } catch {
+    return null;
+  }
+}

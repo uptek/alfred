@@ -103,6 +103,16 @@ export default function App() {
       prevPresets.map(p => p.id === updatedPreset.id ? updatedPreset : p)
     );
     setSelectedPreset(updatedPreset);
+
+    // Track the apply preset action
+    browser.runtime.sendMessage({
+      type: 'track_action',
+      action: 'apply_preset',
+      metadata: {
+        permissions_count: selectedPreset.permissions.length,
+        had_custom_message: !!selectedPreset.customMessage,
+      },
+    });
   };
 
   const handleEditPreset = async (preset: PermissionPreset) => {
@@ -187,6 +197,16 @@ export default function App() {
       await savePreset(newPreset);
       // Add the new preset to the local state
       setPresets([...presets, newPreset]);
+
+      // Track the save preset action
+      browser.runtime.sendMessage({
+        type: 'track_action',
+        action: 'save_preset',
+        metadata: {
+          permissions_count: permissions.length,
+          has_custom_message: !!customMessage,
+        },
+      });
     } catch (error) {
       console.error('Failed to save preset:', error);
     }

@@ -28,6 +28,6 @@ export default defineConfig({
     plugins: [preact()],
   }),
   webExt: {
-    chromiumArgs: ['--user-data-dir=./.wxt/chrome-data', '--disable-infobars', 'https://partners.shopify.com/1750954/stores/new?store_type=managed_store'],
+    chromiumArgs: ['--user-data-dir=./.wxt/chrome-data', '--disable-infobars', 'https://theme-dawn-demo.myshopify.com/'],
   },
 });

@@ -183,6 +183,17 @@ export default function App() {
         // Set loading to false after initial data is loaded
         setIsLoading(false);
 
+        // Track the table view action via background script
+        browser.runtime.sendMessage({
+          type: 'track_action',
+          action: 'appstore_partner_table_view',
+          metadata: {
+            app_count: initialApps.length,
+            page_url: window.location.href,
+            page_type: 'appstore_partners',
+          },
+        });
+
         // Add delay function
         const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -217,6 +228,20 @@ export default function App() {
 
   const handleSort = (column: keyof App, direction: 'asc' | 'desc') => {
     setSortState({ column, direction });
+
+    // Track the sort action via background script
+    browser.runtime.sendMessage({
+      type: 'track_action',
+      action: 'appstore_partner_table_sort',
+      metadata: {
+        app_count: apps.length,
+        sort_by: column,
+        sort_direction: direction,
+        page_url: window.location.href,
+        page_type: 'appstore_partners',
+      },
+    });
+
     const sortedData = [...apps].sort((a, b) => {
       let aValue: any = a[column];
       let bValue: any = b[column];
