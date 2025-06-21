@@ -7,6 +7,7 @@ export type PermissionPreset = {
   id: string;
   name: string;
   permissions: Permission[];
+  customMessage?: string;
   createdAt: number;
   lastUsed?: number;
 };

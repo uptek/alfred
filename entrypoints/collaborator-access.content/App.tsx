@@ -83,6 +83,17 @@ export default function App() {
       });
     }, 100);
 
+    // Apply the custom message if it exists
+    if (selectedPreset.customMessage !== undefined) {
+      const messageTextarea = document.querySelector('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea') as HTMLTextAreaElement;
+      if (messageTextarea) {
+        messageTextarea.value = selectedPreset.customMessage;
+        // Trigger input event to ensure React/framework detects the change
+        messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        messageTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
     // Update the lastUsed timestamp
     const updatedPreset = { ...selectedPreset, lastUsed: Date.now() };
     await savePreset(updatedPreset);
@@ -160,10 +171,15 @@ export default function App() {
       });
     });
 
-    const newPreset = {
+    // Get the custom message from the textarea
+    const messageTextarea = document.querySelector('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea') as HTMLTextAreaElement;
+    const customMessage = messageTextarea?.value || undefined;
+
+    const newPreset: PermissionPreset = {
       id: Math.random().toString(36).substring(2, 8) + Date.now().toString(36),
       name: presetName.trim(),
       permissions,
+      customMessage,
       createdAt: Date.now(),
     };
 
@@ -215,6 +231,7 @@ export default function App() {
                 <s-table-header-row>
                   <s-table-header listSlot="primary">Name</s-table-header>
                   <s-table-header>Permissions</s-table-header>
+                  <s-table-header>Message</s-table-header>
                   <s-table-header>Last used</s-table-header>
                   <s-table-header>Created</s-table-header>
                   <s-table-header>Actions</s-table-header>
@@ -223,6 +240,7 @@ export default function App() {
                   {presets.length === 0 ? (
                     <s-table-row>
                       <s-table-cell>No permission presets saved yet.</s-table-cell>
+                      <s-table-cell></s-table-cell>
                       <s-table-cell></s-table-cell>
                       <s-table-cell></s-table-cell>
                       <s-table-cell></s-table-cell>
@@ -238,6 +256,9 @@ export default function App() {
                             .map((p) => p.label)
                             .join(', ')}
                           {preset.permissions.length > 3 && `, +${preset.permissions.length - 3} more`}
+                        </s-table-cell>
+                        <s-table-cell>
+                          {preset.customMessage && <s-text>{preset.customMessage}</s-text>}
                         </s-table-cell>
                         <s-table-cell>{preset.lastUsed ? formatTimeAgo(preset.lastUsed) : 'Never'}</s-table-cell>
                         <s-table-cell>{formatTimeAgo(preset.createdAt)}</s-table-cell>
