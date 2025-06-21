@@ -2,6 +2,7 @@
 
 ## 1.1.0
 @ 2025-06-21
+- Add analytics tracking system for user actions and time savings
 - Add custom message support in permission presets
 
 ## 1.0.8
