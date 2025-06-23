@@ -81,9 +81,9 @@ export async function trackAction(
       metadata: metadata || {},
     };
 
-    // Check if analytics is disabled via environment variable
-    if (import.meta.env.VITE_ANALYTICS === 'false') {
-      console.log('[Analytics Dev Mode] Event not sent:', eventData);
+    // Disable analytics in development
+    if (import.meta.env.DEV) {
+      console.log('[Dev Mode] Event not sent:', eventData);
       return;
     }
 
