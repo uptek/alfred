@@ -4,8 +4,8 @@ import type { PermissionPreset, PresetStorageData } from './types';
 const STORAGE_KEY = 'alfred:permission-presets';
 
 /**
- * Retrieves all permission presets from browser storage.
- * @returns Promise that resolves to an array of permission presets, or empty array if none exist
+ * Retrieves all permissions presets from browser storage.
+ * @returns Promise that resolves to an array of permissions presets, or empty array if none exist
  */
 export async function getPresets(): Promise<PermissionPreset[]> {
   const data = await getItem<PresetStorageData>(STORAGE_KEY);
@@ -13,8 +13,8 @@ export async function getPresets(): Promise<PermissionPreset[]> {
 }
 
 /**
- * Saves the entire array of permission presets to browser storage.
- * @param presets - Array of permission presets to save
+ * Saves the entire array of permissions presets to browser storage.
+ * @param presets - Array of permissions presets to save
  * @internal Used internally by savePreset and deletePreset functions
  */
 export async function savePresets(presets: PermissionPreset[]): Promise<void> {
@@ -22,10 +22,10 @@ export async function savePresets(presets: PermissionPreset[]): Promise<void> {
 }
 
 /**
- * Saves or updates a permission preset in browser storage.
+ * Saves or updates a permissions preset in browser storage.
  * If a preset with the same ID exists, it will be updated.
  * If not, the preset will be added as a new entry.
- * @param preset - The permission preset to save or update
+ * @param preset - The permissions preset to save or update
  */
 export async function savePreset(preset: PermissionPreset): Promise<void> {
   const presets = await getPresets();
@@ -41,11 +41,28 @@ export async function savePreset(preset: PermissionPreset): Promise<void> {
 }
 
 /**
- * Deletes a permission preset from browser storage.
+ * Deletes a permissions preset from browser storage.
  * @param presetId - The ID of the preset to delete
  */
 export async function deletePreset(presetId: string): Promise<void> {
   const presets = await getPresets();
   const filteredPresets = presets.filter((p) => p.id !== presetId);
   await savePresets(filteredPresets);
+}
+
+/**
+ * Exports permissions presets as a JSON file download.
+ * @param presetsToExport - Array of presets to export
+ */
+export function exportPresets(presetsToExport: PermissionPreset[]): void {
+  // Remove id and lastUsed fields from export
+  const cleanedPresets = presetsToExport.map(({ id, lastUsed, ...preset }) => preset);
+  const dataStr = JSON.stringify(cleanedPresets, null, 2);
+  const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+  const filename = `shopify-alfred-permissions-presets-${new Date().toISOString().split('T')[0]}.json`;
+
+  const linkElement = document.createElement('a');
+  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('download', filename);
+  linkElement.click();
 }

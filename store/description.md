@@ -16,10 +16,10 @@ Skip the clicking marathon with instant shortcuts:
 - **Copy Cart JSON** - Get full cart data instantly for testing and troubleshooting
 - **Clear Cart** - Empty the cart with a single click
 
-3. Collaborator Permission Presets (NEW!)
+3. Collaborator Permissions Presets (NEW!)
 Save your precious time when requesting stores access:
 - Save your frequently used permission combinations as reusable presets
-- Apply permission presets instantly when requesting new collaborator access
+- Apply permissions presets instantly when requesting new collaborator access
 - Manage, edit, and organize your presets in a clean interface
 
 Why Alfred?
