@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'preact/hooks';
-import { getPresets, savePreset, deletePreset, exportPresets } from './utils';
+import { generatePresetId, getPresets, savePreset, deletePreset, exportPresets, importPresets } from './utils';
 import { formatTimeAgo } from '@/utils/helpers';
 import type { Permission, PermissionPreset } from './types';
 
@@ -157,6 +157,29 @@ export default function App() {
     }
   };
 
+  const handleImport = async () => {
+    try {
+      const count = await importPresets();
+
+      if (count === null) {
+        // User cancelled
+        return;
+      }
+
+      // Reload presets to show the imported ones
+      const updatedPresets = await getPresets();
+      setPresets(updatedPresets);
+
+      // Clear checked presets since IDs have changed
+      setCheckedPresets(new Set());
+
+      alert(`Successfully imported ${count} preset${count !== 1 ? 's' : ''}.`);
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('Failed to import presets. Please check the file format.');
+    }
+  };
+
   const handleDeleteMultiple = async () => {
     const presetsToDelete = checkedPresets.size === 0 ? presets.map(p => p.id) : Array.from(checkedPresets);
     if (confirm(`Are you sure you want to delete ${presetsToDelete.length} preset${presetsToDelete.length !== 1 ? 's' : ''}?`)) {
@@ -203,7 +226,7 @@ export default function App() {
     const customMessage = messageTextarea?.value || undefined;
 
     const newPreset: PermissionPreset = {
-      id: Math.random().toString(36).substring(2, 8) + Date.now().toString(36),
+      id: generatePresetId(),
       name: presetName.trim(),
       permissions,
       customMessage,
@@ -278,11 +301,15 @@ export default function App() {
                 >
                   {checkedPresets.size === 0 ? 'Export all' : `Export ${checkedPresets.size} selected`}
                 </s-button>
+                <s-button variant="secondary" onClick={handleImport}>
+                  Import
+                </s-button>
               </s-stack>
               <s-section padding="none">
                 <s-table>
                   <s-table-header-row>
                     <s-table-header>
+                      {presets.length > 0 && (
                       <input
                         type="checkbox"
                         checked={presets.length > 0 && checkedPresets.size === presets.length}
@@ -294,6 +321,7 @@ export default function App() {
                           }
                         }}
                       />
+                      )}
                     </s-table-header>
                     <s-table-header listSlot="primary">Name</s-table-header>
                     <s-table-header>Permissions</s-table-header>
@@ -305,8 +333,8 @@ export default function App() {
                   <s-table-body>
                     {presets.length === 0 ? (
                       <s-table-row>
-                        <s-table-cell>No permissions presets saved yet.</s-table-cell>
                         <s-table-cell></s-table-cell>
+                        <s-table-cell>No permissions presets saved yet.</s-table-cell>
                         <s-table-cell></s-table-cell>
                         <s-table-cell></s-table-cell>
                         <s-table-cell></s-table-cell>
