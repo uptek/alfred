@@ -7,7 +7,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred for Shopify',
     description: 'Make Shopify great again!',
-    version: '1.1.0',
+    version: '1.2.0',
     action: {
       default_title: 'Alfred',
     },
@@ -28,6 +28,6 @@ export default defineConfig({
     plugins: [preact()],
   }),
   webExt: {
-    chromiumArgs: ['--user-data-dir=./.wxt/chrome-data', '--disable-infobars', 'https://partners.shopify.com/1750954/stores/new?store_type=managed_store'],
+    chromiumArgs: ['--user-data-dir=./.wxt/chrome-data', '--disable-infobars', 'https://theme-dawn-demo.myshopify.com/'],
   },
 });

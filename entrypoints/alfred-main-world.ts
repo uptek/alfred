@@ -76,6 +76,21 @@ export default defineUnlistedScript(() => {
         }
 
         window.open(url, '_blank');
+
+        // Track the action
+        window.dispatchEvent(
+          new CustomEvent('alfred:track', {
+            detail: {
+              action: 'open_in_admin',
+              metadata: {
+                page_url: window.location.href,
+                page_type: p || 'other',
+                shop_domain: window.location.hostname,
+              },
+            },
+          })
+        );
+
         return true;
       } catch (error) {
         console.error('Error opening in admin:', error);
@@ -101,6 +116,21 @@ export default defineUnlistedScript(() => {
         const customizerUrl = `https://admin.shopify.com/store/${shopName}/themes/${themeId}/editor?previewPath=${previewPath}`;
 
         window.open(customizerUrl, '_blank');
+
+        // Track the action
+        window.dispatchEvent(
+          new CustomEvent('alfred:track', {
+            detail: {
+              action: 'open_in_customizer',
+              metadata: {
+                page_url: window.location.href,
+                page_type: (window as any).__st?.p || 'other',
+                shop_domain: window.location.hostname,
+              },
+            },
+          })
+        );
+
         return true;
       } catch (error) {
         console.error('Error opening in customizer:', error);
@@ -138,7 +168,25 @@ export default defineUnlistedScript(() => {
         }
 
         const productData = await response.json();
-        return await (window as any).Alfred.writeToClipboard(JSON.stringify(productData, null, 2));
+        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(JSON.stringify(productData, null, 2));
+
+        // If successful, dispatch event for tracking
+        if (copiedToClipboard) {
+          window.dispatchEvent(
+            new CustomEvent('alfred:track', {
+              detail: {
+                action: 'copy_product_json',
+                metadata: {
+                  page_url: window.location.href,
+                  page_type: 'product',
+                  shop_domain: window.location.hostname,
+                },
+              },
+            })
+          );
+        }
+
+        return copiedToClipboard;
       } catch (error) {
         console.error('Error copying product JSON:', error);
         return false;
@@ -166,7 +214,25 @@ export default defineUnlistedScript(() => {
         }
 
         const cartData = await response.json();
-        return await (window as any).Alfred.writeToClipboard(JSON.stringify(cartData, null, 2));
+        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(JSON.stringify(cartData, null, 2));
+
+        // If successful, dispatch event for tracking
+        if (copiedToClipboard) {
+          window.dispatchEvent(
+            new CustomEvent('alfred:track', {
+              detail: {
+                action: 'copy_cart_json',
+                metadata: {
+                  page_url: window.location.href,
+                  page_type: (window as any).__st?.p || 'other',
+                  shop_domain: window.location.hostname,
+                },
+              },
+            })
+          );
+        }
+
+        return copiedToClipboard;
       } catch (error) {
         console.error('Error copying cart JSON:', error);
         return false;
@@ -191,7 +257,25 @@ export default defineUnlistedScript(() => {
         // Add or update the preview_theme_id parameter
         url.searchParams.set('preview_theme_id', themeId);
 
-        return await (window as any).Alfred.writeToClipboard(url.toString());
+        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(url.toString());
+
+        // If successful, dispatch event for tracking
+        if (copiedToClipboard) {
+          window.dispatchEvent(
+            new CustomEvent('alfred:track', {
+              detail: {
+                action: 'copy_theme_preview_url',
+                metadata: {
+                  page_url: window.location.href,
+                  page_type: (window as any).__st?.p || 'other',
+                  shop_domain: window.location.hostname,
+                },
+              },
+            })
+          );
+        }
+
+        return copiedToClipboard;
       } catch (error) {
         console.error('Error copying preview URL:', error);
         return false;
@@ -217,6 +301,20 @@ export default defineUnlistedScript(() => {
           console.warn('Failed to clear cart');
           return false;
         }
+
+        // Track the action before reload
+        window.dispatchEvent(
+          new CustomEvent('alfred:track', {
+            detail: {
+              action: 'clear_cart',
+              metadata: {
+                page_url: window.location.href,
+                page_type: (window as any).__st?.p || 'other',
+                shop_domain: window.location.hostname,
+              },
+            },
+          })
+        );
 
         // Reload the page to reflect the empty cart
         window.location.reload();
