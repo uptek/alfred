@@ -144,4 +144,26 @@ export const registerShortcuts = async () => {
       }
     }
   );
+
+  // Open Section in Editor
+  create(
+    {
+      id: 'open-section-in-editor',
+      title: 'Open Section in Code Editor',
+      parentId: alfredMenuId,
+    },
+    async (info, tab: Browser.tabs.Tab) => {
+      try {
+        await browser.scripting.executeScript({
+          target: { tabId: tab.id! },
+          func: async () => {
+            return await (window as any).Alfred.openSectionInEditor();
+          },
+          world: 'MAIN',
+        });
+      } catch (error) {
+        console.error('Error opening section in editor:', error);
+      }
+    }
+  );
 };
