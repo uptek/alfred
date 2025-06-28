@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+@ 2025-06-27
+- Add shortcut to open sections in code editor
+
 ## 1.2.0
 @ 2025-06-23
 - Add import/export for permissions presets

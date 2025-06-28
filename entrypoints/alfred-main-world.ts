@@ -1,6 +1,16 @@
 export default defineUnlistedScript(() => {
   // Define alfred utils in the global scope
   (window as any).Alfred = {
+    // Store the last right-clicked element
+    _lastRightClickedElement: null as HTMLElement | null,
+
+    // Initialize the context menu listener
+    _initContextMenuListener: () => {
+      document.addEventListener('contextmenu', (event) => {
+        (window as any).Alfred._lastRightClickedElement = event.target as HTMLElement;
+      }, true);
+    },
+
     /**
      * Check if the current page is a Shopify store
      * @returns {boolean}
@@ -324,5 +334,104 @@ export default defineUnlistedScript(() => {
         return false;
       }
     },
+
+    /**
+     * Open the current section in the code editor
+     * @returns {Promise<boolean>}
+     */
+    openSectionInEditor: async (): Promise<boolean> => {
+      try {
+        // Check if this is a Shopify store
+        if (!(window as any).Alfred.isShopify()) {
+          console.warn('Not a Shopify store');
+          return false;
+        }
+
+        // Use the last right-clicked element
+        const target = (window as any).Alfred._lastRightClickedElement;
+
+        if (!target) {
+          console.warn('No right-clicked element found');
+          return false;
+        }
+
+        // Find the parent section element
+        let sectionElement = target.closest('.section.shopify-section') as HTMLElement;
+
+        if (!sectionElement) {
+          console.warn('No Shopify section found');
+          return false;
+        }
+
+        // Extract section ID
+        const sectionId = sectionElement.id;
+        if (!sectionId || !sectionId.includes('__')) {
+          console.warn('Invalid section ID format');
+          return false;
+        }
+
+        // Extract section name from the ID
+        // Handle both formats:
+        // 1. "shopify-section-template--15968257704025__rich_text" -> "rich_text"
+        // 2. "shopify-section-template--18968196514006__image_lelele_zBNR7B" -> "image_lelele"
+        const parts = sectionId.split('__');
+        if (parts.length < 2) {
+          console.warn('Could not extract section name');
+          return false;
+        }
+
+        // Get the part after __ and remove any unique identifier suffix
+        let sectionName = parts[1];
+
+        // Check if there are multiple sections with the same base pattern
+        const basePattern = sectionId.split('__')[0] + '__';
+        const allSections = document.querySelectorAll(`[id^="${basePattern}"]`);
+
+        if (allSections.length > 1) {
+          // Multiple instances detected - remove the unique suffix after the last underscore
+          const lastUnderscore = sectionName.lastIndexOf('_');
+          if (lastUnderscore > 0) {
+            sectionName = sectionName.substring(0, lastUnderscore);
+          }
+        }
+
+        if (!sectionName) {
+          console.warn('Could not extract section name');
+          return false;
+        }
+
+        sectionName = sectionName.replace(/_/g, '-');
+        const shopName = (window as any).Alfred.getShopName();
+        const themeId = (window as any).Shopify.theme.id;
+
+        // Construct the code editor URL
+        const editorUrl = `https://admin.shopify.com/store/${shopName}/themes/${themeId}?key=sections/${sectionName}.liquid`;
+
+        // Open in new tab
+        window.open(editorUrl, '_blank');
+
+        // Track the action
+        window.dispatchEvent(
+          new CustomEvent('alfred:track', {
+            detail: {
+              action: 'open_section_in_code_editor',
+              metadata: {
+                page_url: window.location.href,
+                page_type: (window as any).__st?.p || 'other',
+                shop_domain: window.location.hostname,
+              },
+            },
+          })
+        );
+
+        return true;
+      } catch (error) {
+        console.error('Error opening section in editor:', error);
+        return false;
+      }
+    },
   };
+
+  // Initialize the context menu listener
+  (window as any).Alfred._initContextMenuListener();
 });
