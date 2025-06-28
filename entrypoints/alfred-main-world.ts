@@ -400,7 +400,7 @@ export default defineUnlistedScript(() => {
           return false;
         }
 
-        // Get shop name and theme ID
+        sectionName = sectionName.replace(/_/g, '-');
         const shopName = (window as any).Alfred.getShopName();
         const themeId = (window as any).Shopify.theme.id;
 
