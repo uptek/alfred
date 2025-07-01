@@ -15,12 +15,14 @@ Skip the clicking marathon with instant shortcuts:
 - **Copy Product JSON** - Extract complete product data for competitor research, development and debugging
 - **Copy Cart JSON** - Get full cart data instantly for testing and troubleshooting
 - **Clear Cart** - Empty the cart with a single click
+- **Open Section in Code Editor** - Jump directly to the code of any theme section
 
-3. Collaborator Permissions Presets (NEW!)
+3. Collaborator Permissions Presets
 Save your precious time when requesting stores access:
 - Save your frequently used permission combinations as reusable presets
 - Apply permissions presets instantly when requesting new collaborator access
 - Manage, edit, and organize your presets in a clean interface
+- Import/export presets to share with your team or backup your settings
 
 Why Alfred?
 
