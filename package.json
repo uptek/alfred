@@ -1,7 +1,7 @@
 {
   "name": "alfred",
   "private": true,
-  "version": "1.2.1",
+  "version": "1.2.2",
   "type": "module",
   "packageManager": "bun@1.2.14",
   "scripts": {

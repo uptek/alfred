@@ -60,8 +60,10 @@ export default function App() {
     };
   }, [presets]);
 
-  const handleApplyPreset = async () => {
-    if (!selectedPreset) {
+  const handleApplyPreset = async (presetToApply?: PermissionPreset) => {
+    const preset = presetToApply || selectedPreset;
+
+    if (!preset) {
       alert('Please select a preset to apply.');
       return;
     }
@@ -74,7 +76,7 @@ export default function App() {
 
     // Then click to check only the ones in the preset with delay between each
     setTimeout(() => {
-      selectedPreset.permissions.forEach((permission, index) => {
+      preset.permissions.forEach((permission, index) => {
         setTimeout(() => {
           const checkbox = document.getElementById(permission.id) as HTMLInputElement;
           if (checkbox && !checkbox.checked) {
@@ -85,10 +87,10 @@ export default function App() {
     }, 100);
 
     // Apply the custom message if it exists
-    if (selectedPreset.customMessage !== undefined) {
+    if (preset.customMessage !== undefined) {
       const messageTextarea = document.querySelector('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea') as HTMLTextAreaElement;
       if (messageTextarea) {
-        messageTextarea.value = selectedPreset.customMessage;
+        messageTextarea.value = preset.customMessage;
         // Trigger input event to ensure React/framework detects the change
         messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         messageTextarea.dispatchEvent(new Event('change', { bubbles: true }));
@@ -96,22 +98,26 @@ export default function App() {
     }
 
     // Update the lastUsed timestamp
-    const updatedPreset = { ...selectedPreset, lastUsed: Date.now() };
+    const updatedPreset = { ...preset, lastUsed: Date.now() };
     await savePreset(updatedPreset);
 
     // Update local state
     setPresets(prevPresets =>
       prevPresets.map(p => p.id === updatedPreset.id ? updatedPreset : p)
     );
-    setSelectedPreset(updatedPreset);
+
+    // Update selected preset if applying from table
+    if (presetToApply) {
+      setSelectedPreset(updatedPreset);
+    }
 
     // Track the apply preset action
     browser.runtime.sendMessage({
       type: 'track_action',
       action: 'apply_preset',
       metadata: {
-        permissions_count: selectedPreset.permissions.length,
-        had_custom_message: !!selectedPreset.customMessage,
+        permissions_count: preset.permissions.length,
+        had_custom_message: !!preset.customMessage,
       },
     });
   };
@@ -274,7 +280,7 @@ export default function App() {
                 ))}
               </s-select>
             </div>
-            <s-button variant="primary" onClick={handleApplyPreset}>
+            <s-button variant="primary" onClick={() => handleApplyPreset()}>
               Apply
             </s-button>
             <s-button variant="secondary" onClick={handleSavePreset}>
@@ -362,7 +368,7 @@ export default function App() {
                           <s-table-cell>{preset.name}</s-table-cell>
                           <s-table-cell>
                             {preset.permissions
-                              .slice(0, 3)
+                              .slice(0, 2)
                               .map((p) => p.label)
                               .join(', ')}
                             {preset.permissions.length > 3 && `, +${preset.permissions.length - 3} more`}
@@ -374,8 +380,9 @@ export default function App() {
                           <s-table-cell>{formatTimeAgo(preset.createdAt)}</s-table-cell>
                           <s-table-cell>
                             <s-stack direction="inline" gap="small-200">
-                              <s-button icon="edit" accessibilityLabel="Edit" onClick={() => handleEditPreset(preset)} />
-                              <s-button icon="delete" accessibilityLabel="Delete" onClick={() => handleDeletePreset(preset.id)} />
+                              <s-button icon="check" accessibilityLabel="Apply preset" variant="primary" onClick={() => handleApplyPreset(preset)} />
+                              <s-button icon="edit" accessibilityLabel="Edit preset" onClick={() => handleEditPreset(preset)} />
+                              <s-button icon="delete" accessibilityLabel="Delete preset" onClick={() => handleDeletePreset(preset.id)} />
                             </s-stack>
                           </s-table-cell>
                         </s-table-row>

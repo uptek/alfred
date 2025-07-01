@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+@ 2025-07-01
+- Add apply button to presets table actions column
+
 ## 1.2.1
 @ 2025-06-27
 - Add shortcut to open sections in code editor
