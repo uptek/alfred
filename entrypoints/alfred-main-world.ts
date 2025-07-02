@@ -356,7 +356,7 @@ export default defineUnlistedScript(() => {
         }
 
         // Find the parent section element
-        let sectionElement = target.closest('.section.shopify-section') as HTMLElement;
+        let sectionElement = target.closest('.shopify-section') as HTMLElement;
 
         if (!sectionElement) {
           console.warn('No Shopify section found');
@@ -372,8 +372,8 @@ export default defineUnlistedScript(() => {
 
         // Extract section name from the ID
         // Handle both formats:
-        // 1. "shopify-section-template--15968257704025__rich_text" -> "rich_text"
-        // 2. "shopify-section-template--18968196514006__image_lelele_zBNR7B" -> "image_lelele"
+        // 1. "shopify-section-template--<id>__rich_text" -> "rich_text"
+        // 2. "shopify-section-template--<id>__image_banner_zBNR7B" -> "image_banner"
         const parts = sectionId.split('__');
         if (parts.length < 2) {
           console.warn('Could not extract section name');

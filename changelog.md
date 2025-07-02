@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3
+@ 2025-07-02
+- Use `.shopify-section` to identify section wrapper for Open Section shortcut
+
 ## 1.2.2
 @ 2025-07-01
 - Add apply button to presets table actions column
