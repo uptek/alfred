@@ -9,7 +9,7 @@
     "dev:firefox": "wxt -b firefox",
     "build": "rm -rf .output && wxt build",
     "build:firefox": "wxt build -b firefox",
-    "zip": "rm -rf .output && wxt zip",
+    "zip": "rm -rf .output && wxt zip && open .output",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare"
