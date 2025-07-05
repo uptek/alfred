@@ -15,7 +15,8 @@ export type AnalyticsAction =
   | 'save_preset'
   | 'apply_preset'
   | 'appstore_partner_table_view'
-  | 'appstore_partner_table_sort';
+  | 'appstore_partner_table_sort'
+  | 'open_section_in_code_editor';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number)> = {
@@ -41,13 +42,11 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number
   clear_cart: 30,
   save_preset: 0,
   apply_preset: (metadata) => {
-    const baseTime = 45;
-    const permissionsTime = (metadata?.permissions_count || 0) * 2;
-    const messageTime = metadata?.had_custom_message ? 30 : 0;
-    return baseTime + permissionsTime + messageTime;
+    return 45 + (metadata?.had_custom_message ? 20 : 0);
   },
-  appstore_partner_table_view: (metadata) => (metadata?.app_count || 0) * 20,
-  appstore_partner_table_sort: (metadata) => (metadata?.app_count || 0) * 5,
+  appstore_partner_table_view: (metadata) => (metadata?.app_count || 0) * 5,
+  appstore_partner_table_sort: (metadata) => (metadata?.app_count || 0) * 2,
+  open_section_in_code_editor: 30,
 };
 
 /**
