@@ -157,7 +157,7 @@ export const registerShortcuts = async () => {
         await browser.scripting.executeScript({
           target: { tabId: tab.id! },
           func: async () => {
-            return await (window as any).Alfred.openSectionInEditor();
+            return await (window as any).Alfred.openSectionInCodeEditor();
           },
           world: 'MAIN',
         });

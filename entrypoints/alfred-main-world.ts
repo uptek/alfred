@@ -339,7 +339,7 @@ export default defineUnlistedScript(() => {
      * Open the current section in the code editor
      * @returns {Promise<boolean>}
      */
-    openSectionInEditor: async (): Promise<boolean> => {
+    openSectionInCodeEditor: async (): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
         if (!(window as any).Alfred.isShopify()) {
@@ -401,6 +401,15 @@ export default defineUnlistedScript(() => {
         }
 
         sectionName = sectionName.replace(/_/g, '-');
+
+        // If section name is "main", concatenate with the current page's ptype
+        if (sectionName === 'main') {
+          const pageType = (window as any).__st?.p;
+          if (pageType) {
+            sectionName = `main-${pageType}`;
+          }
+        }
+
         const shopName = (window as any).Alfred.getShopName();
         const themeId = (window as any).Shopify.theme.id;
 
