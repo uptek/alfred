@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+@ 2025-07-05
+- Open Section shortcut: Add support for main sections by appending page type to the name
+
 ## 1.2.3
 @ 2025-07-02
 - Use `.shopify-section` to identify section wrapper for Open Section shortcut
