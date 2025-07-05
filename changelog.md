@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0
+## 1.2.4
 @ 2025-07-05
 - Open Section shortcut: Add support for main sections by appending page type to the name
 
