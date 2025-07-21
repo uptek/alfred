@@ -1,27 +1,37 @@
 # Project-Specific Instructions for Alfred
 
-## Version Bumping Rules (Strict Semantic Versioning)
+## WXT Framework
 
-When bumping versions, follow strict semantic versioning (MAJOR.MINOR.PATCH):
+This project uses WXT - a modern framework for building browser extensions.
 
-### Version Bump Guidelines:
-- **MAJOR (X.0.0)**: Breaking changes that are not backwards compatible
-- **MINOR (x.X.0)**: New features or functionality that are backwards compatible
-- **PATCH (x.x.X)**: Bug fixes, documentation updates, or refactoring with no new features
+### Documentation
+- Official WXT documentation: https://wxt.dev/guide/installation.html
 
-### Commit Type Mapping:
-- `feat:` → MINOR version bump (x.X.0)
-- `fix:` → PATCH version bump (x.x.X)
-- `docs:` → PATCH version bump (x.x.X)
-- `style:` → PATCH version bump (x.x.X)
-- `refactor:` → PATCH version bump (x.x.X)
-- `perf:` → PATCH version bump (x.x.X)
-- `test:` → PATCH version bump (x.x.X)
-- `chore:` → PATCH version bump (x.x.X)
-- `build:` → PATCH version bump (x.x.X)
-- Breaking changes (marked with `!` or `BREAKING CHANGE:`) → MAJOR version bump (X.0.0)
+### Key Points
+- Content scripts are placed in `/entrypoints/` with `.content.ts` suffix
+- Background scripts use `.background.ts` suffix
+- WXT provides auto-imports for common utilities (defineContentScript, browser, etc.)
+- TypeScript is fully supported with proper types
+- Use Tailwind classes from Shopify's design system when styling elements
+
+## Version Bumping Rules (Calendar Versioning - CalVer)
+
+This project uses Calendar Versioning (CalVer) with the format: YYYY.MM.DD.MICRO
+
+### Version Format:
+- **YYYY**: 4-digit year (e.g., 2025)
+- **MM**: 2-digit month (e.g., 01 for January, 12 for December)
+- **DD**: 2-digit day (e.g., 01, 15, 31)
+- **MICRO**: Sequential number for multiple releases on the same day (starts at 0)
+
+### Examples:
+- First release on January 21, 2025: `2025.01.21.0`
+- Second release on January 21, 2025: `2025.01.21.1`
+- First release on January 22, 2025: `2025.01.22.0`
 
 ### Important:
-- If unsure whether a change is a new feature, enhancement, or bug fix, ASK the user before bumping the version
 - Always update package.json, wxt.config.ts, and changelog.md when bumping versions
-- Use today's date in the changelog entry
+- Use the current date (from environment context) for the version - do NOT hardcode dates
+- The date should come from "Today's date" in the environment context
+- If multiple releases happen on the same day, increment the MICRO version
+- The MICRO version resets to 0 on a new day
