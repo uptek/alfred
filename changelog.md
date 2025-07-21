@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025.07.22.0
+@ 2025-07-22
+- Add indexer for Shopify app search results
+- Switch to CalVer for versioning
+
 ## 1.2.4
 @ 2025-07-05
 - Open Section shortcut: Add support for main sections by appending page type to the name
