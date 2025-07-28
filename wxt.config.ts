@@ -7,7 +7,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred for Shopify',
     description: 'Make Shopify great again!',
-    version: '2025.07.22.0',
+    version: '2025.07.28.0',
     action: {
       default_title: 'Alfred',
     },
@@ -28,6 +28,6 @@ export default defineConfig({
     plugins: [preact()],
   }),
   webExt: {
-    chromiumArgs: ['--user-data-dir=./.wxt/chrome-data', '--disable-infobars', 'https://theme-dawn-demo.myshopify.com/'],
+    chromiumArgs: ['--user-data-dir=./.wxt/chrome-data', '--disable-infobars', 'https://admin.shopify.com/store/junaid-workspace/themes/151634247894/editor'],
   },
 });
