@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025.07.28.0
+@ 2025-07-28
+- Add resizable panels in theme editor for primary sidebar, secondary sidebar, and main preview area
+
 ## 2025.07.22.0
 @ 2025-07-22
 - Add indexer for Shopify app search results
