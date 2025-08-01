@@ -1,17 +1,1 @@
-{
-  "toolChoice": {
-    "allowedTools": {
-      "Bash": {
-        "commands": {
-          "curl": "always",
-          "ls": "always",
-          "supabase": "always",
-          "cd": "always"
-        }
-      },
-      "Edit": "always",
-      "MultiEdit": "always",
-      "Write": "always"
-    }
-  }
-}
+{}
