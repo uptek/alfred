@@ -325,6 +325,17 @@ export const downloadCSV = (apps: App[]) => {
 
   // Clean up
   document.body.removeChild(link);
+
+  // Track CSV export via background script
+  browser.runtime.sendMessage({
+    type: "track_action",
+    action: "appstore_partner_table_export",
+    metadata: {
+      app_count: apps.length,
+      page_url: window.location.href,
+      page_type: "appstore_partners",
+    },
+  });
 };
 
 export const getResourceIcon = (resource: Resource) => {

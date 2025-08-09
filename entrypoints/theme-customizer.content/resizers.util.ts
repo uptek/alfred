@@ -1,5 +1,3 @@
-import { trackAction } from '~/utils/analytics';
-
 interface Dimensions {
   primary: number;
   secondary: number;
@@ -99,9 +97,15 @@ const Resizers = () => {
       },
     };
 
-    // Track resize event immediately when user starts dragging
-    trackAction('resize_theme_customizer', {
-      type: resizer.type || 'unknown',
+    // Track resize event
+    browser.runtime.sendMessage({
+      type: "track_action",
+      action: "resize_theme_customizer",
+      metadata: {
+        type: resizer.type || 'unknown',
+        page_url: window.location.href,
+        page_type: "theme_customizer",
+      },
     });
 
     document.body.style.cursor = window.getComputedStyle(e.target as Element).cursor;

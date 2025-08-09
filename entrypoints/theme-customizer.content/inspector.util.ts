@@ -1,6 +1,5 @@
 import { getItem, setItem } from '~/utils/storage';
 import { waitForElement } from '~/utils/helpers';
-import { trackAction } from '~/utils/analytics';
 import type { AlfredSettings } from '~/entrypoints/options/types';
 
 const INSPECTOR_BUTTON_SELECTOR = 'button[aria-label*="inspector"]';
@@ -24,16 +23,33 @@ export async function setupInspector(): Promise<void> {
   if (inspectorSetting === 'disable') {
     if (isPressed) {
       (inspectorButton as HTMLButtonElement).click();
-      trackAction('disable_theme_inspector');
+
+      // Track disable theme inspector action
+      browser.runtime.sendMessage({
+        type: "track_action",
+        action: "disable_theme_inspector",
+        metadata: {
+          page_url: window.location.href,
+          page_type: "theme_customizer",
+        },
+      });
     }
   } else if (inspectorSetting === 'restore') {
     const lastState = await getItem<boolean>(INSPECTOR_STATE_KEY);
 
     if (lastState !== null && lastState !== isPressed) {
       (inspectorButton as HTMLButtonElement).click();
-      // Only track when restoring to disabled state (lastState === false)
+
+      // Track disable theme inspector action
       if (!lastState) {
-        trackAction('disable_theme_inspector');
+        browser.runtime.sendMessage({
+          type: "track_action",
+          action: "disable_theme_inspector",
+          metadata: {
+            page_url: window.location.href,
+            page_type: "theme_customizer",
+          },
+        });
       }
     }
   }
