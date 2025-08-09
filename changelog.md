@@ -1,7 +1,7 @@
 # Changelog
 
-## 2025.07.28.1
-@ 2025-07-28
+## 2025.08.09
+@ 2025-08-09
 This release introduces a new options page, which will serve as the central hub for all extension settings and preferences. Future releases will populate this page with more configuration options.
 
 - New Options Page: A foundational page for future settings and preferences.
