@@ -7,7 +7,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred for Shopify',
     description: 'Make Shopify great again!',
-    version: '2025.08.09',
+    version: '2025.08.09.1',
     action: {
       default_title: 'Alfred',
     },
@@ -32,7 +32,8 @@ export default defineConfig({
       '--user-data-dir=./.wxt/chrome-data',
       '--disable-infobars',
       '--disable-features=BlockThirdPartyCookies',  // Allows third-party cookies
-      'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html'
+      // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
+      'https://admin.shopify.com/store/junaid-workspace/themes/151634247894/editor',
     ],
   },
 });

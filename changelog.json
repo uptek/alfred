@@ -1,5 +1,23 @@
 [
   {
+    "version": "2025.08.09.1",
+    "date": "2025-08-09",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "This release introduces a new setting to manage the theme inspector in the Shopify theme editor. You can configure Alfred to:"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Disable the theme inspector completely",
+          "Remember and restore its previous state automatically",
+          "Keep the default behavior (Alfred will not interfere with the theme inspector)"
+        ]
+      }
+    ]
+  },
+  {
     "version": "2025.08.09",
     "date": "2025-08-09",
     "changes": [

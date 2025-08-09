@@ -1,5 +1,13 @@
 # Changelog
 
+## 2025.08.09.1
+@ 2025-08-09
+This release introduces a new setting to manage the theme inspector in the Shopify theme editor. You can configure Alfred to:
+
+- Disable the theme inspector completely
+- Remember and restore its previous state automatically
+- Keep the default behavior (Alfred will not interfere with the theme inspector)
+
 ## 2025.08.09
 @ 2025-08-09
 This release introduces a new options page, which will serve as the central hub for all extension settings and preferences. Future releases will populate this page with more configuration options.
