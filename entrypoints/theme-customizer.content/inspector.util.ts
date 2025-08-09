@@ -21,12 +21,36 @@ export async function setupInspector(): Promise<void> {
   const isPressed = inspectorButton.getAttribute('aria-pressed') === 'true';
 
   if (inspectorSetting === 'disable') {
-    isPressed && (inspectorButton as HTMLButtonElement).click();
+    if (isPressed) {
+      (inspectorButton as HTMLButtonElement).click();
+
+      // Track disable theme inspector action
+      browser.runtime.sendMessage({
+        type: "track_action",
+        action: "disable_theme_inspector",
+        metadata: {
+          page_url: window.location.href,
+          page_type: "theme_customizer",
+        },
+      });
+    }
   } else if (inspectorSetting === 'restore') {
     const lastState = await getItem<boolean>(INSPECTOR_STATE_KEY);
 
     if (lastState !== null && lastState !== isPressed) {
       (inspectorButton as HTMLButtonElement).click();
+
+      // Track disable theme inspector action
+      if (!lastState) {
+        browser.runtime.sendMessage({
+          type: "track_action",
+          action: "disable_theme_inspector",
+          metadata: {
+            page_url: window.location.href,
+            page_type: "theme_customizer",
+          },
+        });
+      }
     }
   }
 

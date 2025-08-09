@@ -5,10 +5,10 @@ export default defineBackground(() => {
   registerShortcuts();
 
   // Listen for tracking messages from content scripts
-  browser.runtime.onMessage.addListener(async (message) => {
+  browser.runtime.onMessage.addListener((message) => {
     if (message.type === 'track_action') {
       try {
-        await trackAction(message.action as AnalyticsAction, message.metadata);
+        trackAction(message.action as AnalyticsAction, message.metadata);
       } catch (error) {
         console.error('Failed to track action:', error);
       }

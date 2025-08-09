@@ -16,7 +16,10 @@ export type AnalyticsAction =
   | 'apply_preset'
   | 'appstore_partner_table_view'
   | 'appstore_partner_table_sort'
-  | 'open_section_in_code_editor';
+  | 'appstore_partner_table_export'
+  | 'open_section_in_code_editor'
+  | 'disable_theme_inspector'
+  | 'resize_theme_customizer';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number)> = {
@@ -46,7 +49,10 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number
   },
   appstore_partner_table_view: (metadata) => (metadata?.app_count || 0) * 5,
   appstore_partner_table_sort: (metadata) => (metadata?.app_count || 0) * 2,
+  appstore_partner_table_export: (metadata) => (metadata?.app_count || 0) * 10 + 30,
   open_section_in_code_editor: 30,
+  disable_theme_inspector: 3,
+  resize_theme_customizer: 3,
 };
 
 /**
@@ -81,10 +87,10 @@ export async function trackAction(
     };
 
     // Disable analytics in development
-    if (import.meta.env.DEV) {
-      console.log('[Dev Mode] Event not sent:', eventData);
-      return;
-    }
+    // if (import.meta.env.DEV) {
+    //   console.log('[Dev Mode] Event not sent:', eventData);
+    //   return;
+    // }
 
     // Send to Supabase (fire and forget)
     fetch(TRACK_ENDPOINT, {

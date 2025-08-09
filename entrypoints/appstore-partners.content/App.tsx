@@ -231,14 +231,14 @@ export default function App() {
 
     // Track the sort action via background script
     browser.runtime.sendMessage({
-      type: 'track_action',
-      action: 'appstore_partner_table_sort',
+      type: "track_action",
+      action: "appstore_partner_table_sort",
       metadata: {
         app_count: apps.length,
         sort_by: column,
         sort_direction: direction,
         page_url: window.location.href,
-        page_type: 'appstore_partners',
+        page_type: "appstore_partners",
       },
     });
 
@@ -284,7 +284,12 @@ export default function App() {
   return (
     <div className={styles.container}>
       <div className={styles.exportButtonContainer}>
-        <button className={styles.exportButton} onClick={() => downloadCSV(apps)}>
+        <button
+          className={styles.exportButton}
+          onClick={() => {
+            downloadCSV(apps);
+          }}
+        >
           <img src={exportIcon} alt="Export to CSV" />
           Export to CSV
         </button>
