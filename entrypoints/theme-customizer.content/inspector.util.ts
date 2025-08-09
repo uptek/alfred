@@ -1,5 +1,6 @@
 import { getItem, setItem } from '~/utils/storage';
 import { waitForElement } from '~/utils/helpers';
+import { trackAction } from '~/utils/analytics';
 import type { AlfredSettings } from '~/entrypoints/options/types';
 
 const INSPECTOR_BUTTON_SELECTOR = 'button[aria-label*="inspector"]';
@@ -21,12 +22,19 @@ export async function setupInspector(): Promise<void> {
   const isPressed = inspectorButton.getAttribute('aria-pressed') === 'true';
 
   if (inspectorSetting === 'disable') {
-    isPressed && (inspectorButton as HTMLButtonElement).click();
+    if (isPressed) {
+      (inspectorButton as HTMLButtonElement).click();
+      trackAction('theme_inspector_auto_disabled');
+    }
   } else if (inspectorSetting === 'restore') {
     const lastState = await getItem<boolean>(INSPECTOR_STATE_KEY);
 
     if (lastState !== null && lastState !== isPressed) {
       (inspectorButton as HTMLButtonElement).click();
+      // Only track when restoring to disabled state (lastState === false)
+      if (!lastState) {
+        trackAction('theme_inspector_auto_disabled');
+      }
     }
   }
 
