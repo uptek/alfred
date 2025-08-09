@@ -2,9 +2,13 @@
 
 ## 2025.07.28.1
 @ 2025-07-28
-- Add options page
-- Add changelog page
-- Integrate changelog generator
+This release introduces a new options page, which will serve as the central hub for all extension settings and preferences. Future releases will populate this page with more configuration options.
+
+- New Options Page: A foundational page for future settings and preferences.
+- New Changelog Page: Stay up-to-date with a detailed history of changes and new features.
+
+---
+- [DEV] Integrated a new build process to automatically generate and update the changelog.
 
 ## 2025.07.28
 @ 2025-07-28
@@ -14,7 +18,7 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 - Resizable secondary sidebar
 - Resizable main preview area
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/resize-theme-editor.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/resize-theme-editor.mp4"></video>
 
 ## 2025.07.22
 @ 2025-07-22
