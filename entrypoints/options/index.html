@@ -17,7 +17,7 @@
   <div id="app" class="loading">
     <div class="loading-spinner">
       <div class="spinner"></div>
-      <div class="loading-text">Loading settings...</div>
+      <div class="loading-text">Loading...</div>
     </div>
 
     <div id="content">
@@ -26,6 +26,7 @@
           <s-grid gridTemplateColumns="@container (inline-size <= 900px) 1fr, 18rem 1fr" gap="base">
             <s-box id="nav"></s-box>
             <s-box>
+              <div id="settings" class="section" hidden></div>
               <div id="changelog" class="section" hidden></div>
             </s-box>
           </s-grid>

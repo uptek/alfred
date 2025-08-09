@@ -1,100 +1,21 @@
-<s-grid gap="base">
-  <s-stack direction="inline" alignItems="center" gap="small-200">
-    <s-icon type="store"></s-icon>
-    <s-heading>General</s-heading>
-  </s-stack>
-
-  <s-section heading="Notifications">
-    <s-select label="Notification frequency" name="notification-frequency">
-      <s-option value="immediately" selected>Immediately</s-option>
-      <s-option value="hourly">Hourly digest</s-option>
-      <s-option value="daily">Daily digest</s-option>
-    </s-select>
-    <s-choice-list label="Notification types" name="notifications-type" multiple>
-      <s-choice label="New order notifications" value="new-order" selected></s-choice>
-      <s-choice label="Low stock alerts" value="low-stock"></s-choice>
-      <s-choice label="Customer review notifications" value="customer-review"></s-choice>
-      <s-choice label="Shipping updates" value="shipping-updates"></s-choice>
-    </s-choice-list>
-  </s-section>
-
-  <s-section heading="Preferences">
-    <s-stack gap="none" border="base" borderRadius="base" overflow="hidden">
-      <s-clickable padding="small-100" href="/app/settings/shipping"
-        accessibilityLabel="Configure shipping methods, rates, and fulfillment options">
-        <s-grid gridTemplateColumns="1fr auto" alignItems="center" gap="base">
-          <s-box>
-            <s-heading>Shipping & fulfillment</s-heading>
-            <s-paragraph color="subdued">
-              Shipping methods, rates, zones, and fulfillment preferences.
-            </s-paragraph>
-          </s-box>
-          <s-icon type="chevron-right"></s-icon>
-        </s-grid>
-      </s-clickable>
-      <s-box paddingInline="small-100">
-        <s-divider></s-divider>
-      </s-box>
-
-      <s-clickable padding="small-100" href="/app/settings/products_catalog"
-        accessibilityLabel="Configure product defaults, customer experience, and catalog settings">
-        <s-grid gridTemplateColumns="1fr auto" alignItems="center" gap="base">
-          <s-box>
-            <s-heading>Products & catalog</s-heading>
-            <s-paragraph color="subdued">
-              Product defaults, customer experience, and catalog display options.
-            </s-paragraph>
-          </s-box>
-          <s-icon type="chevron-right"></s-icon>
-        </s-grid>
-      </s-clickable>
-      <s-box paddingInline="small-100">
-        <s-divider></s-divider>
-      </s-box>
-
-      <s-clickable padding="small-100" href="/app/settings/customer_support"
-        accessibilityLabel="Manage customer support settings and help resources">
-        <s-grid gridTemplateColumns="1fr auto" alignItems="center" gap="base">
-          <s-box>
-            <s-heading>Customer support</s-heading>
-            <s-paragraph color="subdued">
-              Support settings, help resources, and customer service tools.
-            </s-paragraph>
-          </s-box>
-          <s-icon type="chevron-right"></s-icon>
-        </s-grid>
-      </s-clickable>
+<form>
+  <s-grid gap="base">
+    <s-stack direction="inline" alignItems="center" gap="small-200">
+      <s-icon type="store"></s-icon>
+      <s-heading>General</s-heading>
     </s-stack>
-  </s-section>
 
-  <s-section heading="Tools">
-    <s-stack gap="none" border="base" borderRadius="base" overflow="hidden">
-      <s-box padding="small-100">
-        <s-grid gridTemplateColumns="1fr auto" alignItems="center" gap="base">
-          <s-box>
-            <s-heading>Reset app settings</s-heading>
-            <s-paragraph color="subdued">
-              Reset all settings to their default values. This action cannot be undone.
-            </s-paragraph>
-          </s-box>
-          <s-button tone="critical">Reset</s-button>
-        </s-grid>
-      </s-box>
-      <s-box paddingInline="small-100">
-        <s-divider></s-divider>
-      </s-box>
-
-      <s-box padding="small-100">
-        <s-grid gridTemplateColumns="1fr auto" alignItems="center" gap="base">
-          <s-box>
-            <s-heading>Export settings</s-heading>
-            <s-paragraph color="subdued">
-              Download a backup of all your current settings.
-            </s-paragraph>
-          </s-box>
-          <s-button>Export</s-button>
-        </s-grid>
-      </s-box>
-    </s-stack>
-  </s-section>
-</s-grid>
+    <s-section heading="Theme inspector">
+      <s-paragraph>Customize how Alfred manages the inspector in theme customizer. Choose to disable it automatically, remember and restore your last state, or let it be.</s-paragraph>
+      <s-choice-list
+        label="Theme inspector"
+        labelAccessibilityVisibility="exclusive"
+        name="theme-inspector"
+      >
+        <s-choice label="Default behavior" value="default" selected details="Alfred will not interfere with the theme inspector."></s-choice>
+        <s-choice label="Disable inspector" value="disable" details="Always disable the theme inspector on page load."></s-choice>
+        <s-choice label="Restore previous state" value="restore" details="Remember and restore your last inspector state."></s-choice>
+      </s-choice-list>
+    </s-section>
+  </s-grid>
+</form>
