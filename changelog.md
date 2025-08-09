@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025.07.28.1
+@ 2025-07-28
+- Add options page
+- Add changelog page
+- Integrate changelog generator
+
 ## 2025.07.28
 @ 2025-07-28
 Add resizable panels in the theme editor for the primary sidebar, secondary sidebar, and main preview area. This allows for a more flexible and customizable workspace.
