@@ -7,6 +7,7 @@ export default defineContentScript({
     });
 
     // Listen for tracking events from the main world
+    // @ts-expect-error - CustomEvent is not typed
     window.addEventListener('alfred:track', async (event: CustomEvent) => {
       try {
         const { action, metadata } = event.detail;

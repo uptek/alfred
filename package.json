@@ -17,14 +17,14 @@
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.10.1",
-    "@shopify/app-bridge-ui-types": "^0.1.1",
+    "@preact/preset-vite": "^2.10.2",
+    "@shopify/app-bridge-ui-types": "^0.2.1",
     "@wxt-dev/auto-icons": "^1.0.2",
     "chokidar-cli": "^3.0.0",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.2",
     "wxt": "^0.20.7"
   },
   "dependencies": {
-    "preact": "^10.26.8"
+    "preact": "^10.27.0"
   }
 }
