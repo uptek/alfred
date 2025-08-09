@@ -1,13 +1,33 @@
 # Changelog
 
-## 2025.07.28.0
-@ 2025-07-28
-- Add resizable panels in theme editor for primary sidebar, secondary sidebar, and main preview area
+## 2025.08.09
+@ 2025-08-09
+This release introduces a new options page, which will serve as the central hub for all extension settings and preferences. Future releases will populate this page with more configuration options.
 
-## 2025.07.22.0
+- New Options Page: A foundational page for future settings and preferences.
+- New Changelog Page: Stay up-to-date with a detailed history of changes and new features.
+
+---
+- [DEV] Integrated a new build process to automatically generate and update the changelog.
+
+## 2025.07.28
+@ 2025-07-28
+Add resizable panels in the theme editor for the primary sidebar, secondary sidebar, and main preview area. This allows for a more flexible and customizable workspace.
+
+- Resizable primary sidebar
+- Resizable secondary sidebar
+- Resizable main preview area
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/resize-theme-editor.mp4"></video>
+
+## 2025.07.22
 @ 2025-07-22
 - Add indexer for Shopify app search results
-- Switch to CalVer for versioning
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-appstore-indexing.mp4"></video>
+
+---
+- [DEV] Switch to CalVer for versioning
 
 ## 1.2.4
 @ 2025-07-05
@@ -25,21 +45,31 @@
 @ 2025-06-27
 - Add shortcut to open sections in code editor
 
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-open-section-in-code-editor.mp4"></video>
+
 ## 1.2.0
 @ 2025-06-23
 - Add import/export for permissions presets
 - Add bulk delete for permissions presets
-- Fix analytics disabling in development
+
+---
+- [DEV] Fix analytics disabling in development
 
 ## 1.1.0
 @ 2025-06-21
-- Add analytics tracking system for user actions and time savings
 - Add custom message support in permission presets
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-permissions-presets-custom-message.mp4"></video>
+
+---
+- [DEV] Add analytics tracking system for user actions and time savings
 
 ## 1.0.8
 @ 2025-06-19
 - Rename extension to Alfred
 - Add collaborator permission presets
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/collaborator-access-presets.mp4"></video>
 
 ## 1.0.7
 @ 2025-06-15
@@ -48,7 +78,11 @@
 ## 1.0.6
 @ 2025-06-12
 - New Shortcut: Copy Theme Preview URL
-- Fix: Run main.content at document_start to avoid race condition
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-copy-theme-preview-url.mp4"></video>
+
+---
+- [DEV] Fix: Run main.content at document_start to avoid race condition
 
 ## 1.0.5
 @ 2025-06-09
@@ -62,9 +96,9 @@
 
 ## 1.0.3
 @ 2025-05-25
-- Register context menu items on service worker startup
-- Refactor storefront data extraction in context menu
-- Upgrade packages
+- [DEV] Register context menu items on service worker startup
+- [DEV] Refactor storefront data extraction in context menu
+- [DEV] Upgrade packages
 
 ## 1.0.2
 @ 2025-05-17
@@ -73,5 +107,5 @@
 
 ## 1.0.1
 @ 2025-05-09
-- Add @wxt-dev/auto-icons
-- Add Chrome extension icon
+- [DEV] Add @wxt-dev/auto-icons
+- [DEV] Add Chrome extension icon

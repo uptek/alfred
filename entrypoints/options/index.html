@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alfred for Shopify - Settings</title>
+
+  <!-- Customize the manifest options -->
+  <meta name="manifest.open_in_tab" content="true" />
+
+  <script src="/libs/shopify-polaris-web-components.js"></script>
+  <link rel="stylesheet" href="./options.main.css" />
+</head>
+
+<body>
+  <div id="app" class="loading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading settings...</div>
+    </div>
+
+    <div id="content">
+      <s-page>
+        <s-box paddingBlock="large-500">
+          <s-grid gridTemplateColumns="@container (inline-size <= 900px) 1fr, 18rem 1fr" gap="base">
+            <s-box id="nav"></s-box>
+            <s-box>
+              <div id="changelog" class="section" hidden></div>
+            </s-box>
+          </s-grid>
+        </s-box>
+      </s-page>
+    </div>
+  </div>
+
+  <script type="module" src="./options.main.ts"></script>
+</body>
+
+</html>
