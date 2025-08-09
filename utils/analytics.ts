@@ -17,7 +17,8 @@ export type AnalyticsAction =
   | 'appstore_partner_table_view'
   | 'appstore_partner_table_sort'
   | 'open_section_in_code_editor'
-  | 'theme_inspector_disabled';
+  | 'disable_theme_inspector'
+  | 'resize_theme_customizer';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number)> = {
@@ -48,7 +49,8 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number
   appstore_partner_table_view: (metadata) => (metadata?.app_count || 0) * 5,
   appstore_partner_table_sort: (metadata) => (metadata?.app_count || 0) * 2,
   open_section_in_code_editor: 30,
-  theme_inspector_disabled: 3,
+  disable_theme_inspector: 3,
+  resize_theme_customizer: 3,
 };
 
 /**

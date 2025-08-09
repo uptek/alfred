@@ -24,7 +24,7 @@ export async function setupInspector(): Promise<void> {
   if (inspectorSetting === 'disable') {
     if (isPressed) {
       (inspectorButton as HTMLButtonElement).click();
-      trackAction('theme_inspector_disabled');
+      trackAction('disable_theme_inspector');
     }
   } else if (inspectorSetting === 'restore') {
     const lastState = await getItem<boolean>(INSPECTOR_STATE_KEY);
@@ -33,7 +33,7 @@ export async function setupInspector(): Promise<void> {
       (inspectorButton as HTMLButtonElement).click();
       // Only track when restoring to disabled state (lastState === false)
       if (!lastState) {
-        trackAction('theme_inspector_disabled');
+        trackAction('disable_theme_inspector');
       }
     }
   }
