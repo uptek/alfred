@@ -5,19 +5,22 @@
   "type": "module",
   "packageManager": "bun@1.2.14",
   "scripts": {
-    "dev": "wxt",
+    "dev": "bun run changelog:gen && (bun run watch:changelog & wxt)",
     "dev:firefox": "wxt -b firefox",
-    "build": "rm -rf .output && wxt build",
+    "build": "rm -rf .output && bun run changelog:gen && wxt build",
     "build:firefox": "wxt build -b firefox",
     "zip": "rm -rf .output && wxt zip && open .output",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
+    "changelog:gen": "bun scripts/generate-changelog.ts",
+    "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
     "@shopify/app-bridge-ui-types": "^0.1.1",
     "@wxt-dev/auto-icons": "^1.0.2",
+    "chokidar-cli": "^3.0.0",
     "typescript": "^5.8.3",
     "wxt": "^0.20.7"
   },

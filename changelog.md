@@ -1,10 +1,16 @@
 # Changelog
 
-## 2025.07.28.0
+## 2025.07.28
 @ 2025-07-28
-- Add resizable panels in theme editor for primary sidebar, secondary sidebar, and main preview area
+Add resizable panels in the theme editor for the primary sidebar, secondary sidebar, and main preview area. This allows for a more flexible and customizable workspace.
 
-## 2025.07.22.0
+- Resizable primary sidebar
+- Resizable secondary sidebar
+- Resizable main preview area
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/resize-theme-editor.mp4"></video>
+
+## 2025.07.22
 @ 2025-07-22
 - Add indexer for Shopify app search results
 - Switch to CalVer for versioning

@@ -28,6 +28,11 @@ export default defineConfig({
     plugins: [preact()],
   }),
   webExt: {
-    chromiumArgs: ['--user-data-dir=./.wxt/chrome-data', '--disable-infobars', 'https://admin.shopify.com/store/junaid-workspace/themes/151634247894/editor'],
+    chromiumArgs: [
+      '--user-data-dir=./.wxt/chrome-data',
+      '--disable-infobars',
+      '--disable-features=BlockThirdPartyCookies',  // Allows third-party cookies
+      'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html'
+    ],
   },
 });

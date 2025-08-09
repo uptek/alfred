@@ -1,0 +1,178 @@
+[
+  {
+    "version": "2025.07.28",
+    "date": "2025-07-28",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Add resizable panels in the theme editor for the primary sidebar, secondary sidebar, and main preview area. This allows for a more flexible and customizable workspace."
+      },
+      {
+        "type": "list",
+        "content": ["Resizable primary sidebar", "Resizable secondary sidebar", "Resizable main preview area"]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/resize-theme-editor.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2025.07.22",
+    "date": "2025-07-22",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add indexer for Shopify app search results", "Switch to CalVer for versioning"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.4",
+    "date": "2025-07-05",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Open Section shortcut: Add support for main sections by appending page type to the name"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.3",
+    "date": "2025-07-02",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Use `.shopify-section` to identify section wrapper for Open Section shortcut"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.2",
+    "date": "2025-07-01",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add apply button to presets table actions column"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.1",
+    "date": "2025-06-27",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add shortcut to open sections in code editor"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "date": "2025-06-23",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add import/export for permissions presets", "Add bulk delete for permissions presets", "Fix analytics disabling in development"]
+      }
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "2025-06-21",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add analytics tracking system for user actions and time savings", "Add custom message support in permission presets"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.8",
+    "date": "2025-06-19",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Rename extension to Alfred", "Add collaborator permission presets"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.7",
+    "date": "2025-06-15",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["New Shortcut: Clear Cart"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.6",
+    "date": "2025-06-12",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["New Shortcut: Copy Theme Preview URL", "Fix: Run main.content at document_start to avoid race condition"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.5",
+    "date": "2025-06-09",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Add context menu to copy cart JSON",
+          "Add fallback for copying to clipboard",
+          "Improve Shopify detection by checking for `window.__st`"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.4",
+    "date": "2025-06-01",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add context menu to copy product JSON"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.3",
+    "date": "2025-05-25",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Register context menu items on service worker startup",
+          "Refactor storefront data extraction in context menu",
+          "Upgrade packages"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.2",
+    "date": "2025-05-17",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add context menu to open current page in admin", "Add context menu to open current page in customizer"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.1",
+    "date": "2025-05-09",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add @wxt-dev/auto-icons", "Add Chrome extension icon"]
+      }
+    ]
+  }
+]
