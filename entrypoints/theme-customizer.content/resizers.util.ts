@@ -11,6 +11,7 @@ interface Resizer {
   element: HTMLDivElement;
   resize: (dx: number, dy: number, dimensions: Dimensions) => void;
   isMainResizer: boolean;
+  type?: 'primary' | 'secondary' | 'main-horizontal' | 'main-vertical';
 }
 
 const MIN_SIDEBAR_WIDTH = 100;
@@ -68,9 +69,11 @@ const Resizers = () => {
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
     }
+
     if (main && activeResizer?.isMainResizer) {
       main.style.pointerEvents = '';
     }
+
     activeResizer = null;
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
@@ -94,6 +97,17 @@ const Resizers = () => {
       },
     };
 
+    // Track resize event
+    browser.runtime.sendMessage({
+      type: "track_action",
+      action: "resize_theme_customizer",
+      metadata: {
+        type: resizer.type || 'unknown',
+        page_url: window.location.href,
+        page_type: "theme_customizer",
+      },
+    });
+
     document.body.style.cursor = window.getComputedStyle(e.target as Element).cursor;
     document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', onMouseMove);
@@ -104,7 +118,8 @@ const Resizers = () => {
     element: Element,
     styles: Partial<CSSStyleDeclaration>,
     resizeFn: (dx: number, dy: number, dims: Dimensions) => void,
-    isMain = false
+    isMain = false,
+    type?: 'primary' | 'secondary' | 'main-horizontal' | 'main-vertical'
   ): Resizer => {
     const resizerEl = document.createElement('div');
     Object.assign(resizerEl.style, {
@@ -118,6 +133,7 @@ const Resizers = () => {
       element: resizerEl,
       resize: resizeFn,
       isMainResizer: isMain,
+      type,
     };
     resizerEl.addEventListener('mousedown', (e) => onMouseDown(e, resizer));
     return resizer;
@@ -152,7 +168,7 @@ const Resizers = () => {
       styles.left = '2px';
     }
 
-    createResizer(sidebar, styles, resizeFn);
+    createResizer(sidebar, styles, resizeFn, false, isPrimary ? 'primary' : 'secondary');
   };
 
   // Primary Sidebar Resizer
@@ -181,7 +197,8 @@ const Resizers = () => {
         if (newWidth < MIN_MAIN_WIDTH) return;
         main.style.maxWidth = `${newWidth}px`;
       },
-      true
+      true,
+      'main-horizontal'
     );
 
     // Main Vertical Resizer
@@ -201,7 +218,8 @@ const Resizers = () => {
         if (newHeight < MIN_MAIN_HEIGHT) return;
         main.style.maxHeight = `${newHeight}px`;
       },
-      true
+      true,
+      'main-vertical'
     );
   }
 
