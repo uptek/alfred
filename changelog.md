@@ -23,7 +23,11 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 ## 2025.07.22
 @ 2025-07-22
 - Add indexer for Shopify app search results
-- Switch to CalVer for versioning
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-appstore-indexing.mp4"></video>
+
+---
+- [DEV] Switch to CalVer for versioning
 
 ## 1.2.4
 @ 2025-07-05
@@ -41,21 +45,31 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 @ 2025-06-27
 - Add shortcut to open sections in code editor
 
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-open-section-in-code-editor.mp4"></video>
+
 ## 1.2.0
 @ 2025-06-23
 - Add import/export for permissions presets
 - Add bulk delete for permissions presets
-- Fix analytics disabling in development
+
+---
+- [DEV] Fix analytics disabling in development
 
 ## 1.1.0
 @ 2025-06-21
-- Add analytics tracking system for user actions and time savings
 - Add custom message support in permission presets
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-permissions-presets-custom-message.mp4"></video>
+
+---
+- [DEV] Add analytics tracking system for user actions and time savings
 
 ## 1.0.8
 @ 2025-06-19
 - Rename extension to Alfred
 - Add collaborator permission presets
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/collaborator-access-presets.mp4"></video>
 
 ## 1.0.7
 @ 2025-06-15
@@ -64,7 +78,11 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 ## 1.0.6
 @ 2025-06-12
 - New Shortcut: Copy Theme Preview URL
-- Fix: Run main.content at document_start to avoid race condition
+
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-copy-theme-preview-url.mp4"></video>
+
+---
+- [DEV] Fix: Run main.content at document_start to avoid race condition
 
 ## 1.0.5
 @ 2025-06-09
@@ -78,9 +96,9 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 
 ## 1.0.3
 @ 2025-05-25
-- Register context menu items on service worker startup
-- Refactor storefront data extraction in context menu
-- Upgrade packages
+- [DEV] Register context menu items on service worker startup
+- [DEV] Refactor storefront data extraction in context menu
+- [DEV] Upgrade packages
 
 ## 1.0.2
 @ 2025-05-17
@@ -89,5 +107,5 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 
 ## 1.0.1
 @ 2025-05-09
-- Add @wxt-dev/auto-icons
-- Add Chrome extension icon
+- [DEV] Add @wxt-dev/auto-icons
+- [DEV] Add Chrome extension icon
