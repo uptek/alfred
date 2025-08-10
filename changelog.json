@@ -14,6 +14,10 @@
           "Remember and restore its previous state automatically",
           "Keep the default behavior (Alfred will not interfere with the theme inspector)"
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/theme-inspector.mp4"
       }
     ]
   },
