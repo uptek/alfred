@@ -4,10 +4,10 @@
  * Handles initialization and loading states
  */
 
-// Import HTML templates from the sections directory
-import navHTML from './sections/nav.html?raw';
-import settingsHTML from './sections/settings.html?raw';
-import changelogHTML from './sections/changelog.html?raw';
+// Import HTML templates from the components directory
+import navHTML from './components/nav.html?raw';
+import settingsHTML from './components/settings.html?raw';
+import changelogHTML from './components/changelog.html?raw';
 
 import { getItem, setItem } from '~/utils/storage';
 import { setChoiceListValue, onChoiceListChange } from '~/utils/polaris.polyfill';
@@ -18,7 +18,7 @@ const defaultSettings: AlfredSettings = {
     inspector: 'default',
   },
 };
-const defaultSection = 'settings';
+const defaultPage = 'settings';
 
 // Wait for DOM to be fully loaded before initializing
 document.addEventListener('DOMContentLoaded', (): void => {
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', (): void => {
  * Waits for Polaris components and removes loading state
  */
 async function init(): Promise<void> {
-  const sections = {
+  const components = {
     nav: navHTML,
     settings: settingsHTML,
     changelog: changelogHTML,
@@ -40,8 +40,8 @@ async function init(): Promise<void> {
     // Wait for Polaris web components to be ready
     await customElements.whenDefined('s-page');
 
-    // Render sections
-    Object.entries(sections).forEach(([id, content]) => {
+    // Render components
+    Object.entries(components).forEach(([id, content]) => {
       const container = document.getElementById(id);
       if (container) {
         container.innerHTML = content;
@@ -66,40 +66,40 @@ async function init(): Promise<void> {
 
 /**
  * Sets up navigation functionality for the options page.
- * Handles clicks on navigation links to show/hide content sections.
+ * Handles clicks on navigation links to show/hide pages.
  */
 function setupNavigation(): void {
   const navLinks = document.querySelectorAll<HTMLAnchorElement>('#nav a');
-  const sections = document.querySelectorAll<HTMLElement>('.section');
+  const pages = document.querySelectorAll<HTMLElement>('.page');
 
   function showContent(targetId: string): void {
-    sections.forEach(section => {
-      section.hidden = section.id !== targetId;
+    pages.forEach(page => {
+      page.hidden = page.id !== targetId;
     });
     navLinks.forEach(link => {
-      link.classList.toggle('active', link.dataset.section === targetId);
+      link.classList.toggle('active', link.dataset.page === targetId);
     });
   }
 
   navLinks.forEach(link => {
     link.addEventListener('click', (event: MouseEvent) => {
       event.preventDefault();
-      const targetId = link.dataset.section;
+      const targetId = link.dataset.page;
       if (targetId) {
-        history.pushState({ section: targetId }, '', `?section=${targetId}`);
+        history.pushState({ page: targetId }, '', `?page=${targetId}`);
         showContent(targetId);
       }
     });
   });
 
   window.addEventListener('popstate', (event: PopStateEvent) => {
-    const section = event.state?.section || defaultSection;
-    showContent(section);
+    const page = event.state?.page || defaultPage;
+    showContent(page);
   });
 
-  // Show initial content based on URL or fallback to default section
-  const initialSection = new URLSearchParams(window.location.search).get('section') || defaultSection;
-  showContent(initialSection);
+  // Show initial content based on URL or fallback to default page
+  const initialPage = new URLSearchParams(window.location.search).get('page') || defaultPage;
+  showContent(initialPage);
 }
 
 /**

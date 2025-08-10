@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025.08.10
+@ 2025-08-10
+- Fix changelog page on extension update
+
 ## 2025.08.09.1
 @ 2025-08-09
 This release introduces a new setting to manage the theme inspector in the Shopify theme editor. You can configure Alfred to:
@@ -8,7 +12,7 @@ This release introduces a new setting to manage the theme inspector in the Shopi
 - Remember and restore its previous state automatically
 - Keep the default behavior (Alfred will not interfere with the theme inspector)
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/theme-inspector.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/theme-inspector.mp4"></video>
 
 ## 2025.08.09
 @ 2025-08-09

@@ -28,7 +28,7 @@ const generateChangelog = async () => {
     const changelogMdPath = path.resolve(process.cwd(), 'changelog.md');
     const changelogHtmlPath = path.resolve(
       process.cwd(),
-      'entrypoints/options/sections/changelog.html'
+      'entrypoints/options/components/changelog.html'
     );
 
     const changelogData: ChangelogEntry[] = JSON.parse(
