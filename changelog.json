@@ -1,5 +1,17 @@
 [
   {
+    "version": "2025.08.10",
+    "date": "2025-08-10",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Fix changelog page on extension update"
+        ]
+      }
+    ]
+  },
+  {
     "version": "2025.08.09.1",
     "date": "2025-08-09",
     "changes": [

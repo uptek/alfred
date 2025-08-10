@@ -16,25 +16,27 @@ This project uses WXT - a modern framework for building browser extensions.
 
 ## Version Bumping Rules (Calendar Versioning - CalVer)
 
-This project uses Calendar Versioning (CalVer) with the format: YYYY.MM.DD.MICRO
+This project uses Calendar Versioning (CalVer) with the format: YYYY.MM.DD or YYYY.MM.DD.MICRO
 
 ### Version Format:
 - **YYYY**: 4-digit year (e.g., 2025)
 - **MM**: 2-digit month (e.g., 01 for January, 12 for December)
 - **DD**: 2-digit day (e.g., 01, 15, 31)
-- **MICRO**: Sequential number for multiple releases on the same day (starts at 0)
+- **MICRO**: Sequential number for multiple releases on the same day (starts at 1 for the second release)
 
 ### Examples:
-- First release on January 21, 2025: `2025.01.21.0`
+- First release on January 21, 2025: `2025.01.21`
 - Second release on January 21, 2025: `2025.01.21.1`
-- First release on January 22, 2025: `2025.01.22.0`
+- Third release on January 21, 2025: `2025.01.21.2`
+- First release on January 22, 2025: `2025.01.22`
 
 ### Important:
 - Always update package.json, wxt.config.ts, and changelog.json when bumping versions
 - Use the current date (from environment context) for the version - do NOT hardcode dates
 - The date should come from "Today's date" in the environment context
-- If multiple releases happen on the same day, increment the MICRO version
-- The MICRO version resets to 0 on a new day
+- First release of the day uses YYYY.MM.DD format (no MICRO version)
+- Additional releases on the same day add .MICRO starting at 1
+- The MICRO version is omitted on the first release of a new day
 
 ## Changelog Updates
 
@@ -46,7 +48,7 @@ Changelog entries are managed through `changelog.json`. This file is the single 
 2.  **Add a new JSON object:** Add a new object to the beginning of the JSON array. The object should have the following structure:
     ```json
     {
-      "version": "YYYY.MM.DD.MICRO",
+      "version": "YYYY.MM.DD",
       "date": "YYYY-MM-DD",
       "changes": [
         //... changes go here
