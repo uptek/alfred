@@ -14,33 +14,45 @@ This project uses WXT - a modern framework for building browser extensions.
 - TypeScript is fully supported with proper types
 - Use Tailwind classes from Shopify's design system when styling elements
 
-## Version Bumping Rules (Calendar Versioning - CalVer)
+## Version Bumping Rules (Semantic Versioning - SemVer)
 
-This project uses Calendar Versioning (CalVer) with the format: YYYY.MM.DD or YYYY.MM.DD.MICRO
+This project uses Semantic Versioning (SemVer) with the format: MAJOR.MINOR.PATCH
 
 ### Version Format:
-- **YYYY**: 4-digit year (e.g., 2025)
-- **MM**: 2-digit month (e.g., 01 for January, 12 for December)
-- **DD**: 2-digit day (e.g., 01, 15, 31)
-- **MICRO**: Sequential number for multiple releases on the same day (starts at 1 for the second release)
+- **MAJOR**: Incompatible API changes or significant breaking changes
+- **MINOR**: New functionality in a backward-compatible manner
+- **PATCH**: Backward-compatible bug fixes and minor improvements
 
 ### Examples:
-- First release on January 21, 2025: `2025.01.21`
-- Second release on January 21, 2025: `2025.01.21.1`
-- Third release on January 21, 2025: `2025.01.21.2`
-- First release on January 22, 2025: `2025.01.22`
+- Major release with breaking changes: `2.0.0`
+- New feature added: `1.3.0`
+- Bug fix or small improvement: `1.3.1`
+- Pre-release version: `1.3.2-beta.1`
+
+### When to increment:
+- **MAJOR (X.0.0)**:
+  - Breaking changes to existing features
+  - Removal of deprecated features
+  - Major architectural changes
+- **MINOR (0.X.0)**:
+  - New features or functionality
+  - New settings or options
+  - Deprecation of existing features (but not removal)
+- **PATCH (0.0.X)**:
+  - Bug fixes
+  - Performance improvements
+  - Documentation updates
+  - Minor UI tweaks
 
 ### Important:
 - Always update package.json, wxt.config.ts, and changelog.json when bumping versions
-- Use the current date (from environment context) for the version - do NOT hardcode dates
-- The date should come from "Today's date" in the environment context
-- First release of the day uses YYYY.MM.DD format (no MICRO version)
-- Additional releases on the same day add .MICRO starting at 1
-- The MICRO version is omitted on the first release of a new day
+- Start from the current version and increment appropriately based on changes
+- When in doubt, prefer incrementing MINOR over PATCH for user-visible changes
+- Reset lower version numbers when incrementing higher ones (e.g., 1.2.3 → 2.0.0, not 2.2.3)
 
 ## Changelog Updates
 
-Changelog entries are managed through `changelog.json`. This file is the single source of truth for generating `changelog.md` and `entrypoints/options/sections/changelog.html`.
+Changelog entries are managed through `changelog.json`. This file is the single source of truth for generating `changelog.md` and the changelog displayed in the options page.
 
 ### How to Add a New Entry:
 
@@ -48,7 +60,7 @@ Changelog entries are managed through `changelog.json`. This file is the single 
 2.  **Add a new JSON object:** Add a new object to the beginning of the JSON array. The object should have the following structure:
     ```json
     {
-      "version": "YYYY.MM.DD",
+      "version": "X.Y.Z",
       "date": "YYYY-MM-DD",
       "changes": [
         //... changes go here

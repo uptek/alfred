@@ -26,10 +26,6 @@ const generateChangelog = async () => {
   try {
     const changelogJsonPath = path.resolve(process.cwd(), 'changelog.json');
     const changelogMdPath = path.resolve(process.cwd(), 'changelog.md');
-    const changelogHtmlPath = path.resolve(
-      process.cwd(),
-      'entrypoints/options/components/changelog.html'
-    );
 
     const changelogData: ChangelogEntry[] = JSON.parse(
       await fs.readFile(changelogJsonPath, 'utf-8')
@@ -78,78 +74,7 @@ const generateChangelog = async () => {
     });
     await fs.writeFile(changelogMdPath, mdContent.trim());
 
-    // Generate changelog.html
-    let htmlContent = '<s-stack gap="base">\n';
-    htmlContent +=
-      '  <s-stack direction="inline" alignItems="center" gap="small-200">\n';
-    htmlContent += '    <s-icon type="clock"></s-icon>\n';
-    htmlContent += '    <s-heading>Changelog</s-heading>\n';
-    htmlContent += '  </s-stack>\n';
-    htmlContent += '  <s-grid gap="base">\n';
-    changelogData.forEach((entry, index) => {
-      htmlContent += '    <s-section>\n';
-      htmlContent += '      <s-stack gap="small-200">\n';
-      htmlContent += '        <s-stack gap="none">\n';
-      htmlContent +=
-        '          <s-stack direction="inline" alignItems="center" gap="small-200">\n';
-      htmlContent += `            <s-heading color="strong">${formatDate(
-        entry.date
-      )}</s-heading>\n`;
-      if (index === 0) {
-        htmlContent += '            <s-badge tone="success">New</s-badge>\n';
-      }
-      htmlContent += '          </s-stack>\n';
-      htmlContent += `          <s-text tone="subdued">v${entry.version}</s-text>\n`;
-      htmlContent += '        </s-stack>\n';
-      entry.changes.forEach((change) => {
-        if (typeof change === 'string') {
-          htmlContent += `        <s-paragraph>${change}</s-paragraph>\n`;
-        } else {
-          switch (change.type) {
-            case 'paragraph':
-              htmlContent += `        <s-paragraph>${change.content}</s-paragraph>\n`;
-              break;
-            case 'heading':
-              htmlContent += `        <s-heading>${change.content}</s-heading>\n`;
-              break;
-            case 'list':
-              htmlContent += '        <s-unordered-list>\n';
-              if (Array.isArray(change.content)) {
-                change.content.forEach((item) => {
-                  htmlContent += `          <s-list-item>${item}</s-list-item>\n`;
-                });
-              }
-              htmlContent += '        </s-unordered-list>\n';
-              break;
-            case 'image':
-              htmlContent += `        <s-box>\n          <s-image src="${change.content}" alt="${change.alt}" borderRadius="base" inlineSize="auto"></s-image>\n        </s-box>\n`;
-              break;
-            case 'video':
-              let videoTag = '<video controls muted playsinline ';
-              if (index === 0) {
-                videoTag += 'autoplay loop ';
-              }
-              videoTag += `src="${change.content}" style="width: 100%; height: auto; border-radius: 8px;"></video>`;
-              htmlContent += `        <s-box>\n          ${videoTag}\n        </s-box>\n`;
-              break;
-            case 'divider':
-              htmlContent += '        <s-divider color="strong"></s-divider>\n';
-              break;
-          }
-        }
-      });
-      htmlContent += '      </s-stack>\n';
-      htmlContent += '    </s-section>\n';
-      if (index === changelogData.length - 1) {
-        htmlContent += '    <s-divider color="strong"></s-divider>\n';
-      }
-    });
-    htmlContent += '  </s-grid>\n';
-    htmlContent += '</s-stack>\n';
-
-    await fs.writeFile(changelogHtmlPath, htmlContent);
-
-    console.log('Changelog files generated successfully.');
+    console.log('Changelog markdown generated successfully.');
   } catch (error) {
     console.error('Error generating changelog files:', error);
   }

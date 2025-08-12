@@ -1,10 +1,15 @@
 # Changelog
 
-## 2025.08.10
+## 1.3.0
+@ 2025-08-12
+- [BTS] Options page migrated to Preact for improved performance and maintainability
+- [BTS] Switched to Semantic Versioning (SemVer) for versioning
+
+## 1.2.9
 @ 2025-08-10
 - Fix changelog page on extension update
 
-## 2025.08.09.1
+## 1.2.8
 @ 2025-08-09
 This release introduces a new setting to manage the theme inspector in the Shopify theme editor. You can configure Alfred to:
 
@@ -14,7 +19,7 @@ This release introduces a new setting to manage the theme inspector in the Shopi
 
 <video controls muted playsinline src="https://bucket.alfred.uptek.com/theme-inspector.mp4"></video>
 
-## 2025.08.09
+## 1.2.7
 @ 2025-08-09
 This release introduces a new options page, which will serve as the central hub for all extension settings and preferences. Future releases will populate this page with more configuration options.
 
@@ -22,9 +27,9 @@ This release introduces a new options page, which will serve as the central hub 
 - New Changelog Page: Stay up-to-date with a detailed history of changes and new features.
 
 ---
-- [DEV] Integrated a new build process to automatically generate and update the changelog.
+- [BTS] Integrated a new build process to automatically generate and update the changelog.
 
-## 2025.07.28
+## 1.2.6
 @ 2025-07-28
 Add resizable panels in the theme editor for the primary sidebar, secondary sidebar, and main preview area. This allows for a more flexible and customizable workspace.
 
@@ -34,14 +39,14 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 
 <video controls muted playsinline src="https://bucket.alfred.uptek.com/resize-theme-editor.mp4"></video>
 
-## 2025.07.22
+## 1.2.5
 @ 2025-07-22
 - Add indexer for Shopify app search results
 
 <video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-appstore-indexing.mp4"></video>
 
 ---
-- [DEV] Switch to CalVer for versioning
+- [BTS] Switch to CalVer for versioning
 
 ## 1.2.4
 @ 2025-07-05
@@ -67,7 +72,7 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 - Add bulk delete for permissions presets
 
 ---
-- [DEV] Fix analytics disabling in development
+- [BTS] Fix analytics disabling in development
 
 ## 1.1.0
 @ 2025-06-21
@@ -76,7 +81,7 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 <video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-permissions-presets-custom-message.mp4"></video>
 
 ---
-- [DEV] Add analytics tracking system for user actions and time savings
+- [BTS] Add analytics tracking system for user actions and time savings
 
 ## 1.0.8
 @ 2025-06-19
@@ -96,7 +101,7 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 <video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-copy-theme-preview-url.mp4"></video>
 
 ---
-- [DEV] Fix: Run main.content at document_start to avoid race condition
+- [BTS] Fix: Run main.content at document_start to avoid race condition
 
 ## 1.0.5
 @ 2025-06-09
@@ -110,9 +115,9 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 
 ## 1.0.3
 @ 2025-05-25
-- [DEV] Register context menu items on service worker startup
-- [DEV] Refactor storefront data extraction in context menu
-- [DEV] Upgrade packages
+- [BTS] Register context menu items on service worker startup
+- [BTS] Refactor storefront data extraction in context menu
+- [BTS] Upgrade packages
 
 ## 1.0.2
 @ 2025-05-17
@@ -121,5 +126,5 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 
 ## 1.0.1
 @ 2025-05-09
-- [DEV] Add @wxt-dev/auto-icons
-- [DEV] Add Chrome extension icon
+- [BTS] Add @wxt-dev/auto-icons
+- [BTS] Add Chrome extension icon
