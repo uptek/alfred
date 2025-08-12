@@ -14,28 +14,9 @@
 </head>
 
 <body>
-  <div id="app" class="loading">
-    <div class="loading-spinner">
-      <div class="spinner"></div>
-      <div class="loading-text">Loading...</div>
-    </div>
+  <div id="app"></div>
 
-    <div id="content">
-      <s-page>
-        <s-box paddingBlock="large-500">
-          <s-grid gridTemplateColumns="@container (inline-size <= 900px) 1fr, 18rem 1fr" gap="base">
-            <s-box id="nav"></s-box>
-            <s-box>
-              <div id="settings" class="page" hidden></div>
-              <div id="changelog" class="page" hidden></div>
-            </s-box>
-          </s-grid>
-        </s-box>
-      </s-page>
-    </div>
-  </div>
-
-  <script type="module" src="./options.main.ts"></script>
+  <script type="module" src="./index.tsx"></script>
 </body>
 
 </html>
