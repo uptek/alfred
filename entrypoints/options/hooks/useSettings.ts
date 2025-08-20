@@ -5,6 +5,12 @@ import type { AlfredSettings } from '../types';
 const defaultSettings: AlfredSettings = {
   themeCustomizer: {
     inspector: 'default',
+    resizers: {
+      primarySidebar: true,
+      secondarySidebar: true,
+      mainHorizontal: true,
+      mainVertical: true,
+    },
   },
 };
 

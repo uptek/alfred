@@ -42,3 +42,47 @@ export function onChoiceListChange(choiceListName: string, onChange: (value: str
     }
   });
 }
+
+/**
+ * Sets the checked state for an s-checkbox component
+ * @param checkboxName - The name attribute of the s-checkbox
+ * @param checked - Whether the checkbox should be checked
+ */
+export function setCheckboxValue(checkboxName: string, checked: boolean): void {
+  const escapedName = CSS.escape(checkboxName);
+  const checkbox = document.querySelector<HTMLElement>(`s-checkbox[name="${escapedName}"]`);
+
+  if (!checkbox) {
+    return;
+  }
+
+  if (checked) {
+    checkbox.setAttribute('checked', '');
+  } else {
+    checkbox.removeAttribute('checked');
+  }
+}
+
+/**
+ * Adds a change listener to an s-checkbox component
+ * @param checkboxName - The name attribute of the s-checkbox
+ * @param onChange - Callback function that receives the checked state
+ */
+export function onCheckboxChange(checkboxName: string, onChange: (checked: boolean) => void | Promise<void>): void {
+  const escapedName = CSS.escape(checkboxName);
+  const checkbox = document.querySelector<HTMLElement>(`s-checkbox[name="${escapedName}"]`);
+
+  if (!checkbox) {
+    return;
+  }
+
+  checkbox.addEventListener('change', async () => {
+    const shadowRoot = checkbox.shadowRoot;
+    if (!shadowRoot) return;
+
+    const input = shadowRoot.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!input) return;
+
+    await onChange(input.checked);
+  });
+}
