@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { getItem, setItem } from '~/utils/storage';
-import type { AlfredSettings } from '../types';
 
 const defaultSettings: AlfredSettings = {
   themeCustomizer: {
@@ -11,6 +10,15 @@ const defaultSettings: AlfredSettings = {
       mainHorizontal: true,
       mainVertical: true,
     },
+  },
+  shortcuts: {
+    openInAdmin: true,
+    openInCustomizer: true,
+    copyProductJson: true,
+    copyCartJson: true,
+    copyThemePreviewUrl: true,
+    clearCart: true,
+    openSectionInCodeEditor: true,
   },
 };
 
@@ -38,6 +46,10 @@ export function useSettings() {
           themeCustomizer: {
             ...defaultSettings.themeCustomizer,
             ...(storedSettings.themeCustomizer || {}),
+          },
+          shortcuts: {
+            ...defaultSettings.shortcuts,
+            ...(storedSettings.shortcuts || {}),
           },
         };
         setSettings(mergedSettings);

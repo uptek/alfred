@@ -1,5 +1,4 @@
 import { getItem } from '~/utils/storage';
-import type { AlfredSettings } from '~/entrypoints/options/types';
 
 interface Dimensions {
   primary: number;

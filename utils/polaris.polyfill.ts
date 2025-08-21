@@ -67,8 +67,9 @@ export function setCheckboxValue(checkboxName: string, checked: boolean): void {
  * Adds a change listener to an s-checkbox component
  * @param checkboxName - The name attribute of the s-checkbox
  * @param onChange - Callback function that receives the checked state
+ * @returns Cleanup function to remove the listener
  */
-export function onCheckboxChange(checkboxName: string, onChange: (checked: boolean) => void | Promise<void>): void {
+export function onCheckboxChange(checkboxName: string, onChange: (checked: boolean) => void | Promise<void>): (() => void) | undefined {
   const escapedName = CSS.escape(checkboxName);
   const checkbox = document.querySelector<HTMLElement>(`s-checkbox[name="${escapedName}"]`);
 
@@ -76,7 +77,7 @@ export function onCheckboxChange(checkboxName: string, onChange: (checked: boole
     return;
   }
 
-  checkbox.addEventListener('change', async () => {
+  const handler = async () => {
     const shadowRoot = checkbox.shadowRoot;
     if (!shadowRoot) return;
 
@@ -84,5 +85,12 @@ export function onCheckboxChange(checkboxName: string, onChange: (checked: boole
     if (!input) return;
 
     await onChange(input.checked);
-  });
+  };
+
+  checkbox.addEventListener('change', handler);
+
+  // Return cleanup function
+  return () => {
+    checkbox.removeEventListener('change', handler);
+  };
 }

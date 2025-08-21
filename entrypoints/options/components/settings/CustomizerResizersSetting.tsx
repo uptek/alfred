@@ -65,7 +65,7 @@ export function CustomizerResizersSetting() {
         },
       });
     });
-  }, [isLoading, settings]);
+  }, [isLoading, settings.themeCustomizer?.resizers]);
 
   return (
     <s-section heading="Customizer resizers">
