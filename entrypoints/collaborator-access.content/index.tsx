@@ -1,5 +1,6 @@
 import { createIntegratedUi } from "#imports";
 import { render } from 'preact';
+import { getItem } from '~/utils/storage';
 import { waitForElement } from '@/utils/helpers';
 import App from './App.tsx';
 
@@ -9,6 +10,14 @@ export default defineContentScript({
     // Only run on managed store type pages
     if (!window.location.search.includes('store_type=managed_store')) {
       return;
+    }
+
+    // Check if collaborator access presets are enabled
+    const settings = await getItem<AlfredSettings>('settings');
+    const isPresetsEnabled = settings?.collaboratorAccess?.presets !== false;
+
+    if (!isPresetsEnabled) {
+      return; // Exit early if presets are disabled
     }
 
     // Inject Shopify Polaris

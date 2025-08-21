@@ -3,6 +3,7 @@ import { ThemeInspectorSetting } from './settings/ThemeInspectorSetting';
 import { CustomizerResizersSetting } from './settings/CustomizerResizersSetting';
 import { ShortcutsSetting } from './settings/ShortcutsSetting';
 import { AppStoreSettings } from './settings/AppStoreSettings';
+import { CollaboratorAccessSetting } from './settings/CollaboratorAccessSetting';
 
 export function Settings() {
   return (
@@ -13,6 +14,7 @@ export function Settings() {
         <CustomizerResizersSetting />
         <ShortcutsSetting />
         <AppStoreSettings />
+        <CollaboratorAccessSetting />
         {/* Add more setting components here as needed */}
       </s-grid>
     </form>

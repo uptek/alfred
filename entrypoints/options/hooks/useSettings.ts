@@ -24,6 +24,9 @@ const defaultSettings: AlfredSettings = {
     searchIndexing: true,
     enhancedPartnerPages: true,
   },
+  collaboratorAccess: {
+    presets: true,
+  },
 };
 
 export function useSettings() {
@@ -58,6 +61,10 @@ export function useSettings() {
           appStore: {
             ...defaultSettings.appStore,
             ...(storedSettings.appStore || {}),
+          },
+          collaboratorAccess: {
+            ...defaultSettings.collaboratorAccess,
+            ...(storedSettings.collaboratorAccess || {}),
           },
         };
         setSettings(mergedSettings);

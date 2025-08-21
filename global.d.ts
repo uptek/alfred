@@ -41,4 +41,7 @@ declare interface AlfredSettings {
     searchIndexing?: boolean;
     enhancedPartnerPages?: boolean;
   };
+  collaboratorAccess?: {
+    presets?: boolean;
+  };
 }

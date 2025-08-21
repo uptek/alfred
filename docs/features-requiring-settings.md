@@ -15,7 +15,7 @@ This document lists all features in the Alfred for Shopify extension that curren
 
 ### 1.2 Customizer Resizers
 
-**Status**: ⚠️ Settings Needed
+**Status**: ✅ Settings Implemented
 **Recommended Settings**:
 
 - **Individual resizer toggles**: Enable/disable specific resize handles:
@@ -28,7 +28,7 @@ This document lists all features in the Alfred for Shopify extension that curren
 
 ### 2.1 Context Menu Items
 
-**Status**: ⚠️ Settings Needed
+**Status**: ✅ Settings Implemented
 **Recommended Settings**:
 
 - **Show/Hide individual menu items**: Toggle visibility for each shortcut:
@@ -44,21 +44,21 @@ This document lists all features in the Alfred for Shopify extension that curren
 
 ### 3.1 App Store Search Indexing
 
-**Status**: ⚠️ Settings Needed
+**Status**: ✅ Settings Implemented
 **Recommended Settings**:
 
 - **Enable/Disable indexing**: Toggle the numbering of apps in search results
 
 ### 3.2 App Store Partner Page Enrichment
 
-**Status**: ⚠️ Settings Needed
+**Status**: ✅ Settings Implemented
 **Recommended Settings**:
 
 - **Enable/Disable partner page enrichment**: Toggle enhanced features including table view, sorting, and export options
 
 ### 3.3 Collaborator Access Presets
 
-**Status**: ⚠️ Settings Needed
+**Status**: ✅ Settings Implemented
 **Recommended Settings**:
 
 - **Enable/Disable presets**: Toggle the collaborator access presets feature
@@ -135,9 +135,11 @@ interface AlfredSettings {
 
   appStore?: {
     searchIndexing?: boolean;
-    partnerPageEnrichment?: boolean;
+    enhancedPartnerPages?: boolean;
   };
 
-  collaboratorAccess?: boolean;
+  collaboratorAccess?: {
+    presets?: boolean;
+  };
 }
 ```
