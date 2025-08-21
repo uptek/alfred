@@ -10,11 +10,11 @@ export function Settings() {
     <form id="settings">
       <s-grid gap="base">
         <PageHeader title="Settings" icon="settings" />
-        <ThemeInspectorSetting />
-        <CustomizerResizersSetting />
         <ShortcutsSetting />
-        <AppStoreSettings />
         <CollaboratorAccessSetting />
+        <AppStoreSettings />
+        <CustomizerResizersSetting />
+        <ThemeInspectorSetting />
         {/* Add more setting components here as needed */}
       </s-grid>
     </form>
