@@ -1,6 +1,5 @@
 import { getItem, setItem } from '~/utils/storage';
 import { waitForElement } from '~/utils/helpers';
-import type { AlfredSettings } from '~/entrypoints/options/types';
 
 const INSPECTOR_BUTTON_SELECTOR = 'div[class*="SidekickToggle"] + div button';
 const INSPECTOR_STATE_KEY = 'theme-inspector-state';

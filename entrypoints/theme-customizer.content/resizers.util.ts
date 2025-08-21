@@ -1,3 +1,5 @@
+import { getItem } from '~/utils/storage';
+
 interface Dimensions {
   primary: number;
   secondary: number;
@@ -27,7 +29,7 @@ const BASE_DOT_STYLE: Partial<CSSStyleDeclaration> = {
   backgroundSize: '4px 4px',
 };
 
-const Resizers = () => {
+const Resizers = async () => {
   const frame = document.querySelector<HTMLElement>('[class^="Online-Store-UI-Frame_"]');
   const main = document.querySelector<HTMLElement>('[class*="Online-Store-UI-Preview__Interior_"]');
   const primarySidebar = document.querySelector<HTMLElement>('aside[class^="Online-Store-UI-Frame-Sidebar_"]');
@@ -41,6 +43,15 @@ const Resizers = () => {
   if (frame.hasAttribute(RESIZERS_ATTACHED_ATTR)) {
     return true;
   }
+
+  // Get settings to determine which resizers to show
+  const settings = await getItem<AlfredSettings>('settings');
+  const resizerSettings = settings?.themeCustomizer?.resizers || {
+    primarySidebar: true,
+    secondarySidebar: true,
+    previewHorizontal: true,
+    previewVertical: true,
+  };
 
   // Mark as attached to prevent duplicates
   frame.setAttribute(RESIZERS_ATTACHED_ATTR, 'true');
@@ -99,12 +110,12 @@ const Resizers = () => {
 
     // Track resize event
     browser.runtime.sendMessage({
-      type: "track_action",
-      action: "resize_theme_customizer",
+      type: 'track_action',
+      action: 'resize_theme_customizer',
       metadata: {
         type: resizer.type || 'unknown',
         page_url: window.location.href,
-        page_type: "theme_customizer",
+        page_type: 'theme_customizer',
       },
     });
 
@@ -172,69 +183,75 @@ const Resizers = () => {
   };
 
   // Primary Sidebar Resizer
-  if (primarySidebar) {
+  if (primarySidebar && resizerSettings.primarySidebar !== false) {
     createSidebarResizer(primarySidebar, true);
   }
 
   // Secondary Sidebar Resizer
-  if (secondarySidebar) {
+  if (secondarySidebar && resizerSettings.secondarySidebar !== false) {
     createSidebarResizer(secondarySidebar, false);
   }
 
   if (main) {
     // Main Horizontal Resizer
-    createResizer(
-      main,
-      {
-        ...BASE_DOT_STYLE,
-        top: '50%',
-        right: '-8px',
-        transform: 'translateY(-50%)',
-        height: '40px',
-      },
-      (dx: number, _dy: number, dims: Dimensions) => {
-        const newWidth = dims.main.width + dx;
-        if (newWidth < MIN_MAIN_WIDTH) return;
-        main.style.maxWidth = `${newWidth}px`;
-      },
-      true,
-      'main-horizontal'
-    );
+    if (resizerSettings.previewHorizontal !== false) {
+      createResizer(
+        main,
+        {
+          ...BASE_DOT_STYLE,
+          top: '50%',
+          right: '-8px',
+          transform: 'translateY(-50%)',
+          height: '40px',
+        },
+        (dx: number, _dy: number, dims: Dimensions) => {
+          const newWidth = dims.main.width + dx;
+          if (newWidth < MIN_MAIN_WIDTH) return;
+          main.style.maxWidth = `${newWidth}px`;
+        },
+        true,
+        'main-horizontal'
+      );
+    }
 
     // Main Vertical Resizer
-    createResizer(
-      main,
-      {
-        ...BASE_DOT_STYLE,
-        top: '-8px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '40px',
-        height: '8px',
-        cursor: 'row-resize',
-      },
-      (_dx: number, dy: number, dims: Dimensions) => {
-        const newHeight = dims.main.height - dy;
-        if (newHeight < MIN_MAIN_HEIGHT) return;
-        main.style.maxHeight = `${newHeight}px`;
-      },
-      true,
-      'main-vertical'
-    );
+    if (resizerSettings.previewVertical !== false) {
+      createResizer(
+        main,
+        {
+          ...BASE_DOT_STYLE,
+          top: '-8px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '40px',
+          height: '8px',
+          cursor: 'row-resize',
+        },
+        (_dx: number, dy: number, dims: Dimensions) => {
+          const newHeight = dims.main.height - dy;
+          if (newHeight < MIN_MAIN_HEIGHT) return;
+          main.style.maxHeight = `${newHeight}px`;
+        },
+        true,
+        'main-vertical'
+      );
+    }
   }
 
   return true;
 };
 
-export const setupResizers = () => {
+export const setupResizers = async () => {
   // Try to initialize immediately
-  if (Resizers()) {
+  const success = await Resizers();
+  if (success) {
     return;
   }
 
   // If elements not found, set up a mutation observer
-  const observer = new MutationObserver(() => {
-    if (Resizers()) {
+  const observer = new MutationObserver(async () => {
+    const success = await Resizers();
+    if (success) {
       observer.disconnect();
     }
   });
@@ -245,9 +262,10 @@ export const setupResizers = () => {
   });
 
   // Also try again after a delay
-  setTimeout(() => {
-    if (Resizers()) {
+  setTimeout(async () => {
+    const success = await Resizers();
+    if (success) {
       observer.disconnect();
     }
   }, 2000);
-}
+};

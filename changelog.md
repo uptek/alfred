@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0
+@ 2025-08-21
+Major settings update! You now have granular control over Alfred's features through the new options page.
+
+- Shortcuts: Choose which shortcuts appear in the right-click context menu
+- Collaborator Access Presets: Enable/disable the collaborator access presets feature
+- Enhanced Partner Pages: Toggle the enriched table view for app store partner pages
+- App Store Search Indexing: Enable/disable position numbers in app store search results
+- Customizer Resizers: Toggle individual resize handles for panels in the theme customizer
+
 ## 1.3.0
 @ 2025-08-12
 - [BTS] Options page migrated to Preact for improved performance and maintainability

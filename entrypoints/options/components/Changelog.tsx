@@ -100,8 +100,6 @@ export function Changelog() {
                     <s-badge tone="success">New</s-badge>
                   )}
                 </s-stack>
-                {/* @ts-expect-error - tone is not a valid prop for s-text */}
-                <s-text tone="subdued">{formatDate(entry.date)}</s-text>
               </s-stack>
               {entry.changes.map((change, changeIndex) =>
                 renderChange(change, changeIndex)

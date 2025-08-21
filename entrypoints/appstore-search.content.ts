@@ -1,6 +1,16 @@
+import { getItem } from '~/utils/storage';
+
 export default defineContentScript({
   matches: ['https://apps.shopify.com/search?*'],
   async main(ctx) {
+    // Check if search indexing is enabled
+    const settings = await getItem<AlfredSettings>('settings');
+    const isSearchIndexingEnabled = settings?.appStore?.searchIndexing !== false;
+
+    if (!isSearchIndexingEnabled) {
+      return; // Exit early if indexing is disabled
+    }
+
     let globalIndex = 1;
     const observers: MutationObserver[] = [];
 

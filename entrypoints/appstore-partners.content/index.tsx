@@ -1,11 +1,19 @@
 import { createIntegratedUi } from "#imports";
 import { render } from "preact";
+import { getItem } from "~/utils/storage";
 import { waitForElement } from "@/utils/helpers";
 import App from "./App.tsx";
 
 export default defineContentScript({
   matches: ["*://apps.shopify.com/partners/*"],
   async main(ctx) {
+    // Check if enhanced partner pages are enabled
+    const settings = await getItem<AlfredSettings>('settings');
+    const isEnhancedPartnerPagesEnabled = settings?.appStore?.enhancedPartnerPages !== false;
+
+    if (!isEnhancedPartnerPagesEnabled) {
+      return; // Exit early if enhanced partner pages are disabled
+    }
     const ui = await createIntegratedUi(ctx, {
       position: "inline",
       anchor: "body",
