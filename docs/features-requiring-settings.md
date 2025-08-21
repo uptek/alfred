@@ -49,12 +49,12 @@ This document lists all features in the Alfred for Shopify extension that curren
 
 - **Enable/Disable indexing**: Toggle the numbering of apps in search results
 
-### 3.2 App Store Partner Page Table
+### 3.2 App Store Partner Page Enrichment
 
 **Status**: ⚠️ Settings Needed
 **Recommended Settings**:
 
-- **Enable/Disable partner table**: Toggle the display of partner table
+- **Enable/Disable partner page enrichment**: Toggle enhanced features including table view, sorting, and export options
 
 ### 3.3 Collaborator Access Presets
 
@@ -117,8 +117,8 @@ interface AlfredSettings {
     resizers?: {
       primarySidebar?: boolean; // Toggle left panel resizer
       secondarySidebar?: boolean; // Toggle right panel resizer
-      mainHorizontal?: boolean; // Toggle main preview width resizer
-      mainVertical?: boolean; // Toggle main preview height resizer
+      previewHorizontal?: boolean; // Toggle preview width resizer
+      previewVertical?: boolean; // Toggle preview height resizer
     };
   };
 
@@ -135,7 +135,7 @@ interface AlfredSettings {
 
   appStore?: {
     searchIndexing?: boolean;
-    partnerTable?: boolean;
+    partnerPageEnrichment?: boolean;
   };
 
   collaboratorAccess?: boolean;

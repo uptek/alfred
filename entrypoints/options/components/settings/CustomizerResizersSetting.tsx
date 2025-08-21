@@ -14,8 +14,8 @@ export function CustomizerResizersSetting() {
     // Default all resizers to true if not set
     setCheckboxValue('resizer-primary-sidebar', resizers.primarySidebar !== false);
     setCheckboxValue('resizer-secondary-sidebar', resizers.secondarySidebar !== false);
-    setCheckboxValue('resizer-main-horizontal', resizers.mainHorizontal !== false);
-    setCheckboxValue('resizer-main-vertical', resizers.mainVertical !== false);
+    setCheckboxValue('resizer-preview-horizontal', resizers.previewHorizontal !== false);
+    setCheckboxValue('resizer-preview-vertical', resizers.previewVertical !== false);
 
     // Set up change listeners for each checkbox
     onCheckboxChange('resizer-primary-sidebar', async (checked) => {
@@ -42,25 +42,25 @@ export function CustomizerResizersSetting() {
       });
     });
 
-    onCheckboxChange('resizer-main-horizontal', async (checked) => {
+    onCheckboxChange('resizer-preview-horizontal', async (checked) => {
       await updateSettings({
         themeCustomizer: {
           ...settings.themeCustomizer,
           resizers: {
             ...settings.themeCustomizer?.resizers,
-            mainHorizontal: checked,
+            previewHorizontal: checked,
           },
         },
       });
     });
 
-    onCheckboxChange('resizer-main-vertical', async (checked) => {
+    onCheckboxChange('resizer-preview-vertical', async (checked) => {
       await updateSettings({
         themeCustomizer: {
           ...settings.themeCustomizer,
           resizers: {
             ...settings.themeCustomizer?.resizers,
-            mainVertical: checked,
+            previewVertical: checked,
           },
         },
       });
@@ -70,28 +70,28 @@ export function CustomizerResizersSetting() {
   return (
     <s-section heading="Customizer resizers">
       <s-paragraph>
-        Choose which resize handles to show in the theme customizer. These allow you to adjust panel sizes for better workflow.
+        Controls which resize handles appear in the theme customizer. These allow you to adjust panel sizes for better workflow.
       </s-paragraph>
       <s-grid gap="small">
         <s-checkbox
           name="resizer-primary-sidebar"
           label="Primary sidebar resizer"
-          details="Show resize handle for the left panel"
+          details="Shows resize handle for the left panel"
         />
         <s-checkbox
           name="resizer-secondary-sidebar"
           label="Secondary sidebar resizer"
-          details="Show resize handle for the right panel"
+          details="Shows resize handle for the right panel"
         />
         <s-checkbox
-          name="resizer-main-horizontal"
-          label="Main preview width resizer"
-          details="Show resize handle to adjust preview width"
+          name="resizer-preview-horizontal"
+          label="Preview width resizer"
+          details="Shows resize handle to adjust preview area width"
         />
         <s-checkbox
-          name="resizer-main-vertical"
-          label="Main preview height resizer"
-          details="Show resize handle to adjust preview height"
+          name="resizer-preview-vertical"
+          label="Preview height resizer"
+          details="Shows resize handle to adjust preview area height"
         />
       </s-grid>
     </s-section>

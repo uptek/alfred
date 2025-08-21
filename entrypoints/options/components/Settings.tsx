@@ -2,6 +2,7 @@ import { PageHeader } from './PageHeader';
 import { ThemeInspectorSetting } from './settings/ThemeInspectorSetting';
 import { CustomizerResizersSetting } from './settings/CustomizerResizersSetting';
 import { ShortcutsSetting } from './settings/ShortcutsSetting';
+import { AppStoreSettings } from './settings/AppStoreSettings';
 
 export function Settings() {
   return (
@@ -11,6 +12,7 @@ export function Settings() {
         <ThemeInspectorSetting />
         <CustomizerResizersSetting />
         <ShortcutsSetting />
+        <AppStoreSettings />
         {/* Add more setting components here as needed */}
       </s-grid>
     </form>

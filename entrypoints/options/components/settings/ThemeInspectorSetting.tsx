@@ -26,8 +26,8 @@ export function ThemeInspectorSetting() {
   return (
     <s-section heading="Theme inspector">
       <s-paragraph>
-        Customize how Alfred manages the inspector in theme customizer. Choose to disable it automatically,
-        remember and restore your last state, or let it be.
+        Controls how Alfred manages the theme inspector in the customizer. Choose to disable it automatically,
+        remember and restore your last state, or leave it unchanged.
       </s-paragraph>
       <s-choice-list
         label="Theme inspector"
@@ -37,17 +37,16 @@ export function ThemeInspectorSetting() {
         <s-choice
           label="Default behavior"
           value="default"
-          details="Alfred will not interfere with the theme inspector."
         />
         <s-choice
           label="Disable inspector"
           value="disable"
-          details="Always disable the theme inspector on page load."
+          details="Always disables the theme inspector on page load"
         />
         <s-choice
           label="Restore previous state"
           value="restore"
-          details="Remember and restore your last inspector state."
+          details="Remembers and restores your last inspector state"
         />
       </s-choice-list>
     </s-section>

@@ -49,8 +49,8 @@ const Resizers = async () => {
   const resizerSettings = settings?.themeCustomizer?.resizers || {
     primarySidebar: true,
     secondarySidebar: true,
-    mainHorizontal: true,
-    mainVertical: true,
+    previewHorizontal: true,
+    previewVertical: true,
   };
 
   // Mark as attached to prevent duplicates
@@ -194,7 +194,7 @@ const Resizers = async () => {
 
   if (main) {
     // Main Horizontal Resizer
-    if (resizerSettings.mainHorizontal !== false) {
+    if (resizerSettings.previewHorizontal !== false) {
       createResizer(
         main,
         {
@@ -215,7 +215,7 @@ const Resizers = async () => {
     }
 
     // Main Vertical Resizer
-    if (resizerSettings.mainVertical !== false) {
+    if (resizerSettings.previewVertical !== false) {
       createResizer(
         main,
         {

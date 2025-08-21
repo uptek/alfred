@@ -7,8 +7,8 @@ const defaultSettings: AlfredSettings = {
     resizers: {
       primarySidebar: true,
       secondarySidebar: true,
-      mainHorizontal: true,
-      mainVertical: true,
+      previewHorizontal: true,
+      previewVertical: true,
     },
   },
   shortcuts: {
@@ -19,6 +19,10 @@ const defaultSettings: AlfredSettings = {
     copyThemePreviewUrl: true,
     clearCart: true,
     openSectionInCodeEditor: true,
+  },
+  appStore: {
+    searchIndexing: true,
+    enhancedPartnerPages: true,
   },
 };
 
@@ -50,6 +54,10 @@ export function useSettings() {
           shortcuts: {
             ...defaultSettings.shortcuts,
             ...(storedSettings.shortcuts || {}),
+          },
+          appStore: {
+            ...defaultSettings.appStore,
+            ...(storedSettings.appStore || {}),
           },
         };
         setSettings(mergedSettings);

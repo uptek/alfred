@@ -3,13 +3,13 @@ import { useSettings } from '../../hooks/useSettings';
 import { setCheckboxValue, onCheckboxChange } from '~/utils/polaris.polyfill';
 
 const shortcutItems = [
-  { key: 'openInAdmin', label: 'Open in Admin', details: 'Open the current page in Shopify Admin' },
-  { key: 'openInCustomizer', label: 'Open in Customizer', details: 'Open the current page in theme customizer' },
-  { key: 'copyProductJson', label: 'Copy Product JSON', details: 'Copy product data as JSON to clipboard' },
-  { key: 'copyCartJson', label: 'Copy Cart JSON', details: 'Copy cart data as JSON to clipboard' },
-  { key: 'copyThemePreviewUrl', label: 'Copy Theme Preview URL', details: 'Copy preview URL with theme ID' },
-  { key: 'clearCart', label: 'Clear Cart', details: 'Remove all items from the cart' },
-  { key: 'openSectionInCodeEditor', label: 'Open Section in Code Editor', details: 'Open the clicked section in theme code editor' },
+  { key: 'openInAdmin', label: 'Open in Admin', details: 'Opens the current page in Shopify Admin' },
+  { key: 'openInCustomizer', label: 'Open in Customizer', details: 'Opens the current page in theme customizer' },
+  { key: 'copyProductJson', label: 'Copy Product JSON', details: 'Copies current product data as JSON to clipboard' },
+  { key: 'copyThemePreviewUrl', label: 'Copy Theme Preview URL', details: 'Copies preview URL with context of current page' },
+  { key: 'copyCartJson', label: 'Copy Cart JSON', details: 'Copies cart data as JSON to clipboard' },
+  { key: 'clearCart', label: 'Clear Cart', details: 'Removes all items from the cart' },
+  { key: 'openSectionInCodeEditor', label: 'Open Section in Code Editor', details: 'Opens the clicked section in theme code editor' },
 ];
 
 export function ShortcutsSetting() {
@@ -54,7 +54,7 @@ export function ShortcutsSetting() {
   return (
     <s-section heading="Shortcuts (Right-click menu)">
       <s-paragraph>
-        Choose which shortcuts to show in the right-click context menu when using Alfred on Shopify stores.
+        Controls which shortcuts appear in the right-click context menu when using Alfred on Shopify stores.
       </s-paragraph>
       <s-grid gap="small">
         {shortcutItems.map(({ key, label, details }) => (

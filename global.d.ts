@@ -24,8 +24,8 @@ declare interface AlfredSettings {
     resizers?: {
       primarySidebar?: boolean;
       secondarySidebar?: boolean;
-      mainHorizontal?: boolean;
-      mainVertical?: boolean;
+      previewHorizontal?: boolean;
+      previewVertical?: boolean;
     };
   };
   shortcuts?: {
@@ -36,5 +36,9 @@ declare interface AlfredSettings {
     copyThemePreviewUrl?: boolean;
     clearCart?: boolean;
     openSectionInCodeEditor?: boolean;
+  };
+  appStore?: {
+    searchIndexing?: boolean;
+    enhancedPartnerPages?: boolean;
   };
 }
