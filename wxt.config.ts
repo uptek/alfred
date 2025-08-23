@@ -19,6 +19,10 @@ export default defineConfig({
         matches: ['<all_urls>'],
       },
       {
+        resources: ['alfred-toast.js'],
+        matches: ['<all_urls>'],
+      },
+      {
         resources: ['libs/shopify-polaris-web-components.js'],
         matches: ['<all_urls>'],
       },
@@ -32,7 +36,8 @@ export default defineConfig({
       '--user-data-dir=./.wxt/chrome-data',
       '--disable-infobars',
       '--disable-features=BlockThirdPartyCookies',  // Allows third-party cookies
-      'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
+      // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
+      'https://uptek.com',
     ],
   },
 });

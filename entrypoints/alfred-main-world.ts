@@ -1,6 +1,11 @@
+import { Toast } from '../utils/toast';
+
 export default defineUnlistedScript(() => {
   // Define alfred utils in the global scope
   (window as any).Alfred = {
+    // Toast notifications
+    Toast,
+
     // Store the last right-clicked element
     _lastRightClickedElement: null as HTMLElement | null,
 
