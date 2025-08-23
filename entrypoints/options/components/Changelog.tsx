@@ -95,7 +95,7 @@ export function Changelog() {
             <s-stack gap="small-200">
               <s-stack gap="none">
                 <s-stack direction="inline" alignItems="center" gap="small-200">
-                  <s-heading>v{entry.version} – {formatDate(entry.date)}</s-heading>
+                  <s-heading>v{entry.version}</s-heading>
                   {isNewEntry(entry.date) && entryIndex === 0 && (
                     <s-badge tone="success">New</s-badge>
                   )}
