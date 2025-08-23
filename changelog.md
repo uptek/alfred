@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0
+## 2025.08.21
 @ 2025-08-21
 Major settings update! You now have granular control over Alfred's features through the new options page.
 
@@ -10,16 +10,15 @@ Major settings update! You now have granular control over Alfred's features thro
 - App Store Search Indexing: Enable/disable position numbers in app store search results
 - Customizer Resizers: Toggle individual resize handles for panels in the theme customizer
 
-## 1.3.0
+## 2025.08.12
 @ 2025-08-12
 - [BTS] Options page migrated to Preact for improved performance and maintainability
-- [BTS] Switched to Semantic Versioning (SemVer) for versioning
 
-## 1.2.9
+## 2025.08.10
 @ 2025-08-10
 - Fix changelog page on extension update
 
-## 1.2.8
+## 2025.08.09.1
 @ 2025-08-09
 This release introduces a new setting to manage the theme inspector in the Shopify theme editor. You can configure Alfred to:
 
@@ -29,7 +28,7 @@ This release introduces a new setting to manage the theme inspector in the Shopi
 
 <video controls muted playsinline src="https://bucket.alfred.uptek.com/theme-inspector.mp4"></video>
 
-## 1.2.7
+## 2025.08.09
 @ 2025-08-09
 This release introduces a new options page, which will serve as the central hub for all extension settings and preferences. Future releases will populate this page with more configuration options.
 
@@ -39,7 +38,7 @@ This release introduces a new options page, which will serve as the central hub 
 ---
 - [BTS] Integrated a new build process to automatically generate and update the changelog.
 
-## 1.2.6
+## 2025.07.28
 @ 2025-07-28
 Add resizable panels in the theme editor for the primary sidebar, secondary sidebar, and main preview area. This allows for a more flexible and customizable workspace.
 
@@ -49,14 +48,14 @@ Add resizable panels in the theme editor for the primary sidebar, secondary side
 
 <video controls muted playsinline src="https://bucket.alfred.uptek.com/resize-theme-editor.mp4"></video>
 
-## 1.2.5
+## 2025.07.22
 @ 2025-07-22
 - Add indexer for Shopify app search results
 
 <video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-appstore-indexing.mp4"></video>
 
 ---
-- [BTS] Switch to CalVer for versioning
+- [BTS] Switch to CalVer for versioning from SemVer 1.2.5
 
 ## 1.2.4
 @ 2025-07-05
