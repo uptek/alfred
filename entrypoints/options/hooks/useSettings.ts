@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { getItem, setItem } from '~/utils/storage';
+import { Toast } from '~/utils/toast';
 
 const defaultSettings: AlfredSettings = {
   themeCustomizer: {
@@ -89,10 +90,11 @@ export function useSettings() {
 
         await setItem('settings', updatedSettings);
         setSettings(updatedSettings);
-
+        Toast.success('Settings saved');
         return true;
       } catch (error) {
         console.error('Failed to save settings:', error);
+        Toast.error('Failed to save settings');
         return false;
       } finally {
         setIsSaving(false);
@@ -106,9 +108,11 @@ export function useSettings() {
       setIsSaving(true);
       await setItem('settings', defaultSettings);
       setSettings(defaultSettings);
+      Toast.success('Settings reset to defaults');
       return true;
     } catch (error) {
       console.error('Failed to reset settings:', error);
+      Toast.error('Failed to reset settings');
       return false;
     } finally {
       setIsSaving(false);
