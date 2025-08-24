@@ -7,7 +7,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred for Shopify',
     description: 'Make Shopify great again!',
-    version: '2025.08.21',
+    version: '2025.08.24',
     action: {
       default_title: 'Alfred',
     },

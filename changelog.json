@@ -1,5 +1,15 @@
 [
   {
+    "version": "2025.08.24",
+    "date": "2025-08-24",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Added toast notifications for better user feedback. Success and error messages now display as visual toast notifications, providing improved UX."
+      }
+    ]
+  },
+  {
     "version": "2025.08.21",
     "date": "2025-08-21",
     "changes": [
