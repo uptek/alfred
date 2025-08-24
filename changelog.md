@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025.08.24
+@ 2025-08-24
+Added toast notifications for better user feedback. Success and error messages now display as visual toast notifications, providing improved UX.
+
+
 ## 2025.08.21
 @ 2025-08-21
 Major settings update! You now have granular control over Alfred's features through the new options page.

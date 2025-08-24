@@ -100,6 +100,7 @@ export function Changelog() {
                     <s-badge tone="success">New</s-badge>
                   )}
                 </s-stack>
+                <s-text>{formatDate(entry.date)}</s-text>
               </s-stack>
               {entry.changes.map((change, changeIndex) =>
                 renderChange(change, changeIndex)

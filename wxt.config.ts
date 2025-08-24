@@ -7,7 +7,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred for Shopify',
     description: 'Make Shopify great again!',
-    version: '2025.08.21',
+    version: '2025.08.24',
     action: {
       default_title: 'Alfred',
     },
@@ -16,6 +16,10 @@ export default defineConfig({
     web_accessible_resources: [
       {
         resources: ['alfred-main-world.js'],
+        matches: ['<all_urls>'],
+      },
+      {
+        resources: ['alfred-toast.js'],
         matches: ['<all_urls>'],
       },
       {
@@ -32,7 +36,8 @@ export default defineConfig({
       '--user-data-dir=./.wxt/chrome-data',
       '--disable-infobars',
       '--disable-features=BlockThirdPartyCookies',  // Allows third-party cookies
-      'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
+      // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
+      'https://uptek.com',
     ],
   },
 });
