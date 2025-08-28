@@ -1,13 +1,48 @@
+// Define the custom element class
+class AlfredToast extends HTMLElement {
+  private timeout: ReturnType<typeof setTimeout> | null = null;
+
+  disconnectedCallback() {
+    // Cleanup when removed from DOM
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+  }
+
+  setAutoHide(duration: number) {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+    this.timeout = setTimeout(() => {
+      this.hide();
+    }, duration);
+  }
+
+  hide() {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+
+    // Add hiding animation
+    const toast = this.shadowRoot?.querySelector('.alfred-toast');
+    if (toast) {
+      toast.classList.add('alfred-toast--hiding');
+      setTimeout(() => {
+        this.remove();
+      }, 400);
+    }
+  }
+}
+
 export class Toast {
   private static toastCounter = 0;
-  private static currentToastTimeout: ReturnType<typeof setTimeout> | null = null;
-  private static isTransitioning = false;
-  private static shadowHost: HTMLElement | null = null;
-  private static shadowRoot: ShadowRoot | null = null;
+  private static customElementDefined = false;
 
   private static defaults = {
     duration: 3000,
-    hostId: 'alfred-toast-host'
+    hostTag: 'alfred-toast'
   };
 
   private static styles = `
@@ -16,10 +51,9 @@ export class Toast {
       bottom: 1.25rem;
       left: 50%;
       transform: translateX(-50%);
+      display: block;
+      z-index: 2147483647;
       pointer-events: none;
-      display: flex;
-      flex-direction: column-reverse;
-      gap: 12px;
     }
 
     .alfred-toast {
@@ -35,7 +69,7 @@ export class Toast {
       pointer-events: auto;
       position: relative;
       color: rgb(227, 227, 227);
-      transform: translateY(20px);
+      transform: translateY(40px);
       opacity: 0;
       transition: transform 400ms cubic-bezier(0.19, 0.91, 0.38, 1), opacity 400ms cubic-bezier(0.19, 0.91, 0.38, 1);
       font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
@@ -106,108 +140,76 @@ export class Toast {
     }
   `;
 
-  static init(options: Partial<typeof Toast.defaults> = {}) {
-    Object.assign(this.defaults, options);
-    this.initShadowContainer();
-  }
-
-  private static initShadowContainer() {
-    if (!this.shadowHost) {
-      // Check if host already exists
-      this.shadowHost = document.getElementById(this.defaults.hostId);
-
-      if (!this.shadowHost) {
-        // Create shadow host
-        this.shadowHost = document.createElement('div');
-        this.shadowHost.id = this.defaults.hostId;
-        // Only set essential styles - shadow DOM will isolate the rest
-        this.shadowHost.style.position = 'fixed';
-        this.shadowHost.style.zIndex = '2147483647';
-        this.shadowHost.style.pointerEvents = 'none';
-        document.body.appendChild(this.shadowHost);
-      }
-
-      // Create shadow root if it doesn't exist
-      if (!this.shadowRoot) {
-        this.shadowRoot = this.shadowHost.attachShadow({ mode: 'open' });
-
-        // Add styles
-        const styleEl = document.createElement('style');
-        styleEl.textContent = this.styles;
-        this.shadowRoot.appendChild(styleEl);
-      }
+  private static defineCustomElement() {
+    if (!this.customElementDefined && !customElements.get(this.defaults.hostTag)) {
+      customElements.define(this.defaults.hostTag, AlfredToast);
+      this.customElementDefined = true;
     }
-    return this.shadowRoot;
   }
 
   static show(message: string, type: 'success' | 'error' = 'success', duration: number = this.defaults.duration) {
-    this.initShadowContainer();
+    // Ensure custom element is defined
+    this.defineCustomElement();
 
-    // Clear any existing timeout
-    if (this.currentToastTimeout) {
-      clearTimeout(this.currentToastTimeout);
-      this.currentToastTimeout = null;
-    }
+    // Hide any existing toasts
+    const existingToasts = document.querySelectorAll(this.defaults.hostTag);
 
-    // Check if there's an existing toast
-    const existingToasts = this.shadowRoot!.querySelectorAll('.alfred-toast:not(.alfred-toast--hiding)');
-
+    // If there are existing toasts, wait for them to hide before showing new one
     if (existingToasts.length > 0) {
-      // If we're already transitioning, ignore this call
-      if (this.isTransitioning) return;
-
-      this.isTransitioning = true;
-
-      // Hide existing toasts immediately
       existingToasts.forEach(toast => {
-        toast.classList.add('alfred-toast--hiding');
+        (toast as AlfredToast).hide();
       });
 
-      // Wait for animation to complete, then show new toast
+      // Delay showing new toast until old one has mostly faded out
       setTimeout(() => {
-        // Remove old toasts
-        const hidingToasts = this.shadowRoot!.querySelectorAll('.alfred-toast--hiding');
-        hidingToasts.forEach(toast => toast.remove());
-
-        // Create new toast
-        this.createToast(message, type, duration);
-        this.isTransitioning = false;
-      }, 400);
-    } else {
-      // No existing toast, show immediately
-      this.createToast(message, type, duration);
+        this.create(message, type, duration);
+      }, 100);
+      return;
     }
+
+    // No existing toasts, show immediately
+    this.create(message, type, duration);
   }
 
-  private static createToast(message: string, type: 'success' | 'error', duration: number) {
+  private static create(message: string, type: 'success' | 'error', duration: number) {
+    // Create new toast element
+    const toastElement = document.createElement(this.defaults.hostTag) as AlfredToast;
     const toastId = `alfred-toast-${++this.toastCounter}`;
+    toastElement.id = toastId;
 
+    // Attach shadow root
+    const shadowRoot = toastElement.attachShadow({ mode: 'open' });
+
+    // Add styles
+    const styleEl = document.createElement('style');
+    styleEl.textContent = this.styles;
+    shadowRoot.appendChild(styleEl);
+
+    // Create toast container
     const toast = document.createElement('div');
     toast.className = `alfred-toast${type === 'error' ? ' alfred-toast--error' : ''}`;
-    toast.id = toastId;
 
-    // Create content div
-    const content = document.createElement('div');
-    content.className = 'alfred-toast__content';
-    content.textContent = message; // Use textContent to prevent XSS
-
-    // Create close button
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'alfred-toast__close';
-    closeBtn.setAttribute('aria-label', 'Close notification');
-    closeBtn.innerHTML = `
-      <svg viewBox="1 1 18 18" fill="currentColor" focusable="false" aria-hidden="true">
-        <path d="M12.72 13.78a.75.75 0 1 0 1.06-1.06l-2.72-2.72 2.72-2.72a.75.75 0 0 0-1.06-1.06l-2.72 2.72-2.72-2.72a.75.75 0 0 0-1.06 1.06l2.72 2.72-2.72 2.72a.75.75 0 1 0 1.06 1.06l2.72-2.72 2.72 2.72Z"></path>
-      </svg>
+    toast.innerHTML = `
+      <div class="alfred-toast__content"></div>
+      <button class="alfred-toast__close" aria-label="Close notification">
+        <svg viewBox="1 1 18 18" fill="currentColor" focusable="false" aria-hidden="true">
+          <path d="M12.72 13.78a.75.75 0 1 0 1.06-1.06l-2.72-2.72 2.72-2.72a.75.75 0 0 0-1.06-1.06l-2.72 2.72-2.72-2.72a.75.75 0 0 0-1.06 1.06l2.72 2.72-2.72 2.72a.75.75 0 1 0 1.06 1.06l2.72-2.72 2.72 2.72Z"></path>
+        </svg>
+      </button>
     `;
 
-    // Add event listener to close button
-    closeBtn.addEventListener('click', () => this.close(toastId));
+    // Use textContent to prevent XSS
+    const content = toast.querySelector('.alfred-toast__content')!;
+    content.textContent = message;
 
-    // Append elements
-    toast.appendChild(content);
-    toast.appendChild(closeBtn);
-    this.shadowRoot!.appendChild(toast);
+    // Add event listener to close button
+    const closeBtn = toast.querySelector('.alfred-toast__close')!;
+    closeBtn.addEventListener('click', () => toastElement.hide());
+
+    shadowRoot.appendChild(toast);
+
+    // Add to DOM
+    document.body.appendChild(toastElement);
 
     // Trigger reflow to ensure the initial state is applied
     toast.offsetHeight;
@@ -215,29 +217,9 @@ export class Toast {
     // Add show class to trigger transition
     toast.classList.add('alfred-toast--show');
 
+    // Set auto-hide if duration is specified
     if (duration > 0) {
-      this.currentToastTimeout = setTimeout(() => {
-        this.close(toastId);
-      }, duration);
-    }
-  }
-
-  static close(toastId: string) {
-    const toast = this.shadowRoot?.getElementById(toastId);
-    if (toast && !toast.classList.contains('alfred-toast--hiding')) {
-      toast.classList.add('alfred-toast--hiding');
-
-      // Clear timeout if this is the current toast
-      if (this.currentToastTimeout) {
-        clearTimeout(this.currentToastTimeout);
-        this.currentToastTimeout = null;
-      }
-
-      setTimeout(() => {
-        if (toast.parentNode) {
-          toast.parentNode.removeChild(toast);
-        }
-      }, 400);
+      toastElement.setAutoHide(duration);
     }
   }
 
@@ -247,14 +229,5 @@ export class Toast {
 
   static error(message: string, duration?: number) {
     this.show(message, 'error', duration);
-  }
-
-  // Auto-initialize when DOM is ready
-  static autoInit() {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.initShadowContainer());
-    } else {
-      this.initShadowContainer();
-    }
   }
 }
