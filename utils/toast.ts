@@ -48,7 +48,7 @@ export class Toast {
   private static styles = `
     :host {
       position: fixed;
-      bottom: 1.25rem;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       display: block;
@@ -57,15 +57,15 @@ export class Toast {
     }
 
     .alfred-toast {
-      max-width: 31.25rem;
+      max-width: 500px;
       width: auto;
       background: rgb(26, 26, 26);
-      border-radius: 0.5rem;
-      box-shadow: 0rem 0.5rem 1rem -0.25rem rgba(26, 26, 26, 0.22);
-      padding: 0.75rem;
+      border-radius: 8px;
+      box-shadow: 0px 8px 16px -4px rgba(26, 26, 26, 0.52);
+      padding: 12px;
       display: flex;
       align-items: flex-start;
-      gap: 0.5rem;
+      gap: 8px;
       pointer-events: auto;
       position: relative;
       color: rgb(227, 227, 227);
@@ -98,8 +98,8 @@ export class Toast {
 
     .alfred-toast__content {
       flex: 1;
-      font-size: 0.815rem;
-      line-height: 1.25rem;
+      font-size: 13px;
+      line-height: 20px;
       font-weight: 550;
       margin: 0;
       padding: 0;
@@ -107,8 +107,8 @@ export class Toast {
     }
 
     .alfred-toast__close {
-      width: 1.25rem;
-      height: 1.25rem;
+      width: 20px;
+      height: 20px;
       background: none;
       border: none;
       cursor: pointer;
