@@ -1,8 +1,8 @@
-import { useEffect } from 'preact/hooks';
-import { useSettings } from '../../hooks/useSettings';
+import { useEffect, useContext } from 'preact/hooks';
+import { SettingsContext } from '../../contexts/SettingsContext';
 import { setCheckboxValue, onCheckboxChange } from '~/utils/polaris.polyfill';
 
-const appStoreItems = [
+const settingsItems = [
   {
     key: 'searchIndexing',
     label: 'Number Search Results',
@@ -16,7 +16,9 @@ const appStoreItems = [
 ];
 
 export function AppStoreSettings() {
-  const { settings, updateSettings, isLoading } = useSettings();
+  const context = useContext(SettingsContext);
+  if (!context) throw new Error('AppStoreSettings must be used within SettingsProvider');
+  const { settings, updateSettings, isLoading } = context;
 
   // Update checkbox values when settings change
   useEffect(() => {
@@ -24,7 +26,7 @@ export function AppStoreSettings() {
 
     const appStore = settings.appStore || {};
 
-    appStoreItems.forEach(({ key }) => {
+    settingsItems.forEach(({ key }) => {
       setCheckboxValue(`appstore-${key}`, appStore[key as keyof typeof appStore] !== false);
     });
   }, [isLoading, settings.appStore]);
@@ -35,7 +37,7 @@ export function AppStoreSettings() {
 
     const cleanupFunctions: (() => void)[] = [];
 
-    appStoreItems.forEach(({ key }) => {
+    settingsItems.forEach(({ key }) => {
       const cleanup = onCheckboxChange(`appstore-${key}`, async (checked) => {
         await updateSettings({
           appStore: {
@@ -52,7 +54,7 @@ export function AppStoreSettings() {
     return () => {
       cleanupFunctions.forEach(fn => fn());
     };
-  }, [settings, updateSettings, isLoading]);
+  }, [settings.appStore, updateSettings, isLoading]);
 
   return (
     <s-section heading="App Store Features">
@@ -60,7 +62,7 @@ export function AppStoreSettings() {
         Enhance your Shopify App Store experience with additional features and improvements.
       </s-paragraph>
       <s-grid gap="small">
-        {appStoreItems.map(({ key, label, details }) => (
+        {settingsItems.map(({ key, label, details }) => (
           <s-checkbox
             key={key}
             name={`appstore-${key}`}

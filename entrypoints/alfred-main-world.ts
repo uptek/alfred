@@ -176,8 +176,6 @@ export default defineUnlistedScript(() => {
           return false;
         }
 
-        (window as any).Alfred.Toast.success('Copying product JSON...');
-
         const url = new URL(window.location.href);
         const pathname = url.pathname.replace(/\/$/, '');
         const jsonUrl = `${url.origin}${pathname}.js`;
@@ -231,8 +229,6 @@ export default defineUnlistedScript(() => {
           (window as any).Alfred.Toast.error('Not a Shopify store');
           return false;
         }
-
-        (window as any).Alfred.Toast.success('Copying cart JSON...');
 
         // Fetch cart data using Shopify's cart.js API
         const response = await fetch('/cart.js');

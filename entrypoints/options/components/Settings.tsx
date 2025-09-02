@@ -4,6 +4,7 @@ import { CustomizerResizersSetting } from './settings/CustomizerResizersSetting'
 import { ShortcutsSetting } from './settings/ShortcutsSetting';
 import { AppStoreSettings } from './settings/AppStoreSettings';
 import { CollaboratorAccessSetting } from './settings/CollaboratorAccessSetting';
+import { AdminSettings } from './settings/AdminSettings';
 
 export function Settings() {
   return (
@@ -12,6 +13,7 @@ export function Settings() {
         <PageHeader title="Settings" icon="settings" />
         <ShortcutsSetting />
         <CollaboratorAccessSetting />
+        <AdminSettings />
         <AppStoreSettings />
         <CustomizerResizersSetting />
         <ThemeInspectorSetting />

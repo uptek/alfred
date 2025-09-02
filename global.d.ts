@@ -44,4 +44,17 @@ declare interface AlfredSettings {
   collaboratorAccess?: {
     presets?: boolean;
   };
+  admin?: {
+    collapsibleSidebar?: boolean;
+  };
+}
+
+declare interface SettingItem {
+  key: string;
+  label: string;
+  details?: string;
+  type?: 'checkbox' | 'switch' | 'choice' | 'text' | 'number'; // defaults to 'checkbox'
+  choices?: Array<{ label: string; value: string; details?: string }>; // for choice type
+  defaultValue?: any;
+  subSettingItems?: SettingItem[];
 }

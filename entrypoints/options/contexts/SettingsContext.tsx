@@ -1,6 +1,16 @@
+import { createContext } from 'preact';
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { getItem, setItem } from '~/utils/storage';
 import { Toast } from '~/utils/toast';
+
+interface SettingsContextValue {
+  settings: AlfredSettings;
+  updateSettings: (newSettings: Partial<AlfredSettings>) => Promise<boolean>;
+  resetSettings: () => Promise<boolean>;
+  isLoading: boolean;
+  isSaving: boolean;
+  defaultSettings: AlfredSettings;
+}
 
 const defaultSettings: AlfredSettings = {
   themeCustomizer: {
@@ -28,9 +38,37 @@ const defaultSettings: AlfredSettings = {
   collaboratorAccess: {
     presets: true,
   },
+  admin: {
+    collapsibleSidebar: true,
+  },
 };
 
-export function useSettings() {
+export const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
+
+// Deep merge function to handle nested objects
+function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+  const result = { ...target };
+
+  for (const key in source) {
+    const sourceValue = source[key];
+    if (sourceValue !== undefined) {
+      if (typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue)) {
+        // If both target and source have an object at this key, merge them
+        if (typeof target[key] === 'object' && target[key] !== null && !Array.isArray(target[key])) {
+          result[key] = deepMerge(target[key], sourceValue as any) as T[Extract<keyof T, string>];
+        } else {
+          result[key] = sourceValue as T[Extract<keyof T, string>];
+        }
+      } else {
+        result[key] = sourceValue as T[Extract<keyof T, string>];
+      }
+    }
+  }
+
+  return result;
+}
+
+export function SettingsProvider({ children }: { children: preact.ComponentChildren }) {
   const [settings, setSettings] = useState<AlfredSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -50,24 +88,7 @@ export function useSettings() {
         setSettings(defaultSettings);
       } else {
         // Merge with defaults to ensure all properties exist
-        const mergedSettings: AlfredSettings = {
-          themeCustomizer: {
-            ...defaultSettings.themeCustomizer,
-            ...(storedSettings.themeCustomizer || {}),
-          },
-          shortcuts: {
-            ...defaultSettings.shortcuts,
-            ...(storedSettings.shortcuts || {}),
-          },
-          appStore: {
-            ...defaultSettings.appStore,
-            ...(storedSettings.appStore || {}),
-          },
-          collaboratorAccess: {
-            ...defaultSettings.collaboratorAccess,
-            ...(storedSettings.collaboratorAccess || {}),
-          },
-        };
+        const mergedSettings = deepMerge(defaultSettings, storedSettings);
         setSettings(mergedSettings);
       }
     } catch (error) {
@@ -83,13 +104,16 @@ export function useSettings() {
       try {
         setIsSaving(true);
 
-        const updatedSettings: AlfredSettings = {
-          ...settings,
-          ...newSettings,
-        };
+        // Use functional update to always have fresh state
+        const updatedSettings = await new Promise<AlfredSettings>((resolve) => {
+          setSettings((currentSettings) => {
+            const updated = deepMerge(currentSettings, newSettings);
+            resolve(updated);
+            return updated;
+          });
+        });
 
         await setItem('settings', updatedSettings);
-        setSettings(updatedSettings);
         Toast.success('Settings saved');
         return true;
       } catch (error) {
@@ -100,7 +124,7 @@ export function useSettings() {
         setIsSaving(false);
       }
     },
-    [settings]
+    []
   );
 
   const resetSettings = useCallback(async () => {
@@ -119,12 +143,18 @@ export function useSettings() {
     }
   }, []);
 
-  return {
-    settings,
-    updateSettings,
-    resetSettings,
-    isLoading,
-    isSaving,
-    defaultSettings,
-  };
+  return (
+    <SettingsContext.Provider
+      value={{
+        settings,
+        updateSettings,
+        resetSettings,
+        isLoading,
+        isSaving,
+        defaultSettings,
+      }}
+    >
+      {children}
+    </SettingsContext.Provider>
+  );
 }

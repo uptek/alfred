@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { Navigation } from './components/Navigation';
 import { Settings } from './components/Settings';
 import { Changelog } from './components/Changelog';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('settings');
@@ -56,16 +57,18 @@ export default function App() {
   }
 
   return (
-    <s-page>
-      <s-box paddingBlock="large-500">
-        <s-grid gridTemplateColumns="18rem 1fr" gap="base">
-          <Navigation currentPage={currentPage} onNavigate={handleNavigation} />
-          <s-box>
-            {currentPage === 'settings' && <Settings />}
-            {currentPage === 'changelog' && <Changelog />}
-          </s-box>
-        </s-grid>
-      </s-box>
-    </s-page>
+    <SettingsProvider>
+      <s-page>
+        <s-box paddingBlock="large-500">
+          <s-grid gridTemplateColumns="18rem 1fr" gap="base">
+            <Navigation currentPage={currentPage} onNavigate={handleNavigation} />
+            <s-box>
+              {currentPage === 'settings' && <Settings />}
+              {currentPage === 'changelog' && <Changelog />}
+            </s-box>
+          </s-grid>
+        </s-box>
+      </s-page>
+    </SettingsProvider>
   );
 }
