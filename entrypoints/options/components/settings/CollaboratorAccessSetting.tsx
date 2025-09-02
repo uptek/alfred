@@ -1,8 +1,8 @@
-import { useEffect } from 'preact/hooks';
-import { useSettings } from '../../hooks/useSettings';
+import { useEffect, useContext } from 'preact/hooks';
+import { SettingsContext } from '../../contexts/SettingsContext';
 import { setCheckboxValue, onCheckboxChange } from '~/utils/polaris.polyfill';
 
-const collaboratorItems = [
+const settingsItems = [
   {
     key: 'presets',
     label: 'Enable Presets',
@@ -11,7 +11,9 @@ const collaboratorItems = [
 ];
 
 export function CollaboratorAccessSetting() {
-  const { settings, updateSettings, isLoading } = useSettings();
+  const context = useContext(SettingsContext);
+  if (!context) throw new Error('CollaboratorAccessSetting must be used within SettingsProvider');
+  const { settings, updateSettings, isLoading } = context;
 
   // Update checkbox values when settings change
   useEffect(() => {
@@ -19,7 +21,7 @@ export function CollaboratorAccessSetting() {
 
     const collaboratorAccess = settings.collaboratorAccess || {};
 
-    collaboratorItems.forEach(({ key }) => {
+    settingsItems.forEach(({ key }) => {
       setCheckboxValue(`collaborator-${key}`, collaboratorAccess[key as keyof typeof collaboratorAccess] !== false);
     });
   }, [isLoading, settings.collaboratorAccess]);
@@ -30,7 +32,7 @@ export function CollaboratorAccessSetting() {
 
     const cleanupFunctions: (() => void)[] = [];
 
-    collaboratorItems.forEach(({ key }) => {
+    settingsItems.forEach(({ key }) => {
       const cleanup = onCheckboxChange(`collaborator-${key}`, async (checked) => {
         await updateSettings({
           collaboratorAccess: {
@@ -47,7 +49,7 @@ export function CollaboratorAccessSetting() {
     return () => {
       cleanupFunctions.forEach(fn => fn());
     };
-  }, [settings, updateSettings, isLoading]);
+  }, [settings.collaboratorAccess, updateSettings, isLoading]);
 
   return (
     <s-section heading="Collaborator Access Presets">
@@ -55,7 +57,7 @@ export function CollaboratorAccessSetting() {
         Allows you to save and quickly apply permission presets with custom messages when requesting collaborator access to stores.
       </s-paragraph>
       <s-grid gap="small">
-        {collaboratorItems.map(({ key, label, details }) => (
+        {settingsItems.map(({ key, label, details }) => (
           <s-checkbox
             key={key}
             name={`collaborator-${key}`}

@@ -1,5 +1,5 @@
-import { useEffect } from 'preact/hooks';
-import { useSettings } from '../../hooks/useSettings';
+import { useEffect, useContext } from 'preact/hooks';
+import { SettingsContext } from '../../contexts/SettingsContext';
 import { setCheckboxValue, onCheckboxChange } from '~/utils/polaris.polyfill';
 
 const shortcutItems = [
@@ -13,7 +13,9 @@ const shortcutItems = [
 ];
 
 export function ShortcutsSetting() {
-  const { settings, updateSettings, isLoading } = useSettings();
+  const context = useContext(SettingsContext);
+  if (!context) throw new Error('ShortcutsSetting must be used within SettingsProvider');
+  const { settings, updateSettings, isLoading } = context;
 
   // Update checkbox values when settings change
   useEffect(() => {

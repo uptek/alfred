@@ -21,7 +21,7 @@ export function setChoiceListValue(choiceListName: string, value: string): void 
  * @param choiceListName - The name attribute of the s-choice-list
  * @param onChange - Callback function that receives the new value
  */
-export function onChoiceListChange(choiceListName: string, onChange: (value: string) => void | Promise<void>): void {
+export function onChoiceListChange(choiceListName: string, onChange: (value: string) => void | Promise<void>): (() => void) | undefined {
   const escapedName = CSS.escape(choiceListName);
   const choiceList = document.querySelector<HTMLElement>(`[name="${escapedName}"]`);
 
@@ -29,7 +29,7 @@ export function onChoiceListChange(choiceListName: string, onChange: (value: str
     return;
   }
 
-  choiceList.addEventListener('change', async () => {
+  const handler = async () => {
     const shadowRoot = choiceList.shadowRoot;
     if (!shadowRoot) return;
 
@@ -40,7 +40,14 @@ export function onChoiceListChange(choiceListName: string, onChange: (value: str
     if (value !== null) {
       await onChange(value);
     }
-  });
+  };
+
+  choiceList.addEventListener('change', handler);
+
+  // Return cleanup function
+  return () => {
+    choiceList.removeEventListener('change', handler);
+  };
 }
 
 /**

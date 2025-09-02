@@ -1,11 +1,18 @@
 # Changelog
 
+## 2025.09.02
+@ 2025-09-02
+Added collapsible sidebar toggle to Shopify Admin. Hide the navigation sidebar to maximize your workspace, giving you more room to focus on managing your store.
+
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-admin-sidebar.mp4"></video>
+
 ## 2025.08.24
 @ 2025-08-24
 Added toast notifications for better user feedback. Success and error messages now display as visual toast notifications, providing improved UX.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-notifications.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-notifications.mp4"></video>
 
 ## 2025.08.21
 @ 2025-08-21

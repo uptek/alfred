@@ -3,6 +3,12 @@ import { registerShortcuts } from './shortcuts';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 
 export default defineBackground(() => {
+  // Listen for startup event,
+  // This is a band-aid fix to ensure the service worker is running
+  browser.runtime.onStartup.addListener( () => {
+    console.log(`Alfred for Shopify: Service worker started`);
+  });
+
   // Keep track of current shortcuts in memory to avoid unnecessary re-registration
   let currentShortcuts: any = null;
 

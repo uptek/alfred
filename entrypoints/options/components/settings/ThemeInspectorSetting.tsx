@@ -1,9 +1,11 @@
-import { useEffect } from 'preact/hooks';
-import { useSettings } from '../../hooks/useSettings';
+import { useEffect, useContext } from 'preact/hooks';
+import { SettingsContext } from '../../contexts/SettingsContext';
 import { setChoiceListValue, onChoiceListChange } from '~/utils/polaris.polyfill';
 
 export function ThemeInspectorSetting() {
-  const { settings, updateSettings, isLoading } = useSettings();
+  const context = useContext(SettingsContext);
+  if (!context) throw new Error('ThemeInspectorSetting must be used within SettingsProvider');
+  const { settings, updateSettings, isLoading } = context;
 
   useEffect(() => {
     if (isLoading) return;
@@ -11,9 +13,15 @@ export function ThemeInspectorSetting() {
     // Set initial value
     const value = settings.themeCustomizer?.inspector || 'default';
     setChoiceListValue('theme-inspector', value);
+  }, [isLoading, settings.themeCustomizer?.inspector]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const cleanupFunctions: (() => void)[] = [];
 
     // Set up change listener
-    onChoiceListChange('theme-inspector', async (newValue) => {
+    const cleanup = onChoiceListChange('theme-inspector', async (newValue) => {
       await updateSettings({
         themeCustomizer: {
           ...settings.themeCustomizer,
@@ -21,7 +29,13 @@ export function ThemeInspectorSetting() {
         },
       });
     });
-  }, [isLoading]);
+
+    if (cleanup) cleanupFunctions.push(cleanup);
+
+    return () => {
+      cleanupFunctions.forEach(fn => fn());
+    };
+  }, [isLoading, settings.themeCustomizer?.inspector, updateSettings]);
 
   return (
     <s-section heading="Theme inspector">
