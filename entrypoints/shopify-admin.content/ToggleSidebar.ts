@@ -100,6 +100,15 @@ const injectToggleElement = (): void => {
 
     // Save the state to storage
     await setItem('admin-sidebar-state', SIDEBAR_STATE);
+
+    // Track toggle admin sidebar event
+    browser.runtime.sendMessage({
+      type: 'track_action',
+      action: 'toggle_admin_sidebar',
+      metadata: {
+        state: SIDEBAR_STATE
+      },
+    });
   });
 
   (document as any).querySelector(TOGGLE_WRAPPER_SELECTOR).prepend(toggleElement);

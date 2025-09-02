@@ -19,7 +19,8 @@ export type AnalyticsAction =
   | 'appstore_partner_table_export'
   | 'open_section_in_code_editor'
   | 'disable_theme_inspector'
-  | 'resize_theme_customizer';
+  | 'resize_theme_customizer'
+  | 'toggle_admin_sidebar';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number)> = {
@@ -53,6 +54,7 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number
   open_section_in_code_editor: 30,
   disable_theme_inspector: 3,
   resize_theme_customizer: 3,
+  toggle_admin_sidebar: 0,
 };
 
 /**
