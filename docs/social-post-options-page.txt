@@ -1,0 +1,5 @@
+Added an options page to Alfred.
+
+Configure shortcuts, toggle features, and customize your workflow—all from one settings panel.
+
+Gives you control over all the features. Enable what you want to use and disable everything else.

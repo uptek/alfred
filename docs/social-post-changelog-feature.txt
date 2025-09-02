@@ -1,0 +1,9 @@
+Recently added a changelog page for Alfred.
+
+Now you can see what's new and what's changed, all in one place.
+
+It'll auto-open when the extension updates, so no more wondering if that bug you reported got fixed or if a new feature just dropped.
+
+Simple update, but hopefully makes your experience a bit better.
+
+Thanks for the suggestion!

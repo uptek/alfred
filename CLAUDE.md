@@ -1,5 +1,16 @@
 # Project-Specific Instructions for Alfred
 
+## Important Commands
+
+**NEVER run bun commands directly. Always ask the user to run these commands for you.**
+
+Examples of commands to ask the user to run:
+- `bun run dev` - Start the development server
+- `bun install` - Install dependencies
+- `bun run build` - Build the extension
+- `bun run typecheck` - Run type checking
+- Any other bun commands
+
 ## WXT Framework
 
 This project uses WXT - a modern framework for building browser extensions.

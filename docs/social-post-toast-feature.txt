@@ -1,0 +1,9 @@
+Added toast notifications to Alfred.
+
+Now you get instant feedback when actions complete.
+
+No more wondering if that shortcut actually worked or if something failed silently.
+
+Clean, unobtrusive notifications that don't interrupt your flow. Styled like Shopify's toast notifications to make you feel at home.
+
+See it in action in the video below.
