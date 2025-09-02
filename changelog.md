@@ -5,6 +5,8 @@
 Added toast notifications for better user feedback. Success and error messages now display as visual toast notifications, providing improved UX.
 
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-notifications.mp4"></video>
+
 ## 2025.08.21
 @ 2025-08-21
 Major settings update! You now have granular control over Alfred's features through the new options page.

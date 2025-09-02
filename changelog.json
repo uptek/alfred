@@ -6,6 +6,10 @@
       {
         "type": "paragraph",
         "content": "Added toast notifications for better user feedback. Success and error messages now display as visual toast notifications, providing improved UX."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-notifications.mp4"
       }
     ]
   },

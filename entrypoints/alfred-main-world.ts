@@ -153,7 +153,7 @@ export default defineUnlistedScript(() => {
         return true;
       } catch (error) {
         console.error('Error opening in customizer:', error);
-        (window as any).Alfred.Toast.error('Failed to open customizer');
+        (window as any).Alfred.Toast.error('Failed to open in customizer');
         return false;
       }
     },
@@ -172,9 +172,11 @@ export default defineUnlistedScript(() => {
 
         // Check if this is a product page
         if (!window.location.pathname.includes('/products/')) {
-          (window as any).Alfred.Toast.error('Navigate to a product page first');
+          (window as any).Alfred.Toast.error('Not a product page');
           return false;
         }
+
+        (window as any).Alfred.Toast.success('Copying product JSON...');
 
         const url = new URL(window.location.href);
         const pathname = url.pathname.replace(/\/$/, '');
@@ -192,7 +194,7 @@ export default defineUnlistedScript(() => {
 
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
-          (window as any).Alfred.Toast.success('Product JSON copied!');
+          (window as any).Alfred.Toast.success('Product JSON copied');
 
           window.dispatchEvent(
             new CustomEvent('alfred:track', {
@@ -230,6 +232,8 @@ export default defineUnlistedScript(() => {
           return false;
         }
 
+        (window as any).Alfred.Toast.success('Copying cart JSON...');
+
         // Fetch cart data using Shopify's cart.js API
         const response = await fetch('/cart.js');
 
@@ -243,7 +247,7 @@ export default defineUnlistedScript(() => {
 
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
-          (window as any).Alfred.Toast.success('Cart JSON copied!');
+          (window as any).Alfred.Toast.success('Cart JSON copied');
 
           window.dispatchEvent(
             new CustomEvent('alfred:track', {
@@ -329,6 +333,8 @@ export default defineUnlistedScript(() => {
           return false;
         }
 
+        (window as any).Alfred.Toast.success('Clearing cart...');
+
         // Clear cart
         const response = await fetch('/cart/clear');
 
@@ -337,7 +343,7 @@ export default defineUnlistedScript(() => {
           return false;
         }
 
-        (window as any).Alfred.Toast.success('Cart cleared!');
+        (window as any).Alfred.Toast.success('Cart cleared');
 
         // Track the action before reload
         window.dispatchEvent(
