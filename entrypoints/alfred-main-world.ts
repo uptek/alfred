@@ -153,7 +153,7 @@ export default defineUnlistedScript(() => {
         return true;
       } catch (error) {
         console.error('Error opening in customizer:', error);
-        (window as any).Alfred.Toast.error('Failed to open customizer');
+        (window as any).Alfred.Toast.error('Failed to open in customizer');
         return false;
       }
     },
@@ -172,7 +172,7 @@ export default defineUnlistedScript(() => {
 
         // Check if this is a product page
         if (!window.location.pathname.includes('/products/')) {
-          (window as any).Alfred.Toast.error('Navigate to a product page first');
+          (window as any).Alfred.Toast.error('Not a product page');
           return false;
         }
 
