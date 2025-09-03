@@ -2,8 +2,10 @@
 
 ## 2025.09.03
 @ 2025-09-03
-Fixed toast notifications positioning when the Shopify preview bar is present.
-
+- Toast notifications: Fixed toast notifications positioning when the Shopify preview bar is present
+- Admin sidebar: Fixed the sidebar when a sub navigation item is active
+- Admin sidebar: Added active item dot indicator for better visual feedback
+- Admin sidebar: Added macOS-like magnifying animation to on hover
 
 ## 2025.09.02
 @ 2025-09-02
