@@ -3,7 +3,7 @@ import { getItem, setItem } from '~/utils/storage';
 type SidebarState = 'collapsed' | 'expanded';
 
 let SIDEBAR_STATE: SidebarState = 'expanded';
-const TOGGLE_WRAPPER_SELECTOR = '#AppFrameNav .Polaris-Navigation__Section:has(s-internal-icon[type="home"])';
+const TOGGLE_WRAPPER_SELECTOR = '#AppFrameNav .Polaris-Navigation__Section:has(s-internal-icon[type*="home"])';
 const TOGGLE_ELEMENT_ID = 'alfred-admin-sidebar-toggle';
 const STYLE_TAG_ID = 'alfred-admin-sidebar-styles';
 const STYLES = `
@@ -14,8 +14,50 @@ const STYLES = `
   #AppFrameNav .Polaris-Navigation__Text,
   #AppFrameNav .Polaris-Navigation ul div[class*="Heading"],
   #AppFrameNav .Polaris-Navigation__Badge,
-  #AppFrameNav .Polaris-Navigation__SecondaryActions {
+  #AppFrameNav .Polaris-Navigation__SecondaryActions,
+  #AppFrameNav .Polaris-Navigation__ListItem:has(.Polaris-Navigation--subNavigationActive) .Polaris-Navigation__SecondaryNavigation {
     display: none !important;
+  }
+
+  #AppFrameNav .Polaris-Navigation--subNavigationActive:before,
+  #AppFrameNav .Polaris-Navigation__Item--selected:before {
+    content: "•" !important;
+    height: 1.5rem !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    opacity: 1 !important;
+  }
+
+  /* macOS Dock-like magnification effect */
+  #AppFrameNav .Polaris-Navigation__ListItem {
+    margin-bottom: var(--p-space-025);
+  }
+
+  #AppFrameNav .Polaris-Navigation__ListItem {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transform-origin: center !important;
+  }
+
+  #AppFrameNav .Polaris-Navigation__ListItem:hover {
+    transform: scale(1.1) !important;
+    z-index: 10 !important;
+    position: relative !important;
+  }
+
+  #AppFrameNav .Polaris-Navigation__ListItem:hover + .Polaris-Navigation__ListItem,
+  #AppFrameNav .Polaris-Navigation__ListItem:has(+ .Polaris-Navigation__ListItem:hover) {
+    transform: scale(1.05) !important;
+    z-index: 5 !important;
+    position: relative !important;
+  }
+
+  #AppFrameNav .Polaris-Navigation__ListItem .Polaris-Navigation__Icon {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  #AppFrameNav .Polaris-Navigation__ListItem:hover .Polaris-Navigation__Icon {
+    transform: scale(1.1) !important;
   }
 `;
 
@@ -77,7 +119,7 @@ const injectToggleElement = (): void => {
   toggleElement.innerHTML = `
   <div class="Polaris-Navigation__ItemWrapper">
     <div class="Polaris-Navigation__ItemInnerWrapper">
-      <a data-polaris-unstyled="true" class="Polaris-Navigation__Item Polaris-Navigation__Item--selected Polaris-Navigation--subNavigationActive" tabindex="0" aria-disabled="false">
+      <a data-polaris-unstyled="true" class="Polaris-Navigation__Item" tabindex="0" aria-disabled="false">
         <div class="Polaris-Navigation__Icon"><svg ${SIDEBAR_STATE === 'expanded' ? 'style="transform: scale(-1, -1);"' : ''} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20"><path d="M4 4a1 1 0 0 1 1 1v4h5.336l-1.293-1.293a1 1 0 0 1 1.414-1.414l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 0 1-1.414-1.414l1.293-1.293h-5.336v4a1 1 0 1 1-2 0v-10a1 1 0 0 1 1-1Z"/><path d="M16 4a1 1 0 0 1 1 1v10a1 1 0 1 1-2 0v-10a1 1 0 0 1 1-1Z"/></svg></div>
         <span class="Polaris-Navigation__Text"><span class="Polaris-Text--root Polaris-Text--bodyMd Polaris-Text--semibold">Collapse</span></span>
       </a>
@@ -111,7 +153,21 @@ const injectToggleElement = (): void => {
     });
   });
 
-  (document as any).querySelector(TOGGLE_WRAPPER_SELECTOR).prepend(toggleElement);
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  const insertInterval = setInterval(() => {
+    attempts++;
+
+    const wrapper = (document as any).querySelector(TOGGLE_WRAPPER_SELECTOR);
+    if (wrapper && !document.getElementById(TOGGLE_ELEMENT_ID)) {
+      wrapper.prepend(toggleElement);
+    }
+
+    if (attempts >= maxAttempts) {
+      clearInterval(insertInterval);
+    }
+  }, 500);
 };
 
 /**
