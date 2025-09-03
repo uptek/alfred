@@ -2,6 +2,12 @@
 class AlfredToast extends HTMLElement {
   private timeout: ReturnType<typeof setTimeout> | null = null;
 
+  connectedCallback() {
+    // Set popover attribute and class
+    this.setAttribute('popover', 'manual');
+    this.classList.add('alfred-toast');
+  }
+
   disconnectedCallback() {
     // Cleanup when removed from DOM
     if (this.timeout) {
@@ -25,14 +31,14 @@ class AlfredToast extends HTMLElement {
       this.timeout = null;
     }
 
-    // Add hiding animation
-    const toast = this.shadowRoot?.querySelector('.alfred-toast');
-    if (toast) {
-      toast.classList.add('alfred-toast--hiding');
-      setTimeout(() => {
-        this.remove();
-      }, 400);
-    }
+    // Add hide class and remove show class for hide animation
+    this.classList.remove('alfred-toast--show');
+    this.classList.add('alfred-toast--hide');
+
+    setTimeout(() => {
+      this.hidePopover();
+      this.remove();
+    }, 400);
   }
 }
 
@@ -47,16 +53,34 @@ export class Toast {
 
   private static styles = `
     :host {
-      position: fixed;
-      bottom: 20px;
+      top: auto;
+      bottom: min(calc(29px + var(--alfred-toast-bottom-offset, 0px)), 79px);
       left: 50%;
-      transform: translateX(-50%);
-      display: block;
-      z-index: 2147483647;
+      transform: translateX(-50%) translateY(40px);
+      opacity: 0;
       pointer-events: none;
+      transition: transform 400ms cubic-bezier(0.19, 0.91, 0.38, 1), opacity 400ms cubic-bezier(0.19, 0.91, 0.38, 1);
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: none;
     }
 
-    .alfred-toast {
+    :host(.alfred-toast--show) {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    :host(.alfred-toast--hide) {
+      transform: translateX(-50%) scale(0.8);
+      opacity: 0;
+    }
+
+    .alfred-toast__content, .alfred-toast__content * {
+      box-sizing: border-box;
+    }
+
+    .alfred-toast__content {
       max-width: 500px;
       width: auto;
       background: rgb(26, 26, 26);
@@ -69,34 +93,16 @@ export class Toast {
       pointer-events: auto;
       position: relative;
       color: rgb(227, 227, 227);
-      transform: translateY(40px);
-      opacity: 0;
-      transition: transform 400ms cubic-bezier(0.19, 0.91, 0.38, 1), opacity 400ms cubic-bezier(0.19, 0.91, 0.38, 1);
       font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
       font-size: 14px;
       line-height: 1.5;
-      box-sizing: border-box;
     }
 
-    .alfred-toast * {
-      box-sizing: border-box;
-    }
-
-    .alfred-toast--show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .alfred-toast--hiding {
-      transform: scale(0.8);
-      opacity: 0;
-    }
-
-    .alfred-toast--error {
+    .alfred-toast__content--error {
       background: rgb(199, 10, 36);
     }
 
-    .alfred-toast__content {
+    .alfred-toast__text {
       flex: 1;
       font-size: 13px;
       line-height: 20px;
@@ -177,6 +183,13 @@ export class Toast {
     const toastId = `alfred-toast-${++this.toastCounter}`;
     toastElement.id = toastId;
 
+    // Check for PBarNextFrameWrapper and adjust bottom position
+    const pBarWrapper = document.querySelector('#PBarNextFrameWrapper') as HTMLElement;
+    if (pBarWrapper) {
+      const height = pBarWrapper.offsetHeight;
+      toastElement.style.setProperty('--alfred-toast-bottom-offset', `${height}px`);
+    }
+
     // Attach shadow root
     const shadowRoot = toastElement.attachShadow({ mode: 'open' });
 
@@ -187,10 +200,10 @@ export class Toast {
 
     // Create toast container
     const toast = document.createElement('div');
-    toast.className = `alfred-toast${type === 'error' ? ' alfred-toast--error' : ''}`;
+    toast.className = `alfred-toast__content${type === 'error' ? ' alfred-toast__content--error' : ''}`;
 
     toast.innerHTML = `
-      <div class="alfred-toast__content"></div>
+      <div class="alfred-toast__text"></div>
       <button class="alfred-toast__close" aria-label="Close notification">
         <svg viewBox="1 1 18 18" fill="currentColor" focusable="false" aria-hidden="true">
           <path d="M12.72 13.78a.75.75 0 1 0 1.06-1.06l-2.72-2.72 2.72-2.72a.75.75 0 0 0-1.06-1.06l-2.72 2.72-2.72-2.72a.75.75 0 0 0-1.06 1.06l2.72 2.72-2.72 2.72a.75.75 0 1 0 1.06 1.06l2.72-2.72 2.72 2.72Z"></path>
@@ -199,7 +212,7 @@ export class Toast {
     `;
 
     // Use textContent to prevent XSS
-    const content = toast.querySelector('.alfred-toast__content')!;
+    const content = toast.querySelector('.alfred-toast__text')!;
     content.textContent = message;
 
     // Add event listener to close button
@@ -211,11 +224,13 @@ export class Toast {
     // Add to DOM
     document.body.appendChild(toastElement);
 
-    // Trigger reflow to ensure the initial state is applied
-    toast.offsetHeight;
+    // Show popover
+    toastElement.showPopover();
 
-    // Add show class to trigger transition
-    toast.classList.add('alfred-toast--show');
+    // Add show class after next frame to trigger animation
+    requestAnimationFrame(() => {
+      toastElement.classList.add('alfred-toast--show');
+    });
 
     // Set auto-hide if duration is specified
     if (duration > 0) {

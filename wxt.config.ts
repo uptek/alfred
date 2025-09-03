@@ -7,7 +7,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred for Shopify',
     description: 'Make Shopify great again!',
-    version: '2025.09.02',
+    version: '2025.09.03',
     action: {
       default_title: 'Alfred',
     },
@@ -36,9 +36,9 @@ export default defineConfig({
       '--user-data-dir=./.wxt/chrome-data',
       '--disable-infobars',
       '--disable-features=BlockThirdPartyCookies',  // Allows third-party cookies
-      'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
+      // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
       // 'https://uptek.com',
-      'https://admin.shopify.com/store/junaid-workspace',
+      'https://junaid-workspace.myshopify.com/?pb=1&preview_theme_id=153167626454',
     ],
   },
 });
