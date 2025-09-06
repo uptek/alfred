@@ -1,5 +1,15 @@
 [
   {
+    "version": "2025.09.06",
+    "date": "2025-09-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Added a public Feedback & Requests board, allowing users to submit feature requests and provide feedback. Be part of the journey!"
+      }
+    ]
+  },
+  {
     "version": "2025.09.03",
     "date": "2025-09-03",
     "changes": [

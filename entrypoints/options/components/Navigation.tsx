@@ -3,11 +3,19 @@ interface NavigationProps {
   onNavigate: (page: string) => void;
 }
 
+interface NavItem {
+  id: string;
+  label: string;
+  icon: any;
+  url?: string;
+}
+
 export function Navigation({ currentPage, onNavigate }: NavigationProps) {
-  const navItems = [
+  const navItems: NavItem[] = [
     { id: 'settings', label: 'Settings', icon: 'settings' },
     { id: 'changelog', label: 'Changelog', icon: 'clock' },
-  ] as const;
+    { id: 'feedback', label: 'Feedback & Requests', icon: 'lightbulb', url: 'https://alfred.featurebase.app/' },
+  ];
 
   return (
     <s-box id="nav">
@@ -23,18 +31,30 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
           <ul>
             {navItems.map(item => (
               <li key={item.id}>
-                <a
-                  type="button"
-                  data-page={item.id}
-                  className={`nav-link ${currentPage === item.id ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate(item.id);
-                  }}
-                >
-                  <s-icon type={item.icon}></s-icon>
-                  <span>{item.label}</span>
-                </a>
+                {item.url ? (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    className="nav-link"
+                  >
+                    <s-icon type={item.icon as any}></s-icon>
+                    <span>{item.label}</span>
+                    <s-icon type="external"></s-icon>
+                  </a>
+                ) : (
+                  <a
+                    type="button"
+                    data-page={item.id}
+                    className={`nav-link ${currentPage === item.id ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigate(item.id);
+                    }}
+                  >
+                    <s-icon type={item.icon as any}></s-icon>
+                    <span>{item.label}</span>
+                  </a>
+                )}
               </li>
             ))}
           </ul>

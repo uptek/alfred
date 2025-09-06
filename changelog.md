@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025.09.06
+@ 2025-09-06
+Added a public Feedback & Requests board, allowing users to submit feature requests and provide feedback. Be part of the journey!
+
+
 ## 2025.09.03
 @ 2025-09-03
 - Toast notifications: Fixed toast notifications positioning when the Shopify preview bar is present

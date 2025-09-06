@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import changelogData from '@/changelog.json';
-import { PageHeader } from './PageHeader';
+import { PageHeader } from '../PageHeader';
 
 interface ChangelogEntry {
   version: string;
