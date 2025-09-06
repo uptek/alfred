@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { Navigation } from './components/Navigation';
-import { Settings } from './components/Settings';
-import { Changelog } from './components/Changelog';
+import { Settings, Changelog } from './components/pages';
 import { SettingsProvider } from './contexts/SettingsContext';
 
 export default function App() {

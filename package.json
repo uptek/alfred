@@ -1,7 +1,7 @@
 {
   "name": "alfred",
   "private": true,
-  "version": "2025.09.03",
+  "version": "2025.09.06",
   "type": "module",
   "packageManager": "bun@1.2.14",
   "scripts": {
