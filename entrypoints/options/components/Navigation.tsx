@@ -14,7 +14,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const navItems: NavItem[] = [
     { id: 'settings', label: 'Settings', icon: 'settings' },
     { id: 'changelog', label: 'Changelog', icon: 'clock' },
-    { id: 'feedback', label: 'Feedback & Requests', icon: 'lightbulb', url: 'https://alfred.featurebase.app/' },
+    { id: 'feedback', label: 'Feedback & Requests', icon: 'lightbulb', url: 'https://alfred-for-shopify.canny.io/' },
   ];
 
   return (
