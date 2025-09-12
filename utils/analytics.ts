@@ -46,7 +46,7 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number
   clear_cart: 30,
   save_preset: 0,
   apply_preset: (metadata) => {
-    return 45 + (metadata?.had_custom_message ? 20 : 0);
+    return 45 + (metadata?.has_custom_message ? 20 : 0);
   },
   appstore_partner_table_view: (metadata) => (metadata?.app_count || 0) * 5,
   appstore_partner_table_sort: (metadata) => (metadata?.app_count || 0) * 2,
