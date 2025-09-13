@@ -19,12 +19,12 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
     "@shopify/app-bridge-ui-types": "^0.2.1",
-    "@wxt-dev/auto-icons": "^1.0.2",
+    "@wxt-dev/auto-icons": "^1.1.0",
     "chokidar-cli": "^3.0.0",
     "typescript": "^5.9.2",
-    "wxt": "^0.20.7"
+    "wxt": "^0.20.11"
   },
   "dependencies": {
-    "preact": "^10.27.0"
+    "preact": "^10.27.1"
   }
 }
