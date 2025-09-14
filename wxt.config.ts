@@ -1,5 +1,6 @@
 import { defineConfig } from 'wxt';
 import preact from '@preact/preset-vite';
+import tailwindcss from '@tailwindcss/vite';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -7,7 +8,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred for Shopify',
     description: 'Make Shopify great again!',
-    version: '2025.09.06',
+    version: '2025.09.14',
     action: {
       default_title: 'Alfred',
     },
@@ -29,14 +30,14 @@ export default defineConfig({
     ],
   },
   vite: () => ({
-    plugins: [preact()],
+    plugins: [preact(), tailwindcss()],
   }),
   webExt: {
     chromiumArgs: [
       '--user-data-dir=./.wxt/chrome-data',
       '--disable-infobars',
       '--disable-features=BlockThirdPartyCookies', // Allows third-party cookies
-      'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
+      // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
       // 'https://uptek.com',
       // 'https://junaid-workspace.myshopify.com/?pb=1&preview_theme_id=153167626454',
     ],
