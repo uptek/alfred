@@ -21,7 +21,9 @@ const VALID_ACTIONS = [
   'appstore_partner_table_export',
   'open_section_in_code_editor',
   'disable_theme_inspector',
-  'resize_theme_customizer'
+  'resize_theme_customizer',
+  'toggle_admin_sidebar',
+  'detect_theme'
 ]
 
 serve(async (req) => {

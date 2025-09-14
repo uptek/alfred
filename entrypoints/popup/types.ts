@@ -20,4 +20,5 @@ export interface ThemeInfo {
     author?: string;
   } | null;
   shop: string | null;
+  page_url: string | null;
 }

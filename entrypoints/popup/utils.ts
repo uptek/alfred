@@ -1,3 +1,4 @@
+import { trackAction } from '@/utils/analytics';
 import { ThemeInfo } from './types';
 
 export const getTheme = async (): Promise<ThemeInfo | null> => {
@@ -8,7 +9,10 @@ export const getTheme = async (): Promise<ThemeInfo | null> => {
     if (tab?.id && tab?.url) {
       // Send message to content script
       const response = await browser.tabs.sendMessage(tab.id, { action: 'get_theme' });
-      return response;
+      return {
+        ...response,
+        page_url: tab.url,
+      };
     }
     return null;
   } catch (error) {
