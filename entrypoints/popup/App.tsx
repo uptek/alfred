@@ -30,13 +30,12 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('theme');
   const [tracked, setTracked] = useState<string[]>([]);
-  const tabs = [{
-    handle: 'theme',
-    name: 'Theme',
-  }, {
-    handle: 'store',
-    name: 'Store',
-  }];
+  const tabs = [
+    {
+      handle: 'theme',
+      name: 'Theme',
+    }
+  ];
 
   useEffect(() => {
     const fetchThemeInfo = async () => {
@@ -84,7 +83,7 @@ export default function App() {
                 className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer ${activeTab === tab.handle
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
-                }`}
+                  }`}
                 onClick={() => setActiveTab(tab.handle)}
               >
                 {tab.name}
