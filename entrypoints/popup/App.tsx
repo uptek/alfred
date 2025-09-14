@@ -65,17 +65,17 @@ export default function App() {
             {activeTab === 'theme' ? (
               <div className="flex flex-col">
                 <InfoItem
-                  label="Shopify URL"
-                  value={themeInfo.shop}
+                  label="Shopify URL:"
+                  value={themeInfo.shop || 'N/A'}
                   type="url"
                 />
                 <InfoItem
-                  label="Theme Name"
-                  value={themeInfo.theme?.name}
+                  label="Theme name:"
+                  value={themeInfo.theme?.name || 'N/A'}
                 />
                 <InfoItem
-                  label="Theme Version"
-                  value={themeInfo.theme?.schema_version}
+                  label="Theme version:"
+                  value={themeInfo.theme?.schema_version || 'N/A'}
                   isLast={true}
                 />
               </div>
@@ -88,7 +88,7 @@ export default function App() {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center min-h-[200px] px-15">
-          <h3 className="text-base font-semibold text-slate-900 mb-2">Not a Shopify Store</h3>
+          <h3 className="text-base font-semibold text-slate-900 mb-2">Not a Shopify store</h3>
           <p className="text-sm text-slate-500 leading-relaxed text-center">Navigate to a Shopify store to see Alfred's magic ✨</p>
         </div>
       )}
