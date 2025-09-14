@@ -36,11 +36,6 @@ export default defineBackground(() => {
     }
   });
 
-  // Open options page when extension icon is clicked
-  browser.action.onClicked.addListener(() => {
-    browser.runtime.openOptionsPage();
-  });
-
   // Open changelog page when extension is updated
   browser.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'update') {

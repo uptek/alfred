@@ -1,7 +1,7 @@
 {
   "name": "alfred",
   "private": true,
-  "version": "2025.09.08",
+  "version": "2025.09.14",
   "type": "module",
   "packageManager": "bun@1.2.14",
   "scripts": {
@@ -25,6 +25,8 @@
     "wxt": "^0.20.11"
   },
   "dependencies": {
-    "preact": "^10.27.1"
+    "preact": "^10.27.1",
+    "tailwindcss": "^4.1.13",
+    "@tailwindcss/vite": "^4.1.13"
   }
 }

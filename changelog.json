@@ -1,5 +1,22 @@
 [
   {
+    "version": "2025.09.14",
+    "date": "2025-09-14",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Introducing the Shopify Theme Detector! Instantly find out what Shopify theme a brand is using."
+      },
+      {
+        "type": "list",
+        "content": [
+          "View store URL, theme name, and version.",
+          "Works automatically on any Shopify store, no external API required."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2025.09.06",
     "date": "2025-09-06",
     "changes": [
