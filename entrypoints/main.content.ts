@@ -23,6 +23,19 @@ export default defineContentScript({
       }
     });
 
+    // Listen for postMessage responses from main world
+    window.addEventListener('message', (event) => {
+      if (event.source !== window) return;
+
+      if (event.data && event.data.type === 'alfred:theme_response') {
+        const { requestId, data } = event.data;
+        // Dispatch custom event with the response data
+        window.dispatchEvent(new CustomEvent(`alfred:theme_response_${requestId}`, {
+          detail: data
+        }));
+      }
+    });
+
     /**
      * Listen for messages from registered scripts,
      * relay them to the main world script,
@@ -30,21 +43,46 @@ export default defineContentScript({
      */
     browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       if (request.action === 'get_theme') {
-        // Create a unique event ID to handle the response
-        const eventId = `alfred:get_theme_response_${Date.now()}`;
+        // Create a unique request ID
+        const requestId = Date.now() + '_' + Math.random();
 
-        // Listen for the response from main world
-        const handleThemeData = (event: any) => {
-          window.removeEventListener(eventId, handleThemeData);
-          sendResponse(event.detail);
+        // Set up listener for response
+        let responseHandled = false;
+
+        const handleThemeResponse = (event: any) => {
+          if (responseHandled) return;
+          responseHandled = true;
+
+          window.removeEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
+          clearTimeout(timeoutId);
+
+          sendResponse(event.detail || {
+            isShopify: false,
+            theme: null,
+            shop: null,
+          });
         };
 
-        window.addEventListener(eventId, handleThemeData);
+        // Add timeout fallback
+        const timeoutId = setTimeout(() => {
+          if (responseHandled) return;
+          responseHandled = true;
 
-        // Request theme data from the already-injected Alfred script
-        window.dispatchEvent(new CustomEvent('alfred:request_theme', {
-          detail: { responseEvent: eventId }
-        }));
+          window.removeEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
+          sendResponse({
+            isShopify: false,
+            theme: null,
+            shop: null,
+          });
+        }, 200);
+
+        window.addEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
+
+        // Use postMessage to request theme data
+        window.postMessage({
+          type: 'alfred:request_theme',
+          requestId: requestId
+        }, '*');
 
         // Return true to indicate async response
         return true;

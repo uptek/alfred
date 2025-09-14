@@ -17,16 +17,26 @@ export default defineUnlistedScript(() => {
     },
 
     _initThemeRequestHandler: () => {
-      window.addEventListener('alfred:request_theme', (event: any) => {
-        const responseEvent = event.detail?.responseEvent;
-        if (responseEvent) {
-          // Get theme data
-          const themeData = (window as any).Alfred.getTheme();
+      // Handle postMessage requests
+      window.addEventListener('message', (event) => {
+        if (event.source !== window) return;
 
-          // Send response back to content script
-          window.dispatchEvent(new CustomEvent(responseEvent, {
-            detail: themeData
-          }));
+        if (event.data && event.data.type === 'alfred:request_theme') {
+          const requestId = event.data.requestId;
+          if (requestId) {
+            // Get theme data
+            const themeData = (window as any).Alfred.getTheme();
+
+            // Serialize the data to avoid DataCloneError
+            const serializedData = JSON.parse(JSON.stringify(themeData));
+
+            // Send response back via postMessage
+            window.postMessage({
+              type: 'alfred:theme_response',
+              requestId: requestId,
+              data: serializedData
+            }, '*');
+          }
         }
       });
     },

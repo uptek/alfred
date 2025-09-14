@@ -20,7 +20,8 @@ export type AnalyticsAction =
   | 'open_section_in_code_editor'
   | 'disable_theme_inspector'
   | 'resize_theme_customizer'
-  | 'toggle_admin_sidebar';
+  | 'toggle_admin_sidebar'
+  | 'detect_theme';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number)> = {
@@ -55,6 +56,7 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number
   disable_theme_inspector: 3,
   resize_theme_customizer: 3,
   toggle_admin_sidebar: 0,
+  detect_theme: 15,
 };
 
 /**
@@ -89,10 +91,10 @@ export async function trackAction(
     };
 
     // Disable analytics in development
-    // if (import.meta.env.DEV) {
-    //   console.log('[Dev Mode] Event not sent:', eventData);
-    //   return;
-    // }
+    if (import.meta.env.DEV) {
+      console.log('[Dev Mode] Event not sent:', eventData);
+      return;
+    }
 
     // Send to Supabase (fire and forget)
     fetch(TRACK_ENDPOINT, {
