@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { getTheme } from './utils';
+import { trackAction } from '@/utils/analytics';
 import { InfoItemProps, ThemeInfo } from './types';
 import "@/assets/tailwind.css";
 
@@ -27,17 +28,45 @@ function InfoItem({ label, value, type = 'text', isLast = false }: InfoItemProps
 export default function App() {
   const [themeInfo, setThemeInfo] = useState<ThemeInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'theme' | 'store'>('theme');
+  const [activeTab, setActiveTab] = useState<string>('theme');
+  const [tracked, setTracked] = useState<string[]>([]);
+  const tabs = [
+    {
+      handle: 'theme',
+      name: 'Theme',
+    }
+  ];
 
   useEffect(() => {
     const fetchThemeInfo = async () => {
       const themeData = await getTheme();
       setThemeInfo(themeData);
       setLoading(false);
+
+      trackAction('detect_theme', {
+        is_shopify: themeData?.isShopify,
+        page_url: themeData?.page_url || '',
+        shop_domain: themeData?.shop || '',
+        theme_name: themeData?.theme?.schema_name || themeData?.theme?.name || '',
+        theme_version: themeData?.theme?.schema_version || '',
+      });
     };
 
     fetchThemeInfo();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'theme' && !tracked.includes('theme') && themeInfo) {
+      trackAction('detect_theme', {
+        is_shopify: themeInfo?.isShopify,
+        page_url: themeInfo?.page_url || '',
+        shop_domain: themeInfo?.shop || '',
+        theme_name: themeInfo?.theme?.schema_name || themeInfo?.theme?.name || '',
+        theme_version: themeInfo?.theme?.schema_version || '',
+      });
+      setTracked([...tracked, 'theme']);
+    }
+  }, [activeTab]);
 
   return (
     <div className="bg-white min-h-[200px] p-4">
@@ -49,16 +78,17 @@ export default function App() {
       ) : themeInfo?.isShopify ? (
         <>
           <div className="flex bg-black/5 p-1 rounded-lg gap-1">
-            <button
-              className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer ${
-                activeTab === 'theme'
+            {tabs.map(tab => (
+              <button
+                className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer ${activeTab === tab.handle
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
-              }`}
-              onClick={() => setActiveTab('theme')}
-            >
-              Theme
-            </button>
+                  }`}
+                onClick={() => setActiveTab(tab.handle)}
+              >
+                {tab.name}
+              </button>
+            ))}
           </div>
 
           <div>
@@ -71,7 +101,7 @@ export default function App() {
                 />
                 <InfoItem
                   label="Theme name:"
-                  value={themeInfo.theme?.name || 'N/A'}
+                  value={themeInfo.theme?.schema_name || themeInfo.theme?.name || 'N/A'}
                 />
                 <InfoItem
                   label="Theme version:"

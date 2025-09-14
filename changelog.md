@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025.09.15
+@ 2025-09-15
+- Fix: Improved theme detection for stores with strict security protocols.
+
 ## 2025.09.14
 @ 2025-09-14
 Introducing the Shopify Theme Detector! Instantly find out what Shopify theme a brand is using.
