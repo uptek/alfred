@@ -27,10 +27,7 @@ export async function setupInspector(): Promise<void> {
       browser.runtime.sendMessage({
         type: "track_action",
         action: "disable_theme_inspector",
-        metadata: {
-          page_url: window.location.href,
-          page_type: "theme_customizer",
-        },
+        metadata: {},
       });
     }
   } else if (inspectorSetting === 'restore') {
@@ -44,10 +41,7 @@ export async function setupInspector(): Promise<void> {
         browser.runtime.sendMessage({
           type: "track_action",
           action: "disable_theme_inspector",
-          metadata: {
-            page_url: window.location.href,
-            page_type: "theme_customizer",
-          },
+          metadata: {},
         });
       }
     }

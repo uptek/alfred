@@ -117,7 +117,7 @@ export default function App() {
       action: 'apply_preset',
       metadata: {
         permissions_count: preset.permissions.length,
-        had_custom_message: !!preset.customMessage,
+        has_custom_message: !!preset.customMessage,
       },
     });
   };
