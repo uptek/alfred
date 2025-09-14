@@ -114,7 +114,6 @@ const Resizers = async () => {
       action: 'resize_theme_customizer',
       metadata: {
         type: resizer.type || 'unknown',
-        page_url: window.location.href,
         page_type: 'theme_customizer',
       },
     });

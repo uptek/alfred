@@ -1,5 +1,17 @@
 # Changelog
 
+## 2025.09.14
+@ 2025-09-14
+Introducing the Shopify Theme Detector! Instantly find out what Shopify theme a brand is using.
+
+Navigate to a Shopify store and click the Alfred icon to see the theme information.
+
+- View store URL, theme name, and version.
+- Works automatically on any Shopify store, no external API required.
+
+---
+- Fix: Background service worker becoming inactive interrupting shortcuts.
+
 ## 2025.09.06
 @ 2025-09-06
 Added a public Feedback & Requests board, allowing users to submit feature requests and provide feedback. Be part of the journey!

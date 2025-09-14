@@ -3,11 +3,16 @@ import { registerShortcuts } from './shortcuts';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 
 export default defineBackground(() => {
-  // Listen for startup event,
-  // This is a band-aid fix to ensure the service worker is running
-  browser.runtime.onStartup.addListener( () => {
-    console.log(`Alfred for Shopify: Service worker started`);
-  });
+  // Keep service worker alive to prevent it from becoming inactive
+  const keepAlive = () => {
+    // Send a simple message to keep the service worker active
+    browser.runtime.getPlatformInfo().then(() => {
+      // This is a no-op, but it keeps the service worker alive
+    });
+  };
+
+  // Set up periodic keep-alive (every 20 seconds)
+  setInterval(keepAlive, 20000);
 
   // Keep track of current shortcuts in memory to avoid unnecessary re-registration
   let currentShortcuts: any = null;
@@ -15,7 +20,7 @@ export default defineBackground(() => {
   registerShortcuts();
 
   // Re-register shortcuts when settings change
-  storage.watch<any>('local:settings', async (newValue, oldValue) => {
+  storage.watch<any>('local:settings', async (newValue) => {
     const newShortcuts = newValue?.shortcuts;
 
     // Only re-register if shortcuts actually changed
@@ -34,11 +39,6 @@ export default defineBackground(() => {
         console.error('Failed to track action:', error);
       }
     }
-  });
-
-  // Open options page when extension icon is clicked
-  browser.action.onClicked.addListener(() => {
-    browser.runtime.openOptionsPage();
   });
 
   // Open changelog page when extension is updated

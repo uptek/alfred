@@ -16,12 +16,50 @@ export default defineUnlistedScript(() => {
       }, true);
     },
 
+    _initThemeRequestHandler: () => {
+      window.addEventListener('alfred:request_theme', (event: any) => {
+        const responseEvent = event.detail?.responseEvent;
+        if (responseEvent) {
+          // Get theme data
+          const themeData = (window as any).Alfred.getTheme();
+
+          // Send response back to content script
+          window.dispatchEvent(new CustomEvent(responseEvent, {
+            detail: themeData
+          }));
+        }
+      });
+    },
+
     /**
      * Check if the current page is a Shopify store
      * @returns {boolean}
      */
     isShopify: () => {
       return !!(window as any).Shopify && !!(window as any).__st;
+    },
+
+    /**
+     * Get Shopify theme information
+     * @returns {object} Theme information object
+     */
+    getTheme: () => {
+      if (!(window as any).Alfred.isShopify()) {
+        return {
+          isShopify: false,
+          theme: null,
+          shop: null,
+        };
+      }
+
+      const shopify = (window as any).Shopify;
+
+      // Return the theme data directly from Shopify global object
+      return {
+        isShopify: true,
+        theme: shopify.theme || null,
+        shop: shopify.shop || null,
+      };
     },
 
     /**
@@ -475,4 +513,5 @@ export default defineUnlistedScript(() => {
 
   // Initialize the context menu listener
   (window as any).Alfred._initContextMenuListener();
+  (window as any).Alfred._initThemeRequestHandler();
 });
