@@ -12,7 +12,7 @@ export default defineBackground(() => {
   };
 
   // Set up periodic keep-alive (every 20 seconds)
-  setInterval(keepAlive, 20 * 1000);
+  setInterval(keepAlive, 20000);
 
   // Keep track of current shortcuts in memory to avoid unnecessary re-registration
   let currentShortcuts: any = null;
