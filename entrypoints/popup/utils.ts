@@ -20,3 +20,36 @@ export const getTheme = async (): Promise<ThemeInfo | null> => {
     return null;
   }
 };
+
+export const getThemePreviewUrl = (
+  themeInfo: ThemeInfo | null,
+  disablePreviewBar: boolean
+): string => {
+  if (!themeInfo?.theme?.id || !themeInfo?.page_url) return '';
+
+  const url = new URL(themeInfo.page_url);
+  url.searchParams.set('preview_theme_id', themeInfo.theme.id.toString());
+
+  // Add pb=0 to disable preview bar if requested
+  if (disablePreviewBar) {
+    url.searchParams.set('pb', '0');
+  }
+
+  return url.toString();
+};
+
+export const copyThemePreviewUrl = async (
+  themeInfo: ThemeInfo | null,
+  disablePreviewBar: boolean
+): Promise<boolean> => {
+  const previewUrl = getThemePreviewUrl(themeInfo, disablePreviewBar);
+  if (!previewUrl) return false;
+
+  try {
+    await navigator.clipboard.writeText(previewUrl);
+    return true;
+  } catch (error) {
+    console.error('Failed to copy preview URL:', error);
+    return false;
+  }
+};
