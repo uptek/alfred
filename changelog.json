@@ -1,5 +1,19 @@
 [
   {
+    "version": "2025.09.30",
+    "date": "2025-09-30",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "You can now copy the theme preview URL from the Theme Detector popup, with an option to disable the preview bar."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/theme-preview-url-gui.mp4"
+      }
+    ]
+  },
+  {
     "version": "2025.09.15",
     "date": "2025-09-15",
     "changes": [

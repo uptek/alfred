@@ -319,9 +319,10 @@ export default defineUnlistedScript(() => {
 
     /**
      * Copy theme preview URL to clipboard
+     * @param {boolean} disablePreviewBar - Whether to disable the preview bar (adds pb=0)
      * @returns {Promise<boolean>}
      */
-    copyThemePreviewUrl: async (): Promise<boolean> => {
+    copyThemePreviewUrl: async (disablePreviewBar: boolean = false): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
         if (!(window as any).Alfred.isShopify()) {
@@ -334,6 +335,11 @@ export default defineUnlistedScript(() => {
 
         // Add or update the preview_theme_id parameter
         url.searchParams.set('preview_theme_id', themeId);
+
+        // Add pb=0 to disable preview bar if requested
+        if (disablePreviewBar) {
+          url.searchParams.set('pb', '0');
+        }
 
         const copiedToClipboard = await (window as any).Alfred.writeToClipboard(url.toString());
 
@@ -349,6 +355,7 @@ export default defineUnlistedScript(() => {
                   page_url: window.location.href,
                   page_type: (window as any).__st?.p || 'other',
                   shop_domain: window.location.hostname,
+                  disable_preview_bar: disablePreviewBar,
                 },
               },
             })

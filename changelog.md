@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025.09.30
+@ 2025-09-30
+You can now copy the theme preview URL from the Theme Detector popup, with an option to disable the preview bar.
+
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/theme-preview-url-gui.mp4"></video>
+
 ## 2025.09.15
 @ 2025-09-15
 - Fix: Improved theme detection for stores with strict security protocols.
