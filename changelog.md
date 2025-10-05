@@ -1,11 +1,21 @@
 # Changelog
 
+## 2025.10.05
+@ 2025-10-05
+Improved Collaborator Access Presets UI/UX
+
+- Removed the dropdown presets selector. It was redundant, use the Apply button in the table instead.
+- Apply button in the table is more prominent now.
+- Added icons to the buttons for better visual feedback.
+- Long permission labels are now truncated for better table readability.
+- Removed the message display from the table.
+
 ## 2025.09.30
 @ 2025-09-30
 You can now copy the theme preview URL from the Theme Detector popup, with an option to disable the preview bar.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/theme-preview-url-gui.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/theme-preview-url-gui.mp4"></video>
 
 ## 2025.09.15
 @ 2025-09-15

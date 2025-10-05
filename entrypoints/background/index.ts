@@ -42,9 +42,11 @@ export default defineBackground(() => {
   });
 
   // Open changelog page when extension is updated
-  browser.runtime.onInstalled.addListener((details) => {
-    if (details.reason === 'update') {
-      browser.tabs.create({ url: browser.runtime.getURL('/options.html?page=changelog') });
-    }
-  });
+  if (!import.meta.env.DEV) {
+    browser.runtime.onInstalled.addListener((details) => {
+      if (details.reason === 'update') {
+        browser.tabs.create({ url: browser.runtime.getURL('/options.html?page=changelog') });
+      }
+    });
+  }
 });
