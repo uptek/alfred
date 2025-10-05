@@ -1,5 +1,25 @@
 [
   {
+    "version": "2025.10.05",
+    "date": "2025-10-05",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Improved Collaborator Access Presets UI/UX"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Removed the dropdown presets selector. It was redundant, use the Apply button in the table instead.",
+          "Apply button in the table is more prominent now.",
+          "Added icons to the buttons for better visual feedback.",
+          "Long permission labels are now truncated for better table readability.",
+          "Removed the message display from the table."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2025.09.30",
     "date": "2025-09-30",
     "changes": [

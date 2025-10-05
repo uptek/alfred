@@ -6,7 +6,6 @@ import type { Permission, PermissionPreset } from './types';
 export default function App() {
   const [presets, setPresets] = useState<PermissionPreset[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<PermissionPreset | null>(null);
-  const [showPresetsTable, setShowPresetsTable] = useState(true);
   const [checkedPresets, setCheckedPresets] = useState<Set<string>>(new Set());
   const selectRef = useRef<any>(null);
 
@@ -102,9 +101,7 @@ export default function App() {
     await savePreset(updatedPreset);
 
     // Update local state
-    setPresets(prevPresets =>
-      prevPresets.map(p => p.id === updatedPreset.id ? updatedPreset : p)
-    );
+    setPresets((prevPresets) => prevPresets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p)));
 
     // Update selected preset if applying from table
     if (presetToApply) {
@@ -187,13 +184,13 @@ export default function App() {
   };
 
   const handleDeleteMultiple = async () => {
-    const presetsToDelete = checkedPresets.size === 0 ? presets.map(p => p.id) : Array.from(checkedPresets);
+    const presetsToDelete = checkedPresets.size === 0 ? presets.map((p) => p.id) : Array.from(checkedPresets);
     if (confirm(`Are you sure you want to delete ${presetsToDelete.length} preset${presetsToDelete.length !== 1 ? 's' : ''}?`)) {
       for (const id of presetsToDelete) {
         await deletePreset(id);
       }
 
-      setPresets(presets.filter(p => !presetsToDelete.includes(p.id)));
+      setPresets(presets.filter((p) => !presetsToDelete.includes(p.id)));
       setCheckedPresets(new Set());
 
       if (selectedPreset && presetsToDelete.includes(selectedPreset.id)) {
@@ -263,136 +260,114 @@ export default function App() {
       <s-divider></s-divider>
       <s-box padding="large">
         <s-stack gap="base">
-          <s-text type="strong">Permissions presets</s-text>
-          <s-stack direction="inline" gap="base small-200">
-            <div style={{ width: '300px' }}>
-              <s-select
-                ref={selectRef}
-                label="Presets"
-                labelAccessibilityVisibility="exclusive"
-                value={selectedPreset?.id || '0'}
+          <s-stack direction="inline" justifyContent="space-between">
+            <s-stack direction="inline" gap="small-200">
+              <s-button variant="secondary" tone="critical" icon="delete" onClick={handleDeleteMultiple}>
+                {checkedPresets.size === 0 ? 'Delete all' : `Delete ${checkedPresets.size} selected`}
+              </s-button>
+              <s-button
+                variant="secondary"
+                icon="export"
+                onClick={() => exportPresets(checkedPresets.size === 0 ? presets : presets.filter((p) => checkedPresets.has(p.id)))}
               >
-                <s-option value="0">Select a preset</s-option>
-                {presets.map((preset) => (
-                  <s-option key={preset.id} value={preset.id}>
-                    {preset.name}
-                  </s-option>
-                ))}
-              </s-select>
-            </div>
-            <s-button variant="primary" onClick={() => handleApplyPreset()}>
-              Apply
-            </s-button>
+                {checkedPresets.size === 0 ? 'Export all' : `Export ${checkedPresets.size} selected`}
+              </s-button>
+              <s-button variant="secondary" icon="import" onClick={handleImport}>
+                Import
+              </s-button>
+            </s-stack>
             <s-button variant="secondary" onClick={handleSavePreset}>
               Save preset
             </s-button>
-            <s-button variant="tertiary" onClick={() => setShowPresetsTable(!showPresetsTable)}>
-              View all presets
-            </s-button>
           </s-stack>
-
-          {showPresetsTable && (
-            <>
-              <s-stack direction="inline" gap="small-200">
-                <s-button
-                  variant="secondary"
-                  tone="critical"
-                  onClick={handleDeleteMultiple}
-                >
-                  {checkedPresets.size === 0 ? 'Delete all' : `Delete ${checkedPresets.size} selected`}
-                </s-button>
-                <s-button
-                  variant="secondary"
-                  onClick={() => exportPresets(checkedPresets.size === 0 ? presets : presets.filter(p => checkedPresets.has(p.id)))}
-                >
-                  {checkedPresets.size === 0 ? 'Export all' : `Export ${checkedPresets.size} selected`}
-                </s-button>
-                <s-button variant="secondary" onClick={handleImport}>
-                  Import
-                </s-button>
-              </s-stack>
-              <s-section padding="none">
-                <s-table>
-                  <s-table-header-row>
-                    <s-table-header>
-                      {presets.length > 0 && (
-                      <input
-                        type="checkbox"
-                        checked={presets.length > 0 && checkedPresets.size === presets.length}
-                        onChange={(e) => {
-                          if ((e.target as HTMLInputElement).checked) {
-                            setCheckedPresets(new Set(presets.map(p => p.id)));
-                          } else {
-                            setCheckedPresets(new Set());
-                          }
-                        }}
-                      />
-                      )}
-                    </s-table-header>
-                    <s-table-header listSlot="primary">Name</s-table-header>
-                    <s-table-header>Permissions</s-table-header>
-                    <s-table-header>Message</s-table-header>
-                    <s-table-header>Last used</s-table-header>
-                    <s-table-header>Created</s-table-header>
-                    <s-table-header>Actions</s-table-header>
-                  </s-table-header-row>
-                  <s-table-body>
-                    {presets.length === 0 ? (
-                      <s-table-row>
-                        <s-table-cell></s-table-cell>
-                        <s-table-cell>No permissions presets saved yet.</s-table-cell>
-                        <s-table-cell></s-table-cell>
-                        <s-table-cell></s-table-cell>
-                        <s-table-cell></s-table-cell>
-                        <s-table-cell></s-table-cell>
-                        <s-table-cell></s-table-cell>
-                      </s-table-row>
-                    ) : (
-                      presets.map((preset) => (
-                        <s-table-row key={preset.id}>
-                          <s-table-cell>
-                            <input
-                              type="checkbox"
-                              checked={checkedPresets.has(preset.id)}
-                              onChange={(e) => {
-                                const newChecked = new Set(checkedPresets);
-                                if ((e.target as HTMLInputElement).checked) {
-                                  newChecked.add(preset.id);
-                                } else {
-                                  newChecked.delete(preset.id);
-                                }
-                                setCheckedPresets(newChecked);
-                              }}
-                            />
-                          </s-table-cell>
-                          <s-table-cell>{preset.name}</s-table-cell>
-                          <s-table-cell>
-                            {preset.permissions
-                              .slice(0, 2)
-                              .map((p) => p.label)
-                              .join(', ')}
-                            {preset.permissions.length > 3 && `, +${preset.permissions.length - 3} more`}
-                          </s-table-cell>
-                          <s-table-cell>
-                            {preset.customMessage && <s-text>{preset.customMessage}</s-text>}
-                          </s-table-cell>
-                          <s-table-cell>{preset.lastUsed ? formatTimeAgo(preset.lastUsed) : 'Never'}</s-table-cell>
-                          <s-table-cell>{formatTimeAgo(preset.createdAt)}</s-table-cell>
-                          <s-table-cell>
-                            <s-stack direction="inline" gap="small-200">
-                              <s-button icon="check" accessibilityLabel="Apply preset" variant="primary" onClick={() => handleApplyPreset(preset)} />
-                              <s-button icon="edit" accessibilityLabel="Edit preset" onClick={() => handleEditPreset(preset)} />
-                              <s-button icon="delete" accessibilityLabel="Delete preset" onClick={() => handleDeletePreset(preset.id)} />
-                            </s-stack>
-                          </s-table-cell>
-                        </s-table-row>
-                      ))
-                    )}
-                  </s-table-body>
-                </s-table>
-              </s-section>
-            </>
-          )}
+          <s-section padding="none">
+            <s-table>
+              <s-table-header-row>
+                <s-table-header>
+                  {presets.length > 0 && (
+                    <input
+                      type="checkbox"
+                      checked={presets.length > 0 && checkedPresets.size === presets.length}
+                      onChange={(e) => {
+                        if ((e.target as HTMLInputElement).checked) {
+                          setCheckedPresets(new Set(presets.map((p) => p.id)));
+                        } else {
+                          setCheckedPresets(new Set());
+                        }
+                      }}
+                    />
+                  )}
+                </s-table-header>
+                <s-table-header listSlot="primary">Name</s-table-header>
+                <s-table-header>Permissions</s-table-header>
+                <s-table-header>Message</s-table-header>
+                <s-table-header>Created</s-table-header>
+                <s-table-header>Actions</s-table-header>
+              </s-table-header-row>
+              <s-table-body>
+                {presets.length === 0 ? (
+                  <s-table-row>
+                    <s-table-cell></s-table-cell>
+                    <s-table-cell>No permissions presets saved yet.</s-table-cell>
+                    <s-table-cell></s-table-cell>
+                    <s-table-cell></s-table-cell>
+                    <s-table-cell></s-table-cell>
+                    <s-table-cell></s-table-cell>
+                  </s-table-row>
+                ) : (
+                  presets.map((preset, index) => (
+                    <s-table-row key={preset.id}>
+                      <s-table-cell>
+                        <input
+                          type="checkbox"
+                          checked={checkedPresets.has(preset.id)}
+                          onChange={(e) => {
+                            const newChecked = new Set(checkedPresets);
+                            if ((e.target as HTMLInputElement).checked) {
+                              newChecked.add(preset.id);
+                            } else {
+                              newChecked.delete(preset.id);
+                            }
+                            setCheckedPresets(newChecked);
+                          }}
+                        />
+                      </s-table-cell>
+                      <s-table-cell>{preset.name}</s-table-cell>
+                      <s-table-cell>
+                        {preset.permissions
+                          .slice(0, 2)
+                          .map((p) => (p.label.length > 15 ? p.label.slice(0, 15) + '...' : p.label))
+                          .join(', ')}
+                        {preset.permissions.length > 3 && `, +${preset.permissions.length - 3} more`}
+                      </s-table-cell>
+                      <s-table-cell>
+                        {preset.customMessage ? (
+                          <s-icon type="check-circle-filled"></s-icon>
+                        ) : (
+                          <s-icon type="x-circle"></s-icon>
+                        )}
+                      </s-table-cell>
+                      <s-table-cell>{formatTimeAgo(preset.createdAt)}</s-table-cell>
+                      <s-table-cell>
+                        <s-stack direction="inline" gap="small-200">
+                          <s-button
+                            icon="check-circle-filled"
+                            accessibilityLabel="Apply preset"
+                            variant="primary"
+                            onClick={() => handleApplyPreset(preset)}
+                          >
+                            Apply
+                          </s-button>
+                          <s-button icon="edit" accessibilityLabel="Edit preset" onClick={() => handleEditPreset(preset)} />
+                          <s-button icon="delete" tone="critical" accessibilityLabel="Delete preset" onClick={() => handleDeletePreset(preset.id)} />
+                        </s-stack>
+                      </s-table-cell>
+                    </s-table-row>
+                  ))
+                )}
+              </s-table-body>
+            </s-table>
+          </s-section>
         </s-stack>
       </s-box>
     </>

@@ -21,7 +21,7 @@ export default defineContentScript({
     }
 
     // Inject Shopify Polaris
-    await injectScript('/libs/shopify-polaris-web-components.js', {
+    await injectScript('/libs/shopify-polaris.js', {
       keepInDom: true,
     });
 
