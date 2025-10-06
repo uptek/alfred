@@ -12,7 +12,7 @@ import type { AppRaw, App, Resource } from './types';
  * @returns {AppRaw} The app data
  */
 export const fetchAppData = async (link: string): Promise<AppRaw> => {
-  let appData: AppRaw = {
+  const appData: AppRaw = {
     resources: [],
     developer: {
       website: null,
@@ -45,7 +45,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
       const resourceLinks = resourcesSection?.querySelectorAll('a');
       resourceLinks?.forEach((link) => {
         appData.resources.push({
-          title: link.textContent?.trim() || '',
+          title: link.textContent?.trim() ?? '',
           url: link.href,
         });
       });
@@ -61,19 +61,19 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
 
       // Find website link by text content
       const links = developerSection?.querySelectorAll('a');
-      const websiteElement = Array.from(links || []).find((link) =>
+      const websiteElement = Array.from(links ?? []).find((link) =>
         link.textContent?.trim().toLowerCase().includes('website')
       );
 
       if (websiteElement) {
-        appData.developer.website = websiteElement.href || null;
+        appData.developer.website = websiteElement.href ?? null;
       }
 
       // Find address (assumed to be the last paragraph)
       const paragraphs = developerSection?.querySelectorAll('p');
       if (paragraphs && paragraphs.length > 0) {
         const addressElement = paragraphs[paragraphs.length - 1];
-        appData.developer.address = addressElement?.textContent?.trim() || null;
+        appData.developer.address = addressElement?.textContent?.trim() ?? null;
       }
     }
 
@@ -95,14 +95,14 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
           }
         }
 
-        let launchDateText = dateElement.textContent?.trim() || null;
+        let launchDateText = dateElement.textContent?.trim() ?? '';
 
         // If we found a changelog link
         if (changelogAnchor) {
           // Extract only the date part (text before the anchor)
-          const textContent = dateElement.textContent?.trim() || null;
+          const textContent = dateElement.textContent?.trim() ?? '';
           // Remove the anchor text and any separator (like "·") from the text content
-          launchDateText = textContent?.split('·')[0]?.trim() || null;
+          launchDateText = textContent?.split('·')[0]?.trim() ?? '';
 
           // Add the changelog link to resources
           appData.resources.push({
@@ -114,7 +114,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
         appData.launchDate = launchDateText;
 
         // Calculate app age in years and months
-        const launchDate = new Date(launchDateText || '');
+        const launchDate = new Date(launchDateText ?? '');
         if (!isNaN(launchDate.getTime())) {
           const currentDate = new Date();
 
@@ -160,7 +160,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
           appData.age = ageString.trim() || null;
 
           // Also add detailed age format
-          appData.detailedAge = formatDetailedAge(launchDateText || '');
+          appData.detailedAge = formatDetailedAge(launchDateText ?? '');
         }
       }
     }
@@ -192,11 +192,11 @@ const formatDetailedAge = (launchDateStr: string) => {
   const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
   // Calculate years, months, and remaining days
-  let years = Math.floor(totalDays / 365);
+  const years = Math.floor(totalDays / 365);
   let remainingDays = totalDays % 365;
 
   // Approximate months (using 30.4 days as average month length)
-  let months = Math.floor(remainingDays / 30.4);
+  const months = Math.floor(remainingDays / 30.4);
   remainingDays = Math.floor(remainingDays % 30.4);
 
   // Format the result
@@ -224,7 +224,7 @@ const formatDetailedAge = (launchDateStr: string) => {
  */
 const getPageTitle = () => {
   const h1 = document.querySelector('h1')?.textContent?.trim();
-  let pageTitle = h1 || 'shopify';
+  const pageTitle = h1 ?? 'shopify';
 
   return pageTitle
     .toLowerCase()
@@ -262,25 +262,25 @@ const convertToCSV = (apps: App[]) => {
     // Format the values and handle special cases
     const values = [
       // Escape quotes in name and wrap in quotes
-      '"' + (app.name || '').replace(/"/g, '""') + '"',
+      '"' + (app.name ?? '').replace(/"/g, '""') + '"',
       // Rating
-      app.rating || 'N/A',
+      app.rating ?? 'N/A',
       // Review count
-      app.reviewCount || '0',
+      app.reviewCount ?? '0',
       // Escape quotes in pricing and wrap in quotes
-      '"' + (app.pricing || '').replace(/"/g, '""') + '"',
+      '"' + (app.pricing ?? '').replace(/"/g, '""') + '"',
       // Launch date - properly quoted to prevent CSV issues with commas
-      '"' + (app.launchDate || '').replace(/"/g, '""') + '"',
+      '"' + (app.launchDate ?? '').replace(/"/g, '""') + '"',
       // Installed status (Yes/No)
       app.isInstalled ? 'Yes' : 'No',
       // Built for Shopify status (Yes/No)
       app.isBuiltForShopify ? 'Yes' : 'No',
       // Escape quotes in description and wrap in quotes
-      '"' + (app.description || '').replace(/"/g, '""') + '"',
+      '"' + (app.description ?? '').replace(/"/g, '""') + '"',
       // App URL
-      app.link?.split('?')[0]?.split('#')[0] || '',
+      app.link?.split('?')[0]?.split('#')[0] ?? '',
       // Website URL
-      app.developer && app.developer.website ? app.developer.website : '',
+      app.developer?.website ?? '',
     ];
 
     // Add the row to the CSV
@@ -339,8 +339,8 @@ export const downloadCSV = (apps: App[]) => {
 
 export const getResourceIcon = (resource: Resource) => {
   let icon = defaultIcon;
-  const title = resource.title?.toLowerCase() || '';
-  const url = resource.url?.toLowerCase() || '';
+  const title = resource.title?.toLowerCase() ?? '';
+  const url = resource.url?.toLowerCase() ?? '';
 
   // Determine icon type
   if (title.includes('privacy') || url.includes('privacy')) {

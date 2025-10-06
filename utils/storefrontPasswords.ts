@@ -17,9 +17,7 @@ export interface StorefrontPasswordEntry {
 /**
  * Map of domain to password entry
  */
-export interface StorefrontPasswordsStorage {
-  [domain: string]: StorefrontPasswordEntry;
-}
+export type StorefrontPasswordsStorage = Record<string, StorefrontPasswordEntry>;
 
 /**
  * Get all stored storefront passwords
@@ -48,7 +46,7 @@ export async function getPasswordEntry(
  */
 export async function getPassword(domain: string): Promise<string | null> {
   const entry = await getPasswordEntry(domain);
-  if (!entry || !entry.enabled) {
+  if (!entry?.enabled) {
     return null;
   }
   return entry.password;
@@ -63,7 +61,7 @@ export async function getPassword(domain: string): Promise<string | null> {
 export async function savePassword(
   domain: string,
   password: string,
-  resetFailures: boolean = true
+  resetFailures = true
 ): Promise<void> {
   const allPasswords = await getAllPasswordEntries();
   const existing = allPasswords[domain];
@@ -114,7 +112,7 @@ export async function markPasswordUsed(domain: string): Promise<void> {
  */
 export async function markPasswordFailed(
   domain: string,
-  threshold: number = 1
+  threshold = 1
 ): Promise<void> {
   const allPasswords = await getAllPasswordEntries();
   const entry = allPasswords[domain];

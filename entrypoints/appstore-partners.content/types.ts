@@ -1,20 +1,20 @@
-export type Resource = {
+export interface Resource {
   title: string;
   url: string;
-};
+}
 
-export type Developer = {
+export interface Developer {
   website: string | null;
   address: string | null;
-};
+}
 
-export type AppRaw = {
+export interface AppRaw {
   resources: Resource[];
   developer: Developer;
   launchDate: string | null;
   age: string | null;
   detailedAge: string | null;
-};
+}
 
 export type App = {
   name: string;
@@ -30,12 +30,12 @@ export type App = {
   isBuiltForShopify: boolean;
 } & AppRaw;
 
-export type SummaryCardProps = {
+export interface SummaryCardProps {
   app: App;
   className?: string;
-};
+}
 
-export type SortableHeaderProps = {
+export interface SortableHeaderProps {
   label: string;
   column: keyof App;
   align?: 'left' | 'center' | 'right';
@@ -44,4 +44,4 @@ export type SortableHeaderProps = {
     direction: 'asc' | 'desc' | null;
   };
   onSort: (column: keyof App, direction: 'asc' | 'desc') => void;
-};
+}

@@ -75,7 +75,7 @@ const SummaryCard = ({ app, className }: SummaryCardProps) => {
           </div>
         )}
       </div>
-      {app.developer && (app.developer.website || app.developer.address) && (
+      {app.developer && (app.developer.website ?? app.developer.address) && (
         <div className={styles.summarySection}>
           <div className={styles.summarySectionTitle}>Developer</div>
           {app.developer.website && (
@@ -153,14 +153,14 @@ export default function App() {
         // Process all cards and create initial apps data
         const initialApps = Array.from(appCards).map((card) => {
           // Extract all the synchronous data as before
-          const name = card.getAttribute('data-app-card-name-value') || '';
-          const handle = card.getAttribute('data-app-card-handle-value') || '';
+          const name = card.getAttribute('data-app-card-name-value') ?? '';
+          const handle = card.getAttribute('data-app-card-handle-value') ?? '';
           const iconUrl =
-            card.getAttribute('data-app-card-icon-url-value') || '';
-          const link = card.getAttribute('data-app-card-app-link-value') || '';
+            card.getAttribute('data-app-card-icon-url-value') ?? '';
+          const link = card.getAttribute('data-app-card-app-link-value') ?? '';
 
           // Extract UI elements
-          const iconFigure = card.querySelector('figure') as HTMLElement | null;
+          const iconFigure = card.querySelector('figure');
           const infoRow = card.querySelector(
             'div > div > div:nth-child(1) > div:nth-child(2)'
           );
@@ -191,22 +191,22 @@ export default function App() {
               ) {
                 const firstSpan = spans[0];
                 const firstTextNode = Array.from(
-                  firstSpan?.childNodes || []
-                ).find((n: any) => n.nodeType === Node.TEXT_NODE);
+                  firstSpan?.childNodes ?? []
+                ).find((n): n is Text => n.nodeType === Node.TEXT_NODE);
                 rating = firstTextNode
-                  ? (firstTextNode as any).textContent?.trim() || 'N/A'
-                  : firstSpan?.textContent?.trim() || 'N/A';
+                  ? firstTextNode.textContent?.trim() ?? 'N/A'
+                  : firstSpan?.textContent?.trim() ?? 'N/A';
               }
               for (const span of spans) {
                 if (span.classList.contains('tw-overflow-hidden')) {
-                  pricing = span?.textContent?.trim() || 'N/A';
+                  pricing = span?.textContent?.trim() ?? 'N/A';
                 } else if (
                   span?.hasAttribute('aria-hidden') &&
-                  /^\(.*\)$/.test(span?.textContent?.trim() || '')
+                  /^\(.*\)$/.test(span?.textContent?.trim() ?? '')
                 ) {
                   reviewCount =
                     parseInt(
-                      (span?.textContent || '')
+                      (span?.textContent ?? '')
                         .replace(/[(),]/g, '')
                         .trim()
                         .replace(/,/g, ''),
@@ -228,7 +228,7 @@ export default function App() {
             rating,
             reviewCount,
             pricing,
-            description: descriptionElement?.textContent?.trim() || '',
+            description: descriptionElement?.textContent?.trim() ?? '',
             isInstalled: installedElement !== null,
             isBuiltForShopify: builtForShopifyElement !== null,
             launchDate: null,
@@ -313,8 +313,8 @@ export default function App() {
     });
 
     const sortedData = [...apps].sort((a, b) => {
-      let aValue: any = a[column];
-      let bValue: any = b[column];
+      let aValue: string | number;
+      let bValue: string | number;
 
       // Handle special cases
       if (column === 'rating') {
@@ -329,6 +329,12 @@ export default function App() {
         const bDate = b.launchDate ? new Date(b.launchDate) : new Date(0);
         aValue = aDate.getTime();
         bValue = bDate.getTime();
+      } else {
+        // Default to string comparison
+        const aVal = a[column];
+        const bVal = b[column];
+        aValue = typeof aVal === 'string' || typeof aVal === 'number' ? aVal : '';
+        bValue = typeof bVal === 'string' || typeof bVal === 'number' ? bVal : '';
       }
 
       // Sort based on direction
@@ -445,7 +451,7 @@ export default function App() {
                     className={
                       (activeSummaryCard === app.handle
                         ? styles.summaryCardActive
-                        : styles.summaryCard) || ''
+                        : styles.summaryCard) ?? ''
                     }
                   />
                 </td>

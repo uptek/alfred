@@ -1,7 +1,7 @@
 import { type Browser } from 'wxt/browser';
 
 // State to be shared across functions
-const menus: Map<string, ContextMenu.ClickHandler> = new Map();
+const menus = new Map<string, ContextMenu.ClickHandler>();
 let initialized = false;
 const contexts = [
   'page',
@@ -44,12 +44,12 @@ export function create(
   const menuOptions = {
     id,
     title: options.title,
-    contexts: options.contexts || contexts,
+    contexts: options.contexts ?? contexts,
     parentId: options.parentId,
-    type: options.type || 'normal',
+    type: (options.type ?? 'normal') as Browser.contextMenus.ItemType,
     documentUrlPatterns: options.documentUrlPatterns,
     targetUrlPatterns: options.targetUrlPatterns,
-    enabled: options.enabled !== undefined ? options.enabled : true,
+    enabled: options.enabled ?? true,
   } as Browser.contextMenus.CreateProperties;
 
   if (
@@ -61,7 +61,7 @@ export function create(
 
   try {
     browser.contextMenus.create(menuOptions);
-    menus.set(id, handler || (() => {}));
+    menus.set(id, handler ?? (() => undefined));
   } catch (error) {
     console.error('Failed to create context menu item:', error);
   }
@@ -83,7 +83,7 @@ export function update(
     return false;
   }
 
-  const updateProperties: Record<string, any> = {};
+  const updateProperties: Record<string, unknown> = {};
 
   if (options.title !== undefined) updateProperties.title = options.title;
   if (options.contexts !== undefined)
@@ -96,8 +96,7 @@ export function update(
   if (options.targetUrlPatterns !== undefined)
     updateProperties.targetUrlPatterns = options.targetUrlPatterns;
   if (options.enabled !== undefined) updateProperties.enabled = options.enabled;
-  if (options['checked'] !== undefined)
-    updateProperties['checked'] = options['checked'];
+  if (options.checked !== undefined) updateProperties.checked = options.checked;
 
   try {
     browser.contextMenus.update(id, updateProperties);
@@ -170,7 +169,7 @@ export function createSeparator(id: string, parentId?: string): string {
   try {
     browser.contextMenus.create(options);
     // Add a dummy handler since separators don't have clicks
-    menus.set(id, () => {});
+    menus.set(id, () => undefined);
   } catch (error) {
     console.error('Failed to create separator:', error);
   }

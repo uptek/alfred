@@ -1,7 +1,21 @@
 /// <reference types="chrome" />
 
 declare namespace ContextMenu {
-  type ContextType = chrome.contextMenus.ContextType | 'all';
+  type ContextType =
+    | 'all'
+    | 'page'
+    | 'frame'
+    | 'selection'
+    | 'link'
+    | 'editable'
+    | 'image'
+    | 'video'
+    | 'audio'
+    | 'launcher'
+    | 'browser_action'
+    | 'page_action'
+    | 'action'
+    | 'all_frames';
 
   interface Options {
     id: string;
@@ -57,7 +71,7 @@ declare interface SettingItem {
   label: string;
   details?: string;
   type?: 'checkbox' | 'switch' | 'choice' | 'text' | 'number'; // defaults to 'checkbox'
-  choices?: Array<{ label: string; value: string; details?: string }>; // for choice type
-  defaultValue?: any;
+  choices?: { label: string; value: string; details?: string }[]; // for choice type
+  defaultValue?: unknown;
   subSettingItems?: SettingItem[];
 }

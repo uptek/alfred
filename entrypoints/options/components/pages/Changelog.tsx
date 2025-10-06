@@ -5,11 +5,11 @@ import { PageHeader } from '../PageHeader';
 interface ChangelogEntry {
   version: string;
   date: string;
-  changes: Array<{
+  changes: {
     type: 'heading' | 'paragraph' | 'list' | 'image' | 'video' | 'divider';
     content: string | string[];
     alt?: string;
-  }>;
+  }[];
 }
 
 export function Changelog() {
@@ -64,7 +64,7 @@ export function Changelog() {
           <s-box key={index}>
             <img
               src={change.content as string}
-              alt={change.alt || 'Changelog image'}
+              alt={change.alt ?? 'Changelog image'}
               style="width: 100%; height: auto; border-radius: 8px;"
             />
           </s-box>

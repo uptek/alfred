@@ -16,7 +16,7 @@ export default function App() {
     null
   );
   const [checkedPresets, setCheckedPresets] = useState<Set<string>>(new Set());
-  const selectRef = useRef<any>(null);
+  const selectRef = useRef<HTMLSelectElement | null>(null);
 
   useEffect(() => {
     // Load presets from storage on component mount
@@ -35,7 +35,7 @@ export default function App() {
     // Wait a bit for the shadow DOM to be ready
     const timeoutId = setTimeout(() => {
       // Try to access the shadow root
-      const shadowRoot = (selectElement as any).shadowRoot;
+      const shadowRoot = selectElement.shadowRoot;
 
       if (shadowRoot) {
         // Look for the actual select element inside the shadow DOM
@@ -47,7 +47,7 @@ export default function App() {
 
             if (value !== '0') {
               const preset = presets.find((preset) => preset.id === value);
-              setSelectedPreset(preset || null);
+              setSelectedPreset(preset ?? null);
             } else {
               setSelectedPreset(null);
             }
@@ -69,7 +69,7 @@ export default function App() {
   }, [presets]);
 
   const handleApplyPreset = async (presetToApply?: PermissionPreset) => {
-    const preset = presetToApply || selectedPreset;
+    const preset = presetToApply ?? selectedPreset;
 
     if (!preset) {
       alert('Please select a preset to apply.');
@@ -102,9 +102,10 @@ export default function App() {
     if (preset.customMessage !== '') {
       const messageTextarea = document.querySelector(
         '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea'
-      ) as HTMLTextAreaElement;
+      );
       if (messageTextarea) {
-        messageTextarea.value = preset.customMessage ?? '';
+        (messageTextarea as HTMLTextAreaElement).value =
+          preset.customMessage ?? '';
         // Trigger input event to ensure React/framework detects the change
         messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         messageTextarea.dispatchEvent(new Event('change', { bubbles: true }));
@@ -235,7 +236,7 @@ export default function App() {
 
     const presetName = prompt('Enter a name for this preset:');
 
-    if (!presetName || !presetName.trim()) {
+    if (!presetName?.trim()) {
       return;
     }
 
@@ -244,7 +245,7 @@ export default function App() {
     // Build permissions array
     checkedCheckboxes.forEach((checkbox) => {
       const label =
-        checkbox.closest('label')?.querySelector('p')?.textContent || '';
+        checkbox.closest('label')?.querySelector('p')?.textContent ?? '';
       permissions.push({
         id: checkbox.id,
         label: label.trim(),
@@ -252,10 +253,10 @@ export default function App() {
     });
 
     // Get the custom message from the textarea
-    const messageTextarea = document.querySelector(
+    const messageTextarea = document.querySelector<HTMLTextAreaElement>(
       '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea'
-    ) as HTMLTextAreaElement;
-    const customMessage = messageTextarea?.value || '';
+    );
+    const customMessage = messageTextarea?.value ?? '';
 
     const newPreset: PermissionPreset = {
       id: generatePresetId(),

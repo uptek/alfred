@@ -197,9 +197,9 @@ export class Toast {
     toastElement.id = toastId;
 
     // Check for PBarNextFrameWrapper and adjust bottom position
-    const pBarWrapper = document.querySelector(
+    const pBarWrapper = document.querySelector<HTMLElement>(
       '#PBarNextFrameWrapper'
-    ) as HTMLElement;
+    );
     if (pBarWrapper) {
       const height = pBarWrapper.offsetHeight;
       toastElement.style.setProperty(

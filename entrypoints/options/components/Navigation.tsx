@@ -6,7 +6,7 @@ interface NavigationProps {
 interface NavItem {
   id: string;
   label: string;
-  icon: any;
+  icon: 'settings' | 'clock' | 'lightbulb' | 'external';
   url?: string;
 }
 
@@ -46,7 +46,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               <li key={item.id}>
                 {item.url ? (
                   <a href={item.url} target="_blank" className="nav-link">
-                    <s-icon type={item.icon as any}></s-icon>
+                    <s-icon type={item.icon}></s-icon>
                     <span>{item.label}</span>
                     <s-icon type="external"></s-icon>
                   </a>
@@ -60,7 +60,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                       onNavigate(item.id);
                     }}
                   >
-                    <s-icon type={item.icon as any}></s-icon>
+                    <s-icon type={item.icon}></s-icon>
                     <span>{item.label}</span>
                   </a>
                 )}

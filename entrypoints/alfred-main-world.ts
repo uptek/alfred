@@ -335,7 +335,7 @@ export default defineUnlistedScript(() => {
      * @returns {Promise<boolean>}
      */
     copyThemePreviewUrl: async (
-      disablePreviewBar: boolean = false
+      disablePreviewBar = false
     ): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
@@ -459,7 +459,7 @@ export default defineUnlistedScript(() => {
         }
 
         // Find the parent section element
-        let sectionElement = target.closest('.shopify-section') as HTMLElement;
+        const sectionElement = target.closest('.shopify-section') as HTMLElement;
 
         if (!sectionElement) {
           (window as any).Alfred.Toast.error('Invalid section');
@@ -468,7 +468,7 @@ export default defineUnlistedScript(() => {
 
         // Extract section ID
         const sectionId = sectionElement.id;
-        if (!sectionId || !sectionId.includes('__')) {
+        if (!sectionId?.includes('__')) {
           (window as any).Alfred.Toast.error('Invalid section');
           return false;
         }
