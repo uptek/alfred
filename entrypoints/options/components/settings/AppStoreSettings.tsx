@@ -26,7 +26,7 @@ export function AppStoreSettings() {
   useEffect(() => {
     if (isLoading) return;
 
-    const appStore = settings.appStore || {};
+    const appStore = settings.appStore ?? {};
 
     settingsItems.forEach(({ key }) => {
       setCheckboxValue(

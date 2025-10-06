@@ -54,11 +54,11 @@ export function onChoiceListChange(
     }
   };
 
-  choiceList.addEventListener('change', handler);
+  choiceList.addEventListener('change', () => void handler());
 
   // Return cleanup function
   return () => {
-    choiceList.removeEventListener('change', handler);
+    choiceList.removeEventListener('change', () => void handler());
   };
 }
 
@@ -115,10 +115,10 @@ export function onCheckboxChange(
     await onChange(input.checked);
   };
 
-  checkbox.addEventListener('change', handler);
+  checkbox.addEventListener('change', () => void handler());
 
   // Return cleanup function
   return () => {
-    checkbox.removeEventListener('change', handler);
+    checkbox.removeEventListener('change', () => void handler());
   };
 }

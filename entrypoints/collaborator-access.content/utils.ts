@@ -17,7 +17,7 @@ export function generatePresetId(): string {
  */
 export async function getPresets(): Promise<PermissionPreset[]> {
   const data = await getItem<PresetStorageData>(STORAGE_KEY);
-  return data?.presets || [];
+  return data?.presets ?? [];
 }
 
 /**
@@ -65,7 +65,7 @@ export async function deletePreset(presetId: string): Promise<void> {
 export function exportPresets(presetsToExport: PermissionPreset[]): void {
   // Remove id and lastUsed fields from export
   const cleanedPresets = presetsToExport.map(
-    ({ id, lastUsed, ...preset }) => preset
+    ({ id: _id, lastUsed: _lastUsed, ...preset }) => preset
   );
   const dataStr = JSON.stringify(cleanedPresets, null, 2);
   const dataUri =
@@ -97,7 +97,7 @@ export function importPresets(): Promise<number | null> {
 
       try {
         const text = await file.text();
-        const importedPresets = JSON.parse(text);
+        const importedPresets = JSON.parse(text) as PermissionPreset[];
 
         if (!Array.isArray(importedPresets)) {
           throw new Error('Invalid file format. Expected an array of presets.');
@@ -118,7 +118,7 @@ export function importPresets(): Promise<number | null> {
 
         resolve(importCount);
       } catch (error) {
-        reject(error);
+        reject(error as Error);
       }
     };
 

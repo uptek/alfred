@@ -28,13 +28,14 @@ export type AnalyticsAction =
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<
   AnalyticsAction,
-  number | ((metadata?: any) => number)
+  number | ((metadata?: Record<string, unknown>) => number)
 > = {
   open_in_admin: (metadata) => {
     // Homepage is quickest to navigate to manually
     if (metadata?.page_type === 'homepage') return 10;
     // Products, pages, articles require more navigation
-    if (['product', 'page', 'article'].includes(metadata?.page_type)) return 45;
+    if (['product', 'page', 'article'].includes(metadata?.page_type as string))
+      return 45;
     // Default for other pages
     return 25;
   },
@@ -42,7 +43,8 @@ const TIME_SAVINGS: Record<
     // Homepage is quickest to navigate to manually
     if (metadata?.page_type === 'homepage') return 20;
     // Products, pages, articles require more navigation
-    if (['product', 'page', 'article'].includes(metadata?.page_type)) return 45;
+    if (['product', 'page', 'article'].includes(metadata?.page_type as string))
+      return 45;
     // Default for other pages
     return 30;
   },
@@ -54,10 +56,12 @@ const TIME_SAVINGS: Record<
   apply_preset: (metadata) => {
     return 45 + (metadata?.has_custom_message ? 20 : 0);
   },
-  appstore_partner_table_view: (metadata) => (metadata?.app_count || 0) * 5,
-  appstore_partner_table_sort: (metadata) => (metadata?.app_count || 0) * 2,
+  appstore_partner_table_view: (metadata) =>
+    Number(metadata?.app_count ?? 0) * 5,
+  appstore_partner_table_sort: (metadata) =>
+    Number(metadata?.app_count ?? 0) * 2,
   appstore_partner_table_export: (metadata) =>
-    (metadata?.app_count || 0) * 10 + 30,
+    Number(metadata?.app_count ?? 0) * 10 + 30,
   open_section_in_code_editor: 30,
   disable_theme_inspector: 3,
   resize_theme_customizer: 3,
@@ -73,11 +77,12 @@ const TIME_SAVINGS: Record<
  */
 export async function trackAction(
   action: AnalyticsAction,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   try {
     // Get all required data
-    const [userId, version] = await Promise.all([getUserId(), getVersion()]);
+    const userId = await getUserId();
+    const version = getVersion();
 
     // Calculate time saved
     const timeSavingConfig = TIME_SAVINGS[action];
@@ -92,7 +97,7 @@ export async function trackAction(
       action,
       time_saved: timeSaved,
       version,
-      metadata: metadata || {},
+      metadata: metadata ?? {},
     };
 
     // Disable analytics in development

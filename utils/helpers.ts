@@ -126,7 +126,7 @@ export async function getUserId(): Promise<string> {
  * Get extension version
  * @returns Promise that resolves to the version or null
  */
-export async function getVersion(): Promise<string | null> {
+export function getVersion(): string | null {
   try {
     const manifest = browser.runtime.getManifest();
     return manifest.version || null;

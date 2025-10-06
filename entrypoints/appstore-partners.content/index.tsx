@@ -15,7 +15,7 @@ export default defineContentScript({
     if (!isEnhancedPartnerPagesEnabled) {
       return; // Exit early if enhanced partner pages are disabled
     }
-    const ui = await createIntegratedUi(ctx, {
+    const ui = createIntegratedUi(ctx, {
       position: 'inline',
       anchor: 'body',
       append: 'first',
@@ -37,23 +37,27 @@ export default defineContentScript({
         render(<App />, container);
         return { container };
       },
-      onRemove: async (elements) => {
-        const resolvedElements = await elements;
-        if (resolvedElements?.container) {
-          render(null, resolvedElements.container);
-          resolvedElements.container.remove();
-        }
+      onRemove: (elements) => {
+        void (async () => {
+          const resolved = await elements;
+          if (resolved?.container) {
+            render(null, resolved.container);
+            resolved.container.remove();
+          }
+        })();
       },
     });
 
     // Explicitly mount the UI
     ui.mount();
 
-    browser.runtime.onMessage.addListener((event) => {
-      if (event.type === 'MOUNT_UI') {
-        // dynamic mount by user action via messaging.
-        ui.mount();
+    browser.runtime.onMessage.addListener(
+      (event: { type?: string; [key: string]: unknown }) => {
+          if (event.type === 'MOUNT_UI') {
+          // dynamic mount by user action via messaging.
+          ui.mount();
+        }
       }
-    });
+    );
   },
 });

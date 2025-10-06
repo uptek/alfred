@@ -50,7 +50,7 @@ export function ShortcutsSetting() {
   useEffect(() => {
     if (isLoading) return;
 
-    const shortcuts = settings.shortcuts || {};
+    const shortcuts = settings.shortcuts ?? {};
 
     shortcutItems.forEach(({ key }) => {
       setCheckboxValue(

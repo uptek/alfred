@@ -37,7 +37,7 @@ export function CustomizerResizersSetting() {
   useEffect(() => {
     if (isLoading) return;
 
-    const customizerResizers = settings.themeCustomizer?.resizers || {};
+    const customizerResizers = settings.themeCustomizer?.resizers ?? {};
 
     settingsItems.forEach(({ key }) => {
       setCheckboxValue(
@@ -51,7 +51,7 @@ export function CustomizerResizersSetting() {
     if (isLoading) return;
 
     // Set initial values for all checkboxes
-    const resizers = settings.themeCustomizer?.resizers || {};
+    const resizers = settings.themeCustomizer?.resizers ?? {};
 
     // Default all resizers to true if not set
     settingsItems.forEach(({ key }) => {

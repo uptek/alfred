@@ -6,11 +6,11 @@ import { getItem } from '@/utils/storage';
  */
 export const registerShortcuts = async () => {
   // Remove all context menus
-  await removeAll();
+  removeAll();
 
   // Get settings to determine which shortcuts to show
   const settings = await getItem<AlfredSettings>('settings');
-  const shortcuts = settings?.shortcuts || {
+  const shortcuts = settings?.shortcuts ?? {
     openInAdmin: true,
     openInCustomizer: true,
     copyProductJson: true,
@@ -34,18 +34,22 @@ export const registerShortcuts = async () => {
         title: 'Open in Admin',
         parentId: alfredMenuId,
       },
-      async (_info, tab: Browser.tabs.Tab) => {
-        try {
-          await browser.scripting.executeScript({
-            target: { tabId: tab.id! },
-            func: async () => {
-              return await (window as any).Alfred.openInAdmin();
-            },
-            world: 'MAIN',
-          });
-        } catch (error) {
-          console.error('Error opening in admin:', error);
-        }
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.scripting.executeScript({
+              target: { tabId: tab.id! },
+              func: () => {
+                void (
+                  window as unknown as WindowWithAlfred
+                ).Alfred.openInAdmin();
+              },
+              world: 'MAIN',
+            });
+          } catch (error) {
+            console.error('Error opening in admin:', error);
+          }
+        })();
       }
     );
   }
@@ -58,18 +62,22 @@ export const registerShortcuts = async () => {
         title: 'Open in Customizer',
         parentId: alfredMenuId,
       },
-      async (_info, tab: Browser.tabs.Tab) => {
-        try {
-          await browser.scripting.executeScript({
-            target: { tabId: tab.id! },
-            func: async () => {
-              return await (window as any).Alfred.openInCustomizer();
-            },
-            world: 'MAIN',
-          });
-        } catch (error) {
-          console.error('Error opening customizer:', error);
-        }
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.scripting.executeScript({
+              target: { tabId: tab.id! },
+              func: () => {
+                void (
+                  window as unknown as WindowWithAlfred
+                ).Alfred.openInCustomizer();
+              },
+              world: 'MAIN',
+            });
+          } catch (error) {
+            console.error('Error opening customizer:', error);
+          }
+        })();
       }
     );
   }
@@ -82,18 +90,22 @@ export const registerShortcuts = async () => {
         title: 'Copy Product JSON',
         parentId: alfredMenuId,
       },
-      async (_info, tab: Browser.tabs.Tab) => {
-        try {
-          await browser.scripting.executeScript({
-            target: { tabId: tab.id! },
-            func: async () => {
-              return await (window as any).Alfred.copyProductJson();
-            },
-            world: 'MAIN',
-          });
-        } catch (error) {
-          console.error('Error copying product JSON:', error);
-        }
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.scripting.executeScript({
+              target: { tabId: tab.id! },
+              func: () => {
+                void (
+                  window as unknown as WindowWithAlfred
+                ).Alfred.copyProductJson();
+              },
+              world: 'MAIN',
+            });
+          } catch (error) {
+            console.error('Error copying product JSON:', error);
+          }
+        })();
       }
     );
   }
@@ -106,18 +118,22 @@ export const registerShortcuts = async () => {
         title: 'Copy Cart JSON',
         parentId: alfredMenuId,
       },
-      async (_info, tab: Browser.tabs.Tab) => {
-        try {
-          await browser.scripting.executeScript({
-            target: { tabId: tab.id! },
-            func: async () => {
-              return await (window as any).Alfred.copyCartJson();
-            },
-            world: 'MAIN',
-          });
-        } catch (error) {
-          console.error('Error copying cart JSON:', error);
-        }
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.scripting.executeScript({
+              target: { tabId: tab.id! },
+              func: () => {
+                void (
+                  window as unknown as WindowWithAlfred
+                ).Alfred.copyCartJson();
+              },
+              world: 'MAIN',
+            });
+          } catch (error) {
+            console.error('Error copying cart JSON:', error);
+          }
+        })();
       }
     );
   }
@@ -130,18 +146,22 @@ export const registerShortcuts = async () => {
         title: 'Copy Theme Preview URL',
         parentId: alfredMenuId,
       },
-      async (_info, tab: Browser.tabs.Tab) => {
-        try {
-          await browser.scripting.executeScript({
-            target: { tabId: tab.id! },
-            func: async () => {
-              return await (window as any).Alfred.copyThemePreviewUrl();
-            },
-            world: 'MAIN',
-          });
-        } catch (error) {
-          console.error('Error copying theme preview URL:', error);
-        }
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.scripting.executeScript({
+              target: { tabId: tab.id! },
+              func: () => {
+                void (
+                  window as unknown as WindowWithAlfred
+                ).Alfred.copyThemePreviewUrl();
+              },
+              world: 'MAIN',
+            });
+          } catch (error) {
+            console.error('Error copying theme preview URL:', error);
+          }
+        })();
       }
     );
   }
@@ -154,18 +174,20 @@ export const registerShortcuts = async () => {
         title: 'Clear Cart',
         parentId: alfredMenuId,
       },
-      async (_info, tab: Browser.tabs.Tab) => {
-        try {
-          await browser.scripting.executeScript({
-            target: { tabId: tab.id! },
-            func: async () => {
-              return await (window as any).Alfred.clearCart();
-            },
-            world: 'MAIN',
-          });
-        } catch (error) {
-          console.error('Error clearing cart:', error);
-        }
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.scripting.executeScript({
+              target: { tabId: tab.id! },
+              func: () => {
+                void (window as unknown as WindowWithAlfred).Alfred.clearCart();
+              },
+              world: 'MAIN',
+            });
+          } catch (error) {
+            console.error('Error clearing cart:', error);
+          }
+        })();
       }
     );
   }
@@ -178,18 +200,22 @@ export const registerShortcuts = async () => {
         title: 'Open Section in Code Editor',
         parentId: alfredMenuId,
       },
-      async (_info, tab: Browser.tabs.Tab) => {
-        try {
-          await browser.scripting.executeScript({
-            target: { tabId: tab.id! },
-            func: async () => {
-              return await (window as any).Alfred.openSectionInCodeEditor();
-            },
-            world: 'MAIN',
-          });
-        } catch (error) {
-          console.error('Error opening section in editor:', error);
-        }
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.scripting.executeScript({
+              target: { tabId: tab.id! },
+              func: () => {
+                void (
+                  window as unknown as WindowWithAlfred
+                ).Alfred.openSectionInCodeEditor();
+              },
+              world: 'MAIN',
+            });
+          } catch (error) {
+            console.error('Error opening section in editor:', error);
+          }
+        })();
       }
     );
   }

@@ -47,8 +47,10 @@ export async function setupInspector(): Promise<void> {
     }
   }
 
-  inspectorButton.addEventListener('click', async () => {
-    const isPressed = inspectorButton.getAttribute('aria-pressed') !== 'true';
-    await setItem(INSPECTOR_STATE_KEY, isPressed);
+  inspectorButton.addEventListener('click', () => {
+    void (async () => {
+      const isPressed = inspectorButton.getAttribute('aria-pressed') !== 'true';
+      await setItem(INSPECTOR_STATE_KEY, isPressed);
+    })();
   });
 }

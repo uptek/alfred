@@ -48,7 +48,7 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'off',
 
       // General
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['warn', { allow: ['warn', 'error', 'log', 'debug'] }],
       'prefer-const': 'error',
       'no-var': 'error',
     },

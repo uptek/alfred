@@ -75,3 +75,40 @@ declare interface SettingItem {
   defaultValue?: unknown;
   subSettingItems?: SettingItem[];
 }
+
+declare interface WindowWithAlfred {
+  Shopify?: {
+    shop?: string;
+    theme?: {
+      id?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  };
+  __st?: {
+    p?: string;
+    rid?: string;
+    [key: string]: unknown;
+  };
+  Alfred: {
+    Toast: unknown;
+    _lastRightClickedElement: HTMLElement | null;
+    _initContextMenuListener: () => void;
+    _initThemeRequestHandler: () => void;
+    isShopify: () => boolean;
+    getTheme: () => {
+      isShopify: boolean;
+      theme: unknown;
+      shop: unknown;
+    };
+    getShopName: () => string;
+    writeToClipboard: (text: string) => Promise<boolean>;
+    openInAdmin: () => boolean;
+    openInCustomizer: () => boolean;
+    copyProductJson: () => Promise<boolean>;
+    copyCartJson: () => Promise<boolean>;
+    copyThemePreviewUrl: (disablePreviewBar?: boolean) => Promise<boolean>;
+    clearCart: () => Promise<boolean>;
+    openSectionInCodeEditor: () => boolean;
+  };
+}

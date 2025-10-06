@@ -17,7 +17,7 @@ export function ThemeInspectorSetting() {
     if (isLoading) return;
 
     // Set initial value
-    const value = settings.themeCustomizer?.inspector || 'default';
+    const value = settings.themeCustomizer?.inspector ?? 'default';
     setChoiceListValue('theme-inspector', value);
   }, [isLoading, settings.themeCustomizer?.inspector]);
 

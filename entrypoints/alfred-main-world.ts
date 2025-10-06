@@ -2,7 +2,7 @@ import { Toast } from '../utils/toast';
 
 export default defineUnlistedScript(() => {
   // Define alfred utils in the global scope
-  (window as any).Alfred = {
+  (window as unknown as WindowWithAlfred).Alfred = {
     // Toast notifications
     Toast,
 
@@ -14,8 +14,9 @@ export default defineUnlistedScript(() => {
       document.addEventListener(
         'contextmenu',
         (event) => {
-          (window as any).Alfred._lastRightClickedElement =
-            event.target as HTMLElement;
+          (
+            window as unknown as WindowWithAlfred
+          ).Alfred._lastRightClickedElement = event.target as HTMLElement;
         },
         true
       );
@@ -26,20 +27,25 @@ export default defineUnlistedScript(() => {
       window.addEventListener('message', (event) => {
         if (event.source !== window) return;
 
-        if (event.data && event.data.type === 'alfred:request_theme') {
-          const requestId = event.data.requestId;
+        const data = event.data as { type?: string; requestId?: string };
+        if (data && data.type === 'alfred:request_theme') {
+          const requestId = data.requestId;
           if (requestId) {
             // Get theme data
-            const themeData = (window as any).Alfred.getTheme();
+            const themeData = (
+              window as unknown as WindowWithAlfred
+            ).Alfred.getTheme();
 
             // Serialize the data to avoid DataCloneError
-            const serializedData = JSON.parse(JSON.stringify(themeData));
+            const serializedData = JSON.parse(
+              JSON.stringify(themeData)
+            ) as typeof themeData;
 
             // Send response back via postMessage
             window.postMessage(
               {
                 type: 'alfred:theme_response',
-                requestId: requestId,
+                requestId,
                 data: serializedData,
               },
               '*'
@@ -54,7 +60,8 @@ export default defineUnlistedScript(() => {
      * @returns {boolean}
      */
     isShopify: () => {
-      return !!(window as any).Shopify && !!(window as any).__st;
+      const win = window as unknown as WindowWithAlfred;
+      return !!win.Shopify && !!win.__st;
     },
 
     /**
@@ -62,7 +69,8 @@ export default defineUnlistedScript(() => {
      * @returns {object} Theme information object
      */
     getTheme: () => {
-      if (!(window as any).Alfred.isShopify()) {
+      const win = window as unknown as WindowWithAlfred;
+      if (!win.Alfred.isShopify()) {
         return {
           isShopify: false,
           theme: null,
@@ -70,13 +78,13 @@ export default defineUnlistedScript(() => {
         };
       }
 
-      const shopify = (window as any).Shopify;
+      const shopify = win.Shopify;
 
       // Return the theme data directly from Shopify global object
       return {
         isShopify: true,
-        theme: shopify.theme || null,
-        shop: shopify.shop || null,
+        theme: shopify?.theme ?? null,
+        shop: shopify?.shop ?? null,
       };
     },
 
@@ -85,7 +93,8 @@ export default defineUnlistedScript(() => {
      * @returns {string} Shop name
      */
     getShopName: () => {
-      return (window as any).Shopify.shop.replace('.myshopify.com', '');
+      const win = window as unknown as WindowWithAlfred;
+      return (win.Shopify?.shop ?? '').replace('.myshopify.com', '');
     },
 
     /**
@@ -104,7 +113,7 @@ export default defineUnlistedScript(() => {
         try {
           await navigator.clipboard.writeText(text);
           return true;
-        } catch (clipboardError) {
+        } catch {
           // Fallback: Create a textarea, select it, and use document.execCommand
           const textArea = document.createElement('textarea');
           textArea.value = text;
@@ -126,28 +135,39 @@ export default defineUnlistedScript(() => {
      * Open the current page in the admin editor
      * @returns {Promise<boolean>}
      */
-    openInAdmin: async (): Promise<boolean> => {
+    openInAdmin: (): boolean => {
       try {
+        const win = window as unknown as WindowWithAlfred;
         // Check if this is a Shopify store
-        if (!(window as any).Alfred.isShopify()) {
-          (window as any).Alfred.Toast.error('Not a Shopify store');
+        if (!win.Alfred.isShopify()) {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a Shopify store'
+          );
           return false;
         }
 
-        const shopName = (window as any).Alfred.getShopName();
-        const { p, rid } = (window as any).__st;
+        const shopName = win.Alfred.getShopName();
+        const { p, rid } = win.__st ?? {};
         let url = '';
 
-        if (['home', 'cart'].includes(p)) {
+        if (p && ['home', 'cart'].includes(p)) {
           url = `https://admin.shopify.com/store/${shopName}`;
-        } else if (['product', 'collection', 'page', 'article'].includes(p)) {
+        } else if (
+          p &&
+          rid &&
+          ['product', 'collection', 'page', 'article'].includes(p)
+        ) {
           url = `https://admin.shopify.com/store/${shopName}/${p}s/${rid}`;
         } else {
-          (window as any).Alfred.Toast.error('Page type not supported');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Page type not supported'
+          );
           return false;
         }
 
-        (window as any).Alfred.Toast.success('Opening admin...');
+        (win.Alfred.Toast as { success: (msg: string) => void }).success(
+          'Opening admin...'
+        );
         window.open(url, '_blank');
 
         // Track the action
@@ -167,7 +187,10 @@ export default defineUnlistedScript(() => {
         return true;
       } catch (error) {
         console.error('Error opening in admin:', error);
-        (window as any).Alfred.Toast.error('Failed to open admin');
+        const win = window as unknown as WindowWithAlfred;
+        (win.Alfred.Toast as { error: (msg: string) => void }).error(
+          'Failed to open admin'
+        );
         return false;
       }
     },
@@ -176,20 +199,25 @@ export default defineUnlistedScript(() => {
      * Open the current page in the customizer
      * @returns {Promise<boolean>}
      */
-    openInCustomizer: async (): Promise<boolean> => {
+    openInCustomizer: (): boolean => {
       try {
+        const win = window as unknown as WindowWithAlfred;
         // Check if this is a Shopify store
-        if (!(window as any).Alfred.isShopify()) {
-          (window as any).Alfred.Toast.error('Not a Shopify store');
+        if (!win.Alfred.isShopify()) {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a Shopify store'
+          );
           return false;
         }
 
-        const themeId = (window as any).Shopify.theme.id;
-        const shopName = (window as any).Alfred.getShopName();
+        const themeId = win.Shopify?.theme?.id;
+        const shopName = win.Alfred.getShopName();
         const previewPath = encodeURIComponent(window.location.pathname);
         const customizerUrl = `https://admin.shopify.com/store/${shopName}/themes/${themeId}/editor?previewPath=${previewPath}`;
 
-        (window as any).Alfred.Toast.success('Opening customizer...');
+        (win.Alfred.Toast as { success: (msg: string) => void }).success(
+          'Opening customizer...'
+        );
         window.open(customizerUrl, '_blank');
 
         // Track the action
@@ -199,7 +227,7 @@ export default defineUnlistedScript(() => {
               action: 'open_in_customizer',
               metadata: {
                 page_url: window.location.href,
-                page_type: (window as any).__st?.p || 'other',
+                page_type: win.__st?.p ?? 'other',
                 shop_domain: window.location.hostname,
               },
             },
@@ -209,7 +237,10 @@ export default defineUnlistedScript(() => {
         return true;
       } catch (error) {
         console.error('Error opening in customizer:', error);
-        (window as any).Alfred.Toast.error('Failed to open in customizer');
+        const win = window as unknown as WindowWithAlfred;
+        (win.Alfred.Toast as { error: (msg: string) => void }).error(
+          'Failed to open in customizer'
+        );
         return false;
       }
     },
@@ -220,15 +251,20 @@ export default defineUnlistedScript(() => {
      */
     copyProductJson: async (): Promise<boolean> => {
       try {
+        const win = window as unknown as WindowWithAlfred;
         // Check if this is a Shopify store
-        if (!(window as any).Alfred.isShopify()) {
-          (window as any).Alfred.Toast.error('Not a Shopify store');
+        if (!win.Alfred.isShopify()) {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a Shopify store'
+          );
           return false;
         }
 
         // Check if this is a product page
         if (!window.location.pathname.includes('/products/')) {
-          (window as any).Alfred.Toast.error('Not a product page');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a product page'
+          );
           return false;
         }
 
@@ -239,18 +275,22 @@ export default defineUnlistedScript(() => {
         const response = await fetch(jsonUrl);
 
         if (!response.ok) {
-          (window as any).Alfred.Toast.error('Failed to fetch product data');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Failed to fetch product data'
+          );
           return false;
         }
 
-        const productData = await response.json();
-        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(
+        const productData = (await response.json()) as unknown;
+        const copiedToClipboard = await win.Alfred.writeToClipboard(
           JSON.stringify(productData, null, 2)
         );
 
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
-          (window as any).Alfred.Toast.success('Product JSON copied');
+          (win.Alfred.Toast as { success: (msg: string) => void }).success(
+            'Product JSON copied'
+          );
 
           window.dispatchEvent(
             new CustomEvent('alfred:track', {
@@ -265,13 +305,18 @@ export default defineUnlistedScript(() => {
             })
           );
         } else {
-          (window as any).Alfred.Toast.error('Failed to copy product JSON');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Failed to copy product JSON'
+          );
         }
 
         return copiedToClipboard;
       } catch (error) {
         console.error('Error copying product JSON:', error);
-        (window as any).Alfred.Toast.error('Failed to copy product JSON');
+        const win = window as unknown as WindowWithAlfred;
+        (win.Alfred.Toast as { error: (msg: string) => void }).error(
+          'Failed to copy product JSON'
+        );
         return false;
       }
     },
@@ -282,9 +327,12 @@ export default defineUnlistedScript(() => {
      */
     copyCartJson: async (): Promise<boolean> => {
       try {
+        const win = window as unknown as WindowWithAlfred;
         // Check if this is a Shopify store
-        if (!(window as any).Alfred.isShopify()) {
-          (window as any).Alfred.Toast.error('Not a Shopify store');
+        if (!win.Alfred.isShopify()) {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a Shopify store'
+          );
           return false;
         }
 
@@ -292,18 +340,22 @@ export default defineUnlistedScript(() => {
         const response = await fetch('/cart.js');
 
         if (!response.ok) {
-          (window as any).Alfred.Toast.error('Failed to fetch cart data');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Failed to fetch cart data'
+          );
           return false;
         }
 
-        const cartData = await response.json();
-        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(
+        const cartData = (await response.json()) as unknown;
+        const copiedToClipboard = await win.Alfred.writeToClipboard(
           JSON.stringify(cartData, null, 2)
         );
 
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
-          (window as any).Alfred.Toast.success('Cart JSON copied');
+          (win.Alfred.Toast as { success: (msg: string) => void }).success(
+            'Cart JSON copied'
+          );
 
           window.dispatchEvent(
             new CustomEvent('alfred:track', {
@@ -311,20 +363,26 @@ export default defineUnlistedScript(() => {
                 action: 'copy_cart_json',
                 metadata: {
                   page_url: window.location.href,
-                  page_type: (window as any).__st?.p || 'other',
+                  page_type:
+                    (window as unknown as WindowWithAlfred).__st?.p ?? 'other',
                   shop_domain: window.location.hostname,
                 },
               },
             })
           );
         } else {
-          (window as any).Alfred.Toast.error('Failed to copy cart JSON');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Failed to copy cart JSON'
+          );
         }
 
         return copiedToClipboard;
       } catch (error) {
         console.error('Error copying cart JSON:', error);
-        (window as any).Alfred.Toast.error('Failed to copy cart JSON');
+        const win = window as unknown as WindowWithAlfred;
+        (win.Alfred.Toast as { error: (msg: string) => void }).error(
+          'Failed to copy cart JSON'
+        );
         return false;
       }
     },
@@ -338,13 +396,16 @@ export default defineUnlistedScript(() => {
       disablePreviewBar = false
     ): Promise<boolean> => {
       try {
+        const win = window as unknown as WindowWithAlfred;
         // Check if this is a Shopify store
-        if (!(window as any).Alfred.isShopify()) {
-          (window as any).Alfred.Toast.error('Not a Shopify store');
+        if (!win.Alfred.isShopify()) {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a Shopify store'
+          );
           return false;
         }
 
-        const themeId = (window as any).Shopify.theme.id;
+        const themeId = win.Shopify?.theme?.id ?? '';
         const url = new URL(window.location.href);
 
         // Add or update the preview_theme_id parameter
@@ -355,13 +416,15 @@ export default defineUnlistedScript(() => {
           url.searchParams.set('pb', '0');
         }
 
-        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(
+        const copiedToClipboard = await win.Alfred.writeToClipboard(
           url.toString()
         );
 
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
-          (window as any).Alfred.Toast.success('Preview URL copied!');
+          (win.Alfred.Toast as { success: (msg: string) => void }).success(
+            'Preview URL copied!'
+          );
 
           window.dispatchEvent(
             new CustomEvent('alfred:track', {
@@ -369,7 +432,7 @@ export default defineUnlistedScript(() => {
                 action: 'copy_theme_preview_url',
                 metadata: {
                   page_url: window.location.href,
-                  page_type: (window as any).__st?.p || 'other',
+                  page_type: win.__st?.p ?? 'other',
                   shop_domain: window.location.hostname,
                   disable_preview_bar: disablePreviewBar,
                 },
@@ -377,7 +440,7 @@ export default defineUnlistedScript(() => {
             })
           );
         } else {
-          (window as any).Alfred.Toast.error(
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
             'Failed to copy theme preview URL'
           );
         }
@@ -385,7 +448,10 @@ export default defineUnlistedScript(() => {
         return copiedToClipboard;
       } catch (error) {
         console.error('Error copying preview URL:', error);
-        (window as any).Alfred.Toast.error('Failed to copy theme preview URL');
+        const win = window as unknown as WindowWithAlfred;
+        (win.Alfred.Toast as { error: (msg: string) => void }).error(
+          'Failed to copy theme preview URL'
+        );
         return false;
       }
     },
@@ -396,23 +462,32 @@ export default defineUnlistedScript(() => {
      */
     clearCart: async (): Promise<boolean> => {
       try {
+        const win = window as unknown as WindowWithAlfred;
         // Check if this is a Shopify store
-        if (!(window as any).Alfred.isShopify()) {
-          (window as any).Alfred.Toast.error('Not a Shopify store');
+        if (!win.Alfred.isShopify()) {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a Shopify store'
+          );
           return false;
         }
 
-        (window as any).Alfred.Toast.success('Clearing cart...');
+        (win.Alfred.Toast as { success: (msg: string) => void }).success(
+          'Clearing cart...'
+        );
 
         // Clear cart
         const response = await fetch('/cart/clear');
 
         if (!response.ok) {
-          (window as any).Alfred.Toast.error('Failed to clear cart');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Failed to clear cart'
+          );
           return false;
         }
 
-        (window as any).Alfred.Toast.success('Cart cleared');
+        (win.Alfred.Toast as { success: (msg: string) => void }).success(
+          'Cart cleared'
+        );
 
         // Track the action before reload
         window.dispatchEvent(
@@ -421,7 +496,7 @@ export default defineUnlistedScript(() => {
               action: 'clear_cart',
               metadata: {
                 page_url: window.location.href,
-                page_type: (window as any).__st?.p || 'other',
+                page_type: win.__st?.p ?? 'other',
                 shop_domain: window.location.hostname,
               },
             },
@@ -433,7 +508,10 @@ export default defineUnlistedScript(() => {
         return true;
       } catch (error) {
         console.error('Error clearing cart:', error);
-        (window as any).Alfred.Toast.error('Failed to clear cart');
+        const win = window as unknown as WindowWithAlfred;
+        (win.Alfred.Toast as { error: (msg: string) => void }).error(
+          'Failed to clear cart'
+        );
         return false;
       }
     },
@@ -442,34 +520,43 @@ export default defineUnlistedScript(() => {
      * Open the current section in the code editor
      * @returns {Promise<boolean>}
      */
-    openSectionInCodeEditor: async (): Promise<boolean> => {
+    openSectionInCodeEditor: (): boolean => {
       try {
+        const win = window as unknown as WindowWithAlfred;
         // Check if this is a Shopify store
-        if (!(window as any).Alfred.isShopify()) {
-          (window as any).Alfred.Toast.error('Not a Shopify store');
+        if (!win.Alfred.isShopify()) {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a Shopify store'
+          );
           return false;
         }
 
         // Use the last right-clicked element
-        const target = (window as any).Alfred._lastRightClickedElement;
+        const target = win.Alfred._lastRightClickedElement;
 
         if (!target) {
-          (window as any).Alfred.Toast.error('Invalid section');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Invalid section'
+          );
           return false;
         }
 
         // Find the parent section element
-        const sectionElement = target.closest('.shopify-section') as HTMLElement;
+        const sectionElement = target.closest('.shopify-section')!;
 
         if (!sectionElement) {
-          (window as any).Alfred.Toast.error('Invalid section');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Invalid section'
+          );
           return false;
         }
 
         // Extract section ID
         const sectionId = sectionElement.id;
         if (!sectionId?.includes('__')) {
-          (window as any).Alfred.Toast.error('Invalid section');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Invalid section'
+          );
           return false;
         }
 
@@ -479,7 +566,9 @@ export default defineUnlistedScript(() => {
         // 2. "shopify-section-template--<id>__image_banner_zBNR7B" -> "image_banner"
         const parts = sectionId.split('__');
         if (parts.length < 2) {
-          (window as any).Alfred.Toast.error('Section not recognized');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Section not recognized'
+          );
           return false;
         }
 
@@ -487,7 +576,9 @@ export default defineUnlistedScript(() => {
         let sectionName = parts[1];
 
         if (!sectionName) {
-          (window as any).Alfred.Toast.error('Section not recognized');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Section not recognized'
+          );
           return false;
         }
 
@@ -504,7 +595,9 @@ export default defineUnlistedScript(() => {
         }
 
         if (!sectionName) {
-          (window as any).Alfred.Toast.error('Section not recognized');
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Section not recognized'
+          );
           return false;
         }
 
@@ -512,21 +605,23 @@ export default defineUnlistedScript(() => {
 
         // If section name is "main", concatenate with the current page's ptype
         if (sectionName === 'main') {
-          const pageType = (window as any).__st?.p;
+          const pageType = win.__st?.p;
           if (pageType) {
             sectionName = `main-${pageType}`;
           }
         }
 
-        const shopName = (window as any).Alfred.getShopName();
-        const themeId = (window as any).Shopify.theme.id;
+        const shopName = win.Alfred.getShopName();
+        const themeId = win.Shopify?.theme?.id;
 
         // Construct the code editor URL
         const editorUrl = `https://admin.shopify.com/store/${shopName}/themes/${themeId}?key=sections/${sectionName}.liquid`;
 
         // Open in new tab
         window.open(editorUrl, '_blank');
-        (window as any).Alfred.Toast.success(`Opening ${sectionName}.liquid`);
+        (win.Alfred.Toast as { success: (msg: string) => void }).success(
+          `Opening ${sectionName}.liquid`
+        );
 
         // Track the action
         window.dispatchEvent(
@@ -535,7 +630,7 @@ export default defineUnlistedScript(() => {
               action: 'open_section_in_code_editor',
               metadata: {
                 page_url: window.location.href,
-                page_type: (window as any).__st?.p || 'other',
+                page_type: win.__st?.p ?? 'other',
                 shop_domain: window.location.hostname,
               },
             },
@@ -545,13 +640,17 @@ export default defineUnlistedScript(() => {
         return true;
       } catch (error) {
         console.error('Error opening section in editor:', error);
-        (window as any).Alfred.Toast.error('Failed to open section in editor');
+        const win = window as unknown as WindowWithAlfred;
+        (win.Alfred.Toast as { error: (msg: string) => void }).error(
+          'Failed to open section in editor'
+        );
         return false;
       }
     },
   };
 
   // Initialize the context menu listener
-  (window as any).Alfred._initContextMenuListener();
-  (window as any).Alfred._initThemeRequestHandler();
+  const win = window as unknown as WindowWithAlfred;
+  win.Alfred._initContextMenuListener();
+  win.Alfred._initThemeRequestHandler();
 });

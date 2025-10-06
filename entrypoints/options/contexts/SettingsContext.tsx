@@ -48,7 +48,7 @@ export const SettingsContext = createContext<SettingsContextValue | undefined>(
 );
 
 // Deep merge function to handle nested objects
-function deepMerge<T extends Record<string, any>>(
+function deepMerge<T>(
   target: T,
   source: Partial<T>
 ): T {
@@ -68,10 +68,10 @@ function deepMerge<T extends Record<string, any>>(
           target[key] !== null &&
           !Array.isArray(target[key])
         ) {
-          result[key] = deepMerge(target[key], sourceValue as any) as T[Extract<
-            keyof T,
-            string
-          >];
+          result[key] = deepMerge(
+            target[key] as Record<string, unknown>,
+            sourceValue as Partial<Record<string, unknown>>
+          ) as T[Extract<keyof T, string>];
         } else {
           result[key] = sourceValue as T[Extract<keyof T, string>];
         }

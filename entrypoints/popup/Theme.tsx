@@ -69,10 +69,10 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
   useEffect(() => {
     trackAction('detect_theme', {
       is_shopify: storeInfo.isShopify,
-      page_url: storeInfo.page_url || '',
-      shop_domain: storeInfo.shopDomain || '',
-      theme_name: storeInfo.theme?.schema_name || storeInfo.theme?.name || '',
-      theme_version: storeInfo.theme?.schema_version || '',
+      page_url: storeInfo.page_url ?? '',
+      shop_domain: storeInfo.shopDomain ?? '',
+      theme_name: storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? '',
+      theme_version: storeInfo.theme?.schema_version ?? '',
     });
   }, [storeInfo]);
 
@@ -80,16 +80,16 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
     <div className="flex flex-col">
       <InfoItem
         label="Shopify URL:"
-        value={storeInfo.shopDomain || 'N/A'}
+        value={storeInfo.shopDomain ?? 'N/A'}
         type="url"
       />
       <InfoItem
         label="Theme name:"
-        value={storeInfo.theme?.schema_name || storeInfo.theme?.name || 'N/A'}
+        value={storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? 'N/A'}
       />
       <InfoItem
         label="Theme version:"
-        value={storeInfo.theme?.schema_version || 'N/A'}
+        value={storeInfo.theme?.schema_version ?? 'N/A'}
       />
       <div className="py-3.5 border-t border-slate-100">
         <div className="flex items-center justify-between mb-3">
@@ -128,11 +128,10 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
               setTimeout(() => setCopying(false), success ? 1500 : 0);
             }}
             disabled={copying || !storeInfo.theme?.id}
-            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${
-              copying
-                ? 'bg-green-500 text-white'
-                : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${copying
+              ? 'bg-green-500 text-white'
+              : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <svg
               className="w-4 h-4"

@@ -17,7 +17,7 @@ export default defineContentScript({
 
     function getCurrentPage() {
       const urlParams = new URLSearchParams(window.location.search);
-      return parseInt(urlParams.get('page') || '1', 10);
+      return parseInt(urlParams.get('page') ?? '1', 10);
     }
 
     function calculateStartingIndex() {

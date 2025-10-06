@@ -17,14 +17,17 @@ export interface StorefrontPasswordEntry {
 /**
  * Map of domain to password entry
  */
-export type StorefrontPasswordsStorage = Record<string, StorefrontPasswordEntry>;
+export type StorefrontPasswordsStorage = Record<
+  string,
+  StorefrontPasswordEntry
+>;
 
 /**
  * Get all stored storefront passwords
  */
 export async function getAllPasswordEntries(): Promise<StorefrontPasswordsStorage> {
   const data = await storage.getItem<StorefrontPasswordsStorage>(STORAGE_KEY);
-  return data || {};
+  return data ?? {};
 }
 
 /**
@@ -36,7 +39,7 @@ export async function getPasswordEntry(
   domain: string
 ): Promise<StorefrontPasswordEntry | null> {
   const allPasswords = await getAllPasswordEntries();
-  return allPasswords[domain] || null;
+  return allPasswords[domain] ?? null;
 }
 
 /**
@@ -68,9 +71,9 @@ export async function savePassword(
 
   allPasswords[domain] = {
     password: password,
-    createdAt: existing?.createdAt || new Date().toISOString(),
+    createdAt: existing?.createdAt ?? new Date().toISOString(),
     lastUsed: existing?.lastUsed,
-    failedAttempts: resetFailures ? 0 : existing?.failedAttempts || 0,
+    failedAttempts: resetFailures ? 0 : (existing?.failedAttempts ?? 0),
     lastFailedAt: resetFailures ? undefined : existing?.lastFailedAt,
     enabled: existing?.enabled ?? true,
   };
@@ -118,7 +121,7 @@ export async function markPasswordFailed(
   const entry = allPasswords[domain];
 
   if (entry) {
-    entry.failedAttempts = (entry.failedAttempts || 0) + 1;
+    entry.failedAttempts = (entry.failedAttempts ?? 0) + 1;
     entry.lastFailedAt = new Date().toISOString();
 
     if (entry.failedAttempts >= threshold) {

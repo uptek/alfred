@@ -55,7 +55,7 @@ const Resizers = async () => {
 
   // Get settings to determine which resizers to show
   const settings = await getItem<AlfredSettings>('settings');
-  const resizerSettings = settings?.themeCustomizer?.resizers || {
+  const resizerSettings = settings?.themeCustomizer?.resizers ?? {
     primarySidebar: true,
     secondarySidebar: true,
     previewHorizontal: true,
@@ -154,7 +154,7 @@ const Resizers = async () => {
       element: resizerEl,
       resize: resizeFn,
       isMainResizer: isMain,
-      type: type || 'primary',
+      type: type ?? 'primary',
     };
     resizerEl.addEventListener('mousedown', (e) => onMouseDown(e, resizer));
     return resizer;
@@ -269,11 +269,13 @@ export const setupResizers = async () => {
   }
 
   // If elements not found, set up a mutation observer
-  const observer = new MutationObserver(async () => {
-    const success = await Resizers();
-    if (success) {
-      observer.disconnect();
-    }
+  const observer = new MutationObserver(() => {
+    void (async () => {
+      const success = await Resizers();
+      if (success) {
+        observer.disconnect();
+      }
+    })();
   });
 
   observer.observe(document.body, {
@@ -282,10 +284,12 @@ export const setupResizers = async () => {
   });
 
   // Also try again after a delay
-  setTimeout(async () => {
-    const success = await Resizers();
-    if (success) {
-      observer.disconnect();
-    }
+  setTimeout(() => {
+    void (async () => {
+      const success = await Resizers();
+      if (success) {
+        observer.disconnect();
+      }
+    })();
   }, 2000);
 };

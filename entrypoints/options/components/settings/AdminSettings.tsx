@@ -29,7 +29,7 @@ export function AdminSettings() {
       // Set initial value
       setCheckboxValue(
         `${prefix}-${key}`,
-        settings.admin?.[key as keyof typeof settings.admin] || false
+        settings.admin?.[key as keyof typeof settings.admin] ?? false
       );
 
       // Initialize sub-settings if they exist
@@ -109,7 +109,7 @@ export function AdminSettings() {
             <s-checkbox
               name={`${prefix}-${key}`}
               label={label}
-              details={details || ''}
+              details={details ?? ''}
             />
           </div>
           {hasSubSettings && parentEnabled && (

@@ -22,7 +22,7 @@ export function CollaboratorAccessSetting() {
   useEffect(() => {
     if (isLoading) return;
 
-    const collaboratorAccess = settings.collaboratorAccess || {};
+    const collaboratorAccess = settings.collaboratorAccess ?? {};
 
     settingsItems.forEach(({ key }) => {
       setCheckboxValue(
