@@ -48,20 +48,15 @@ export function ThemeInspectorSetting() {
         labelAccessibilityVisibility="exclusive"
         name="theme-inspector"
       >
-        <s-choice
-          label="Default behavior"
-          value="default"
-        />
-        <s-choice
-          label="Disable inspector"
-          value="disable"
-          details="Always disables the theme inspector on page load"
-        />
-        <s-choice
-          label="Restore previous state"
-          value="restore"
-          details="Remembers and restores your last inspector state"
-        />
+        <s-choice value="default">
+          Default behavior
+        </s-choice>
+        <s-choice value="disable">
+          Disable inspector: Always disables the theme inspector on page load
+        </s-choice>
+        <s-choice value="restore">
+          Restore previous state: Remembers and restores your last inspector state
+        </s-choice>
       </s-choice-list>
     </s-section>
   );

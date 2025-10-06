@@ -1,5 +1,15 @@
 [
   {
+    "version": "2025.10.06",
+    "date": "2025-10-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Introducing Storefront Password Auto-fill! Save and automatically fill passwords for password-protected Shopify storefronts. Passwords are stored locally in your browser and can be managed from the extension popup or settings page."
+      }
+    ]
+  },
+  {
     "version": "2025.10.05",
     "date": "2025-10-05",
     "changes": [

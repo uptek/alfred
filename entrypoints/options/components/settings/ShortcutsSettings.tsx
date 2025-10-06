@@ -54,7 +54,7 @@ export function ShortcutsSetting() {
   }, [settings, updateSettings, isLoading]);
 
   return (
-    <s-section heading="Shortcuts (Right-click menu)">
+    <s-section heading="Shortcuts (right-click menu)">
       <s-paragraph>
         Controls which shortcuts appear in the right-click context menu when using Alfred on Shopify stores.
       </s-paragraph>

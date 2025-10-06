@@ -62,7 +62,7 @@ export function CollaboratorAccessSetting() {
             key={key}
             name={`collaborator-${key}`}
             label={label}
-            details={details}
+            details={details || undefined}
           />
         ))}
       </s-grid>

@@ -57,7 +57,7 @@ export function AppStoreSettings() {
   }, [settings.appStore, updateSettings, isLoading]);
 
   return (
-    <s-section heading="App Store Features">
+    <s-section heading="App Store features">
       <s-paragraph>
         Enhance your Shopify App Store experience with additional features and improvements.
       </s-paragraph>

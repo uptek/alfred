@@ -105,7 +105,7 @@ export function AdminSettings() {
   };
 
   return (
-    <s-section heading="Shopify admin">
+    <s-section heading="Shopify Admin">
       <s-paragraph>
         Customize the Shopify admin dashboard.
       </s-paragraph>
