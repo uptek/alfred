@@ -142,16 +142,16 @@ export default function App() {
             const spansRow = infoRow.querySelector('div.tw-relative.tw-flex.tw-items-center');
             if (spansRow) {
               const spans = spansRow.querySelectorAll('span');
-              if (spans.length > 0 && !spans[0].classList.contains('tw-overflow-hidden')) {
+              if (spans.length > 0 && !spans[0]?.classList.contains('tw-overflow-hidden')) {
                 const firstSpan = spans[0];
-                const firstTextNode = Array.from(firstSpan.childNodes).find((n: any) => n.nodeType === Node.TEXT_NODE);
-                rating = firstTextNode ? (firstTextNode as any).textContent?.trim() || 'N/A' : firstSpan.textContent?.trim() || 'N/A';
+                const firstTextNode = Array.from(firstSpan?.childNodes || []).find((n: any) => n.nodeType === Node.TEXT_NODE);
+                rating = firstTextNode ? (firstTextNode as any).textContent?.trim() || 'N/A' : firstSpan?.textContent?.trim() || 'N/A';
               }
               for (const span of spans) {
                 if (span.classList.contains('tw-overflow-hidden')) {
-                  pricing = span.textContent?.trim() || 'N/A';
-                } else if (span.hasAttribute('aria-hidden') && /^\(.*\)$/.test(span.textContent?.trim() || '')) {
-                  reviewCount = parseInt((span.textContent || '').replace(/[(),]/g, '').trim().replace(/,/g, ''), 10) || 0;
+                  pricing = span?.textContent?.trim() || 'N/A';
+                } else if (span?.hasAttribute('aria-hidden') && /^\(.*\)$/.test(span?.textContent?.trim() || '')) {
+                  reviewCount = parseInt((span?.textContent || '').replace(/[(),]/g, '').trim().replace(/,/g, ''), 10) || 0;
                 }
               }
             }

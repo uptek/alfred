@@ -21,10 +21,15 @@ export function StorefrontPasswordSettings() {
 
   const handleToggleEnabled = async (domain: string, enabled: boolean) => {
     // Optimistic update - update UI immediately
-    setPasswords((prev) => ({
-      ...prev,
-      [domain]: { ...prev[domain], enabled },
-    }));
+    setPasswords((prev) => {
+      const existingEntry = prev[domain];
+      if (!existingEntry) return prev;
+
+      return {
+        ...prev,
+        [domain]: { ...existingEntry, enabled },
+      };
+    });
 
     try {
       await setPasswordEnabled(domain, enabled);
@@ -89,10 +94,15 @@ export function StorefrontPasswordSettings() {
     const trimmedPassword = newPassword.trim();
 
     // Optimistic update - update UI immediately
-    setPasswords((prev) => ({
-      ...prev,
-      [domain]: { ...prev[domain], password: trimmedPassword },
-    }));
+    setPasswords((prev) => {
+      const existingEntry = prev[domain];
+      if (!existingEntry) return prev;
+
+      return {
+        ...prev,
+        [domain]: { ...existingEntry, password: trimmedPassword },
+      };
+    });
 
     // Clear editing state
     setEditingPasswords((prev) => {
@@ -140,8 +150,7 @@ export function StorefrontPasswordSettings() {
                 <s-table-header></s-table-header>
               </s-table-header-row>
               <s-table-body>
-                {Object.keys(passwords).map((domain) => {
-                  const entry = passwords[domain];
+                {Object.entries(passwords).map(([domain, entry]) => {
                   return (
                     <s-table-row key={domain}>
                       <s-table-cell>

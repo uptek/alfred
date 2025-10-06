@@ -1,4 +1,4 @@
-import { StoreInfo } from './types';
+import type { StoreInfo } from './types';
 import StorefrontPassword from './settings/StorefrontPassword';
 
 interface SettingsProps {

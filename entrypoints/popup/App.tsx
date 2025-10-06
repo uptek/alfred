@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { getTheme } from './utils';
 import Theme from './Theme';
 import Settings from './Settings';
-import { StoreInfo } from './types';
+import type { StoreInfo } from './types';
 import "@/assets/tailwind.css";
 
 export default function App() {

@@ -468,6 +468,11 @@ export default defineUnlistedScript(() => {
         // Get the part after __ and remove any unique identifier suffix
         let sectionName = parts[1];
 
+        if (!sectionName) {
+          (window as any).Alfred.Toast.error('Section not recognized');
+          return false;
+        }
+
         // Check if there are multiple sections with the same base pattern
         const basePattern = sectionId.split('__')[0] + '__';
         const allSections = document.querySelectorAll(`[id^="${basePattern}"]`);

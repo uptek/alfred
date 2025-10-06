@@ -34,7 +34,7 @@ export const registerShortcuts = async () => {
         title: 'Open in Admin',
         parentId: alfredMenuId,
       },
-      async (info, tab: Browser.tabs.Tab) => {
+      async (_info, tab: Browser.tabs.Tab) => {
         try {
           await browser.scripting.executeScript({
             target: { tabId: tab.id! },
@@ -58,7 +58,7 @@ export const registerShortcuts = async () => {
         title: 'Open in Customizer',
         parentId: alfredMenuId,
       },
-      async (info, tab: Browser.tabs.Tab) => {
+      async (_info, tab: Browser.tabs.Tab) => {
         try {
           await browser.scripting.executeScript({
             target: { tabId: tab.id! },
@@ -82,7 +82,7 @@ export const registerShortcuts = async () => {
         title: 'Copy Product JSON',
         parentId: alfredMenuId,
       },
-      async (info, tab: Browser.tabs.Tab) => {
+      async (_info, tab: Browser.tabs.Tab) => {
         try {
           await browser.scripting.executeScript({
             target: { tabId: tab.id! },
@@ -106,7 +106,7 @@ export const registerShortcuts = async () => {
         title: 'Copy Cart JSON',
         parentId: alfredMenuId,
       },
-      async (info, tab: Browser.tabs.Tab) => {
+      async (_info, tab: Browser.tabs.Tab) => {
         try {
           await browser.scripting.executeScript({
             target: { tabId: tab.id! },
@@ -130,7 +130,7 @@ export const registerShortcuts = async () => {
         title: 'Copy Theme Preview URL',
         parentId: alfredMenuId,
       },
-      async (info, tab: Browser.tabs.Tab) => {
+      async (_info, tab: Browser.tabs.Tab) => {
         try {
           await browser.scripting.executeScript({
             target: { tabId: tab.id! },
@@ -154,7 +154,7 @@ export const registerShortcuts = async () => {
         title: 'Clear Cart',
         parentId: alfredMenuId,
       },
-      async (info, tab: Browser.tabs.Tab) => {
+      async (_info, tab: Browser.tabs.Tab) => {
         try {
           await browser.scripting.executeScript({
             target: { tabId: tab.id! },
@@ -178,7 +178,7 @@ export const registerShortcuts = async () => {
         title: 'Open Section in Code Editor',
         parentId: alfredMenuId,
       },
-      async (info, tab: Browser.tabs.Tab) => {
+      async (_info, tab: Browser.tabs.Tab) => {
         try {
           await browser.scripting.executeScript({
             target: { tabId: tab.id! },

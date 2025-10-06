@@ -1,9 +1,19 @@
 {
   "extends": "./.wxt/tsconfig.json",
+  "exclude": ["supabase/*"],
   "compilerOptions": {
+    "composite": true,
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "types": ["preact", "@shopify/app-bridge-ui-types"]
+    "types": ["preact", "@shopify/app-bridge-ui-types"],
+    // "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    // "noImplicitReturns": true,
+    // "noPropertyAccessFromIndexSignature": true,
+    "verbatimModuleSyntax": true
   }
 }

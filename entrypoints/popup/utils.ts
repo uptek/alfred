@@ -1,4 +1,4 @@
-import { StoreInfo } from './types';
+import type { StoreInfo } from './types';
 
 export const getTheme = async (): Promise<StoreInfo | null> => {
   try {

@@ -315,7 +315,7 @@ export default function App() {
                     <s-table-cell></s-table-cell>
                   </s-table-row>
                 ) : (
-                  presets.map((preset, index) => (
+                  presets.map((preset) => (
                     <s-table-row key={preset.id}>
                       <s-table-cell>
                         <input

@@ -13,15 +13,6 @@ interface ChangelogEntry {
   changes: (string | Change)[];
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
 const generateChangelog = async () => {
   try {
     const changelogJsonPath = path.resolve(process.cwd(), 'changelog.json');

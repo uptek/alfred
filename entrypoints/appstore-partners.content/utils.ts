@@ -73,7 +73,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
       const paragraphs = developerSection?.querySelectorAll("p");
       if (paragraphs && paragraphs.length > 0) {
         const addressElement = paragraphs[paragraphs.length - 1];
-        appData.developer.address = addressElement.textContent?.trim() || null;
+        appData.developer.address = addressElement?.textContent?.trim() || null;
       }
     }
 
@@ -101,9 +101,8 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
         if (changelogAnchor) {
           // Extract only the date part (text before the anchor)
           const textContent = dateElement.textContent?.trim() || null;
-          const anchorText = changelogAnchor.textContent?.trim() || null;
           // Remove the anchor text and any separator (like "·") from the text content
-          launchDateText = textContent?.split("·")[0].trim() || null;
+          launchDateText = textContent?.split("·")[0]?.trim() || null;
 
           // Add the changelog link to resources
           appData.resources.push({
@@ -151,7 +150,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
             ageString = months + (months === 1 ? " month" : " months");
           } else {
             // More than a year - show as X.Y years
-            const decimalMonths = (months / 12).toFixed(1).substring(1);
+            const decimalMonths = (months / 12).toFixed(1).substring(1) || "";
             ageString =
               years +
               decimalMonths +
@@ -279,7 +278,7 @@ const convertToCSV = (apps: App[]) => {
       // Escape quotes in description and wrap in quotes
       '"' + (app.description || "").replace(/"/g, '""') + '"',
       // App URL
-      app.link.split("?")[0].split("#")[0] || "",
+      app.link?.split("?")[0]?.split("#")[0] || "",
       // Website URL
       app.developer && app.developer.website ? app.developer.website : "",
     ];
@@ -340,8 +339,8 @@ export const downloadCSV = (apps: App[]) => {
 
 export const getResourceIcon = (resource: Resource) => {
   let icon = defaultIcon;
-  const title = resource.title.toLowerCase();
-  const url = resource.url.toLowerCase();
+  const title = resource.title?.toLowerCase() || "";
+  const url = resource.url?.toLowerCase() || "";
 
   // Determine icon type
   if (title.includes("privacy") || url.includes("privacy")) {

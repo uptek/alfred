@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { getPasswordEntry, savePassword, deletePassword, setPasswordEnabled } from '@/utils/storefrontPasswords';
-import { StoreInfo } from '../types';
+import type { StoreInfo } from '../types';
 
 interface StorefrontPasswordProps {
   storeInfo: StoreInfo;

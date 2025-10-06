@@ -74,7 +74,7 @@ export function update(id: string, options: Partial<ContextMenu.Options>): boole
   if (options.documentUrlPatterns !== undefined) updateProperties.documentUrlPatterns = options.documentUrlPatterns;
   if (options.targetUrlPatterns !== undefined) updateProperties.targetUrlPatterns = options.targetUrlPatterns;
   if (options.enabled !== undefined) updateProperties.enabled = options.enabled;
-  if (options.checked !== undefined) updateProperties.checked = options.checked;
+  if (options['checked'] !== undefined) updateProperties['checked'] = options['checked'];
 
   try {
     browser.contextMenus.update(id, updateProperties);

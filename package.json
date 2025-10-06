@@ -11,7 +11,8 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "rm -rf .output && wxt zip && open .output",
     "zip:firefox": "wxt zip -b firefox",
-    "compile": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch",
     "changelog:gen": "bun scripts/generate-changelog.ts",
     "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
     "postinstall": "wxt prepare"

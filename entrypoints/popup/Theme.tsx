@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { trackAction } from '@/utils/analytics';
-import { InfoItemProps, StoreInfo } from './types';
+import type { InfoItemProps, StoreInfo } from './types';
 
 function InfoItem({ label, value, type = 'text', isLast = false }: InfoItemProps) {
   const getValueClassName = () => {
