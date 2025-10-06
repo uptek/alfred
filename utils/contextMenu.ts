@@ -40,7 +40,7 @@ export function create(options: ContextMenu.Options, handler?: ContextMenu.Click
     enabled: options.enabled !== undefined ? options.enabled : true,
   } as Browser.contextMenus.CreateProperties;
 
-  if (options.type === 'checkbox' || options.type === 'radio') {
+  if ((options.type === 'checkbox' || options.type === 'radio') && options.checked !== undefined) {
     menuOptions.checked = options.checked;
   }
 

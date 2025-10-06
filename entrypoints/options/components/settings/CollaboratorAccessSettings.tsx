@@ -6,7 +6,7 @@ const settingsItems = [
   {
     key: 'presets',
     label: 'Enable Presets',
-    details: null
+    details: ""
   },
 ];
 
@@ -62,7 +62,7 @@ export function CollaboratorAccessSetting() {
             key={key}
             name={`collaborator-${key}`}
             label={label}
-            details={details || undefined}
+            details={details || ""}
           />
         ))}
       </s-grid>

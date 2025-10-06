@@ -87,6 +87,9 @@ export default defineContentScript({
         // Return true to indicate async response
         return true;
       }
+
+      // Return false for unhandled messages
+      return false;
     });
   },
 });

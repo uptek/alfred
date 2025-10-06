@@ -331,7 +331,7 @@ export default function App() {
                     {app.name}
                   </a>
                   <div className={styles.appDescription}>{app.description}</div>
-                  <SummaryCard app={app} className={activeSummaryCard === app.handle ? styles.summaryCardActive : styles.summaryCard} />
+                  <SummaryCard app={app} className={(activeSummaryCard === app.handle ? styles.summaryCardActive : styles.summaryCard) || ''} />
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <div className={styles.ratingContainer}>{app.rating}</div>

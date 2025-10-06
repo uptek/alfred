@@ -13,7 +13,7 @@ interface Resizer {
   element: HTMLDivElement;
   resize: (dx: number, dy: number, dimensions: Dimensions) => void;
   isMainResizer: boolean;
-  type?: 'primary' | 'secondary' | 'main-horizontal' | 'main-vertical';
+  type: 'primary' | 'secondary' | 'main-horizontal' | 'main-vertical';
 }
 
 const MIN_SIDEBAR_WIDTH = 100;
@@ -143,7 +143,7 @@ const Resizers = async () => {
       element: resizerEl,
       resize: resizeFn,
       isMainResizer: isMain,
-      type,
+      type: type || 'primary',
     };
     resizerEl.addEventListener('mousedown', (e) => onMouseDown(e, resizer));
     return resizer;

@@ -86,10 +86,10 @@ export default function App() {
     }, 100);
 
     // Apply the custom message if it exists
-    if (preset.customMessage !== undefined) {
+    if (preset.customMessage !== "") {
       const messageTextarea = document.querySelector('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea') as HTMLTextAreaElement;
       if (messageTextarea) {
-        messageTextarea.value = preset.customMessage;
+        messageTextarea.value = preset.customMessage ?? "";
         // Trigger input event to ensure React/framework detects the change
         messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         messageTextarea.dispatchEvent(new Event('change', { bubbles: true }));
@@ -226,7 +226,7 @@ export default function App() {
 
     // Get the custom message from the textarea
     const messageTextarea = document.querySelector('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea') as HTMLTextAreaElement;
-    const customMessage = messageTextarea?.value || undefined;
+    const customMessage = messageTextarea?.value || "";
 
     const newPreset: PermissionPreset = {
       id: generatePresetId(),

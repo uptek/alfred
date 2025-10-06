@@ -6,12 +6,12 @@ const STORAGE_KEY = 'local:storefront_passwords';
  * Represents a stored password entry for a storefront
  */
 export interface StorefrontPasswordEntry {
-  password: string;           // Plain text password
-  createdAt: string;          // ISO timestamp
-  lastUsed?: string;          // ISO timestamp
-  failedAttempts: number;     // Counter for failed attempts
-  lastFailedAt?: string;      // ISO timestamp of last failure
-  enabled: boolean;           // Auto-fill enabled flag
+  password: string; // Plain text password
+  createdAt: string; // ISO timestamp
+  lastUsed?: string | undefined; // ISO timestamp
+  failedAttempts: number; // Counter for failed attempts
+  lastFailedAt?: string | undefined; // ISO timestamp of last failure
+  enabled: boolean; // Auto-fill enabled flag
 }
 
 /**
@@ -58,11 +58,7 @@ export async function getPassword(domain: string): Promise<string | null> {
  * @param password - The plain text password
  * @param resetFailures - Whether to reset failure count (default: true)
  */
-export async function savePassword(
-  domain: string,
-  password: string,
-  resetFailures: boolean = true
-): Promise<void> {
+export async function savePassword(domain: string, password: string, resetFailures: boolean = true): Promise<void> {
   const allPasswords = await getAllPasswordEntries();
   const existing = allPasswords[domain];
 
@@ -70,7 +66,7 @@ export async function savePassword(
     password: password,
     createdAt: existing?.createdAt || new Date().toISOString(),
     lastUsed: existing?.lastUsed,
-    failedAttempts: resetFailures ? 0 : (existing?.failedAttempts || 0),
+    failedAttempts: resetFailures ? 0 : existing?.failedAttempts || 0,
     lastFailedAt: resetFailures ? undefined : existing?.lastFailedAt,
     enabled: existing?.enabled ?? true,
   };
@@ -99,7 +95,7 @@ export async function markPasswordUsed(domain: string): Promise<void> {
   if (entry) {
     entry.lastUsed = new Date().toISOString();
     entry.failedAttempts = 0;
-    entry.lastFailedAt = undefined;
+    delete entry.lastFailedAt;
     entry.enabled = true; // Enable since password was successfully used
     await storage.setItem(STORAGE_KEY, allPasswords);
   }
@@ -141,7 +137,7 @@ export async function setPasswordEnabled(domain: string, enabled: boolean): Prom
     if (enabled) {
       // Reset failures when enabling
       entry.failedAttempts = 0;
-      entry.lastFailedAt = undefined;
+      delete entry.lastFailedAt;
     }
     await storage.setItem(STORAGE_KEY, allPasswords);
   }

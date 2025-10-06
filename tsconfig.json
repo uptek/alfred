@@ -7,13 +7,13 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "types": ["preact", "@shopify/app-bridge-ui-types"],
-    // "strict": true,
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    // "noImplicitReturns": true,
-    // "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "exactOptionalPropertyTypes": true,
     "verbatimModuleSyntax": true
   }
 }

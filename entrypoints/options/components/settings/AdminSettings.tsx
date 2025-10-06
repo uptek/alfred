@@ -91,7 +91,7 @@ export function AdminSettings() {
             <s-checkbox
               name={`${prefix}-${key}`}
               label={label}
-              details={details}
+              details={details || ""}
             />
           </div>
           {hasSubSettings && parentEnabled && (
