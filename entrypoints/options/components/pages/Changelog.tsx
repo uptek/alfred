@@ -75,7 +75,6 @@ export function Changelog() {
           <s-box key={index}>
             <video
               controls
-              muted
               playsinline
               src={change.content as string}
               style="width: 100%; height: auto; border-radius: 8px;"

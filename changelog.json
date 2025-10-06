@@ -6,6 +6,10 @@
       {
         "type": "paragraph",
         "content": "Introducing Storefront Password Auto-fill! Save and automatically fill passwords for password-protected Shopify storefronts. Passwords are stored locally in your browser and can be managed from the extension popup or settings page."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/storefront-password-autofill.mp4"
       }
     ]
   },
