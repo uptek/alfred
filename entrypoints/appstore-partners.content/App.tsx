@@ -194,8 +194,8 @@ export default function App() {
                   firstSpan?.childNodes ?? []
                 ).find((n): n is Text => n.nodeType === Node.TEXT_NODE);
                 rating = firstTextNode
-                  ? firstTextNode.textContent?.trim() ?? 'N/A'
-                  : firstSpan?.textContent?.trim() ?? 'N/A';
+                  ? (firstTextNode.textContent?.trim() ?? 'N/A')
+                  : (firstSpan?.textContent?.trim() ?? 'N/A');
               }
               for (const span of spans) {
                 if (span.classList.contains('tw-overflow-hidden')) {
@@ -333,8 +333,10 @@ export default function App() {
         // Default to string comparison
         const aVal = a[column];
         const bVal = b[column];
-        aValue = typeof aVal === 'string' || typeof aVal === 'number' ? aVal : '';
-        bValue = typeof bVal === 'string' || typeof bVal === 'number' ? bVal : '';
+        aValue =
+          typeof aVal === 'string' || typeof aVal === 'number' ? aVal : '';
+        bValue =
+          typeof bVal === 'string' || typeof bVal === 'number' ? bVal : '';
       }
 
       // Sort based on direction

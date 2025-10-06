@@ -16,7 +16,8 @@ export default function App() {
     }
 
     const handlePopState = (event: PopStateEvent) => {
-      const page = ((event.state as { page?: string } | null)?.page) ?? 'settings';
+      const page =
+        (event.state as { page?: string } | null)?.page ?? 'settings';
       setCurrentPage(page);
     };
 

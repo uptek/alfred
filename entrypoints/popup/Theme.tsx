@@ -128,10 +128,11 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
               setTimeout(() => setCopying(false), success ? 1500 : 0);
             }}
             disabled={copying || !storeInfo.theme?.id}
-            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${copying
-              ? 'bg-green-500 text-white'
-              : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${
+              copying
+                ? 'bg-green-500 text-white'
+                : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <svg
               className="w-4 h-4"

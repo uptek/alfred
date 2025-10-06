@@ -48,10 +48,7 @@ export const SettingsContext = createContext<SettingsContextValue | undefined>(
 );
 
 // Deep merge function to handle nested objects
-function deepMerge<T>(
-  target: T,
-  source: Partial<T>
-): T {
+function deepMerge<T>(target: T, source: Partial<T>): T {
   const result = { ...target };
 
   for (const key in source) {
