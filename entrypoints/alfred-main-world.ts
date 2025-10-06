@@ -11,9 +11,14 @@ export default defineUnlistedScript(() => {
 
     // Initialize the context menu listener
     _initContextMenuListener: () => {
-      document.addEventListener('contextmenu', (event) => {
-        (window as any).Alfred._lastRightClickedElement = event.target as HTMLElement;
-      }, true);
+      document.addEventListener(
+        'contextmenu',
+        (event) => {
+          (window as any).Alfred._lastRightClickedElement =
+            event.target as HTMLElement;
+        },
+        true
+      );
     },
 
     _initThemeRequestHandler: () => {
@@ -31,11 +36,14 @@ export default defineUnlistedScript(() => {
             const serializedData = JSON.parse(JSON.stringify(themeData));
 
             // Send response back via postMessage
-            window.postMessage({
-              type: 'alfred:theme_response',
-              requestId: requestId,
-              data: serializedData
-            }, '*');
+            window.postMessage(
+              {
+                type: 'alfred:theme_response',
+                requestId: requestId,
+                data: serializedData,
+              },
+              '*'
+            );
           }
         }
       });
@@ -236,7 +244,9 @@ export default defineUnlistedScript(() => {
         }
 
         const productData = await response.json();
-        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(JSON.stringify(productData, null, 2));
+        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(
+          JSON.stringify(productData, null, 2)
+        );
 
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
@@ -287,7 +297,9 @@ export default defineUnlistedScript(() => {
         }
 
         const cartData = await response.json();
-        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(JSON.stringify(cartData, null, 2));
+        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(
+          JSON.stringify(cartData, null, 2)
+        );
 
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
@@ -322,7 +334,9 @@ export default defineUnlistedScript(() => {
      * @param {boolean} disablePreviewBar - Whether to disable the preview bar (adds pb=0)
      * @returns {Promise<boolean>}
      */
-    copyThemePreviewUrl: async (disablePreviewBar: boolean = false): Promise<boolean> => {
+    copyThemePreviewUrl: async (
+      disablePreviewBar: boolean = false
+    ): Promise<boolean> => {
       try {
         // Check if this is a Shopify store
         if (!(window as any).Alfred.isShopify()) {
@@ -341,7 +355,9 @@ export default defineUnlistedScript(() => {
           url.searchParams.set('pb', '0');
         }
 
-        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(url.toString());
+        const copiedToClipboard = await (window as any).Alfred.writeToClipboard(
+          url.toString()
+        );
 
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
@@ -361,7 +377,9 @@ export default defineUnlistedScript(() => {
             })
           );
         } else {
-          (window as any).Alfred.Toast.error('Failed to copy theme preview URL');
+          (window as any).Alfred.Toast.error(
+            'Failed to copy theme preview URL'
+          );
         }
 
         return copiedToClipboard;

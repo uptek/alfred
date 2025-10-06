@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'preact/hooks';
-import { getPasswordEntry, savePassword, deletePassword, setPasswordEnabled } from '@/utils/storefrontPasswords';
+import {
+  getPasswordEntry,
+  savePassword,
+  deletePassword,
+  setPasswordEnabled,
+} from '@/utils/storefrontPasswords';
 import type { StoreInfo } from '../types';
 
 interface StorefrontPasswordProps {
   storeInfo: StoreInfo;
 }
 
-export default function StorefrontPassword({ storeInfo }: StorefrontPasswordProps) {
+export default function StorefrontPassword({
+  storeInfo,
+}: StorefrontPasswordProps) {
   const [domain, setDomain] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [autoFillPassword, setAutoFillPassword] = useState(true);
@@ -76,7 +83,9 @@ export default function StorefrontPassword({ storeInfo }: StorefrontPasswordProp
     return (
       <div className="py-3.5">
         <div className="text-center py-8">
-          <p className="text-sm text-slate-500">Unable to detect current store domain</p>
+          <p className="text-sm text-slate-500">
+            Unable to detect current store domain
+          </p>
         </div>
       </div>
     );
@@ -85,15 +94,23 @@ export default function StorefrontPassword({ storeInfo }: StorefrontPasswordProp
   return (
     <div className="py-3.5 border-t border-slate-100">
       <div className="flex items-center justify-between mb-3">
-        <label htmlFor="storefrontPassword" className="text-sm font-semibold text-slate-500 cursor-pointer">
+        <label
+          htmlFor="storefrontPassword"
+          className="text-sm font-semibold text-slate-500 cursor-pointer"
+        >
           Storefront password:
         </label>
-        <label htmlFor="autoFillPassword" className="flex items-center gap-2 cursor-pointer">
+        <label
+          htmlFor="autoFillPassword"
+          className="flex items-center gap-2 cursor-pointer"
+        >
           <input
             type="checkbox"
             id="autoFillPassword"
             checked={autoFillPassword}
-            onChange={(e) => handleAutoFillPasswordChange(e.currentTarget.checked)}
+            onChange={(e) =>
+              handleAutoFillPasswordChange(e.currentTarget.checked)
+            }
             className="w-4 h-4 text-indigo-500 border-slate-300 rounded focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
           />
           <span className="text-xs text-slate-600">Auto-fill password?</span>
@@ -128,7 +145,10 @@ export default function StorefrontPassword({ storeInfo }: StorefrontPasswordProp
               </svg>
             ) : (
               <svg className="w-4 h-4" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M13 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-1.5 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+                <path
+                  fill-rule="evenodd"
+                  d="M13 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-1.5 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"
+                />
                 <path
                   fill-rule="evenodd"
                   d="M10 4c-2.476 0-4.348 1.23-5.577 2.532a9.266 9.266 0 0 0-1.4 1.922 5.98 5.98 0 0 0-.37.818c-.082.227-.153.488-.153.728s.071.501.152.728c.088.246.213.524.371.818.317.587.784 1.27 1.4 1.922 1.229 1.302 3.1 2.532 5.577 2.532 2.476 0 4.348-1.23 5.577-2.532a9.265 9.265 0 0 0 1.4-1.922 5.98 5.98 0 0 0 .37-.818c.082-.227.153-.488.153-.728s-.071-.501-.152-.728a5.984 5.984 0 0 0-.371-.818 9.269 9.269 0 0 0-1.4-1.922c-1.229-1.302-3.1-2.532-5.577-2.532Zm-5.999 6.002v-.004c.004-.02.017-.09.064-.223a4.5 4.5 0 0 1 .278-.608 7.768 7.768 0 0 1 1.17-1.605c1.042-1.104 2.545-2.062 4.487-2.062 1.942 0 3.445.958 4.486 2.062a7.77 7.77 0 0 1 1.17 1.605c.13.24.221.447.279.608.047.132.06.203.064.223v.004c-.004.02-.017.09-.064.223a4.503 4.503 0 0 1-.278.608 7.768 7.768 0 0 1-1.17 1.605c-1.042 1.104-2.545 2.062-4.487 2.062-1.942 0-3.445-.958-4.486-2.062a7.766 7.766 0 0 1-1.17-1.605 4.5 4.5 0 0 1-.279-.608c-.047-.132-.06-.203-.064-.223Z"
@@ -141,12 +161,24 @@ export default function StorefrontPassword({ storeInfo }: StorefrontPasswordProp
           onClick={handleSavePassword}
           disabled={saving || !autoFillPassword}
           className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${
-            saving ? 'bg-green-500 text-white' : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
+            saving
+              ? 'bg-green-500 text-white'
+              : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             {saving ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             ) : (
               <path
                 strokeLinecap="round"

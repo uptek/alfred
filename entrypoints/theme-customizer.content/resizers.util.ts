@@ -25,15 +25,24 @@ const BASE_DOT_STYLE: Partial<CSSStyleDeclaration> = {
   width: '8px',
   height: '20px',
   cursor: 'col-resize',
-  backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.3) 1px, transparent 1px)',
+  backgroundImage:
+    'radial-gradient(circle, rgba(0,0,0,0.3) 1px, transparent 1px)',
   backgroundSize: '4px 4px',
 };
 
 const Resizers = async () => {
-  const frame = document.querySelector<HTMLElement>('[class^="Online-Store-UI-Frame_"]');
-  const main = document.querySelector<HTMLElement>('[class*="Online-Store-UI-Preview__Interior_"]');
-  const primarySidebar = document.querySelector<HTMLElement>('aside[class^="Online-Store-UI-Frame-Sidebar_"]');
-  const secondarySidebar = document.querySelector<HTMLElement>('[class*="Online-Store-UI-Frame-Sidebar--secondary_"]');
+  const frame = document.querySelector<HTMLElement>(
+    '[class^="Online-Store-UI-Frame_"]'
+  );
+  const main = document.querySelector<HTMLElement>(
+    '[class*="Online-Store-UI-Preview__Interior_"]'
+  );
+  const primarySidebar = document.querySelector<HTMLElement>(
+    'aside[class^="Online-Store-UI-Frame-Sidebar_"]'
+  );
+  const secondarySidebar = document.querySelector<HTMLElement>(
+    '[class*="Online-Store-UI-Frame-Sidebar--secondary_"]'
+  );
 
   if (!frame || !main || !primarySidebar || !secondarySidebar) {
     return false;
@@ -118,7 +127,9 @@ const Resizers = async () => {
       },
     });
 
-    document.body.style.cursor = window.getComputedStyle(e.target as Element).cursor;
+    document.body.style.cursor = window.getComputedStyle(
+      e.target as Element
+    ).cursor;
     document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
@@ -154,7 +165,9 @@ const Resizers = async () => {
       const newWidth = isPrimary ? dims.primary + dx : dims.secondary - dx;
       if (newWidth < MIN_SIDEBAR_WIDTH) return;
 
-      const panelArea = sidebar.querySelector<HTMLElement>('div[class*="Online-Store-UI-Frame-PanelArea_"]');
+      const panelArea = sidebar.querySelector<HTMLElement>(
+        'div[class*="Online-Store-UI-Frame-PanelArea_"]'
+      );
       if (panelArea) {
         const originalWidth = isPrimary ? dims.primary : dims.secondary;
         panelArea.style.width = newWidth === originalWidth ? '' : '100%';
@@ -169,7 +182,9 @@ const Resizers = async () => {
 
     const styles: Partial<CSSStyleDeclaration> = {
       ...BASE_DOT_STYLE,
-      top: isPrimary ? 'calc(var(--p-space-300) + var(--p-space-050))' : 'var(--p-space-300)',
+      top: isPrimary
+        ? 'calc(var(--p-space-300) + var(--p-space-050))'
+        : 'var(--p-space-300)',
     };
 
     if (isPrimary) {
@@ -178,7 +193,13 @@ const Resizers = async () => {
       styles.left = '2px';
     }
 
-    createResizer(sidebar, styles, resizeFn, false, isPrimary ? 'primary' : 'secondary');
+    createResizer(
+      sidebar,
+      styles,
+      resizeFn,
+      false,
+      isPrimary ? 'primary' : 'secondary'
+    );
   };
 
   // Primary Sidebar Resizer

@@ -1,4 +1,4 @@
-import { createIntegratedUi } from "#imports";
+import { createIntegratedUi } from '#imports';
 import { render } from 'preact';
 import { getItem } from '~/utils/storage';
 import { waitForElement } from '@/utils/helpers';
@@ -26,19 +26,19 @@ export default defineContentScript({
     });
 
     const ui = await createIntegratedUi(ctx, {
-      position: "inline",
-      anchor: "body",
-      append: "first",
+      position: 'inline',
+      anchor: 'body',
+      append: 'first',
       onMount: async (container) => {
         const target = await waitForElement(
-          "#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) > .Polaris-Card > .Polaris-Card__Section:nth-child(2)"
+          '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) > .Polaris-Card > .Polaris-Card__Section:nth-child(2)'
         );
 
         if (!target) {
           return;
         }
 
-        target.insertAdjacentElement("afterend", container);
+        target.insertAdjacentElement('afterend', container);
 
         render(<App />, container);
         return { container };
@@ -56,7 +56,7 @@ export default defineContentScript({
     ui.mount();
 
     browser.runtime.onMessage.addListener((event) => {
-      if (event.type === "MOUNT_UI") {
+      if (event.type === 'MOUNT_UI') {
         // dynamic mount by user action via messaging.
         ui.mount();
       }

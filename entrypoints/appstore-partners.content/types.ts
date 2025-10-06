@@ -1,12 +1,12 @@
 export type Resource = {
   title: string;
   url: string;
-}
+};
 
 export type Developer = {
   website: string | null;
   address: string | null;
-}
+};
 
 export type AppRaw = {
   resources: Resource[];
@@ -14,7 +14,7 @@ export type AppRaw = {
   launchDate: string | null;
   age: string | null;
   detailedAge: string | null;
-}
+};
 
 export type App = {
   name: string;
@@ -28,7 +28,7 @@ export type App = {
   description: string;
   isInstalled: boolean;
   isBuiltForShopify: boolean;
-} & AppRaw
+} & AppRaw;
 
 export type SummaryCardProps = {
   app: App;

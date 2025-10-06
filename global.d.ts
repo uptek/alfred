@@ -15,7 +15,10 @@ declare namespace ContextMenu {
     checked?: boolean;
   }
 
-  type ClickHandler = (info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => void;
+  type ClickHandler = (
+    info: chrome.contextMenus.OnClickData,
+    tab?: chrome.tabs.Tab
+  ) => void;
 }
 
 declare interface AlfredSettings {

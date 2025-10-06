@@ -1,26 +1,27 @@
-import { createIntegratedUi } from "#imports";
-import { render } from "preact";
-import { getItem } from "~/utils/storage";
-import { waitForElement } from "@/utils/helpers";
-import App from "./App.tsx";
+import { createIntegratedUi } from '#imports';
+import { render } from 'preact';
+import { getItem } from '~/utils/storage';
+import { waitForElement } from '@/utils/helpers';
+import App from './App.tsx';
 
 export default defineContentScript({
-  matches: ["*://apps.shopify.com/partners/*"],
+  matches: ['*://apps.shopify.com/partners/*'],
   async main(ctx) {
     // Check if enhanced partner pages are enabled
     const settings = await getItem<AlfredSettings>('settings');
-    const isEnhancedPartnerPagesEnabled = settings?.appStore?.enhancedPartnerPages !== false;
+    const isEnhancedPartnerPagesEnabled =
+      settings?.appStore?.enhancedPartnerPages !== false;
 
     if (!isEnhancedPartnerPagesEnabled) {
       return; // Exit early if enhanced partner pages are disabled
     }
     const ui = await createIntegratedUi(ctx, {
-      position: "inline",
-      anchor: "body",
-      append: "first",
+      position: 'inline',
+      anchor: 'body',
+      append: 'first',
       onMount: async (container) => {
         const target = await waitForElement(
-          "#PartnersShow > main > div > section > div:nth-child(1)"
+          '#PartnersShow > main > div > section > div:nth-child(1)'
         );
 
         if (!target) {
@@ -49,7 +50,7 @@ export default defineContentScript({
     ui.mount();
 
     browser.runtime.onMessage.addListener((event) => {
-      if (event.type === "MOUNT_UI") {
+      if (event.type === 'MOUNT_UI') {
         // dynamic mount by user action via messaging.
         ui.mount();
       }

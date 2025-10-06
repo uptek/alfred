@@ -3,7 +3,8 @@ import { getItem, setItem } from '~/utils/storage';
 type SidebarState = 'collapsed' | 'expanded';
 
 let SIDEBAR_STATE: SidebarState = 'expanded';
-const TOGGLE_WRAPPER_SELECTOR = '#AppFrameNav .Polaris-Navigation__Section:has(s-internal-icon[type*="home"])';
+const TOGGLE_WRAPPER_SELECTOR =
+  '#AppFrameNav .Polaris-Navigation__Section:has(s-internal-icon[type*="home"])';
 const TOGGLE_ELEMENT_ID = 'alfred-admin-sidebar-toggle';
 const STYLE_TAG_ID = 'alfred-admin-sidebar-styles';
 const STYLES = `
@@ -107,7 +108,10 @@ const removeStyles = (): void => {
  * Injects the toggle element into the document
  */
 const injectToggleElement = (): void => {
-  if (!document.body || !(document as any).querySelector(TOGGLE_WRAPPER_SELECTOR)) {
+  if (
+    !document.body ||
+    !(document as any).querySelector(TOGGLE_WRAPPER_SELECTOR)
+  ) {
     setTimeout(injectToggleElement, 100);
     return;
   }
@@ -129,16 +133,20 @@ const injectToggleElement = (): void => {
 
   // Handle toggle event
   toggleElement.addEventListener('click', async () => {
-    SIDEBAR_STATE = toggleElement.getAttribute('data-state') === 'collapsed' ? 'expanded' : 'collapsed';
+    SIDEBAR_STATE =
+      toggleElement.getAttribute('data-state') === 'collapsed'
+        ? 'expanded'
+        : 'collapsed';
     toggleElement.setAttribute('data-state', SIDEBAR_STATE);
 
     // Update the icon rotation
     const icon = toggleElement.querySelector('svg');
     if (icon) {
-      icon.style.transform = SIDEBAR_STATE === 'expanded' ? 'scale(-1, -1)' : '';
+      icon.style.transform =
+        SIDEBAR_STATE === 'expanded' ? 'scale(-1, -1)' : '';
     }
 
-    (SIDEBAR_STATE === 'collapsed') ? injectStyles() : removeStyles();
+    SIDEBAR_STATE === 'collapsed' ? injectStyles() : removeStyles();
 
     // Save the state to storage
     await setItem('admin-sidebar-state', SIDEBAR_STATE);
@@ -148,7 +156,7 @@ const injectToggleElement = (): void => {
       type: 'track_action',
       action: 'toggle_admin_sidebar',
       metadata: {
-        state: SIDEBAR_STATE
+        state: SIDEBAR_STATE,
       },
     });
   });

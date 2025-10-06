@@ -3,7 +3,16 @@ import { type Browser } from 'wxt/browser';
 // State to be shared across functions
 const menus: Map<string, ContextMenu.ClickHandler> = new Map();
 let initialized = false;
-const contexts = ['page', 'selection', 'image', 'video', 'audio', 'link', 'editable', 'frame'];
+const contexts = [
+  'page',
+  'selection',
+  'image',
+  'video',
+  'audio',
+  'link',
+  'editable',
+  'frame',
+];
 
 /**
  * Initialize the context menu manager
@@ -25,7 +34,10 @@ function initialize(): void {
 /**
  * Create a new context menu item
  */
-export function create(options: ContextMenu.Options, handler?: ContextMenu.ClickHandler): string {
+export function create(
+  options: ContextMenu.Options,
+  handler?: ContextMenu.ClickHandler
+): string {
   if (!initialized) initialize();
 
   const id = options.id;
@@ -40,7 +52,10 @@ export function create(options: ContextMenu.Options, handler?: ContextMenu.Click
     enabled: options.enabled !== undefined ? options.enabled : true,
   } as Browser.contextMenus.CreateProperties;
 
-  if ((options.type === 'checkbox' || options.type === 'radio') && options.checked !== undefined) {
+  if (
+    (options.type === 'checkbox' || options.type === 'radio') &&
+    options.checked !== undefined
+  ) {
     menuOptions.checked = options.checked;
   }
 
@@ -57,7 +72,10 @@ export function create(options: ContextMenu.Options, handler?: ContextMenu.Click
 /**
  * Update an existing context menu item
  */
-export function update(id: string, options: Partial<ContextMenu.Options>): boolean {
+export function update(
+  id: string,
+  options: Partial<ContextMenu.Options>
+): boolean {
   if (!initialized) initialize();
 
   if (!menus.has(id)) {
@@ -68,13 +86,18 @@ export function update(id: string, options: Partial<ContextMenu.Options>): boole
   const updateProperties: Record<string, any> = {};
 
   if (options.title !== undefined) updateProperties.title = options.title;
-  if (options.contexts !== undefined) updateProperties.contexts = options.contexts;
-  if (options.parentId !== undefined) updateProperties.parentId = options.parentId;
+  if (options.contexts !== undefined)
+    updateProperties.contexts = options.contexts;
+  if (options.parentId !== undefined)
+    updateProperties.parentId = options.parentId;
   if (options.type !== undefined) updateProperties.type = options.type;
-  if (options.documentUrlPatterns !== undefined) updateProperties.documentUrlPatterns = options.documentUrlPatterns;
-  if (options.targetUrlPatterns !== undefined) updateProperties.targetUrlPatterns = options.targetUrlPatterns;
+  if (options.documentUrlPatterns !== undefined)
+    updateProperties.documentUrlPatterns = options.documentUrlPatterns;
+  if (options.targetUrlPatterns !== undefined)
+    updateProperties.targetUrlPatterns = options.targetUrlPatterns;
   if (options.enabled !== undefined) updateProperties.enabled = options.enabled;
-  if (options['checked'] !== undefined) updateProperties['checked'] = options['checked'];
+  if (options['checked'] !== undefined)
+    updateProperties['checked'] = options['checked'];
 
   try {
     browser.contextMenus.update(id, updateProperties);

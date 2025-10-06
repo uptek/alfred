@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'preact/hooks';
-import { getAllPasswordEntries, deletePassword, setPasswordEnabled, deleteAllPasswords, savePassword } from '@/utils/storefrontPasswords';
+import {
+  getAllPasswordEntries,
+  deletePassword,
+  setPasswordEnabled,
+  deleteAllPasswords,
+  savePassword,
+} from '@/utils/storefrontPasswords';
 import type { StorefrontPasswordsStorage } from '@/utils/storefrontPasswords';
 import { Toast } from '~/utils/toast';
 
 export function StorefrontPasswordSettings() {
   const [passwords, setPasswords] = useState<StorefrontPasswordsStorage>({});
   const [loading, setLoading] = useState(true);
-  const [editingPasswords, setEditingPasswords] = useState<Record<string, string>>({});
+  const [editingPasswords, setEditingPasswords] = useState<
+    Record<string, string>
+  >({});
 
   const loadPasswords = async () => {
     setLoading(true);
@@ -57,7 +65,11 @@ export function StorefrontPasswordSettings() {
 
   const handleDeleteAll = async () => {
     const count = Object.keys(passwords).length;
-    if (confirm(`Delete all ${count} saved passwords? This action cannot be undone.`)) {
+    if (
+      confirm(
+        `Delete all ${count} saved passwords? This action cannot be undone.`
+      )
+    ) {
       try {
         await deleteAllPasswords();
         await loadPasswords();
@@ -125,7 +137,8 @@ export function StorefrontPasswordSettings() {
   return (
     <s-section heading="Storefront Password Auto-fill">
       <s-paragraph>
-        Automatically fill and submit passwords for password-protected Shopify storefronts. Passwords are stored locally in your browser.
+        Automatically fill and submit passwords for password-protected Shopify
+        storefronts. Passwords are stored locally in your browser.
       </s-paragraph>
 
       {loading ? (
@@ -133,11 +146,20 @@ export function StorefrontPasswordSettings() {
           <s-spinner size="base" />
         </div>
       ) : Object.keys(passwords).length === 0 ? (
-        <s-banner tone="info">No saved passwords yet. Visit a Shopify store and enter a password in the Alfred extension popup to save it.</s-banner>
+        <s-banner tone="info">
+          No saved passwords yet. Visit a Shopify store and enter a password in
+          the Alfred extension popup to save it.
+        </s-banner>
       ) : (
         <>
           <s-stack direction="inline" justifyContent="end">
-            <s-button icon="delete" onClick={handleDeleteAll} tone="critical" variant="secondary" disabled={Object.keys(passwords).length === 0}>
+            <s-button
+              icon="delete"
+              onClick={handleDeleteAll}
+              tone="critical"
+              variant="secondary"
+              disabled={Object.keys(passwords).length === 0}
+            >
               Delete all
             </s-button>
           </s-stack>
@@ -164,16 +186,34 @@ export function StorefrontPasswordSettings() {
                             label="Password"
                             labelAccessibilityVisibility="exclusive"
                             value={editingPasswords[domain] ?? entry.password}
-                            onInput={(e) => handlePasswordChange(domain, (e.target as HTMLInputElement).value)}
+                            onInput={(e) =>
+                              handlePasswordChange(
+                                domain,
+                                (e.target as HTMLInputElement).value
+                              )
+                            }
                             onBlur={() => handlePasswordBlur(domain)}
                           />
                         </s-box>
                       </s-table-cell>
                       <s-table-cell>
-                        <s-checkbox checked={entry.enabled} onChange={(e) => handleToggleEnabled(domain, (e.target as HTMLInputElement).checked)} />
+                        <s-checkbox
+                          checked={entry.enabled}
+                          onChange={(e) =>
+                            handleToggleEnabled(
+                              domain,
+                              (e.target as HTMLInputElement).checked
+                            )
+                          }
+                        />
                       </s-table-cell>
                       <s-table-cell>
-                        <s-button icon="delete" accessibilityLabel="Delete password" onClick={() => handleDelete(domain)} tone="critical" />
+                        <s-button
+                          icon="delete"
+                          accessibilityLabel="Delete password"
+                          onClick={() => handleDelete(domain)}
+                          tone="critical"
+                        />
                       </s-table-cell>
                     </s-table-row>
                   );

@@ -45,7 +45,9 @@ export default defineBackground(() => {
   if (!import.meta.env.DEV) {
     browser.runtime.onInstalled.addListener((details) => {
       if (details.reason === 'update') {
-        browser.tabs.create({ url: browser.runtime.getURL('/options.html?page=changelog') });
+        browser.tabs.create({
+          url: browser.runtime.getURL('/options.html?page=changelog'),
+        });
       }
     });
   }

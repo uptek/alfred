@@ -13,6 +13,10 @@
     "zip:firefox": "wxt zip -b firefox",
     "typecheck": "tsc --noEmit",
     "typecheck:watch": "tsc --noEmit --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "changelog:gen": "bun scripts/generate-changelog.ts",
     "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
     "postinstall": "wxt prepare"
@@ -22,6 +26,7 @@
     "@shopify/app-bridge-ui-types": "^0.3.3",
     "@wxt-dev/auto-icons": "^1.1.0",
     "chokidar-cli": "^3.0.0",
+    "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "wxt": "^0.20.11"
   },

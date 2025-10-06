@@ -3,15 +3,34 @@ import { SettingsContext } from '../../contexts/SettingsContext';
 import { setCheckboxValue, onCheckboxChange } from '~/utils/polaris.polyfill';
 
 const settingsItems = [
-  { key: 'primarySidebar', label: 'Primary sidebar resizer', details: 'Shows resize handle for the left panel' },
-  { key: 'secondarySidebar', label: 'Secondary sidebar resizer', details: 'Shows resize handle for the right panel' },
-  { key: 'previewHorizontal', label: 'Preview width resizer', details: 'Shows resize handle to adjust preview area width' },
-  { key: 'previewVertical', label: 'Preview height resizer', details: 'Shows resize handle to adjust preview area height' },
+  {
+    key: 'primarySidebar',
+    label: 'Primary sidebar resizer',
+    details: 'Shows resize handle for the left panel',
+  },
+  {
+    key: 'secondarySidebar',
+    label: 'Secondary sidebar resizer',
+    details: 'Shows resize handle for the right panel',
+  },
+  {
+    key: 'previewHorizontal',
+    label: 'Preview width resizer',
+    details: 'Shows resize handle to adjust preview area width',
+  },
+  {
+    key: 'previewVertical',
+    label: 'Preview height resizer',
+    details: 'Shows resize handle to adjust preview area height',
+  },
 ];
 
 export function CustomizerResizersSetting() {
   const context = useContext(SettingsContext);
-  if (!context) throw new Error('CustomizerResizersSetting must be used within SettingsProvider');
+  if (!context)
+    throw new Error(
+      'CustomizerResizersSetting must be used within SettingsProvider'
+    );
   const { settings, updateSettings, isLoading } = context;
 
   // Update checkbox values when settings change
@@ -21,7 +40,10 @@ export function CustomizerResizersSetting() {
     const customizerResizers = settings.themeCustomizer?.resizers || {};
 
     settingsItems.forEach(({ key }) => {
-      setCheckboxValue(`customizer-${key}`, customizerResizers[key as keyof typeof customizerResizers] !== false);
+      setCheckboxValue(
+        `customizer-${key}`,
+        customizerResizers[key as keyof typeof customizerResizers] !== false
+      );
     });
   }, [isLoading, settings.themeCustomizer?.resizers]);
 
@@ -33,7 +55,10 @@ export function CustomizerResizersSetting() {
 
     // Default all resizers to true if not set
     settingsItems.forEach(({ key }) => {
-      setCheckboxValue(`resizer-${key}`, resizers[key as keyof typeof resizers] !== false);
+      setCheckboxValue(
+        `resizer-${key}`,
+        resizers[key as keyof typeof resizers] !== false
+      );
     });
   }, [isLoading, settings.themeCustomizer?.resizers]);
 
@@ -60,14 +85,15 @@ export function CustomizerResizersSetting() {
 
     // Cleanup old listeners when settings change
     return () => {
-      cleanupFunctions.forEach(fn => fn());
+      cleanupFunctions.forEach((fn) => fn());
     };
   }, [settings, updateSettings, isLoading]);
 
   return (
     <s-section heading="Customizer resizers">
       <s-paragraph>
-        Controls which resize handles appear in the theme customizer. These allow you to adjust panel sizes for better workflow.
+        Controls which resize handles appear in the theme customizer. These
+        allow you to adjust panel sizes for better workflow.
       </s-paragraph>
       <s-grid gap="small">
         {settingsItems.map(({ key, label, details }) => (

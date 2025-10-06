@@ -1,0 +1,18 @@
+# Build outputs
+.output/
+dist/
+build/
+.wxt/
+
+# Public assets
+public/
+
+# Dependencies
+node_modules/
+
+# Supabase
+supabase/
+
+# Generated files
+*.tsbuildinfo
+changelog.md

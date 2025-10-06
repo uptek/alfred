@@ -24,7 +24,7 @@ export function Changelog() {
     return date.toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -37,13 +37,18 @@ export function Changelog() {
     return diffDays <= 7;
   };
 
-  const renderChange = (change: ChangelogEntry['changes'][0], index: number) => {
+  const renderChange = (
+    change: ChangelogEntry['changes'][0],
+    index: number
+  ) => {
     switch (change.type) {
       case 'heading':
         return <s-heading key={index}>{change.content as string}</s-heading>;
 
       case 'paragraph':
-        return <s-paragraph key={index}>{change.content as string}</s-paragraph>;
+        return (
+          <s-paragraph key={index}>{change.content as string}</s-paragraph>
+        );
 
       case 'list':
         return (

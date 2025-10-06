@@ -1,7 +1,8 @@
 import { getUserId, getVersion } from './helpers';
 
 const SUPABASE_URL = 'https://obrjirdnqoiailhbsnmu.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9icmppcmRucW9pYWlsaGJzbm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA0NzAyMzQsImV4cCI6MjA2NjA0NjIzNH0.i0cWjFKNk8HDZQsVkCn83fTKFROiNzvPf_sTP5xQwAM';
+const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9icmppcmRucW9pYWlsaGJzbm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA0NzAyMzQsImV4cCI6MjA2NjA0NjIzNH0.i0cWjFKNk8HDZQsVkCn83fTKFROiNzvPf_sTP5xQwAM';
 const TRACK_ENDPOINT = `${SUPABASE_URL}/functions/v1/track`;
 
 // Valid action types
@@ -25,7 +26,10 @@ export type AnalyticsAction =
   | 'password_autofill';
 
 // Time savings per action (in seconds)
-const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number)> = {
+const TIME_SAVINGS: Record<
+  AnalyticsAction,
+  number | ((metadata?: any) => number)
+> = {
   open_in_admin: (metadata) => {
     // Homepage is quickest to navigate to manually
     if (metadata?.page_type === 'homepage') return 10;
@@ -52,7 +56,8 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: any) => number
   },
   appstore_partner_table_view: (metadata) => (metadata?.app_count || 0) * 5,
   appstore_partner_table_sort: (metadata) => (metadata?.app_count || 0) * 2,
-  appstore_partner_table_export: (metadata) => (metadata?.app_count || 0) * 10 + 30,
+  appstore_partner_table_export: (metadata) =>
+    (metadata?.app_count || 0) * 10 + 30,
   open_section_in_code_editor: 30,
   disable_theme_inspector: 3,
   resize_theme_customizer: 3,
@@ -72,16 +77,14 @@ export async function trackAction(
 ): Promise<void> {
   try {
     // Get all required data
-    const [userId, version] = await Promise.all([
-      getUserId(),
-      getVersion(),
-    ]);
+    const [userId, version] = await Promise.all([getUserId(), getVersion()]);
 
     // Calculate time saved
     const timeSavingConfig = TIME_SAVINGS[action];
-    const timeSaved = typeof timeSavingConfig === 'function'
-      ? timeSavingConfig(metadata)
-      : timeSavingConfig;
+    const timeSaved =
+      typeof timeSavingConfig === 'function'
+        ? timeSavingConfig(metadata)
+        : timeSavingConfig;
 
     // Prepare event data
     const eventData = {
@@ -103,7 +106,7 @@ export async function trackAction(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify(eventData),
     }).catch(() => {

@@ -1,6 +1,6 @@
 {
   "extends": "./.wxt/tsconfig.json",
-  "exclude": ["supabase/*"],
+  "exclude": ["supabase/*", "public/*"],
   "compilerOptions": {
     "composite": true,
     "allowImportingTsExtensions": true,

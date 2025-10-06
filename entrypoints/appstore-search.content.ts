@@ -5,7 +5,8 @@ export default defineContentScript({
   async main(ctx) {
     // Check if search indexing is enabled
     const settings = await getItem<AlfredSettings>('settings');
-    const isSearchIndexingEnabled = settings?.appStore?.searchIndexing !== false;
+    const isSearchIndexingEnabled =
+      settings?.appStore?.searchIndexing !== false;
 
     if (!isSearchIndexingEnabled) {
       return; // Exit early if indexing is disabled
@@ -25,14 +26,17 @@ export default defineContentScript({
     }
 
     function addIndexesToAppCards() {
-      const appCards = document.querySelectorAll<HTMLElement>('[data-controller="app-card"][data-app-card-offer-token-value=""]');
+      const appCards = document.querySelectorAll<HTMLElement>(
+        '[data-controller="app-card"][data-app-card-offer-token-value=""]'
+      );
 
       appCards.forEach((card) => {
         if (card.dataset.alfredIndexed) {
           return;
         }
 
-        const targetContainer = card.querySelector('figure')?.nextElementSibling;
+        const targetContainer =
+          card.querySelector('figure')?.nextElementSibling;
         if (targetContainer) {
           const badgeElement = document.createElement('div');
           badgeElement.className =
@@ -53,7 +57,10 @@ export default defineContentScript({
             const hasNewAppCards = Array.from(mutation.addedNodes).some(
               (node) =>
                 node.nodeType === Node.ELEMENT_NODE &&
-                ((node as Element).matches('[data-controller="app-card"]') || (node as Element).querySelector('[data-controller="app-card"]'))
+                ((node as Element).matches('[data-controller="app-card"]') ||
+                  (node as Element).querySelector(
+                    '[data-controller="app-card"]'
+                  ))
             );
 
             if (hasNewAppCards) {

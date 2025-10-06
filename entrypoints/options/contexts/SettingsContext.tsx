@@ -43,19 +43,35 @@ const defaultSettings: AlfredSettings = {
   },
 };
 
-export const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
+export const SettingsContext = createContext<SettingsContextValue | undefined>(
+  undefined
+);
 
 // Deep merge function to handle nested objects
-function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+function deepMerge<T extends Record<string, any>>(
+  target: T,
+  source: Partial<T>
+): T {
   const result = { ...target };
 
   for (const key in source) {
     const sourceValue = source[key];
     if (sourceValue !== undefined) {
-      if (typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue)) {
+      if (
+        typeof sourceValue === 'object' &&
+        sourceValue !== null &&
+        !Array.isArray(sourceValue)
+      ) {
         // If both target and source have an object at this key, merge them
-        if (typeof target[key] === 'object' && target[key] !== null && !Array.isArray(target[key])) {
-          result[key] = deepMerge(target[key], sourceValue as any) as T[Extract<keyof T, string>];
+        if (
+          typeof target[key] === 'object' &&
+          target[key] !== null &&
+          !Array.isArray(target[key])
+        ) {
+          result[key] = deepMerge(target[key], sourceValue as any) as T[Extract<
+            keyof T,
+            string
+          >];
         } else {
           result[key] = sourceValue as T[Extract<keyof T, string>];
         }
@@ -68,7 +84,11 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
   return result;
 }
 
-export function SettingsProvider({ children }: { children: preact.ComponentChildren }) {
+export function SettingsProvider({
+  children,
+}: {
+  children: preact.ComponentChildren;
+}) {
   const [settings, setSettings] = useState<AlfredSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);

@@ -1,11 +1,20 @@
 import { useEffect, useState, useRef } from 'preact/hooks';
-import { generatePresetId, getPresets, savePreset, deletePreset, exportPresets, importPresets } from './utils';
+import {
+  generatePresetId,
+  getPresets,
+  savePreset,
+  deletePreset,
+  exportPresets,
+  importPresets,
+} from './utils';
 import { formatTimeAgo } from '@/utils/helpers';
 import type { Permission, PermissionPreset } from './types';
 
 export default function App() {
   const [presets, setPresets] = useState<PermissionPreset[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<PermissionPreset | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<PermissionPreset | null>(
+    null
+  );
   const [checkedPresets, setCheckedPresets] = useState<Set<string>>(new Set());
   const selectRef = useRef<any>(null);
 
@@ -68,7 +77,9 @@ export default function App() {
     }
 
     // First uncheck all checkboxes by clicking checked ones
-    const checkedCheckboxes = document.querySelectorAll('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]:checked');
+    const checkedCheckboxes = document.querySelectorAll(
+      '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]:checked'
+    );
     checkedCheckboxes.forEach((checkbox) => {
       (checkbox as HTMLInputElement).click();
     });
@@ -77,7 +88,9 @@ export default function App() {
     setTimeout(() => {
       preset.permissions.forEach((permission, index) => {
         setTimeout(() => {
-          const checkbox = document.getElementById(permission.id) as HTMLInputElement;
+          const checkbox = document.getElementById(
+            permission.id
+          ) as HTMLInputElement;
           if (checkbox && !checkbox.checked) {
             checkbox.click();
           }
@@ -86,10 +99,12 @@ export default function App() {
     }, 100);
 
     // Apply the custom message if it exists
-    if (preset.customMessage !== "") {
-      const messageTextarea = document.querySelector('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea') as HTMLTextAreaElement;
+    if (preset.customMessage !== '') {
+      const messageTextarea = document.querySelector(
+        '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea'
+      ) as HTMLTextAreaElement;
       if (messageTextarea) {
-        messageTextarea.value = preset.customMessage ?? "";
+        messageTextarea.value = preset.customMessage ?? '';
         // Trigger input event to ensure React/framework detects the change
         messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         messageTextarea.dispatchEvent(new Event('change', { bubbles: true }));
@@ -101,7 +116,9 @@ export default function App() {
     await savePreset(updatedPreset);
 
     // Update local state
-    setPresets((prevPresets) => prevPresets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p)));
+    setPresets((prevPresets) =>
+      prevPresets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p))
+    );
 
     // Update selected preset if applying from table
     if (presetToApply) {
@@ -184,8 +201,15 @@ export default function App() {
   };
 
   const handleDeleteMultiple = async () => {
-    const presetsToDelete = checkedPresets.size === 0 ? presets.map((p) => p.id) : Array.from(checkedPresets);
-    if (confirm(`Are you sure you want to delete ${presetsToDelete.length} preset${presetsToDelete.length !== 1 ? 's' : ''}?`)) {
+    const presetsToDelete =
+      checkedPresets.size === 0
+        ? presets.map((p) => p.id)
+        : Array.from(checkedPresets);
+    if (
+      confirm(
+        `Are you sure you want to delete ${presetsToDelete.length} preset${presetsToDelete.length !== 1 ? 's' : ''}?`
+      )
+    ) {
       for (const id of presetsToDelete) {
         await deletePreset(id);
       }
@@ -200,7 +224,9 @@ export default function App() {
   };
 
   const handleSavePreset = async () => {
-    const checkedCheckboxes = document.querySelectorAll('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]:checked');
+    const checkedCheckboxes = document.querySelectorAll(
+      '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]:checked'
+    );
 
     if (checkedCheckboxes.length === 0) {
       alert('Please select at least one permission to save as a preset.');
@@ -217,7 +243,8 @@ export default function App() {
 
     // Build permissions array
     checkedCheckboxes.forEach((checkbox) => {
-      const label = checkbox.closest('label')?.querySelector('p')?.textContent || '';
+      const label =
+        checkbox.closest('label')?.querySelector('p')?.textContent || '';
       permissions.push({
         id: checkbox.id,
         label: label.trim(),
@@ -225,8 +252,10 @@ export default function App() {
     });
 
     // Get the custom message from the textarea
-    const messageTextarea = document.querySelector('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea') as HTMLTextAreaElement;
-    const customMessage = messageTextarea?.value || "";
+    const messageTextarea = document.querySelector(
+      '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea'
+    ) as HTMLTextAreaElement;
+    const customMessage = messageTextarea?.value || '';
 
     const newPreset: PermissionPreset = {
       id: generatePresetId(),
@@ -262,17 +291,36 @@ export default function App() {
         <s-stack gap="base">
           <s-stack direction="inline" justifyContent="space-between">
             <s-stack direction="inline" gap="small-200">
-              <s-button variant="secondary" tone="critical" icon="delete" onClick={handleDeleteMultiple}>
-                {checkedPresets.size === 0 ? 'Delete all' : `Delete ${checkedPresets.size} selected`}
+              <s-button
+                variant="secondary"
+                tone="critical"
+                icon="delete"
+                onClick={handleDeleteMultiple}
+              >
+                {checkedPresets.size === 0
+                  ? 'Delete all'
+                  : `Delete ${checkedPresets.size} selected`}
               </s-button>
               <s-button
                 variant="secondary"
                 icon="export"
-                onClick={() => exportPresets(checkedPresets.size === 0 ? presets : presets.filter((p) => checkedPresets.has(p.id)))}
+                onClick={() =>
+                  exportPresets(
+                    checkedPresets.size === 0
+                      ? presets
+                      : presets.filter((p) => checkedPresets.has(p.id))
+                  )
+                }
               >
-                {checkedPresets.size === 0 ? 'Export all' : `Export ${checkedPresets.size} selected`}
+                {checkedPresets.size === 0
+                  ? 'Export all'
+                  : `Export ${checkedPresets.size} selected`}
               </s-button>
-              <s-button variant="secondary" icon="import" onClick={handleImport}>
+              <s-button
+                variant="secondary"
+                icon="import"
+                onClick={handleImport}
+              >
                 Import
               </s-button>
             </s-stack>
@@ -287,7 +335,10 @@ export default function App() {
                   {presets.length > 0 && (
                     <input
                       type="checkbox"
-                      checked={presets.length > 0 && checkedPresets.size === presets.length}
+                      checked={
+                        presets.length > 0 &&
+                        checkedPresets.size === presets.length
+                      }
                       onChange={(e) => {
                         if ((e.target as HTMLInputElement).checked) {
                           setCheckedPresets(new Set(presets.map((p) => p.id)));
@@ -308,7 +359,9 @@ export default function App() {
                 {presets.length === 0 ? (
                   <s-table-row>
                     <s-table-cell></s-table-cell>
-                    <s-table-cell>No permissions presets saved yet.</s-table-cell>
+                    <s-table-cell>
+                      No permissions presets saved yet.
+                    </s-table-cell>
                     <s-table-cell></s-table-cell>
                     <s-table-cell></s-table-cell>
                     <s-table-cell></s-table-cell>
@@ -336,9 +389,14 @@ export default function App() {
                       <s-table-cell>
                         {preset.permissions
                           .slice(0, 2)
-                          .map((p) => (p.label.length > 15 ? p.label.slice(0, 15) + '...' : p.label))
+                          .map((p) =>
+                            p.label.length > 15
+                              ? p.label.slice(0, 15) + '...'
+                              : p.label
+                          )
                           .join(', ')}
-                        {preset.permissions.length > 3 && `, +${preset.permissions.length - 3} more`}
+                        {preset.permissions.length > 3 &&
+                          `, +${preset.permissions.length - 3} more`}
                       </s-table-cell>
                       <s-table-cell>
                         {preset.customMessage ? (
@@ -347,7 +405,9 @@ export default function App() {
                           <s-icon type="x-circle"></s-icon>
                         )}
                       </s-table-cell>
-                      <s-table-cell>{formatTimeAgo(preset.createdAt)}</s-table-cell>
+                      <s-table-cell>
+                        {formatTimeAgo(preset.createdAt)}
+                      </s-table-cell>
                       <s-table-cell>
                         <s-stack direction="inline" gap="small-200">
                           <s-button
@@ -358,8 +418,17 @@ export default function App() {
                           >
                             Apply
                           </s-button>
-                          <s-button icon="edit" accessibilityLabel="Edit preset" onClick={() => handleEditPreset(preset)} />
-                          <s-button icon="delete" tone="critical" accessibilityLabel="Delete preset" onClick={() => handleDeletePreset(preset.id)} />
+                          <s-button
+                            icon="edit"
+                            accessibilityLabel="Edit preset"
+                            onClick={() => handleEditPreset(preset)}
+                          />
+                          <s-button
+                            icon="delete"
+                            tone="critical"
+                            accessibilityLabel="Delete preset"
+                            onClick={() => handleDeletePreset(preset.id)}
+                          />
                         </s-stack>
                       </s-table-cell>
                     </s-table-row>

@@ -6,18 +6,20 @@ const settingsItems = [
   {
     key: 'searchIndexing',
     label: 'Number Search Results',
-    details: 'Displays position numbers next to apps in search results'
+    details: 'Displays position numbers next to apps in search results',
   },
   {
     key: 'enhancedPartnerPages',
     label: 'Enhanced Partner Pages',
-    details: 'Adds a table to enrich apps data with sorting and download options for easier comparison and research'
+    details:
+      'Adds a table to enrich apps data with sorting and download options for easier comparison and research',
   },
 ];
 
 export function AppStoreSettings() {
   const context = useContext(SettingsContext);
-  if (!context) throw new Error('AppStoreSettings must be used within SettingsProvider');
+  if (!context)
+    throw new Error('AppStoreSettings must be used within SettingsProvider');
   const { settings, updateSettings, isLoading } = context;
 
   // Update checkbox values when settings change
@@ -27,7 +29,10 @@ export function AppStoreSettings() {
     const appStore = settings.appStore || {};
 
     settingsItems.forEach(({ key }) => {
-      setCheckboxValue(`appstore-${key}`, appStore[key as keyof typeof appStore] !== false);
+      setCheckboxValue(
+        `appstore-${key}`,
+        appStore[key as keyof typeof appStore] !== false
+      );
     });
   }, [isLoading, settings.appStore]);
 
@@ -52,14 +57,15 @@ export function AppStoreSettings() {
 
     // Cleanup old listeners when settings change
     return () => {
-      cleanupFunctions.forEach(fn => fn());
+      cleanupFunctions.forEach((fn) => fn());
     };
   }, [settings.appStore, updateSettings, isLoading]);
 
   return (
     <s-section heading="App Store features">
       <s-paragraph>
-        Enhance your Shopify App Store experience with additional features and improvements.
+        Enhance your Shopify App Store experience with additional features and
+        improvements.
       </s-paragraph>
       <s-grid gap="small">
         {settingsItems.map(({ key, label, details }) => (

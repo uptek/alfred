@@ -30,9 +30,11 @@ export default defineContentScript({
       if (event.data && event.data.type === 'alfred:theme_response') {
         const { requestId, data } = event.data;
         // Dispatch custom event with the response data
-        window.dispatchEvent(new CustomEvent(`alfred:theme_response_${requestId}`, {
-          detail: data
-        }));
+        window.dispatchEvent(
+          new CustomEvent(`alfred:theme_response_${requestId}`, {
+            detail: data,
+          })
+        );
       }
     });
 
@@ -53,14 +55,19 @@ export default defineContentScript({
           if (responseHandled) return;
           responseHandled = true;
 
-          window.removeEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
+          window.removeEventListener(
+            `alfred:theme_response_${requestId}`,
+            handleThemeResponse
+          );
           clearTimeout(timeoutId);
 
-          sendResponse(event.detail || {
-            isShopify: false,
-            theme: null,
-            shop: null,
-          });
+          sendResponse(
+            event.detail || {
+              isShopify: false,
+              theme: null,
+              shop: null,
+            }
+          );
         };
 
         // Add timeout fallback
@@ -68,7 +75,10 @@ export default defineContentScript({
           if (responseHandled) return;
           responseHandled = true;
 
-          window.removeEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
+          window.removeEventListener(
+            `alfred:theme_response_${requestId}`,
+            handleThemeResponse
+          );
           sendResponse({
             isShopify: false,
             theme: null,
@@ -76,13 +86,19 @@ export default defineContentScript({
           });
         }, 200);
 
-        window.addEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
+        window.addEventListener(
+          `alfred:theme_response_${requestId}`,
+          handleThemeResponse
+        );
 
         // Use postMessage to request theme data
-        window.postMessage({
-          type: 'alfred:request_theme',
-          requestId: requestId
-        }, '*');
+        window.postMessage(
+          {
+            type: 'alfred:request_theme',
+            requestId: requestId,
+          },
+          '*'
+        );
 
         // Return true to indicate async response
         return true;

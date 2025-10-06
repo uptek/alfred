@@ -36,8 +36,8 @@ const generateChangelog = async () => {
               mdContent += `${change.content}\n\n`;
               break;
             case 'heading':
-                mdContent += `\n### ${change.content}\n`;
-                break;
+              mdContent += `\n### ${change.content}\n`;
+              break;
             case 'list':
               if (Array.isArray(change.content)) {
                 change.content.forEach((item) => {
