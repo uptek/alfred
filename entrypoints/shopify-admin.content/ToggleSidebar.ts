@@ -3,7 +3,8 @@ import { getItem, setItem } from '~/utils/storage';
 type SidebarState = 'collapsed' | 'expanded';
 
 let SIDEBAR_STATE: SidebarState = 'expanded';
-const TOGGLE_WRAPPER_SELECTOR = '#AppFrameNav .Polaris-Navigation__Section:has(s-internal-icon[type*="home"])';
+const TOGGLE_WRAPPER_SELECTOR =
+  '#AppFrameNav .Polaris-Navigation__Section:has(s-internal-icon[type*="home"])';
 const TOGGLE_ELEMENT_ID = 'alfred-admin-sidebar-toggle';
 const STYLE_TAG_ID = 'alfred-admin-sidebar-styles';
 const STYLES = `
@@ -107,7 +108,10 @@ const removeStyles = (): void => {
  * Injects the toggle element into the document
  */
 const injectToggleElement = (): void => {
-  if (!document.body || !(document as any).querySelector(TOGGLE_WRAPPER_SELECTOR)) {
+  if (
+    !document.body ||
+    !(document as unknown as Document).querySelector(TOGGLE_WRAPPER_SELECTOR)
+  ) {
     setTimeout(injectToggleElement, 100);
     return;
   }
@@ -128,29 +132,39 @@ const injectToggleElement = (): void => {
   `;
 
   // Handle toggle event
-  toggleElement.addEventListener('click', async () => {
-    SIDEBAR_STATE = toggleElement.getAttribute('data-state') === 'collapsed' ? 'expanded' : 'collapsed';
-    toggleElement.setAttribute('data-state', SIDEBAR_STATE);
+  toggleElement.addEventListener('click', () => {
+    void (async () => {
+      SIDEBAR_STATE =
+        toggleElement.getAttribute('data-state') === 'collapsed'
+          ? 'expanded'
+          : 'collapsed';
+      toggleElement.setAttribute('data-state', SIDEBAR_STATE);
 
-    // Update the icon rotation
-    const icon = toggleElement.querySelector('svg');
-    if (icon) {
-      icon.style.transform = SIDEBAR_STATE === 'expanded' ? 'scale(-1, -1)' : '';
-    }
+      // Update the icon rotation
+      const icon = toggleElement.querySelector('svg');
+      if (icon) {
+        icon.style.transform =
+          SIDEBAR_STATE === 'expanded' ? 'scale(-1, -1)' : '';
+      }
 
-    (SIDEBAR_STATE === 'collapsed') ? injectStyles() : removeStyles();
+      if (SIDEBAR_STATE === 'collapsed') {
+        injectStyles();
+      } else {
+        removeStyles();
+      }
 
-    // Save the state to storage
-    await setItem('admin-sidebar-state', SIDEBAR_STATE);
+      // Save the state to storage
+      await setItem('admin-sidebar-state', SIDEBAR_STATE);
 
-    // Track toggle admin sidebar event
-    browser.runtime.sendMessage({
-      type: 'track_action',
-      action: 'toggle_admin_sidebar',
-      metadata: {
-        state: SIDEBAR_STATE
-      },
-    });
+      // Track toggle admin sidebar event
+      browser.runtime.sendMessage({
+        type: 'track_action',
+        action: 'toggle_admin_sidebar',
+        metadata: {
+          state: SIDEBAR_STATE,
+        },
+      });
+    })();
   });
 
   let attempts = 0;
@@ -159,7 +173,9 @@ const injectToggleElement = (): void => {
   const insertInterval = setInterval(() => {
     attempts++;
 
-    const wrapper = (document as any).querySelector(TOGGLE_WRAPPER_SELECTOR);
+    const wrapper = (document as unknown as Document).querySelector(
+      TOGGLE_WRAPPER_SELECTOR
+    );
     if (wrapper && !document.getElementById(TOGGLE_ELEMENT_ID)) {
       wrapper.prepend(toggleElement);
     }

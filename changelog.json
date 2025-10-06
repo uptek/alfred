@@ -1,5 +1,19 @@
 [
   {
+    "version": "2025.10.06",
+    "date": "2025-10-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Introducing Storefront Password Auto-fill! Save and automatically fill passwords for password-protected Shopify storefronts. Passwords are stored locally in your browser and can be managed from the extension popup or settings page."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/storefront-password-autofill.mp4"
+      }
+    ]
+  },
+  {
     "version": "2025.10.05",
     "date": "2025-10-05",
     "changes": [
@@ -39,9 +53,7 @@
     "changes": [
       {
         "type": "list",
-        "content": [
-          "Fix: Improved theme detection for stores with strict security protocols."
-        ]
+        "content": ["Fix: Improved theme detection for stores with strict security protocols."]
       }
     ]
   },
@@ -69,9 +81,7 @@
       },
       {
         "type": "list",
-        "content": [
-          "Fix: Background service worker becoming inactive interrupting shortcuts."
-        ]
+        "content": ["Fix: Background service worker becoming inactive interrupting shortcuts."]
       }
     ]
   },
@@ -154,9 +164,7 @@
     "changes": [
       {
         "type": "list",
-        "content": [
-          "[BTS] Options page migrated to Preact for improved performance and maintainability"
-        ]
+        "content": ["[BTS] Options page migrated to Preact for improved performance and maintainability"]
       }
     ]
   },
@@ -166,9 +174,7 @@
     "changes": [
       {
         "type": "list",
-        "content": [
-          "Fix changelog page on extension update"
-        ]
+        "content": ["Fix changelog page on extension update"]
       }
     ]
   },
@@ -428,7 +434,10 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Add context menu to open current page in admin", "Add context menu to open current page in customizer"]
+        "content": [
+          "Add context menu to open current page in admin",
+          "Add context menu to open current page in customizer"
+        ]
       }
     ]
   },

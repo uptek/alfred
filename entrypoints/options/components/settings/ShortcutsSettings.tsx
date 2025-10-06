@@ -3,28 +3,60 @@ import { SettingsContext } from '../../contexts/SettingsContext';
 import { setCheckboxValue, onCheckboxChange } from '~/utils/polaris.polyfill';
 
 const shortcutItems = [
-  { key: 'openInAdmin', label: 'Open in Admin', details: 'Opens the current page in Shopify Admin' },
-  { key: 'openInCustomizer', label: 'Open in Customizer', details: 'Opens the current page in theme customizer' },
-  { key: 'copyProductJson', label: 'Copy Product JSON', details: 'Copies current product data as JSON to clipboard' },
-  { key: 'copyThemePreviewUrl', label: 'Copy Theme Preview URL', details: 'Copies preview URL with context of current page' },
-  { key: 'copyCartJson', label: 'Copy Cart JSON', details: 'Copies cart data as JSON to clipboard' },
-  { key: 'clearCart', label: 'Clear Cart', details: 'Removes all items from the cart' },
-  { key: 'openSectionInCodeEditor', label: 'Open Section in Code Editor', details: 'Opens the clicked section in theme code editor' },
+  {
+    key: 'openInAdmin',
+    label: 'Open in Admin',
+    details: 'Opens the current page in Shopify Admin',
+  },
+  {
+    key: 'openInCustomizer',
+    label: 'Open in Customizer',
+    details: 'Opens the current page in theme customizer',
+  },
+  {
+    key: 'copyProductJson',
+    label: 'Copy Product JSON',
+    details: 'Copies current product data as JSON to clipboard',
+  },
+  {
+    key: 'copyThemePreviewUrl',
+    label: 'Copy Theme Preview URL',
+    details: 'Copies preview URL with context of current page',
+  },
+  {
+    key: 'copyCartJson',
+    label: 'Copy Cart JSON',
+    details: 'Copies cart data as JSON to clipboard',
+  },
+  {
+    key: 'clearCart',
+    label: 'Clear Cart',
+    details: 'Removes all items from the cart',
+  },
+  {
+    key: 'openSectionInCodeEditor',
+    label: 'Open Section in Code Editor',
+    details: 'Opens the clicked section in theme code editor',
+  },
 ];
 
 export function ShortcutsSetting() {
   const context = useContext(SettingsContext);
-  if (!context) throw new Error('ShortcutsSetting must be used within SettingsProvider');
+  if (!context)
+    throw new Error('ShortcutsSetting must be used within SettingsProvider');
   const { settings, updateSettings, isLoading } = context;
 
   // Update checkbox values when settings change
   useEffect(() => {
     if (isLoading) return;
 
-    const shortcuts = settings.shortcuts || {};
+    const shortcuts = settings.shortcuts ?? {};
 
     shortcutItems.forEach(({ key }) => {
-      setCheckboxValue(`shortcut-${key}`, shortcuts[key as keyof typeof shortcuts] !== false);
+      setCheckboxValue(
+        `shortcut-${key}`,
+        shortcuts[key as keyof typeof shortcuts] !== false
+      );
     });
   }, [isLoading, settings.shortcuts]);
 
@@ -49,14 +81,15 @@ export function ShortcutsSetting() {
 
     // Cleanup old listeners when settings change
     return () => {
-      cleanupFunctions.forEach(fn => fn());
+      cleanupFunctions.forEach((fn) => fn());
     };
   }, [settings, updateSettings, isLoading]);
 
   return (
-    <s-section heading="Shortcuts (Right-click menu)">
+    <s-section heading="Shortcuts (right-click menu)">
       <s-paragraph>
-        Controls which shortcuts appear in the right-click context menu when using Alfred on Shopify stores.
+        Controls which shortcuts appear in the right-click context menu when
+        using Alfred on Shopify stores.
       </s-paragraph>
       <s-grid gap="small">
         {shortcutItems.map(({ key, label, details }) => (

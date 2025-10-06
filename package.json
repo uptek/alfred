@@ -1,7 +1,7 @@
 {
   "name": "alfred",
   "private": true,
-  "version": "2025.10.05",
+  "version": "2025.10.06",
   "type": "module",
   "packageManager": "bun@1.2.14",
   "scripts": {
@@ -11,17 +11,27 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "rm -rf .output && wxt zip && open .output",
     "zip:firefox": "wxt zip -b firefox",
-    "compile": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "changelog:gen": "bun scripts/generate-changelog.ts",
     "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "@eslint/js": "^9.37.0",
     "@preact/preset-vite": "^2.10.2",
     "@shopify/app-bridge-ui-types": "^0.3.3",
     "@wxt-dev/auto-icons": "^1.1.0",
     "chokidar-cli": "^3.0.0",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.45.0",
     "wxt": "^0.20.11"
   },
   "dependencies": {

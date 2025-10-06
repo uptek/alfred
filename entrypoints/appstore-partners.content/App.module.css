@@ -2,7 +2,6 @@
   margin: 20px 0;
 }
 
-
 /* Export button */
 .exportButtonContainer {
   display: flex;
@@ -22,7 +21,9 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
   height: 36px;
 }
 
@@ -41,9 +42,10 @@
 }
 
 .tableContainer {
-  font-family: "Inter var", Helvetica, Arial, sans-serif;
+  font-family: 'Inter var', Helvetica, Arial, sans-serif;
   border-radius: 8px;
-  box-shadow: 0 0 0 1px rgba(63, 63, 68, 0.05),
+  box-shadow:
+    0 0 0 1px rgba(63, 63, 68, 0.05),
     0 1px 3px 0 rgba(63, 63, 68, 0.15);
   color: #202223;
   background-color: #ffffff;
@@ -173,7 +175,7 @@
 }
 
 .sortIconBoth::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -183,7 +185,7 @@
 }
 
 .sortIconBoth::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   left: 0;
@@ -278,7 +280,9 @@
   margin-left: 20px;
   font-size: 14px;
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
   transform: translateY(10px);
   pointer-events: none;
 }

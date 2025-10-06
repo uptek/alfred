@@ -8,7 +8,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred for Shopify',
     description: 'Make Shopify great again!',
-    version: '2025.10.05',
+    version: '2025.10.06',
     action: {
       default_title: 'Alfred',
     },
@@ -40,7 +40,8 @@ export default defineConfig({
       // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
       // 'https://uptek.com',
       // 'https://junaid-workspace.myshopify.com/?pb=1&preview_theme_id=153167626454',
-      'https://partners.shopify.com/1750954/stores/new?store_type=managed_store'
+      // 'https://partners.shopify.com/1750954/stores/new?store_type=managed_store',
+      'https://junaid-workspace.myshopify.com/',
     ],
   },
 });

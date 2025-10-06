@@ -25,8 +25,8 @@ export async function setupInspector(): Promise<void> {
 
       // Track disable theme inspector action
       browser.runtime.sendMessage({
-        type: "track_action",
-        action: "disable_theme_inspector",
+        type: 'track_action',
+        action: 'disable_theme_inspector',
         metadata: {},
       });
     }
@@ -39,16 +39,18 @@ export async function setupInspector(): Promise<void> {
       // Track disable theme inspector action
       if (!lastState) {
         browser.runtime.sendMessage({
-          type: "track_action",
-          action: "disable_theme_inspector",
+          type: 'track_action',
+          action: 'disable_theme_inspector',
           metadata: {},
         });
       }
     }
   }
 
-  inspectorButton.addEventListener('click', async () => {
-    const isPressed = inspectorButton.getAttribute('aria-pressed') !== 'true';
-    await setItem(INSPECTOR_STATE_KEY, isPressed);
+  inspectorButton.addEventListener('click', () => {
+    void (async () => {
+      const isPressed = inspectorButton.getAttribute('aria-pressed') !== 'true';
+      await setItem(INSPECTOR_STATE_KEY, isPressed);
+    })();
   });
 }

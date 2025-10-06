@@ -13,15 +13,6 @@ interface ChangelogEntry {
   changes: (string | Change)[];
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
 const generateChangelog = async () => {
   try {
     const changelogJsonPath = path.resolve(process.cwd(), 'changelog.json');
@@ -29,7 +20,7 @@ const generateChangelog = async () => {
 
     const changelogData: ChangelogEntry[] = JSON.parse(
       await fs.readFile(changelogJsonPath, 'utf-8')
-    );
+    ) as ChangelogEntry[];
 
     // Generate changelog.md
     let mdContent = '# Changelog\n\n';
@@ -42,11 +33,11 @@ const generateChangelog = async () => {
         } else {
           switch (change.type) {
             case 'paragraph':
-              mdContent += `${change.content}\n\n`;
+              mdContent += `${change.content as string}\n\n`;
               break;
             case 'heading':
-                mdContent += `\n### ${change.content}\n`;
-                break;
+              mdContent += `\n### ${change.content as string}\n`;
+              break;
             case 'list':
               if (Array.isArray(change.content)) {
                 change.content.forEach((item) => {
@@ -55,13 +46,13 @@ const generateChangelog = async () => {
               }
               break;
             case 'image':
-              mdContent += `![${change.alt}](${change.content})\n`;
+              mdContent += `![${change.alt}](${change.content as string})\n`;
               break;
             case 'video':
               if (index === 0) {
-                mdContent += `\n<video controls autoplay loop muted playsinline src="${change.content}"></video>\n`;
+                mdContent += `\n<video controls autoplay loop muted playsinline src="${change.content as string}"></video>\n`;
               } else {
-                mdContent += `\n<video controls muted playsinline src="${change.content}"></video>\n`;
+                mdContent += `\n<video controls muted playsinline src="${change.content as string}"></video>\n`;
               }
               break;
             case 'divider':
@@ -73,7 +64,6 @@ const generateChangelog = async () => {
       mdContent += '\n';
     });
     await fs.writeFile(changelogMdPath, mdContent.trim());
-
     console.log('Changelog markdown generated successfully.');
   } catch (error) {
     console.error('Error generating changelog files:', error);

@@ -1,10 +1,11 @@
 import { PageHeader } from '../PageHeader';
-import { ThemeInspectorSetting } from '../settings/ThemeInspectorSetting';
-import { CustomizerResizersSetting } from '../settings/CustomizerResizersSetting';
-import { ShortcutsSetting } from '../settings/ShortcutsSetting';
+import { ThemeInspectorSetting } from '../settings/ThemeInspectorSettings';
+import { CustomizerResizersSetting } from '../settings/CustomizerResizersSettings';
+import { ShortcutsSetting } from '../settings/ShortcutsSettings';
 import { AppStoreSettings } from '../settings/AppStoreSettings';
-import { CollaboratorAccessSetting } from '../settings/CollaboratorAccessSetting';
+import { CollaboratorAccessSetting } from '../settings/CollaboratorAccessSettings';
 import { AdminSettings } from '../settings/AdminSettings';
+import { StorefrontPasswordSettings } from '../settings/StorefrontPasswordSettings';
 
 export function Settings() {
   return (
@@ -15,6 +16,7 @@ export function Settings() {
         <CollaboratorAccessSetting />
         <AdminSettings />
         <AppStoreSettings />
+        <StorefrontPasswordSettings />
         <CustomizerResizersSetting />
         <ThemeInspectorSetting />
         {/* Add more setting components here as needed */}

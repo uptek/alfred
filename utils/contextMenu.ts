@@ -1,9 +1,18 @@
 import { type Browser } from 'wxt/browser';
 
 // State to be shared across functions
-const menus: Map<string, ContextMenu.ClickHandler> = new Map();
+const menus = new Map<string, ContextMenu.ClickHandler>();
 let initialized = false;
-const contexts = ['page', 'selection', 'image', 'video', 'audio', 'link', 'editable', 'frame'];
+const contexts = [
+  'page',
+  'selection',
+  'image',
+  'video',
+  'audio',
+  'link',
+  'editable',
+  'frame',
+];
 
 /**
  * Initialize the context menu manager
@@ -25,28 +34,34 @@ function initialize(): void {
 /**
  * Create a new context menu item
  */
-export function create(options: ContextMenu.Options, handler?: ContextMenu.ClickHandler): string {
+export function create(
+  options: ContextMenu.Options,
+  handler?: ContextMenu.ClickHandler
+): string {
   if (!initialized) initialize();
 
   const id = options.id;
   const menuOptions = {
     id,
     title: options.title,
-    contexts: options.contexts || contexts,
+    contexts: options.contexts ?? contexts,
     parentId: options.parentId,
-    type: options.type || 'normal',
+    type: (options.type ?? 'normal') as Browser.contextMenus.ItemType,
     documentUrlPatterns: options.documentUrlPatterns,
     targetUrlPatterns: options.targetUrlPatterns,
-    enabled: options.enabled !== undefined ? options.enabled : true,
+    enabled: options.enabled ?? true,
   } as Browser.contextMenus.CreateProperties;
 
-  if (options.type === 'checkbox' || options.type === 'radio') {
+  if (
+    (options.type === 'checkbox' || options.type === 'radio') &&
+    options.checked !== undefined
+  ) {
     menuOptions.checked = options.checked;
   }
 
   try {
     browser.contextMenus.create(menuOptions);
-    menus.set(id, handler || (() => {}));
+    menus.set(id, handler ?? (() => undefined));
   } catch (error) {
     console.error('Failed to create context menu item:', error);
   }
@@ -57,7 +72,10 @@ export function create(options: ContextMenu.Options, handler?: ContextMenu.Click
 /**
  * Update an existing context menu item
  */
-export function update(id: string, options: Partial<ContextMenu.Options>): boolean {
+export function update(
+  id: string,
+  options: Partial<ContextMenu.Options>
+): boolean {
   if (!initialized) initialize();
 
   if (!menus.has(id)) {
@@ -65,14 +83,18 @@ export function update(id: string, options: Partial<ContextMenu.Options>): boole
     return false;
   }
 
-  const updateProperties: Record<string, any> = {};
+  const updateProperties: Record<string, unknown> = {};
 
   if (options.title !== undefined) updateProperties.title = options.title;
-  if (options.contexts !== undefined) updateProperties.contexts = options.contexts;
-  if (options.parentId !== undefined) updateProperties.parentId = options.parentId;
+  if (options.contexts !== undefined)
+    updateProperties.contexts = options.contexts;
+  if (options.parentId !== undefined)
+    updateProperties.parentId = options.parentId;
   if (options.type !== undefined) updateProperties.type = options.type;
-  if (options.documentUrlPatterns !== undefined) updateProperties.documentUrlPatterns = options.documentUrlPatterns;
-  if (options.targetUrlPatterns !== undefined) updateProperties.targetUrlPatterns = options.targetUrlPatterns;
+  if (options.documentUrlPatterns !== undefined)
+    updateProperties.documentUrlPatterns = options.documentUrlPatterns;
+  if (options.targetUrlPatterns !== undefined)
+    updateProperties.targetUrlPatterns = options.targetUrlPatterns;
   if (options.enabled !== undefined) updateProperties.enabled = options.enabled;
   if (options.checked !== undefined) updateProperties.checked = options.checked;
 
@@ -147,7 +169,7 @@ export function createSeparator(id: string, parentId?: string): string {
   try {
     browser.contextMenus.create(options);
     // Add a dummy handler since separators don't have clicks
-    menus.set(id, () => {});
+    menus.set(id, () => undefined);
   } catch (error) {
     console.error('Failed to create separator:', error);
   }

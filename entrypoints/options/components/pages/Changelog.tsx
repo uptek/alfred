@@ -5,11 +5,11 @@ import { PageHeader } from '../PageHeader';
 interface ChangelogEntry {
   version: string;
   date: string;
-  changes: Array<{
+  changes: {
     type: 'heading' | 'paragraph' | 'list' | 'image' | 'video' | 'divider';
     content: string | string[];
     alt?: string;
-  }>;
+  }[];
 }
 
 export function Changelog() {
@@ -24,7 +24,7 @@ export function Changelog() {
     return date.toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -37,13 +37,18 @@ export function Changelog() {
     return diffDays <= 7;
   };
 
-  const renderChange = (change: ChangelogEntry['changes'][0], index: number) => {
+  const renderChange = (
+    change: ChangelogEntry['changes'][0],
+    index: number
+  ) => {
     switch (change.type) {
       case 'heading':
         return <s-heading key={index}>{change.content as string}</s-heading>;
 
       case 'paragraph':
-        return <s-paragraph key={index}>{change.content as string}</s-paragraph>;
+        return (
+          <s-paragraph key={index}>{change.content as string}</s-paragraph>
+        );
 
       case 'list':
         return (
@@ -59,7 +64,7 @@ export function Changelog() {
           <s-box key={index}>
             <img
               src={change.content as string}
-              alt={change.alt || 'Changelog image'}
+              alt={change.alt ?? 'Changelog image'}
               style="width: 100%; height: auto; border-radius: 8px;"
             />
           </s-box>
@@ -70,7 +75,6 @@ export function Changelog() {
           <s-box key={index}>
             <video
               controls
-              muted
               playsinline
               src={change.content as string}
               style="width: 100%; height: auto; border-radius: 8px;"

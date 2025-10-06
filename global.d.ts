@@ -1,7 +1,21 @@
 /// <reference types="chrome" />
 
 declare namespace ContextMenu {
-  type ContextType = chrome.contextMenus.ContextType | 'all';
+  type ContextType =
+    | 'all'
+    | 'page'
+    | 'frame'
+    | 'selection'
+    | 'link'
+    | 'editable'
+    | 'image'
+    | 'video'
+    | 'audio'
+    | 'launcher'
+    | 'browser_action'
+    | 'page_action'
+    | 'action'
+    | 'all_frames';
 
   interface Options {
     id: string;
@@ -15,7 +29,10 @@ declare namespace ContextMenu {
     checked?: boolean;
   }
 
-  type ClickHandler = (info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => void;
+  type ClickHandler = (
+    info: chrome.contextMenus.OnClickData,
+    tab?: chrome.tabs.Tab
+  ) => void;
 }
 
 declare interface AlfredSettings {
@@ -54,7 +71,44 @@ declare interface SettingItem {
   label: string;
   details?: string;
   type?: 'checkbox' | 'switch' | 'choice' | 'text' | 'number'; // defaults to 'checkbox'
-  choices?: Array<{ label: string; value: string; details?: string }>; // for choice type
-  defaultValue?: any;
+  choices?: { label: string; value: string; details?: string }[]; // for choice type
+  defaultValue?: unknown;
   subSettingItems?: SettingItem[];
+}
+
+declare interface WindowWithAlfred {
+  Shopify?: {
+    shop?: string;
+    theme?: {
+      id?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  };
+  __st?: {
+    p?: string;
+    rid?: string;
+    [key: string]: unknown;
+  };
+  Alfred: {
+    Toast: unknown;
+    _lastRightClickedElement: HTMLElement | null;
+    _initContextMenuListener: () => void;
+    _initThemeRequestHandler: () => void;
+    isShopify: () => boolean;
+    getTheme: () => {
+      isShopify: boolean;
+      theme: unknown;
+      shop: unknown;
+    };
+    getShopName: () => string;
+    writeToClipboard: (text: string) => Promise<boolean>;
+    openInAdmin: () => boolean;
+    openInCustomizer: () => boolean;
+    copyProductJson: () => Promise<boolean>;
+    copyCartJson: () => Promise<boolean>;
+    copyThemePreviewUrl: (disablePreviewBar?: boolean) => Promise<boolean>;
+    clearCart: () => Promise<boolean>;
+    openSectionInCodeEditor: () => boolean;
+  };
 }

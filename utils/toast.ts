@@ -48,7 +48,7 @@ export class Toast {
 
   private static defaults = {
     duration: 3000,
-    hostTag: 'alfred-toast'
+    hostTag: 'alfred-toast',
   };
 
   private static styles = `
@@ -147,13 +147,20 @@ export class Toast {
   `;
 
   private static defineCustomElement() {
-    if (!this.customElementDefined && !customElements.get(this.defaults.hostTag)) {
+    if (
+      !this.customElementDefined &&
+      !customElements.get(this.defaults.hostTag)
+    ) {
       customElements.define(this.defaults.hostTag, AlfredToast);
       this.customElementDefined = true;
     }
   }
 
-  static show(message: string, type: 'success' | 'error' = 'success', duration: number = this.defaults.duration) {
+  static show(
+    message: string,
+    type: 'success' | 'error' = 'success',
+    duration: number = this.defaults.duration
+  ) {
     // Ensure custom element is defined
     this.defineCustomElement();
 
@@ -162,7 +169,7 @@ export class Toast {
 
     // If there are existing toasts, wait for them to hide before showing new one
     if (existingToasts.length > 0) {
-      existingToasts.forEach(toast => {
+      existingToasts.forEach((toast) => {
         (toast as AlfredToast).hide();
       });
 
@@ -177,17 +184,28 @@ export class Toast {
     this.create(message, type, duration);
   }
 
-  private static create(message: string, type: 'success' | 'error', duration: number) {
+  private static create(
+    message: string,
+    type: 'success' | 'error',
+    duration: number
+  ) {
     // Create new toast element
-    const toastElement = document.createElement(this.defaults.hostTag) as AlfredToast;
+    const toastElement = document.createElement(
+      this.defaults.hostTag
+    ) as AlfredToast;
     const toastId = `alfred-toast-${++this.toastCounter}`;
     toastElement.id = toastId;
 
     // Check for PBarNextFrameWrapper and adjust bottom position
-    const pBarWrapper = document.querySelector('#PBarNextFrameWrapper') as HTMLElement;
+    const pBarWrapper = document.querySelector<HTMLElement>(
+      '#PBarNextFrameWrapper'
+    );
     if (pBarWrapper) {
       const height = pBarWrapper.offsetHeight;
-      toastElement.style.setProperty('--alfred-toast-bottom-offset', `${height}px`);
+      toastElement.style.setProperty(
+        '--alfred-toast-bottom-offset',
+        `${height}px`
+      );
     }
 
     // Attach shadow root
