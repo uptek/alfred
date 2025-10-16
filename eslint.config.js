@@ -14,6 +14,7 @@ export default tseslint.config(
       '*.config.js',
       '*.config.ts',
       'supabase/**',
+      '**/*.md',
     ],
   },
   js.configs.recommended,

@@ -1,12 +1,3 @@
-# Chrome Web Store Description - Alfred for Shopify
-
-## Short Description (132 characters max)
-
-Shopify productivity extension with theme detector, shortcuts, admin tools, and
-workflow automation for Shopify developers & merchants
-
-## Detailed Description
-
 Alfred is a Shopify productivity extension for developers, theme designers,
 agency partners, and merchants. Streamline your workflow with theme detection,
 smart shortcuts, and collaborator access management.
@@ -53,15 +44,6 @@ Save time requesting store access:
 
 Perfect for Shopify developers, theme designers, agency partners, and merchants
 who need faster workflows and better productivity tools
-
-### Keywords
-
-Shopify extension, Shopify theme detector, Shopify developer tools, Shopify
-admin, Shopify productivity, Shopify shortcuts, Shopify theme editor, Shopify
-theme customizer, theme preview URL, Shopify JSON, Shopify cart, Shopify product
-data, Shopify collaborator, Shopify permissions, Shopify workflow, Shopify
-automation, Shopify Plus tools, Shopify app development, Shopify theme
-development, Shopify partner tools
 
 ### Feedback & Feature Requests
 
