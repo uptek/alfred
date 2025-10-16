@@ -1,6 +1,6 @@
-Alfred is a Shopify productivity extension for developers, theme designers,
-agency partners, and merchants. Streamline your workflow with theme detection,
-smart shortcuts, and collaborator access management.
+Alfred is a Shopify theme detector and productivity extension for developers and
+merchants. Instantly detect themes. Streamline your workflow with smart
+shortcuts and Shopify productivity tools.
 
 ### Shopify Theme Detector
 
@@ -50,5 +50,5 @@ who need faster workflows and better productivity tools
 Your input helps make Alfred better! Submit feature requests and feedback at:
 https://tally.so/r/nPgYx0
 
-Transform your Shopify workflow today with Alfred - the essential Chrome
-extension for Shopify professionals.
+Transform your Shopify workflow today with Alfred - the essential theme detector
+and productivity extension for Shopify professionals.

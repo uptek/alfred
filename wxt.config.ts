@@ -6,9 +6,10 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   modules: ['@wxt-dev/auto-icons'],
   manifest: {
-    name: 'Alfred for Shopify',
-    description: 'Make Shopify great again!',
-    version: '2025.10.06',
+    name: 'Alfred - Shopify Theme Detector',
+    description:
+      'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
+    version: '2025.10.17',
     action: {
       default_title: 'Alfred',
     },

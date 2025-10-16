@@ -20,7 +20,7 @@ export const registerShortcuts = async () => {
     openSectionInCodeEditor: true,
   };
 
-  // Create Alfred menu
+  // Create main menu
   const alfredMenuId = create({
     id: 'main',
     title: 'Alfred',
