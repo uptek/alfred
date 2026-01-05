@@ -58,7 +58,7 @@ export default defineContentScript({
     // Track successful autofill
     browser.runtime.sendMessage({
       type: 'track_action',
-      action: 'password_autofill',
+      action: 'autofill_storefront_password',
       metadata: {
         domain,
         password_length: password.length,

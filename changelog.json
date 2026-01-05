@@ -1,5 +1,22 @@
 [
   {
+    "version": "2026.01.06",
+    "date": "2026-01-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Added more theme details to the Theme Detector."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Added Theme ID display with click-to-copy functionality.",
+          "Added Theme name (internal) when it differs from the store theme name, also click-to-copy."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2025.10.06",
     "date": "2025-10-06",
     "changes": [

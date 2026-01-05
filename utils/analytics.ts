@@ -23,7 +23,7 @@ export type AnalyticsAction =
   | 'resize_theme_customizer'
   | 'toggle_admin_sidebar'
   | 'detect_theme'
-  | 'password_autofill';
+  | 'autofill_storefront_password';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<
@@ -67,7 +67,7 @@ const TIME_SAVINGS: Record<
   resize_theme_customizer: 3,
   toggle_admin_sidebar: 0,
   detect_theme: 15,
-  password_autofill: 10,
+  autofill_storefront_password: 10,
 };
 
 /**

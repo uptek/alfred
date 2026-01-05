@@ -7,7 +7,21 @@ function InfoItem({
   value,
   type = 'text',
   isLast = false,
+  copyable = false,
 }: InfoItemProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // ignore
+    }
+  };
+
   const getValueClassName = () => {
     switch (type) {
       case 'url':
@@ -24,7 +38,13 @@ function InfoItem({
     >
       <label className="text-sm font-semibold text-slate-500">{label}</label>
       <span
-        className={`max-w-[60%] break-all text-right select-text ${getValueClassName()}`}
+        onClick={copyable && value ? handleCopy : undefined}
+        className={`max-w-[60%] break-all text-right select-text ${getValueClassName()} ${
+          copyable && value
+            ? 'underline decoration-2 decoration-slate-300 cursor-pointer hover:decoration-slate-500'
+            : ''
+        } ${copied ? 'text-green-600' : ''}`}
+        title={copyable && value ? (copied ? 'Copied!' : 'Click to copy') : undefined}
       >
         {value}
       </span>
@@ -85,12 +105,26 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
       />
       <InfoItem
         label="Theme name:"
-        value={storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? 'N/A'}
+        value={storeInfo.theme?.schema_name ?? 'N/A'}
       />
       <InfoItem
         label="Theme version:"
         value={storeInfo.theme?.schema_version ?? 'N/A'}
       />
+      <InfoItem
+        label="Theme ID:"
+        value={storeInfo.theme?.id?.toString() ?? 'N/A'}
+        copyable
+      />
+      {storeInfo.theme?.name &&
+        (!storeInfo.theme?.schema_name ||
+          storeInfo.theme.name !== storeInfo.theme.schema_name) && (
+          <InfoItem
+            label="Theme name (internal):"
+            value={storeInfo.theme.name}
+            copyable
+          />
+        )}
       <div className="py-3.5 border-t border-slate-100">
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-semibold text-slate-500">
@@ -128,11 +162,10 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
               setTimeout(() => setCopying(false), success ? 1500 : 0);
             }}
             disabled={copying || !storeInfo.theme?.id}
-            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${
-              copying
+            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${copying
                 ? 'bg-green-500 text-white'
                 : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <svg
               className="w-4 h-4"

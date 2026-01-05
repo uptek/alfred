@@ -5,6 +5,7 @@ export interface InfoItemProps {
   value: string | undefined | null;
   type?: InfoItemType;
   isLast?: boolean;
+  copyable?: boolean;
 }
 
 export interface Theme {

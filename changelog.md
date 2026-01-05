@@ -1,11 +1,18 @@
 # Changelog
 
+## 2026.01.06
+@ 2026-01-06
+Added more theme details to the Theme Detector.
+
+- Added Theme ID display with click-to-copy functionality.
+- Added Theme name (internal) when it differs from the store theme name, also click-to-copy.
+
 ## 2025.10.06
 @ 2025-10-06
 Introducing Storefront Password Auto-fill! Save and automatically fill passwords for password-protected Shopify storefronts. Passwords are stored locally in your browser and can be managed from the extension popup or settings page.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/storefront-password-autofill.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/storefront-password-autofill.mp4"></video>
 
 ## 2025.10.05
 @ 2025-10-05

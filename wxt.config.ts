@@ -9,7 +9,7 @@ export default defineConfig({
     name: 'Alfred - Shopify Theme Detector',
     description:
       'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
-    version: '2025.10.17',
+    version: '2026.01.06',
     action: {
       default_title: 'Alfred',
     },
