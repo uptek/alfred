@@ -40,6 +40,7 @@ const defaultSettings: AlfredSettings = {
   },
   admin: {
     collapsibleSidebar: true,
+    warnBeforeClosingCodeEditor: true,
   },
 };
 

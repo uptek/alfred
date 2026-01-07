@@ -16,6 +16,12 @@ const settingsItems: SettingItem[] = [
     details:
       'Adds a toggle button to collapse/expand the Shopify admin navigation sidebar',
   },
+  {
+    key: 'warnBeforeClosingCodeEditor',
+    label: 'Warn before closing code editor',
+    details:
+      'Show a confirmation dialog before closing the theme code editor page',
+  },
 ];
 
 export function AdminSettings() {

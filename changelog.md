@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.01.08
+@ 2026-01-08
+Added a warning dialog before closing the theme code editor page. This helps prevent accidental tab closures when using Cmd+W/Ctrl+W (a common VS Code habit).
+
+
 ## 2026.01.06
 @ 2026-01-06
 Added more theme details to the Theme Detector.

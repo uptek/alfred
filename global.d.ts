@@ -63,6 +63,7 @@ declare interface AlfredSettings {
   };
   admin?: {
     collapsibleSidebar?: boolean;
+    warnBeforeClosingCodeEditor?: boolean;
   };
 }
 
