@@ -2,7 +2,12 @@ import { storage } from '#imports';
 import { registerShortcuts } from './shortcuts';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 
+const UNINSTALL_SURVEY_URL = 'https://tally.so/r/zx79O8';
+
 export default defineBackground(() => {
+  // Set uninstall survey URL
+  browser.runtime.setUninstallURL(UNINSTALL_SURVEY_URL);
+
   // Keep service worker alive to prevent it from becoming inactive
   const keepAlive = () => {
     // Send a simple message to keep the service worker active

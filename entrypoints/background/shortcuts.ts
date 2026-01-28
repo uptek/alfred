@@ -1,5 +1,6 @@
 import { create, removeAll } from '@/utils/contextMenu';
 import { getItem } from '@/utils/storage';
+import { trackAction } from '@/utils/analytics';
 
 /**
  * Register shortcuts (context menu items) for the extension
@@ -18,6 +19,7 @@ export const registerShortcuts = async () => {
     copyThemePreviewUrl: true,
     clearCart: true,
     openSectionInCodeEditor: true,
+    openImageInAdmin: true,
   };
 
   // Create main menu
@@ -214,6 +216,51 @@ export const registerShortcuts = async () => {
             });
           } catch (error) {
             console.error('Error opening section in editor:', error);
+          }
+        })();
+      }
+    );
+  }
+
+  // Open Image in Admin > Files
+  if (shortcuts.openImageInAdmin !== false) {
+    create(
+      {
+        id: 'open-image-in-admin',
+        title: 'Open Image in Admin > Files',
+        parentId: alfredMenuId,
+        contexts: ['image'],
+      },
+      (info: Browser.contextMenus.OnClickData, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            const imageUrl = info.srcUrl;
+            if (!imageUrl) return;
+
+            // Extract filename from URL
+            const url = new URL(imageUrl);
+            const filename = url.pathname.split('/').pop() ?? '';
+
+            // Get shop name from the page
+            const results = await browser.scripting.executeScript({
+              target: { tabId: tab.id! },
+              func: () => {
+                return (
+                  window as unknown as WindowWithAlfred
+                ).Alfred.getShopName();
+              },
+              world: 'MAIN',
+            });
+
+            const shopName = results?.[0]?.result;
+            if (!shopName) return;
+
+            const adminUrl = `https://admin.shopify.com/store/${shopName}/content/files?query=${filename}`;
+            await browser.tabs.create({ url: adminUrl });
+
+            trackAction('open_image_in_admin');
+          } catch (error) {
+            console.error('Error searching image in files:', error);
           }
         })();
       }

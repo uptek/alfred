@@ -36,6 +36,9 @@ declare namespace ContextMenu {
 }
 
 declare interface AlfredSettings {
+  general?: {
+    restoreRightClick?: boolean;
+  };
   themeCustomizer?: {
     inspector?: 'default' | 'disable' | 'restore';
     resizers?: {
@@ -53,6 +56,7 @@ declare interface AlfredSettings {
     copyThemePreviewUrl?: boolean;
     clearCart?: boolean;
     openSectionInCodeEditor?: boolean;
+    openImageInAdmin?: boolean;
   };
   appStore?: {
     searchIndexing?: boolean;
@@ -92,6 +96,7 @@ declare interface WindowWithAlfred {
     [key: string]: unknown;
   };
   Alfred: {
+    settings: AlfredSettings;
     Toast: unknown;
     _lastRightClickedElement: HTMLElement | null;
     _initContextMenuListener: () => void;

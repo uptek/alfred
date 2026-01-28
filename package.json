@@ -1,7 +1,7 @@
 {
   "name": "alfred",
   "private": true,
-  "version": "2026.01.08",
+  "version": "2026.01.28",
   "type": "module",
   "packageManager": "bun@1.2.14",
   "scripts": {
@@ -22,21 +22,21 @@
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
-    "@preact/preset-vite": "^2.10.2",
+    "@eslint/js": "^9.39.2",
+    "@preact/preset-vite": "^2.10.3",
     "@shopify/app-bridge-ui-types": "^0.3.3",
     "@wxt-dev/auto-icons": "^1.1.0",
     "chokidar-cli": "^3.0.0",
-    "eslint": "^9.37.0",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.6.2",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.45.0",
-    "wxt": "^0.20.11"
+    "typescript-eslint": "^8.54.0",
+    "wxt": "^0.20.13"
   },
   "dependencies": {
-    "preact": "^10.27.2",
-    "tailwindcss": "^4.1.14",
-    "@tailwindcss/vite": "^4.1.14"
+    "preact": "^10.28.2",
+    "tailwindcss": "^4.1.18",
+    "@tailwindcss/vite": "^4.1.18"
   }
 }

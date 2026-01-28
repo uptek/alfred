@@ -1,7 +1,15 @@
+import { getItem } from '@/utils/storage';
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_start',
   async main() {
+    // Pass settings to main world via data attribute
+    const settings = await getItem<AlfredSettings>('settings');
+    document.documentElement.dataset.alfredSettings = JSON.stringify(
+      settings ?? {}
+    );
+
     await injectScript('/alfred-main-world.js', {
       keepInDom: true,
     });

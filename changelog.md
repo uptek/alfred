@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.01.28
+@ 2026-01-28
+- Open Image in Admin Shortcut: Added a new right-click shortcut for images. Right-click any image on a Shopify storefront to quickly search for it in the store's Admin Files.
+- New: Restore Right-Click. Alfred now automatically re-enables right-click context menus and text selection on websites that block them. This can be toggled off in Settings > General.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/open-image-in-admin.mp4"></video>
+
 ## 2026.01.08
 @ 2026-01-08
 Added a warning dialog before closing the theme code editor page. This helps prevent accidental tab closures when using Cmd+W/Ctrl+W (a common VS Code habit).

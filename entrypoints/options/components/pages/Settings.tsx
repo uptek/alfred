@@ -6,12 +6,14 @@ import { AppStoreSettings } from '../settings/AppStoreSettings';
 import { CollaboratorAccessSetting } from '../settings/CollaboratorAccessSettings';
 import { AdminSettings } from '../settings/AdminSettings';
 import { StorefrontPasswordSettings } from '../settings/StorefrontPasswordSettings';
+import { GeneralSettings } from '../settings/GeneralSettings';
 
 export function Settings() {
   return (
     <form id="settings">
       <s-grid gap="base">
         <PageHeader title="Settings" icon="settings" />
+        <GeneralSettings />
         <ShortcutsSetting />
         <CollaboratorAccessSetting />
         <AdminSettings />

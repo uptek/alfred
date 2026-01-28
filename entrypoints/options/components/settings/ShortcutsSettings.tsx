@@ -38,6 +38,11 @@ const shortcutItems = [
     label: 'Open Section in Code Editor',
     details: 'Opens the clicked section in theme code editor',
   },
+  {
+    key: 'openImageInAdmin',
+    label: 'Open Image in Admin > Files',
+    details: 'Opens (searches) the right-clicked image in Shopify Admin > Files',
+  },
 ];
 
 export function ShortcutsSetting() {

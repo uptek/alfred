@@ -13,6 +13,9 @@ interface SettingsContextValue {
 }
 
 const defaultSettings: AlfredSettings = {
+  general: {
+    restoreRightClick: true,
+  },
   themeCustomizer: {
     inspector: 'default',
     resizers: {
@@ -30,6 +33,7 @@ const defaultSettings: AlfredSettings = {
     copyThemePreviewUrl: true,
     clearCart: true,
     openSectionInCodeEditor: true,
+    openImageInAdmin: true,
   },
   appStore: {
     searchIndexing: true,
