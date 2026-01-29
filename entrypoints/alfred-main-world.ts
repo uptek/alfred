@@ -1,74 +1,10 @@
+import { initRestoreRightClick } from '../utils/restore-right-click';
 import { Toast } from '../utils/toast';
 
 export default defineUnlistedScript(() => {
   // Parse settings from data attribute
   const settingsJson = document.documentElement.dataset.alfredSettings ?? '{}';
   const settings = JSON.parse(settingsJson) as AlfredSettings;
-
-  // Restore right-click and text selection on all pages (if enabled)
-  if (settings.general?.restoreRightClick !== false) {
-    const blockedEvents = [
-      'contextmenu',
-      'copy',
-      'cut',
-      'paste',
-      'selectstart',
-      'dragstart',
-    ];
-
-    // Override addEventListener to prevent sites from blocking these events
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    const originalAddEventListener = EventTarget.prototype.addEventListener;
-    EventTarget.prototype.addEventListener = function (
-      type: string,
-      listener: EventListenerOrEventListenerObject,
-      options?: boolean | AddEventListenerOptions
-    ) {
-      if (blockedEvents.includes(type)) {
-        return;
-      }
-      originalAddEventListener.call(this, type, listener, options);
-    };
-
-    // Remove inline handlers and inject styles once DOM is ready
-    const init = () => {
-      // Remove inline handlers
-      document
-        .querySelectorAll(
-          '[oncontextmenu], [oncopy], [oncut], [onpaste], [onselectstart], [ondragstart]'
-        )
-        .forEach((el) => {
-          el.removeAttribute('oncontextmenu');
-          el.removeAttribute('oncopy');
-          el.removeAttribute('oncut');
-          el.removeAttribute('onpaste');
-          el.removeAttribute('onselectstart');
-          el.removeAttribute('ondragstart');
-        });
-
-      // Inject CSS to enable text selection
-      const style = document.createElement('style');
-      style.id = 'alfred-restore-right-click';
-      style.textContent = `
-        *, *::before, *::after {
-          user-select: text !important;
-          -webkit-user-select: text !important;
-        }
-      `;
-      document.head.appendChild(style);
-
-      // Capture and stop propagation for blocked events
-      blockedEvents.forEach((eventType) => {
-        document.addEventListener(eventType, (e) => e.stopPropagation(), true);
-      });
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
-  }
 
   // Define alfred utils in the global scope
   (window as unknown as WindowWithAlfred).Alfred = {
@@ -129,7 +65,6 @@ export default defineUnlistedScript(() => {
 
     /**
      * Check if the current page is a Shopify store
-     * @returns {boolean}
      */
     isShopify: () => {
       const win = window as unknown as WindowWithAlfred;
@@ -725,4 +660,7 @@ export default defineUnlistedScript(() => {
   const win = window as unknown as WindowWithAlfred;
   win.Alfred._initContextMenuListener();
   win.Alfred._initThemeRequestHandler();
+
+  // Restore right-click and text selection on Shopify sites only
+  if (settings.general?.restoreRightClick) initRestoreRightClick();
 });

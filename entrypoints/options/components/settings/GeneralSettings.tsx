@@ -7,7 +7,7 @@ const settingsItems = [
     key: 'restoreRightClick',
     label: 'Restore right-click',
     details:
-      'Re-enables right-click context menu and text selection on websites that block them',
+      'Re-enables right-click context menu and text selection on Shopify sites that block them',
   },
 ];
 

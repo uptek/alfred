@@ -1,5 +1,15 @@
 [
   {
+    "version": "2026.01.29",
+    "date": "2026-01-29",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "The right-click restore was conflicting with web apps that have their own custom context menus (like Google Docs). The restore feature is now limited to Shopify storefronts only."
+      }
+    ]
+  },
+  {
     "version": "2026.01.28",
     "date": "2026-01-28",
     "changes": [
