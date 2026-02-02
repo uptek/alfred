@@ -2,9 +2,8 @@ import { initRestoreRightClick } from '../utils/restore-right-click';
 import { Toast } from '../utils/toast';
 
 export default defineUnlistedScript(() => {
-  // Parse settings from data attribute
-  const settingsJson = document.documentElement.dataset.alfredSettings ?? '{}';
-  const settings = JSON.parse(settingsJson) as AlfredSettings;
+  // Settings will be received via postMessage
+  let settings: AlfredSettings = {};
 
   // Define alfred utils in the global scope
   (window as unknown as WindowWithAlfred).Alfred = {
@@ -661,6 +660,17 @@ export default defineUnlistedScript(() => {
   win.Alfred._initContextMenuListener();
   win.Alfred._initThemeRequestHandler();
 
-  // Restore right-click and text selection on Shopify sites only
-  if (settings.general?.restoreRightClick) initRestoreRightClick();
+  // Listen for settings from content script via postMessage
+  window.addEventListener('message', (event) => {
+    if (event.source !== window) return;
+
+    const data = event.data as { type?: string; settings?: AlfredSettings };
+    if (data?.type === 'alfred:settings' && data.settings) {
+      settings = data.settings;
+      win.Alfred.settings = settings;
+
+      // Initialize features that depend on settings
+      if (settings.general?.restoreRightClick) initRestoreRightClick();
+    }
+  });
 });

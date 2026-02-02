@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.02.03
+@ 2026-02-03
+Fixed an issue where React hydration errors occurred on Next.js sites.
+
+
 ## 2026.01.29
 @ 2026-01-29
 The right-click restore was conflicting with web apps that have their own custom context menus (like Google Docs). The restore feature is now limited to Shopify storefronts only.

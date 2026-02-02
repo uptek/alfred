@@ -44,7 +44,7 @@ export default function App() {
 
   if (!storeInfo?.isShopify) {
     return (
-      <div className="bg-white max-w-[400px] min-h-[200px] p-4">
+      <div className="bg-white max-w-[400px] min-h-[200px] p-4 m-auto">
         <div className="flex flex-col items-center justify-center min-h-[200px] px-15">
           <h3 className="text-base font-semibold text-slate-900 mb-2">
             Not a Shopify store

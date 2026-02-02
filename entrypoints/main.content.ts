@@ -4,15 +4,21 @@ export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_start',
   async main() {
-    // Pass settings to main world via data attribute
+    // Get settings before injecting the script
     const settings = await getItem<AlfredSettings>('settings');
-    document.documentElement.dataset.alfredSettings = JSON.stringify(
-      settings ?? {}
-    );
 
     await injectScript('/alfred-main-world.js', {
       keepInDom: true,
     });
+
+    // Pass settings to main world via postMessage (avoids React hydration errors)
+    window.postMessage(
+      {
+        type: 'alfred:settings',
+        settings: settings ?? {},
+      },
+      '*'
+    );
 
     // Listen for tracking events from the main world
     window.addEventListener('alfred:track', (event: Event) => {
