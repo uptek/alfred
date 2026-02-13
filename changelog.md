@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.02.13
+@ 2026-02-13
+Storefront Password Redirect: Shopify redirects you to the home page after entering a store password, even if you were trying to visit a specific page. Alfred now remembers your intended destination and redirects you there after a successful password entry.
+
+
 ## 2026.02.03
 @ 2026-02-03
 Fixed an issue where React hydration errors occurred on Next.js sites.
