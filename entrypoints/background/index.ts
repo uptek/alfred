@@ -1,12 +1,44 @@
 import { storage } from '#imports';
 import { registerShortcuts } from './shortcuts';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
+import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 
 const UNINSTALL_SURVEY_URL = 'https://tally.so/r/zx79O8';
 
 export default defineBackground(() => {
   // Set uninstall survey URL
   browser.runtime.setUninstallURL(UNINSTALL_SURVEY_URL);
+
+  // Track navigation start URLs to handle redirect chains correctly
+  // This is needed because preview_theme_id URLs may redirect multiple times before /password
+  const pendingNavigations = new Map<number, string>();
+
+  // When a navigation starts, save the original URL
+  browser.webNavigation.onBeforeNavigate.addListener((details) => {
+    if (details.frameId === 0) {
+      pendingNavigations.set(details.tabId, details.url);
+    }
+  });
+
+  // When navigation completes, check if we ended up on /password
+  browser.webNavigation.onCommitted.addListener((details) => {
+    if (details.frameId !== 0) return;
+
+    const committedUrl = new URL(details.url);
+    const originalUrl = pendingNavigations.get(details.tabId);
+
+    pendingNavigations.delete(details.tabId);
+
+    // If we ended up on /password, save the original URL for redirect after password entry
+    if (
+      committedUrl.pathname === '/password' ||
+      committedUrl.pathname === '/password/'
+    ) {
+      if (originalUrl && isValidReturnUrl(originalUrl)) {
+        saveReturnUrl(originalUrl).catch(() => {});
+      }
+    }
+  });
 
   // Keep service worker alive to prevent it from becoming inactive
   const keepAlive = () => {

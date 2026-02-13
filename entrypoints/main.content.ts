@@ -1,9 +1,15 @@
 import { getItem } from '@/utils/storage';
+import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_start',
   async main() {
+    // Handle redirect back to intended page after successful password entry
+    if (await handleReturnUrlRedirect()) {
+      return; // Stop further execution since we're navigating away
+    }
+
     // Get settings before injecting the script
     const settings = await getItem<AlfredSettings>('settings');
 
@@ -51,7 +57,7 @@ export default defineContentScript({
       ) => {
         if (event.source !== window) return;
 
-        if (event.data && event.data.type === 'alfred:theme_response') {
+        if (event.data?.type === 'alfred:theme_response') {
           const { requestId, data } = event.data;
           // Dispatch custom event with the response data
           window.dispatchEvent(

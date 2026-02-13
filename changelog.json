@@ -1,5 +1,15 @@
 [
   {
+    "version": "2026.02.13",
+    "date": "2026-02-13",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Storefront Password Redirect: Shopify redirects you to the home page after entering a store password, even if you were trying to visit a specific page. Alfred now remembers your intended destination and redirects you there after a successful password entry."
+      }
+    ]
+  },
+  {
     "version": "2026.02.03",
     "date": "2026-02-03",
     "changes": [
