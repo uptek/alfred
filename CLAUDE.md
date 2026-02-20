@@ -2,16 +2,8 @@
 
 ## Important Commands
 
-**NEVER run bun commands directly. Always ask the user to run these commands for
-you.**
-
-Examples of commands to ask the user to run:
-
-- `bun run dev` - Start the development server
-- `bun install` - Install dependencies
-- `bun run build` - Build the extension
-- `bun run typecheck` - Run type checking
-- Any other bun commands
+**NEVER run `bun run dev` or `bun run build` directly. Always ask the user to
+run these commands for you.**
 
 ## WXT Framework
 

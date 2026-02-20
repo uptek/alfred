@@ -57,6 +57,7 @@ declare interface AlfredSettings {
     clearCart?: boolean;
     openSectionInCodeEditor?: boolean;
     openImageInAdmin?: boolean;
+    exitThemePreview?: boolean;
   };
   appStore?: {
     searchIndexing?: boolean;
@@ -86,6 +87,7 @@ declare interface WindowWithAlfred {
     shop?: string;
     theme?: {
       id?: string;
+      role?: string;
       [key: string]: unknown;
     };
     [key: string]: unknown;
@@ -116,5 +118,6 @@ declare interface WindowWithAlfred {
     copyThemePreviewUrl: (disablePreviewBar?: boolean) => Promise<boolean>;
     clearCart: () => Promise<boolean>;
     openSectionInCodeEditor: () => boolean;
+    exitThemePreview: () => boolean;
   };
 }

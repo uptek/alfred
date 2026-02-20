@@ -463,6 +463,59 @@ export default defineUnlistedScript(() => {
     },
 
     /**
+     * Exit theme preview by navigating to the current URL with an empty preview_theme_id
+     * @returns {boolean}
+     */
+    exitThemePreview: (): boolean => {
+      try {
+        const win = window as unknown as WindowWithAlfred;
+        // Check if this is a Shopify store
+        if (!win.Alfred.isShopify()) {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not a Shopify store'
+          );
+          return false;
+        }
+
+        // Check if the current theme is not the main/published theme
+        const role = win.Shopify?.theme?.role;
+        if (role === 'main') {
+          (win.Alfred.Toast as { error: (msg: string) => void }).error(
+            'Not previewing a theme'
+          );
+          return false;
+        }
+
+        (win.Alfred.Toast as { success: (msg: string) => void }).success(
+          'Exiting theme preview...'
+        );
+
+        // Track the action before navigation
+        window.dispatchEvent(
+          new CustomEvent('alfred:track', {
+            detail: {
+              action: 'exit_theme_preview',
+            },
+          })
+        );
+
+        // Navigate to the current URL with an empty preview_theme_id to clear the preview
+        const url = new URL(window.location.href);
+        url.searchParams.set('preview_theme_id', '');
+        window.location.href = url.toString();
+
+        return true;
+      } catch (error) {
+        console.error('Error exiting theme preview:', error);
+        const win = window as unknown as WindowWithAlfred;
+        (win.Alfred.Toast as { error: (msg: string) => void }).error(
+          'Failed to exit theme preview'
+        );
+        return false;
+      }
+    },
+
+    /**
      * Clear the shopping cart
      * @returns {Promise<boolean>}
      */

@@ -2,48 +2,89 @@ import { useEffect, useContext } from 'preact/hooks';
 import { SettingsContext } from '../../contexts/SettingsContext';
 import { setCheckboxValue, onCheckboxChange } from '~/utils/polaris.polyfill';
 
-const shortcutItems = [
+interface ShortcutItem {
+  key: string;
+  label: string;
+  details: string;
+}
+
+interface ShortcutCategory {
+  label: string;
+  items: ShortcutItem[];
+}
+
+const shortcutCategories: ShortcutCategory[] = [
   {
-    key: 'openInAdmin',
-    label: 'Open in Admin',
-    details: 'Opens the current page in Shopify Admin',
+    label: 'Navigation',
+    items: [
+      {
+        key: 'openInAdmin',
+        label: 'Open in Admin',
+        details: 'Opens the current page in Shopify Admin',
+      },
+      {
+        key: 'openInCustomizer',
+        label: 'Open in Customizer',
+        details: 'Opens the current page in theme customizer',
+      },
+      {
+        key: 'openSectionInCodeEditor',
+        label: 'Open Section in Code Editor',
+        details: 'Opens the clicked section in theme code editor',
+      },
+      {
+        key: 'openImageInAdmin',
+        label: 'Open Image in Admin > Files',
+        details:
+          'Opens (searches) the right-clicked image in Shopify Admin > Files',
+      },
+    ],
   },
   {
-    key: 'openInCustomizer',
-    label: 'Open in Customizer',
-    details: 'Opens the current page in theme customizer',
+    label: 'Theme',
+    items: [
+      {
+        key: 'copyThemePreviewUrl',
+        label: 'Copy Theme Preview URL',
+        details: 'Copies preview URL with context of current page',
+      },
+      {
+        key: 'exitThemePreview',
+        label: 'Exit Theme Preview',
+        details: 'Exits the current theme preview and loads the live theme',
+      },
+    ],
   },
   {
-    key: 'copyProductJson',
-    label: 'Copy Product JSON',
-    details: 'Copies current product data as JSON to clipboard',
+    label: 'Data',
+    items: [
+      {
+        key: 'copyProductJson',
+        label: 'Copy Product JSON',
+        details: 'Copies current product data as JSON to clipboard',
+      },
+      {
+        key: 'copyCartJson',
+        label: 'Copy Cart JSON',
+        details: 'Copies cart data as JSON to clipboard',
+      },
+    ],
   },
   {
-    key: 'copyThemePreviewUrl',
-    label: 'Copy Theme Preview URL',
-    details: 'Copies preview URL with context of current page',
-  },
-  {
-    key: 'copyCartJson',
-    label: 'Copy Cart JSON',
-    details: 'Copies cart data as JSON to clipboard',
-  },
-  {
-    key: 'clearCart',
-    label: 'Clear Cart',
-    details: 'Removes all items from the cart',
-  },
-  {
-    key: 'openSectionInCodeEditor',
-    label: 'Open Section in Code Editor',
-    details: 'Opens the clicked section in theme code editor',
-  },
-  {
-    key: 'openImageInAdmin',
-    label: 'Open Image in Admin > Files',
-    details: 'Opens (searches) the right-clicked image in Shopify Admin > Files',
+    label: 'Cart',
+    items: [
+      {
+        key: 'clearCart',
+        label: 'Clear Cart',
+        details: 'Removes all items from the cart',
+      },
+    ],
   },
 ];
+
+const allShortcutItems = shortcutCategories.flatMap(
+  (category) => category.items
+);
 
 export function ShortcutsSetting() {
   const context = useContext(SettingsContext);
@@ -57,7 +98,7 @@ export function ShortcutsSetting() {
 
     const shortcuts = settings.shortcuts ?? {};
 
-    shortcutItems.forEach(({ key }) => {
+    allShortcutItems.forEach(({ key }) => {
       setCheckboxValue(
         `shortcut-${key}`,
         shortcuts[key as keyof typeof shortcuts] !== false
@@ -71,7 +112,7 @@ export function ShortcutsSetting() {
 
     const cleanupFunctions: (() => void)[] = [];
 
-    shortcutItems.forEach(({ key }) => {
+    allShortcutItems.forEach(({ key }) => {
       const cleanup = onCheckboxChange(`shortcut-${key}`, async (checked) => {
         await updateSettings({
           shortcuts: {
@@ -96,16 +137,26 @@ export function ShortcutsSetting() {
         Controls which shortcuts appear in the right-click context menu when
         using Alfred on Shopify stores.
       </s-paragraph>
-      <s-grid gap="small">
-        {shortcutItems.map(({ key, label, details }) => (
-          <s-checkbox
-            key={key}
-            name={`shortcut-${key}`}
-            label={label}
-            details={details}
-          />
+      <s-stack gap="base">
+        {shortcutCategories.map((category, categoryIndex) => (
+          <>
+            <s-stack key={category.label} gap="small-300">
+              <s-text><b>{category.label}</b></s-text>
+              <s-stack gap="small">
+                {category.items.map(({ key, label, details }) => (
+                  <s-checkbox
+                    key={key}
+                    name={`shortcut-${key}`}
+                    label={label}
+                    details={details}
+                  />
+                ))}
+              </s-stack>
+            </s-stack>
+            {categoryIndex < shortcutCategories.length - 1 && <s-divider></s-divider>}
+          </>
         ))}
-      </s-grid>
+      </s-stack>
     </s-section>
   );
 }

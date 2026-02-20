@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.02.20
+@ 2026-02-20
+- Exit Theme Preview Shortcut: Added a new right-click shortcut to exit a Shopify theme preview and switch back to the live/published theme.
+- Reorganized right-click menu shortcuts into categorized groups with visual separators for easier discovery.
+
 ## 2026.02.13
 @ 2026-02-13
 Storefront Password Redirect: Shopify redirects you to the home page after entering a store password, even if you were trying to visit a specific page. Alfred now remembers your intended destination and redirects you there after a successful password entry.

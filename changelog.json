@@ -1,5 +1,18 @@
 [
   {
+    "version": "2026.02.20",
+    "date": "2026-02-20",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Exit Theme Preview Shortcut: Added a new right-click shortcut to exit a Shopify theme preview and switch back to the live/published theme.",
+          "Reorganized right-click menu shortcuts into categorized groups with visual separators for easier discovery."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.02.13",
     "date": "2026-02-13",
     "changes": [
