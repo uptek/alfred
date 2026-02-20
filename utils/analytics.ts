@@ -24,7 +24,8 @@ export type AnalyticsAction =
   | 'toggle_admin_sidebar'
   | 'detect_theme'
   | 'autofill_storefront_password'
-  | 'open_image_in_admin';
+  | 'open_image_in_admin'
+  | 'exit_theme_preview';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<
@@ -70,6 +71,7 @@ const TIME_SAVINGS: Record<
   detect_theme: 15,
   autofill_storefront_password: 10,
   open_image_in_admin: 15,
+  exit_theme_preview: 20,
 };
 
 /**
