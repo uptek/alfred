@@ -50,69 +50,53 @@ const el = (
   return element;
 };
 
-const createCopyButton = (text: string) => {
-  const btn = el('s-button', { variant: 'tertiary', icon: 'clipboard' });
-
-  btn.addEventListener('click', (e) => {
+const createCopyField = (label: string, value: string) => {
+  const copyBtn = el('s-button', { variant: 'tertiary', icon: 'clipboard' });
+  copyBtn.title = 'Copy to clipboard';
+  copyBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(text);
-
-    btn.setAttribute('icon', 'check');
-    btn.setAttribute('tone', 'success');
-
+    navigator.clipboard.writeText(value);
+    copyBtn.setAttribute('icon', 'check');
     setTimeout(() => {
-      btn.setAttribute('icon', 'clipboard');
-      btn.removeAttribute('tone');
-    }, 1500);
+      copyBtn.setAttribute('icon', 'clipboard');
+    }, 1200);
   });
 
-  return btn;
-};
-
-const createInfoRow = (label: string, value: string) => {
   const labelEl = el('s-text', { variant: 'bodySm', tone: 'subdued' }, [
     label,
   ]);
-  Object.assign(labelEl.style, { width: '56px', flexShrink: '0' });
+  Object.assign(labelEl.style, { flexShrink: '0' });
 
-  const valueEl = el('code', {}, [value]);
-  Object.assign(valueEl.style, {
-    fontSize: '12px',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.readOnly = true;
+  input.value = value;
+  Object.assign(input.style, {
     flex: '1',
     minWidth: '0',
+    border: 'var(--p-border-width-025, 1px) solid var(--p-color-border, #8c9196)',
+    borderRadius: 'var(--p-border-radius-150, 6px)',
+    padding: 'var(--p-space-050, 2px) var(--p-space-200, 8px)',
+    fontSize: 'var(--p-font-size-275, 12px)',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: 'var(--p-color-text, #303030)',
+    background: 'var(--p-color-bg-surface-secondary, #f1f1f1)',
+    outline: 'none',
+    lineHeight: 'var(--p-font-line-height-400, 20px)',
   });
 
-  const row = el(
+  return el(
     's-stack',
-    { direction: 'inline', gap: 'small-200', 'block-align': 'center' },
-    [labelEl, valueEl, createCopyButton(value)]
+    { direction: 'inline', gap: 'small-200', 'block-align': 'center', wrap: 'nowrap' },
+    [labelEl, input, copyBtn]
   );
-  Object.assign(row.style, { flexWrap: 'nowrap' });
-
-  return row;
 };
 
-const createPanel = (data: ThemeData) => {
-  // Badge
-  const badge = el('s-badge', { tone: 'info' }, ['Alfred']);
-
-  // Info rows
-  const infoRows = el('s-stack', { gap: 'small' }, [
-    createInfoRow('ID', data.themeId),
-    createInfoRow('Preview', data.previewUrl),
-  ]);
-
-  // Divider
-  const divider = el('s-divider');
-
-  // Action buttons
+const createButtonRow = (data: ThemeData) => {
   const previewBtn = el(
     's-button',
     { variant: 'secondary', icon: 'external' },
-    ['Open Preview']
+    ['Preview']
   );
   previewBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -127,31 +111,11 @@ const createPanel = (data: ThemeData) => {
     window.open(data.codeEditorUrl, '_top');
   });
 
-  const actions = el('s-stack', { direction: 'inline', gap: 'base' }, [
-    previewBtn,
-    codeBtn,
-  ]);
-
-  // Panel container
-  const panel = el(
-    's-box',
-    {
-      padding: 'base',
-      background: 'subdued',
-    },
-    [
-      el('s-stack', { gap: 'small-200' }, [
-        badge,
-        infoRows,
-        divider,
-        actions,
-      ]),
-    ]
+  return el(
+    's-stack',
+    { direction: 'inline', gap: 'base', 'block-align': 'center' },
+    [previewBtn, codeBtn]
   );
-
-  panel.classList.add('alfred-theme-panel');
-
-  return panel;
 };
 
 const injectIntoThemeList = () => {
@@ -171,13 +135,19 @@ const injectIntoThemeList = () => {
     const data = extractThemeData(listItem);
     if (!data) return;
 
-    const panel = createPanel(data);
-
-    const parentBlock = listItem.closest('div[class*="BlockStack"]');
-    if (parentBlock) {
-      parentBlock.appendChild(panel);
-    } else {
-      listItem.appendChild(panel);
+    const contextProvider = listItem.querySelector(
+      's-internal-context-provider'
+    );
+    if (contextProvider) {
+      const wrapper = el('s-stack', {
+        gap: 'small-200',
+        'block-align': 'end',
+      });
+      contextProvider.replaceWith(wrapper);
+      wrapper.appendChild(contextProvider);
+      wrapper.appendChild(createButtonRow(data));
+      wrapper.appendChild(createCopyField('ID', data.themeId));
+      wrapper.appendChild(createCopyField('Preview', data.previewUrl));
     }
 
     listItem.setAttribute(INJECTED_ATTR, 'true');
