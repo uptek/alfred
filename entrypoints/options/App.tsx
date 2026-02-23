@@ -16,8 +16,7 @@ export default function App() {
     }
 
     const handlePopState = (event: PopStateEvent) => {
-      const page =
-        (event.state as { page?: string } | null)?.page ?? 'settings';
+      const page = (event.state as { page?: string } | null)?.page ?? 'settings';
       setCurrentPage(page);
     };
 
@@ -61,10 +60,7 @@ export default function App() {
       <s-page>
         <s-box paddingBlock="large-500">
           <s-grid gridTemplateColumns="18rem 1fr" gap="base">
-            <Navigation
-              currentPage={currentPage}
-              onNavigate={handleNavigation}
-            />
+            <Navigation currentPage={currentPage} onNavigate={handleNavigation} />
             <s-box>
               {currentPage === 'settings' && <Settings />}
               {currentPage === 'changelog' && <Changelog />}

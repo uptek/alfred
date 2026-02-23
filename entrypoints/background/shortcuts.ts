@@ -20,13 +20,13 @@ export const registerShortcuts = async () => {
     exitThemePreview: true,
     copyProductJson: true,
     copyCartJson: true,
-    clearCart: true,
+    clearCart: true
   };
 
   // Create main menu
   const alfredMenuId = create({
     id: 'main',
-    title: 'Alfred',
+    title: 'Alfred'
   });
 
   // ── Navigation ──
@@ -37,7 +37,7 @@ export const registerShortcuts = async () => {
       {
         id: 'open-in-admin',
         title: 'Open in Admin',
-        parentId: alfredMenuId,
+        parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -45,11 +45,9 @@ export const registerShortcuts = async () => {
             await browser.scripting.executeScript({
               target: { tabId: tab.id! },
               func: () => {
-                void (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.openInAdmin();
+                void (window as unknown as WindowWithAlfred).Alfred.openInAdmin();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
           } catch (error) {
             console.error('Error opening in admin:', error);
@@ -65,7 +63,7 @@ export const registerShortcuts = async () => {
       {
         id: 'open-in-customizer',
         title: 'Open in Customizer',
-        parentId: alfredMenuId,
+        parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -73,11 +71,9 @@ export const registerShortcuts = async () => {
             await browser.scripting.executeScript({
               target: { tabId: tab.id! },
               func: () => {
-                void (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.openInCustomizer();
+                void (window as unknown as WindowWithAlfred).Alfred.openInCustomizer();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
           } catch (error) {
             console.error('Error opening customizer:', error);
@@ -93,7 +89,7 @@ export const registerShortcuts = async () => {
       {
         id: 'open-section-in-editor',
         title: 'Open Section in Code Editor',
-        parentId: alfredMenuId,
+        parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -101,11 +97,9 @@ export const registerShortcuts = async () => {
             await browser.scripting.executeScript({
               target: { tabId: tab.id! },
               func: () => {
-                void (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.openSectionInCodeEditor();
+                void (window as unknown as WindowWithAlfred).Alfred.openSectionInCodeEditor();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
           } catch (error) {
             console.error('Error opening section in editor:', error);
@@ -122,7 +116,7 @@ export const registerShortcuts = async () => {
         id: 'open-image-in-admin',
         title: 'Open Image in Admin > Files',
         parentId: alfredMenuId,
-        contexts: ['image'],
+        contexts: ['image']
       },
       (info: Browser.contextMenus.OnClickData, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -138,11 +132,9 @@ export const registerShortcuts = async () => {
             const results = await browser.scripting.executeScript({
               target: { tabId: tab.id! },
               func: () => {
-                return (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.getShopName();
+                return (window as unknown as WindowWithAlfred).Alfred.getShopName();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
 
             const shopName = results?.[0]?.result;
@@ -170,7 +162,7 @@ export const registerShortcuts = async () => {
       {
         id: 'copy-theme-preview-url',
         title: 'Copy Theme Preview URL',
-        parentId: alfredMenuId,
+        parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -178,11 +170,9 @@ export const registerShortcuts = async () => {
             await browser.scripting.executeScript({
               target: { tabId: tab.id! },
               func: () => {
-                void (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.copyThemePreviewUrl();
+                void (window as unknown as WindowWithAlfred).Alfred.copyThemePreviewUrl();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
           } catch (error) {
             console.error('Error copying theme preview URL:', error);
@@ -198,7 +188,7 @@ export const registerShortcuts = async () => {
       {
         id: 'exit-theme-preview',
         title: 'Exit Theme Preview',
-        parentId: alfredMenuId,
+        parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -206,11 +196,9 @@ export const registerShortcuts = async () => {
             await browser.scripting.executeScript({
               target: { tabId: tab.id! },
               func: () => {
-                void (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.exitThemePreview();
+                void (window as unknown as WindowWithAlfred).Alfred.exitThemePreview();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
           } catch (error) {
             console.error('Error exiting theme preview:', error);
@@ -230,7 +218,7 @@ export const registerShortcuts = async () => {
       {
         id: 'copy-product-json',
         title: 'Copy Product JSON',
-        parentId: alfredMenuId,
+        parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -238,11 +226,9 @@ export const registerShortcuts = async () => {
             await browser.scripting.executeScript({
               target: { tabId: tab.id! },
               func: () => {
-                void (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.copyProductJson();
+                void (window as unknown as WindowWithAlfred).Alfred.copyProductJson();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
           } catch (error) {
             console.error('Error copying product JSON:', error);
@@ -258,7 +244,7 @@ export const registerShortcuts = async () => {
       {
         id: 'copy-cart-json',
         title: 'Copy Cart JSON',
-        parentId: alfredMenuId,
+        parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -266,11 +252,9 @@ export const registerShortcuts = async () => {
             await browser.scripting.executeScript({
               target: { tabId: tab.id! },
               func: () => {
-                void (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.copyCartJson();
+                void (window as unknown as WindowWithAlfred).Alfred.copyCartJson();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
           } catch (error) {
             console.error('Error copying cart JSON:', error);
@@ -290,7 +274,7 @@ export const registerShortcuts = async () => {
       {
         id: 'clear-cart',
         title: 'Clear Cart',
-        parentId: alfredMenuId,
+        parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
@@ -300,7 +284,7 @@ export const registerShortcuts = async () => {
               func: () => {
                 void (window as unknown as WindowWithAlfred).Alfred.clearCart();
               },
-              world: 'MAIN',
+              world: 'MAIN'
             });
           } catch (error) {
             console.error('Error clearing cart:', error);

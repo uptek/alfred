@@ -13,12 +13,12 @@ export default function App() {
   const tabs = [
     {
       handle: 'theme',
-      name: 'Theme',
+      name: 'Theme'
     },
     {
       handle: 'settings',
-      name: 'Settings',
-    },
+      name: 'Settings'
+    }
   ];
 
   useEffect(() => {
@@ -46,9 +46,7 @@ export default function App() {
     return (
       <div className="bg-white max-w-[400px] min-h-[200px] p-4 m-auto">
         <div className="flex flex-col items-center justify-center min-h-[200px] px-15">
-          <h3 className="text-base font-semibold text-slate-900 mb-2">
-            Not a Shopify store
-          </h3>
+          <h3 className="text-base font-semibold text-slate-900 mb-2">Not a Shopify store</h3>
           <p className="text-sm text-slate-500 leading-relaxed text-center">
             Navigate to a Shopify store to see Alfred's magic ✨
           </p>
@@ -62,12 +60,10 @@ export default function App() {
       <div className="flex bg-black/5 p-1 rounded-lg gap-1">
         {tabs.map((tab) => (
           <button
-            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer ${activeTab === tab.handle
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-              }`}
-            onClick={() => setActiveTab(tab.handle)}
-          >
+            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer ${
+              activeTab === tab.handle ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+            onClick={() => setActiveTab(tab.handle)}>
             {tab.name}
           </button>
         ))}

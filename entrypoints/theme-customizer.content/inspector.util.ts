@@ -27,7 +27,7 @@ export async function setupInspector(): Promise<void> {
       browser.runtime.sendMessage({
         type: 'track_action',
         action: 'disable_theme_inspector',
-        metadata: {},
+        metadata: {}
       });
     }
   } else if (inspectorSetting === 'restore') {
@@ -41,7 +41,7 @@ export async function setupInspector(): Promise<void> {
         browser.runtime.sendMessage({
           type: 'track_action',
           action: 'disable_theme_inspector',
-          metadata: {},
+          metadata: {}
         });
       }
     }

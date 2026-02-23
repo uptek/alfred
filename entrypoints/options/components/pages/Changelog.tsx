@@ -24,7 +24,7 @@ export function Changelog() {
     return date.toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
-      year: 'numeric',
+      year: 'numeric'
     });
   };
 
@@ -37,18 +37,13 @@ export function Changelog() {
     return diffDays <= 7;
   };
 
-  const renderChange = (
-    change: ChangelogEntry['changes'][0],
-    index: number
-  ) => {
+  const renderChange = (change: ChangelogEntry['changes'][0], index: number) => {
     switch (change.type) {
       case 'heading':
         return <s-heading key={index}>{change.content as string}</s-heading>;
 
       case 'paragraph':
-        return (
-          <s-paragraph key={index}>{change.content as string}</s-paragraph>
-        );
+        return <s-paragraph key={index}>{change.content as string}</s-paragraph>;
 
       case 'list':
         return (
@@ -100,15 +95,11 @@ export function Changelog() {
               <s-stack gap="none">
                 <s-stack direction="inline" alignItems="center" gap="small-200">
                   <s-heading>v{entry.version}</s-heading>
-                  {isNewEntry(entry.date) && entryIndex === 0 && (
-                    <s-badge tone="success">New</s-badge>
-                  )}
+                  {isNewEntry(entry.date) && entryIndex === 0 && <s-badge tone="success">New</s-badge>}
                 </s-stack>
                 <s-text>{formatDate(entry.date)}</s-text>
               </s-stack>
-              {entry.changes.map((change, changeIndex) =>
-                renderChange(change, changeIndex)
-              )}
+              {entry.changes.map((change, changeIndex) => renderChange(change, changeIndex))}
             </s-stack>
           </s-section>
         ))}

@@ -22,7 +22,7 @@ export default defineContentScript({
 
     // Inject Shopify Polaris
     await injectScript('/libs/shopify-polaris.js', {
-      keepInDom: true,
+      keepInDom: true
     });
 
     const ui = createIntegratedUi(ctx, {
@@ -51,7 +51,7 @@ export default defineContentScript({
             resolvedElements.container.remove();
           }
         })();
-      },
+      }
     });
 
     // Explicitly mount the UI
@@ -63,5 +63,5 @@ export default defineContentScript({
         ui.mount();
       }
     });
-  },
+  }
 });

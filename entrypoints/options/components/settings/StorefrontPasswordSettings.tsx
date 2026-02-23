@@ -4,7 +4,7 @@ import {
   deletePassword,
   setPasswordEnabled,
   deleteAllPasswords,
-  savePassword,
+  savePassword
 } from '@/utils/storefrontPasswords';
 import type { StorefrontPasswordsStorage } from '@/utils/storefrontPasswords';
 import { Toast } from '~/utils/toast';
@@ -12,9 +12,7 @@ import { Toast } from '~/utils/toast';
 export function StorefrontPasswordSettings() {
   const [passwords, setPasswords] = useState<StorefrontPasswordsStorage>({});
   const [loading, setLoading] = useState(true);
-  const [editingPasswords, setEditingPasswords] = useState<
-    Record<string, string>
-  >({});
+  const [editingPasswords, setEditingPasswords] = useState<Record<string, string>>({});
 
   const loadPasswords = async () => {
     setLoading(true);
@@ -35,7 +33,7 @@ export function StorefrontPasswordSettings() {
 
       return {
         ...prev,
-        [domain]: { ...existingEntry, enabled },
+        [domain]: { ...existingEntry, enabled }
       };
     });
 
@@ -65,11 +63,7 @@ export function StorefrontPasswordSettings() {
 
   const handleDeleteAll = async () => {
     const count = Object.keys(passwords).length;
-    if (
-      confirm(
-        `Delete all ${count} saved passwords? This action cannot be undone.`
-      )
-    ) {
+    if (confirm(`Delete all ${count} saved passwords? This action cannot be undone.`)) {
       try {
         await deleteAllPasswords();
         await loadPasswords();
@@ -84,7 +78,7 @@ export function StorefrontPasswordSettings() {
   const handlePasswordChange = (domain: string, value: string) => {
     setEditingPasswords((prev) => ({
       ...prev,
-      [domain]: value,
+      [domain]: value
     }));
   };
 
@@ -112,7 +106,7 @@ export function StorefrontPasswordSettings() {
 
       return {
         ...prev,
-        [domain]: { ...existingEntry, password: trimmedPassword },
+        [domain]: { ...existingEntry, password: trimmedPassword }
       };
     });
 
@@ -137,8 +131,8 @@ export function StorefrontPasswordSettings() {
   return (
     <s-section heading="Storefront Password Auto-fill">
       <s-paragraph>
-        Automatically fill and submit passwords for password-protected Shopify
-        storefronts. Passwords are stored locally in your browser.
+        Automatically fill and submit passwords for password-protected Shopify storefronts. Passwords are stored locally
+        in your browser.
       </s-paragraph>
 
       {loading ? (
@@ -147,8 +141,7 @@ export function StorefrontPasswordSettings() {
         </div>
       ) : Object.keys(passwords).length === 0 ? (
         <s-banner tone="info">
-          No saved passwords yet. Visit a Shopify store and enter a password in
-          the Alfred extension popup to save it.
+          No saved passwords yet. Visit a Shopify store and enter a password in the Alfred extension popup to save it.
         </s-banner>
       ) : (
         <>
@@ -158,8 +151,7 @@ export function StorefrontPasswordSettings() {
               onClick={handleDeleteAll}
               tone="critical"
               variant="secondary"
-              disabled={Object.keys(passwords).length === 0}
-            >
+              disabled={Object.keys(passwords).length === 0}>
               Delete all
             </s-button>
           </s-stack>
@@ -186,12 +178,7 @@ export function StorefrontPasswordSettings() {
                             label="Password"
                             labelAccessibilityVisibility="exclusive"
                             value={editingPasswords[domain] ?? entry.password}
-                            onInput={(e) =>
-                              handlePasswordChange(
-                                domain,
-                                (e.target as HTMLInputElement).value
-                              )
-                            }
+                            onInput={(e) => handlePasswordChange(domain, (e.target as HTMLInputElement).value)}
                             onBlur={() => handlePasswordBlur(domain)}
                           />
                         </s-box>
@@ -199,12 +186,7 @@ export function StorefrontPasswordSettings() {
                       <s-table-cell>
                         <s-checkbox
                           checked={entry.enabled}
-                          onChange={(e) =>
-                            handleToggleEnabled(
-                              domain,
-                              (e.target as HTMLInputElement).checked
-                            )
-                          }
+                          onChange={(e) => handleToggleEnabled(domain, (e.target as HTMLInputElement).checked)}
                         />
                       </s-table-cell>
                       <s-table-cell>

@@ -6,6 +6,6 @@ const CHROME_TESTING_BINARY =
 
 export default defineWebExtConfig({
   binaries: {
-    ...(existsSync(CHROME_TESTING_BINARY) && { chrome: CHROME_TESTING_BINARY }),
-  },
+    ...(existsSync(CHROME_TESTING_BINARY) && { chrome: CHROME_TESTING_BINARY })
+  }
 });

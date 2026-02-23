@@ -85,9 +85,7 @@ export const waitForElement = (
       }
 
       if (elapsed >= timeout) {
-        console.warn(
-          `Element ${selector} not found after ${timeout}ms timeout`
-        );
+        console.warn(`Element ${selector} not found after ${timeout}ms timeout`);
         resolve(null);
         return;
       }

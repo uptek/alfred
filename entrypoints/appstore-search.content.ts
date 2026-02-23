@@ -5,8 +5,7 @@ export default defineContentScript({
   async main(ctx) {
     // Check if search indexing is enabled
     const settings = await getItem<AlfredSettings>('settings');
-    const isSearchIndexingEnabled =
-      settings?.appStore?.searchIndexing !== false;
+    const isSearchIndexingEnabled = settings?.appStore?.searchIndexing !== false;
 
     if (!isSearchIndexingEnabled) {
       return; // Exit early if indexing is disabled
@@ -35,8 +34,7 @@ export default defineContentScript({
           return;
         }
 
-        const targetContainer =
-          card.querySelector('figure')?.nextElementSibling;
+        const targetContainer = card.querySelector('figure')?.nextElementSibling;
         if (targetContainer) {
           const badgeElement = document.createElement('div');
           badgeElement.className =
@@ -58,9 +56,7 @@ export default defineContentScript({
               (node) =>
                 node.nodeType === Node.ELEMENT_NODE &&
                 ((node as Element).matches('[data-controller="app-card"]') ||
-                  (node as Element).querySelector(
-                    '[data-controller="app-card"]'
-                  ))
+                  (node as Element).querySelector('[data-controller="app-card"]'))
             );
 
             if (hasNewAppCards) {
@@ -72,7 +68,7 @@ export default defineContentScript({
 
       observer.observe(document.body, {
         childList: true,
-        subtree: true,
+        subtree: true
       });
 
       observers.push(observer);
@@ -92,7 +88,7 @@ export default defineContentScript({
 
       urlObserver.observe(document, {
         subtree: true,
-        childList: true,
+        childList: true
       });
 
       observers.push(urlObserver);
@@ -115,5 +111,5 @@ export default defineContentScript({
     ctx.onInvalidated(() => {
       observers.forEach((obs) => obs.disconnect());
     });
-  },
+  }
 });

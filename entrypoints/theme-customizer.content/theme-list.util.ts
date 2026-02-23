@@ -2,14 +2,11 @@ import { getItem } from '~/utils/storage';
 
 const INJECTED_ATTR = 'data-alfred-theme-list';
 
-const trackThemeListAction = (
-  action: string,
-  metadata: Record<string, unknown> = {}
-) => {
+const trackThemeListAction = (action: string, metadata: Record<string, unknown> = {}) => {
   browser.runtime.sendMessage({
     type: 'track_action',
     action,
-    metadata,
+    metadata
   });
 };
 
@@ -22,9 +19,7 @@ interface ThemeData {
 }
 
 const extractThemeData = (listItem: HTMLElement): ThemeData | null => {
-  const editLink = listItem.querySelector<HTMLAnchorElement>(
-    'a[href*="/themes/"][href*="/editor"]'
-  );
+  const editLink = listItem.querySelector<HTMLAnchorElement>('a[href*="/themes/"][href*="/editor"]');
   if (!editLink) {
     return null;
   }
@@ -32,16 +27,11 @@ const extractThemeData = (listItem: HTMLElement): ThemeData | null => {
   const href = editLink.getAttribute('href') ?? '';
   const themeId = /\/themes\/(\d+)\//.exec(href)?.[1] ?? '';
   const storeName = /\/store\/([^/]+)\//.exec(href)?.[1] ?? '';
-  const themeName =
-    listItem.querySelector('h3')?.textContent?.trim() ?? 'Unknown';
+  const themeName = listItem.querySelector('h3')?.textContent?.trim() ?? 'Unknown';
 
-  const previewUrl = storeName
-    ? `https://${storeName}.myshopify.com/?preview_theme_id=${themeId}`
-    : '';
+  const previewUrl = storeName ? `https://${storeName}.myshopify.com/?preview_theme_id=${themeId}` : '';
 
-  const codeEditorUrl = storeName
-    ? `https://admin.shopify.com/store/${storeName}/themes/${themeId}`
-    : '';
+  const codeEditorUrl = storeName ? `https://admin.shopify.com/store/${storeName}/themes/${themeId}` : '';
 
   return { themeId, storeName, themeName, previewUrl, codeEditorUrl };
 };
@@ -52,12 +42,7 @@ const html = (template: string): HTMLElement => {
   return container.firstElementChild as HTMLElement;
 };
 
-const createInfoRow = (
-  label: string,
-  value: string,
-  minWidth = '0',
-  trackingAction?: string
-) => {
+const createInfoRow = (label: string, value: string, minWidth = '0', trackingAction?: string) => {
   const row = html(`
     <s-stack direction="inline" gap="small-200" alignItems="center">
       <span>${label}</span>
@@ -76,18 +61,16 @@ const createInfoRow = (
     </s-stack>
   `);
 
-  row
-    .querySelector<HTMLElement>('[icon="clipboard"]')!
-    .addEventListener('click', (e) => {
-      e.stopPropagation();
-      const btn = e.currentTarget as HTMLElement;
-      navigator.clipboard.writeText(value);
-      btn.setAttribute('icon', 'check');
-      setTimeout(() => btn.setAttribute('icon', 'clipboard'), 1200);
-      if (trackingAction) {
-        trackThemeListAction(trackingAction);
-      }
-    });
+  row.querySelector<HTMLElement>('[icon="clipboard"]')!.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const btn = e.currentTarget as HTMLElement;
+    navigator.clipboard.writeText(value);
+    btn.setAttribute('icon', 'check');
+    setTimeout(() => btn.setAttribute('icon', 'clipboard'), 1200);
+    if (trackingAction) {
+      trackThemeListAction(trackingAction);
+    }
+  });
 
   return row;
 };
@@ -100,25 +83,19 @@ const createButtonRow = (data: ThemeData) => {
     </s-stack>
   `);
 
-  row
-    .querySelector<HTMLElement>('[icon="external"]')
-    ?.addEventListener('click', () => {
-      trackThemeListAction('theme_list_preview');
-    });
+  row.querySelector<HTMLElement>('[icon="external"]')?.addEventListener('click', () => {
+    trackThemeListAction('theme_list_preview');
+  });
 
-  row
-    .querySelector<HTMLElement>('[icon="code"]')
-    ?.addEventListener('click', () => {
-      trackThemeListAction('theme_list_edit_code');
-    });
+  row.querySelector<HTMLElement>('[icon="code"]')?.addEventListener('click', () => {
+    trackThemeListAction('theme_list_edit_code');
+  });
 
   return row;
 };
 
 const injectIntoThemeList = () => {
-  const themeListItems = document.querySelectorAll<HTMLElement>(
-    'ul[class*="ThemeList"] div[class*="ThemeListItem"]'
-  );
+  const themeListItems = document.querySelectorAll<HTMLElement>('ul[class*="ThemeList"] div[class*="ThemeListItem"]');
 
   if (!themeListItems.length) {
     return false;
@@ -136,9 +113,7 @@ const injectIntoThemeList = () => {
       return;
     }
 
-    const contextProvider = listItem.querySelector(
-      's-internal-context-provider'
-    );
+    const contextProvider = listItem.querySelector('s-internal-context-provider');
     if (contextProvider) {
       const wrapper = html(`
         <s-stack gap="small-200" block-align="end"></s-stack>
@@ -146,23 +121,12 @@ const injectIntoThemeList = () => {
       contextProvider.replaceWith(wrapper);
       wrapper.appendChild(contextProvider);
       wrapper.appendChild(createButtonRow(data));
-      wrapper.appendChild(
-        createInfoRow('ID:', data.themeId, '0', 'theme_list_copy_id')
-      );
-      wrapper.appendChild(
-        createInfoRow(
-          'Preview URL:',
-          data.previewUrl,
-          '400px',
-          'theme_list_copy_preview_url'
-        )
-      );
+      wrapper.appendChild(createInfoRow('ID:', data.themeId, '0', 'theme_list_copy_id'));
+      wrapper.appendChild(createInfoRow('Preview URL:', data.previewUrl, '400px', 'theme_list_copy_preview_url'));
     }
 
     listItem.setAttribute(INJECTED_ATTR, 'true');
-    listItem
-      .querySelector<HTMLElement>(':scope > s-stack')
-      ?.setAttribute('alignItems', 'end');
+    listItem.querySelector<HTMLElement>(':scope > s-stack')?.setAttribute('alignItems', 'end');
     injected = true;
   });
 
@@ -193,6 +157,6 @@ export const setupThemeList = async () => {
 
   observer.observe(document.body, {
     childList: true,
-    subtree: true,
+    subtree: true
   });
 };

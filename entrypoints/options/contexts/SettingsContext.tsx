@@ -14,7 +14,7 @@ interface SettingsContextValue {
 
 const defaultSettings: AlfredSettings = {
   general: {
-    restoreRightClick: true,
+    restoreRightClick: true
   },
   themeCustomizer: {
     inspector: 'default',
@@ -22,8 +22,8 @@ const defaultSettings: AlfredSettings = {
       primarySidebar: true,
       secondarySidebar: true,
       previewHorizontal: true,
-      previewVertical: true,
-    },
+      previewVertical: true
+    }
   },
   shortcuts: {
     openInAdmin: true,
@@ -33,25 +33,23 @@ const defaultSettings: AlfredSettings = {
     copyThemePreviewUrl: true,
     clearCart: true,
     openSectionInCodeEditor: true,
-    openImageInAdmin: true,
+    openImageInAdmin: true
   },
   appStore: {
     searchIndexing: true,
-    enhancedPartnerPages: true,
+    enhancedPartnerPages: true
   },
   collaboratorAccess: {
-    presets: true,
+    presets: true
   },
   admin: {
     collapsibleSidebar: true,
     warnBeforeClosingCodeEditor: true,
-    themeListUtils: true,
-  },
+    themeListUtils: true
+  }
 };
 
-export const SettingsContext = createContext<SettingsContextValue | undefined>(
-  undefined
-);
+export const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
 
 // Deep merge function to handle nested objects
 function deepMerge<T>(target: T, source: Partial<T>): T {
@@ -60,17 +58,9 @@ function deepMerge<T>(target: T, source: Partial<T>): T {
   for (const key in source) {
     const sourceValue = source[key];
     if (sourceValue !== undefined) {
-      if (
-        typeof sourceValue === 'object' &&
-        sourceValue !== null &&
-        !Array.isArray(sourceValue)
-      ) {
+      if (typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue)) {
         // If both target and source have an object at this key, merge them
-        if (
-          typeof target[key] === 'object' &&
-          target[key] !== null &&
-          !Array.isArray(target[key])
-        ) {
+        if (typeof target[key] === 'object' && target[key] !== null && !Array.isArray(target[key])) {
           result[key] = deepMerge(
             target[key] as Record<string, unknown>,
             sourceValue as Partial<Record<string, unknown>>
@@ -87,11 +77,7 @@ function deepMerge<T>(target: T, source: Partial<T>): T {
   return result;
 }
 
-export function SettingsProvider({
-  children,
-}: {
-  children: preact.ComponentChildren;
-}) {
+export function SettingsProvider({ children }: { children: preact.ComponentChildren }) {
   const [settings, setSettings] = useState<AlfredSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -122,33 +108,30 @@ export function SettingsProvider({
     }
   };
 
-  const updateSettings = useCallback(
-    async (newSettings: Partial<AlfredSettings>) => {
-      try {
-        setIsSaving(true);
+  const updateSettings = useCallback(async (newSettings: Partial<AlfredSettings>) => {
+    try {
+      setIsSaving(true);
 
-        // Use functional update to always have fresh state
-        const updatedSettings = await new Promise<AlfredSettings>((resolve) => {
-          setSettings((currentSettings) => {
-            const updated = deepMerge(currentSettings, newSettings);
-            resolve(updated);
-            return updated;
-          });
+      // Use functional update to always have fresh state
+      const updatedSettings = await new Promise<AlfredSettings>((resolve) => {
+        setSettings((currentSettings) => {
+          const updated = deepMerge(currentSettings, newSettings);
+          resolve(updated);
+          return updated;
         });
+      });
 
-        await setItem('settings', updatedSettings);
-        Toast.success('Settings saved');
-        return true;
-      } catch (error) {
-        console.error('Failed to save settings:', error);
-        Toast.error('Failed to save settings');
-        return false;
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    []
-  );
+      await setItem('settings', updatedSettings);
+      Toast.success('Settings saved');
+      return true;
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      Toast.error('Failed to save settings');
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
 
   const resetSettings = useCallback(async () => {
     try {
@@ -174,9 +157,8 @@ export function SettingsProvider({
         resetSettings,
         isLoading,
         isSaving,
-        defaultSettings,
-      }}
-    >
+        defaultSettings
+      }}>
       {children}
     </SettingsContext.Provider>
   );

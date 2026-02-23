@@ -2,13 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { trackAction } from '@/utils/analytics';
 import type { InfoItemProps, StoreInfo } from './types';
 
-function InfoItem({
-  label,
-  value,
-  type = 'text',
-  isLast = false,
-  copyable = false,
-}: InfoItemProps) {
+function InfoItem({ label, value, type = 'text', isLast = false, copyable = false }: InfoItemProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -33,9 +27,7 @@ function InfoItem({
   };
 
   return (
-    <div
-      className={`flex justify-between items-center py-3.5 ${!isLast ? 'border-b border-slate-100' : ''}`}
-    >
+    <div className={`flex justify-between items-center py-3.5 ${!isLast ? 'border-b border-slate-100' : ''}`}>
       <label className="text-sm font-semibold text-slate-500">{label}</label>
       <span
         onClick={copyable && value ? handleCopy : undefined}
@@ -44,18 +36,14 @@ function InfoItem({
             ? 'underline decoration-2 decoration-slate-300 cursor-pointer hover:decoration-slate-500'
             : ''
         } ${copied ? 'text-green-600' : ''}`}
-        title={copyable && value ? (copied ? 'Copied!' : 'Click to copy') : undefined}
-      >
+        title={copyable && value ? (copied ? 'Copied!' : 'Click to copy') : undefined}>
         {value}
       </span>
     </div>
   );
 }
 
-function getThemePreviewUrl(
-  storeInfo: StoreInfo,
-  disablePreviewBar: boolean
-): string {
+function getThemePreviewUrl(storeInfo: StoreInfo, disablePreviewBar: boolean): string {
   if (!storeInfo.theme?.id || !storeInfo.page_url) return '';
 
   const url = new URL(storeInfo.page_url);
@@ -68,10 +56,7 @@ function getThemePreviewUrl(
   return url.toString();
 }
 
-async function copyThemePreviewUrl(
-  storeInfo: StoreInfo,
-  disablePreviewBar: boolean
-): Promise<boolean> {
+async function copyThemePreviewUrl(storeInfo: StoreInfo, disablePreviewBar: boolean): Promise<boolean> {
   const url = getThemePreviewUrl(storeInfo, disablePreviewBar);
   if (!url) return false;
   try {
@@ -92,44 +77,23 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
       page_url: storeInfo.page_url ?? '',
       shop_domain: storeInfo.shopDomain ?? '',
       theme_name: storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? '',
-      theme_version: storeInfo.theme?.schema_version ?? '',
+      theme_version: storeInfo.theme?.schema_version ?? ''
     });
   }, [storeInfo]);
 
   return (
     <div className="flex flex-col">
-      <InfoItem
-        label="Shopify URL:"
-        value={storeInfo.shopDomain ?? 'N/A'}
-        type="url"
-      />
-      <InfoItem
-        label="Theme name:"
-        value={storeInfo.theme?.schema_name ?? 'N/A'}
-      />
-      <InfoItem
-        label="Theme version:"
-        value={storeInfo.theme?.schema_version ?? 'N/A'}
-      />
-      <InfoItem
-        label="Theme ID:"
-        value={storeInfo.theme?.id?.toString() ?? 'N/A'}
-        copyable
-      />
+      <InfoItem label="Shopify URL:" value={storeInfo.shopDomain ?? 'N/A'} type="url" />
+      <InfoItem label="Theme name:" value={storeInfo.theme?.schema_name ?? 'N/A'} />
+      <InfoItem label="Theme version:" value={storeInfo.theme?.schema_version ?? 'N/A'} />
+      <InfoItem label="Theme ID:" value={storeInfo.theme?.id?.toString() ?? 'N/A'} copyable />
       {storeInfo.theme?.name &&
-        (!storeInfo.theme?.schema_name ||
-          storeInfo.theme.name !== storeInfo.theme.schema_name) && (
-          <InfoItem
-            label="Theme name (internal):"
-            value={storeInfo.theme.name}
-            copyable
-          />
+        (!storeInfo.theme?.schema_name || storeInfo.theme.name !== storeInfo.theme.schema_name) && (
+          <InfoItem label="Theme name (internal):" value={storeInfo.theme.name} copyable />
         )}
       <div className="py-3.5 border-t border-slate-100">
         <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-semibold text-slate-500">
-            Preview URL:
-          </label>
+          <label className="text-sm font-semibold text-slate-500">Preview URL:</label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -146,40 +110,21 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
             value={getThemePreviewUrl(storeInfo, disablePreviewBar)}
             readOnly
             className="flex-1 px-3 py-2 text-xs font-mono text-slate-600 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 select-all"
-            placeholder={
-              storeInfo.theme?.id
-                ? 'Generating preview URL...'
-                : 'Theme ID not available'
-            }
+            placeholder={storeInfo.theme?.id ? 'Generating preview URL...' : 'Theme ID not available'}
           />
           <button
             onClick={async () => {
               setCopying(true);
-              const success = await copyThemePreviewUrl(
-                storeInfo,
-                disablePreviewBar
-              );
+              const success = await copyThemePreviewUrl(storeInfo, disablePreviewBar);
               setTimeout(() => setCopying(false), success ? 1500 : 0);
             }}
             disabled={copying || !storeInfo.theme?.id}
-            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${copying
-                ? 'bg-green-500 text-white'
-                : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${
+              copying ? 'bg-green-500 text-white' : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {copying ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               ) : (
                 <path
                   strokeLinecap="round"

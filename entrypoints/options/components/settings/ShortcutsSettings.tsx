@@ -20,25 +20,24 @@ const shortcutCategories: ShortcutCategory[] = [
       {
         key: 'openInAdmin',
         label: 'Open in Admin',
-        details: 'Opens the current page in Shopify Admin',
+        details: 'Opens the current page in Shopify Admin'
       },
       {
         key: 'openInCustomizer',
         label: 'Open in Customizer',
-        details: 'Opens the current page in theme customizer',
+        details: 'Opens the current page in theme customizer'
       },
       {
         key: 'openSectionInCodeEditor',
         label: 'Open Section in Code Editor',
-        details: 'Opens the clicked section in theme code editor',
+        details: 'Opens the clicked section in theme code editor'
       },
       {
         key: 'openImageInAdmin',
         label: 'Open Image in Admin > Files',
-        details:
-          'Opens (searches) the right-clicked image in Shopify Admin > Files',
-      },
-    ],
+        details: 'Opens (searches) the right-clicked image in Shopify Admin > Files'
+      }
+    ]
   },
   {
     label: 'Theme',
@@ -46,14 +45,14 @@ const shortcutCategories: ShortcutCategory[] = [
       {
         key: 'copyThemePreviewUrl',
         label: 'Copy Theme Preview URL',
-        details: 'Copies preview URL with context of current page',
+        details: 'Copies preview URL with context of current page'
       },
       {
         key: 'exitThemePreview',
         label: 'Exit Theme Preview',
-        details: 'Exits the current theme preview and loads the live theme',
-      },
-    ],
+        details: 'Exits the current theme preview and loads the live theme'
+      }
+    ]
   },
   {
     label: 'Data',
@@ -61,14 +60,14 @@ const shortcutCategories: ShortcutCategory[] = [
       {
         key: 'copyProductJson',
         label: 'Copy Product JSON',
-        details: 'Copies current product data as JSON to clipboard',
+        details: 'Copies current product data as JSON to clipboard'
       },
       {
         key: 'copyCartJson',
         label: 'Copy Cart JSON',
-        details: 'Copies cart data as JSON to clipboard',
-      },
-    ],
+        details: 'Copies cart data as JSON to clipboard'
+      }
+    ]
   },
   {
     label: 'Cart',
@@ -76,20 +75,17 @@ const shortcutCategories: ShortcutCategory[] = [
       {
         key: 'clearCart',
         label: 'Clear Cart',
-        details: 'Removes all items from the cart',
-      },
-    ],
-  },
+        details: 'Removes all items from the cart'
+      }
+    ]
+  }
 ];
 
-const allShortcutItems = shortcutCategories.flatMap(
-  (category) => category.items
-);
+const allShortcutItems = shortcutCategories.flatMap((category) => category.items);
 
 export function ShortcutsSetting() {
   const context = useContext(SettingsContext);
-  if (!context)
-    throw new Error('ShortcutsSetting must be used within SettingsProvider');
+  if (!context) throw new Error('ShortcutsSetting must be used within SettingsProvider');
   const { settings, updateSettings, isLoading } = context;
 
   // Update checkbox values when settings change
@@ -99,10 +95,7 @@ export function ShortcutsSetting() {
     const shortcuts = settings.shortcuts ?? {};
 
     allShortcutItems.forEach(({ key }) => {
-      setCheckboxValue(
-        `shortcut-${key}`,
-        shortcuts[key as keyof typeof shortcuts] !== false
-      );
+      setCheckboxValue(`shortcut-${key}`, shortcuts[key as keyof typeof shortcuts] !== false);
     });
   }, [isLoading, settings.shortcuts]);
 
@@ -117,8 +110,8 @@ export function ShortcutsSetting() {
         await updateSettings({
           shortcuts: {
             ...settings.shortcuts,
-            [key]: checked,
-          },
+            [key]: checked
+          }
         });
       });
 
@@ -134,22 +127,18 @@ export function ShortcutsSetting() {
   return (
     <s-section heading="Shortcuts (right-click menu)">
       <s-paragraph>
-        Controls which shortcuts appear in the right-click context menu when
-        using Alfred on Shopify stores.
+        Controls which shortcuts appear in the right-click context menu when using Alfred on Shopify stores.
       </s-paragraph>
       <s-stack gap="base">
         {shortcutCategories.map((category, categoryIndex) => (
           <>
             <s-stack key={category.label} gap="small-300">
-              <s-text><b>{category.label}</b></s-text>
+              <s-text>
+                <b>{category.label}</b>
+              </s-text>
               <s-stack gap="small">
                 {category.items.map(({ key, label, details }) => (
-                  <s-checkbox
-                    key={key}
-                    name={`shortcut-${key}`}
-                    label={label}
-                    details={details}
-                  />
+                  <s-checkbox key={key} name={`shortcut-${key}`} label={label} details={details} />
                 ))}
               </s-stack>
             </s-stack>

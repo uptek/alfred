@@ -1,8 +1,4 @@
-import {
-  getPassword,
-  markPasswordUsed,
-  markPasswordFailed,
-} from '@/utils/storefrontPasswords';
+import { getPassword, markPasswordUsed, markPasswordFailed } from '@/utils/storefrontPasswords';
 
 export default defineContentScript({
   matches: ['*://*/password'],
@@ -16,9 +12,7 @@ export default defineContentScript({
       return;
     }
 
-    const passwordInput = document.querySelector<HTMLInputElement>(
-      'input[type="password"][name="password"]'
-    );
+    const passwordInput = document.querySelector<HTMLInputElement>('input[type="password"][name="password"]');
     const form = passwordInput?.closest('form');
 
     if (!passwordInput || !form) {
@@ -42,9 +36,7 @@ export default defineContentScript({
 
     // Don't auto-fill if user has already entered something
     if (passwordInput.value.trim() !== '') {
-      console.log(
-        '[Alfred] Password field already has a value, skipping auto-fill'
-      );
+      console.log('[Alfred] Password field already has a value, skipping auto-fill');
       return;
     }
 
@@ -61,8 +53,8 @@ export default defineContentScript({
       action: 'autofill_storefront_password',
       metadata: {
         domain,
-        password_length: password.length,
-      },
+        password_length: password.length
+      }
     });
 
     // Auto-submit the form
@@ -72,5 +64,5 @@ export default defineContentScript({
     } catch (error) {
       console.error('[Alfred] Error submitting password form:', error);
     }
-  },
+  }
 });

@@ -25,7 +25,7 @@ export async function saveReturnUrl(url: string): Promise<void> {
   try {
     await storage.setItem<StorefrontPasswordRedirectData>(STORAGE_KEY, {
       url,
-      timestamp: Date.now(),
+      timestamp: Date.now()
     });
   } catch (error) {
     console.error('[Alfred] Failed to save return URL:', error);
@@ -38,8 +38,7 @@ export async function saveReturnUrl(url: string): Promise<void> {
  */
 export async function getReturnUrl(): Promise<string | null> {
   try {
-    const data =
-      await storage.getItem<StorefrontPasswordRedirectData>(STORAGE_KEY);
+    const data = await storage.getItem<StorefrontPasswordRedirectData>(STORAGE_KEY);
     if (!data) return null;
 
     // Check if URL is expired
@@ -112,10 +111,7 @@ export async function handleReturnUrlRedirect(): Promise<boolean> {
   // Verify the return URL is for this origin (safety check)
   try {
     const returnUrlObj = new URL(returnUrl);
-    if (
-      returnUrlObj.origin === window.location.origin &&
-      window.location.href !== returnUrl
-    ) {
+    if (returnUrlObj.origin === window.location.origin && window.location.href !== returnUrl) {
       window.location.replace(returnUrl);
       return true;
     }

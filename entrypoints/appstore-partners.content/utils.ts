@@ -16,11 +16,11 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
     resources: [],
     developer: {
       website: null,
-      address: null,
+      address: null
     },
     launchDate: null,
     age: null,
-    detailedAge: null,
+    detailedAge: null
   };
 
   try {
@@ -46,7 +46,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
       resourceLinks?.forEach((link) => {
         appData.resources.push({
           title: link.textContent?.trim() ?? '',
-          url: link.href,
+          url: link.href
         });
       });
     }
@@ -107,7 +107,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
           // Add the changelog link to resources
           appData.resources.push({
             title: 'Changelog',
-            url: changelogAnchor.href,
+            url: changelogAnchor.href
           });
         }
 
@@ -119,9 +119,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
           const currentDate = new Date();
 
           // Calculate differences
-          const diffTime = Math.abs(
-            currentDate.getTime() - launchDate.getTime()
-          );
+          const diffTime = Math.abs(currentDate.getTime() - launchDate.getTime());
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
           // Calculate difference in years and months
@@ -151,10 +149,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
           } else {
             // More than a year - show as X.Y years
             const decimalMonths = (months / 12).toFixed(1).substring(1) || '';
-            ageString =
-              years +
-              decimalMonths +
-              (years === 1 && months === 0 ? ' year' : ' years');
+            ageString = years + decimalMonths + (years === 1 && months === 0 ? ' year' : ' years');
           }
 
           appData.age = ageString.trim() || null;
@@ -251,7 +246,7 @@ const convertToCSV = (apps: App[]) => {
     'Built for Shopify',
     'Description',
     'App URL',
-    'Website',
+    'Website'
   ];
 
   // Create the CSV header row
@@ -280,7 +275,7 @@ const convertToCSV = (apps: App[]) => {
       // App URL
       app.link?.split('?')[0]?.split('#')[0] ?? '',
       // Website URL
-      app.developer?.website ?? '',
+      app.developer?.website ?? ''
     ];
 
     // Add the row to the CSV
@@ -332,8 +327,8 @@ export const downloadCSV = (apps: App[]) => {
     metadata: {
       app_count: apps.length,
       page_url: window.location.href,
-      page_type: 'appstore_partners',
-    },
+      page_type: 'appstore_partners'
+    }
   });
 };
 
@@ -357,11 +352,7 @@ export const getResourceIcon = (resource: Resource) => {
     icon = demoIcon;
   } else if (title.includes('doc') || title.includes('manual')) {
     icon = docsIcon;
-  } else if (
-    title.includes('support') ||
-    title.includes('help') ||
-    title.includes('faq')
-  ) {
+  } else if (title.includes('support') || title.includes('help') || title.includes('faq')) {
     icon = supportIcon;
   }
 

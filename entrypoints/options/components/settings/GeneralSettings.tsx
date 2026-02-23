@@ -6,25 +6,20 @@ const settingsItems = [
   {
     key: 'restoreRightClick',
     label: 'Restore right-click',
-    details:
-      'Re-enables right-click context menu and text selection on Shopify sites that block them',
-  },
+    details: 'Re-enables right-click context menu and text selection on Shopify sites that block them'
+  }
 ];
 
 export function GeneralSettings() {
   const context = useContext(SettingsContext);
-  if (!context)
-    throw new Error('GeneralSettings must be used within SettingsProvider');
+  if (!context) throw new Error('GeneralSettings must be used within SettingsProvider');
   const { settings, updateSettings, isLoading } = context;
 
   useEffect(() => {
     if (isLoading) return;
 
     settingsItems.forEach(({ key }) => {
-      setCheckboxValue(
-        `general-${key}`,
-        settings.general?.[key as keyof typeof settings.general] !== false
-      );
+      setCheckboxValue(`general-${key}`, settings.general?.[key as keyof typeof settings.general] !== false);
     });
   }, [isLoading, settings.general]);
 
@@ -38,8 +33,8 @@ export function GeneralSettings() {
         await updateSettings({
           general: {
             ...settings.general,
-            [key]: checked,
-          },
+            [key]: checked
+          }
         });
       });
 
@@ -56,12 +51,7 @@ export function GeneralSettings() {
       {/* <s-paragraph>General settings that apply to all websites.</s-paragraph> */}
       <s-grid gap="small">
         {settingsItems.map(({ key, label, details }) => (
-          <s-checkbox
-            key={key}
-            name={`general-${key}`}
-            label={label}
-            details={details}
-          />
+          <s-checkbox key={key} name={`general-${key}`} label={label} details={details} />
         ))}
       </s-grid>
     </s-section>

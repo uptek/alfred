@@ -17,10 +17,7 @@ export interface StorefrontPasswordEntry {
 /**
  * Map of domain to password entry
  */
-export type StorefrontPasswordsStorage = Record<
-  string,
-  StorefrontPasswordEntry
->;
+export type StorefrontPasswordsStorage = Record<string, StorefrontPasswordEntry>;
 
 /**
  * Get all stored storefront passwords
@@ -35,9 +32,7 @@ export async function getAllPasswordEntries(): Promise<StorefrontPasswordsStorag
  * @param domain - The Shopify store domain
  * @returns The password entry or null if not found
  */
-export async function getPasswordEntry(
-  domain: string
-): Promise<StorefrontPasswordEntry | null> {
+export async function getPasswordEntry(domain: string): Promise<StorefrontPasswordEntry | null> {
   const allPasswords = await getAllPasswordEntries();
   return allPasswords[domain] ?? null;
 }
@@ -61,11 +56,7 @@ export async function getPassword(domain: string): Promise<string | null> {
  * @param password - The plain text password
  * @param resetFailures - Whether to reset failure count (default: true)
  */
-export async function savePassword(
-  domain: string,
-  password: string,
-  resetFailures = true
-): Promise<void> {
+export async function savePassword(domain: string, password: string, resetFailures = true): Promise<void> {
   const allPasswords = await getAllPasswordEntries();
   const existing = allPasswords[domain];
 
@@ -75,7 +66,7 @@ export async function savePassword(
     lastUsed: existing?.lastUsed,
     failedAttempts: resetFailures ? 0 : (existing?.failedAttempts ?? 0),
     lastFailedAt: resetFailures ? undefined : existing?.lastFailedAt,
-    enabled: existing?.enabled ?? true,
+    enabled: existing?.enabled ?? true
   };
 
   await storage.setItem(STORAGE_KEY, allPasswords);
@@ -113,10 +104,7 @@ export async function markPasswordUsed(domain: string): Promise<void> {
  * @param domain - The Shopify store domain
  * @param threshold - Number of failures before disabling (default: 1)
  */
-export async function markPasswordFailed(
-  domain: string,
-  threshold = 1
-): Promise<void> {
+export async function markPasswordFailed(domain: string, threshold = 1): Promise<void> {
   const allPasswords = await getAllPasswordEntries();
   const entry = allPasswords[domain];
 
@@ -138,10 +126,7 @@ export async function markPasswordFailed(
  * @param domain - The Shopify store domain
  * @param enabled - Whether to enable auto-fill
  */
-export async function setPasswordEnabled(
-  domain: string,
-  enabled: boolean
-): Promise<void> {
+export async function setPasswordEnabled(domain: string, enabled: boolean): Promise<void> {
   const allPasswords = await getAllPasswordEntries();
   const entry = allPasswords[domain];
 

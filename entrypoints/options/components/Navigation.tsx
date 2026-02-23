@@ -18,18 +18,14 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
       id: 'feedback',
       label: 'Feedback & Requests',
       icon: 'lightbulb',
-      url: 'https://alfred-for-shopify.canny.io/',
-    },
+      url: 'https://alfred-for-shopify.canny.io/'
+    }
   ];
 
   return (
     <s-box id="nav">
       <s-section padding="none">
-        <s-box
-          background="strong"
-          paddingBlock="large-100"
-          paddingInline="large-100"
-        >
+        <s-box background="strong" paddingBlock="large-100" paddingInline="large-100">
           <s-stack direction="inline" alignItems="center" gap="small-200">
             <img
               src="https://bucket.alfred.uptek.com/logo-settings.png"
@@ -58,8 +54,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                     onClick={(e) => {
                       e.preventDefault();
                       onNavigate(item.id);
-                    }}
-                  >
+                    }}>
                     <s-icon type={item.icon}></s-icon>
                     <span>{item.label}</span>
                   </a>

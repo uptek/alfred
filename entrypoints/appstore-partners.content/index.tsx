@@ -9,8 +9,7 @@ export default defineContentScript({
   async main(ctx) {
     // Check if enhanced partner pages are enabled
     const settings = await getItem<AlfredSettings>('settings');
-    const isEnhancedPartnerPagesEnabled =
-      settings?.appStore?.enhancedPartnerPages !== false;
+    const isEnhancedPartnerPagesEnabled = settings?.appStore?.enhancedPartnerPages !== false;
 
     if (!isEnhancedPartnerPagesEnabled) {
       return; // Exit early if enhanced partner pages are disabled
@@ -20,9 +19,7 @@ export default defineContentScript({
       anchor: 'body',
       append: 'first',
       onMount: async (container) => {
-        const target = await waitForElement(
-          '#PartnersShow > main > div > section > div:nth-child(1)'
-        );
+        const target = await waitForElement('#PartnersShow > main > div > section > div:nth-child(1)');
 
         if (!target) {
           return;
@@ -45,19 +42,17 @@ export default defineContentScript({
             resolved.container.remove();
           }
         })();
-      },
+      }
     });
 
     // Explicitly mount the UI
     ui.mount();
 
-    browser.runtime.onMessage.addListener(
-      (event: { type?: string; [key: string]: unknown }) => {
-        if (event.type === 'MOUNT_UI') {
-          // dynamic mount by user action via messaging.
-          ui.mount();
-        }
+    browser.runtime.onMessage.addListener((event: { type?: string; [key: string]: unknown }) => {
+      if (event.type === 'MOUNT_UI') {
+        // dynamic mount by user action via messaging.
+        ui.mount();
       }
-    );
-  },
+    });
+  }
 });

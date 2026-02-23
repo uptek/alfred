@@ -5,7 +5,7 @@ export const getTheme = async (): Promise<StoreInfo | null> => {
     // Get the current active tab
     const [tab] = await browser.tabs.query({
       active: true,
-      currentWindow: true,
+      currentWindow: true
     });
 
     if (tab?.id && tab?.url) {
@@ -17,7 +17,7 @@ export const getTheme = async (): Promise<StoreInfo | null> => {
       }
 
       const response: ThemeResponse = await browser.tabs.sendMessage(tab.id, {
-        action: 'get_theme',
+        action: 'get_theme'
       });
 
       // Transform response to StoreInfo format
@@ -26,7 +26,7 @@ export const getTheme = async (): Promise<StoreInfo | null> => {
         domain: new URL(tab.url).hostname,
         shopDomain: response?.shop ?? null,
         page_url: tab.url,
-        theme: response?.theme ?? null,
+        theme: response?.theme ?? null
       };
     }
     return null;

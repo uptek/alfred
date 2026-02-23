@@ -3,14 +3,9 @@
  * @param choiceListName - The name attribute of the s-choice-list
  * @param value - The value to select
  */
-export function setChoiceListValue(
-  choiceListName: string,
-  value: string
-): void {
+export function setChoiceListValue(choiceListName: string, value: string): void {
   const escapedName = CSS.escape(choiceListName);
-  const choices = document.querySelectorAll<HTMLElement>(
-    `[name="${escapedName}"] s-choice`
-  );
+  const choices = document.querySelectorAll<HTMLElement>(`[name="${escapedName}"] s-choice`);
 
   choices.forEach((choice) => {
     if (choice.getAttribute('value') === value) {
@@ -31,9 +26,7 @@ export function onChoiceListChange(
   onChange: (value: string) => void | Promise<void>
 ): (() => void) | undefined {
   const escapedName = CSS.escape(choiceListName);
-  const choiceList = document.querySelector<HTMLElement>(
-    `[name="${escapedName}"]`
-  );
+  const choiceList = document.querySelector<HTMLElement>(`[name="${escapedName}"]`);
 
   if (!choiceList) {
     return;
@@ -43,9 +36,7 @@ export function onChoiceListChange(
     const shadowRoot = choiceList.shadowRoot;
     if (!shadowRoot) return;
 
-    const checkedInput = shadowRoot.querySelector<HTMLInputElement>(
-      'input[type="radio"]:checked'
-    );
+    const checkedInput = shadowRoot.querySelector<HTMLInputElement>('input[type="radio"]:checked');
     if (!checkedInput) return;
 
     const value = checkedInput.getAttribute('value');
@@ -69,9 +60,7 @@ export function onChoiceListChange(
  */
 export function setCheckboxValue(checkboxName: string, checked: boolean): void {
   const escapedName = CSS.escape(checkboxName);
-  const checkbox = document.querySelector<HTMLElement>(
-    `s-checkbox[name="${escapedName}"]`
-  );
+  const checkbox = document.querySelector<HTMLElement>(`s-checkbox[name="${escapedName}"]`);
 
   if (!checkbox) {
     return;
@@ -95,9 +84,7 @@ export function onCheckboxChange(
   onChange: (checked: boolean) => void | Promise<void>
 ): (() => void) | undefined {
   const escapedName = CSS.escape(checkboxName);
-  const checkbox = document.querySelector<HTMLElement>(
-    `s-checkbox[name="${escapedName}"]`
-  );
+  const checkbox = document.querySelector<HTMLElement>(`s-checkbox[name="${escapedName}"]`);
 
   if (!checkbox) {
     return;
@@ -107,9 +94,7 @@ export function onCheckboxChange(
     const shadowRoot = checkbox.shadowRoot;
     if (!shadowRoot) return;
 
-    const input = shadowRoot.querySelector<HTMLInputElement>(
-      'input[type="checkbox"]'
-    );
+    const input = shadowRoot.querySelector<HTMLInputElement>('input[type="checkbox"]');
     if (!input) return;
 
     await onChange(input.checked);

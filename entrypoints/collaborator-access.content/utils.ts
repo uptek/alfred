@@ -64,12 +64,9 @@ export async function deletePreset(presetId: string): Promise<void> {
  */
 export function exportPresets(presetsToExport: PermissionPreset[]): void {
   // Remove id and lastUsed fields from export
-  const cleanedPresets = presetsToExport.map(
-    ({ id: _id, lastUsed: _lastUsed, ...preset }) => preset
-  );
+  const cleanedPresets = presetsToExport.map(({ id: _id, lastUsed: _lastUsed, ...preset }) => preset);
   const dataStr = JSON.stringify(cleanedPresets, null, 2);
-  const dataUri =
-    'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+  const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
   const filename = `shopify-alfred-permissions-presets-${new Date().toISOString().split('T')[0]}.json`;
 
   const linkElement = document.createElement('a');
@@ -109,7 +106,7 @@ export function importPresets(): Promise<number | null> {
           const newPreset: PermissionPreset = {
             ...importedPreset,
             id: generatePresetId(),
-            createdAt: importedPreset.createdAt || Date.now(),
+            createdAt: importedPreset.createdAt || Date.now()
           };
 
           await savePreset(newPreset);

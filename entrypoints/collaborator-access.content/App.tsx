@@ -1,20 +1,11 @@
 import { useEffect, useState, useRef } from 'preact/hooks';
-import {
-  generatePresetId,
-  getPresets,
-  savePreset,
-  deletePreset,
-  exportPresets,
-  importPresets,
-} from './utils';
+import { generatePresetId, getPresets, savePreset, deletePreset, exportPresets, importPresets } from './utils';
 import { formatTimeAgo } from '@/utils/helpers';
 import type { Permission, PermissionPreset } from './types';
 
 export default function App() {
   const [presets, setPresets] = useState<PermissionPreset[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<PermissionPreset | null>(
-    null
-  );
+  const [selectedPreset, setSelectedPreset] = useState<PermissionPreset | null>(null);
   const [checkedPresets, setCheckedPresets] = useState<Set<string>>(new Set());
   const selectRef = useRef<HTMLSelectElement | null>(null);
 
@@ -88,9 +79,7 @@ export default function App() {
     setTimeout(() => {
       preset.permissions.forEach((permission, index) => {
         setTimeout(() => {
-          const checkbox = document.getElementById(
-            permission.id
-          ) as HTMLInputElement;
+          const checkbox = document.getElementById(permission.id) as HTMLInputElement;
           if (checkbox && !checkbox.checked) {
             checkbox.click();
           }
@@ -104,8 +93,7 @@ export default function App() {
         '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea'
       );
       if (messageTextarea) {
-        (messageTextarea as HTMLTextAreaElement).value =
-          preset.customMessage ?? '';
+        (messageTextarea as HTMLTextAreaElement).value = preset.customMessage ?? '';
         // Trigger input event to ensure React/framework detects the change
         messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         messageTextarea.dispatchEvent(new Event('change', { bubbles: true }));
@@ -117,9 +105,7 @@ export default function App() {
     await savePreset(updatedPreset);
 
     // Update local state
-    setPresets((prevPresets) =>
-      prevPresets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p))
-    );
+    setPresets((prevPresets) => prevPresets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p)));
 
     // Update selected preset if applying from table
     if (presetToApply) {
@@ -132,8 +118,8 @@ export default function App() {
       action: 'apply_preset',
       metadata: {
         permissions_count: preset.permissions.length,
-        has_custom_message: !!preset.customMessage,
-      },
+        has_custom_message: !!preset.customMessage
+      }
     });
   };
 
@@ -146,7 +132,7 @@ export default function App() {
 
     const updatedPreset = {
       ...preset,
-      name: newName.trim(),
+      name: newName.trim()
     };
 
     try {
@@ -202,10 +188,7 @@ export default function App() {
   };
 
   const handleDeleteMultiple = async () => {
-    const presetsToDelete =
-      checkedPresets.size === 0
-        ? presets.map((p) => p.id)
-        : Array.from(checkedPresets);
+    const presetsToDelete = checkedPresets.size === 0 ? presets.map((p) => p.id) : Array.from(checkedPresets);
     if (
       confirm(
         `Are you sure you want to delete ${presetsToDelete.length} preset${presetsToDelete.length !== 1 ? 's' : ''}?`
@@ -244,11 +227,10 @@ export default function App() {
 
     // Build permissions array
     checkedCheckboxes.forEach((checkbox) => {
-      const label =
-        checkbox.closest('label')?.querySelector('p')?.textContent ?? '';
+      const label = checkbox.closest('label')?.querySelector('p')?.textContent ?? '';
       permissions.push({
         id: checkbox.id,
-        label: label.trim(),
+        label: label.trim()
       });
     });
 
@@ -263,7 +245,7 @@ export default function App() {
       name: presetName.trim(),
       permissions,
       customMessage,
-      createdAt: Date.now(),
+      createdAt: Date.now()
     };
 
     try {
@@ -277,8 +259,8 @@ export default function App() {
         action: 'save_preset',
         metadata: {
           permissions_count: permissions.length,
-          has_custom_message: !!customMessage,
-        },
+          has_custom_message: !!customMessage
+        }
       });
     } catch (error) {
       console.error('Failed to save preset:', error);
@@ -292,36 +274,18 @@ export default function App() {
         <s-stack gap="base">
           <s-stack direction="inline" justifyContent="space-between">
             <s-stack direction="inline" gap="small-200">
-              <s-button
-                variant="secondary"
-                tone="critical"
-                icon="delete"
-                onClick={handleDeleteMultiple}
-              >
-                {checkedPresets.size === 0
-                  ? 'Delete all'
-                  : `Delete ${checkedPresets.size} selected`}
+              <s-button variant="secondary" tone="critical" icon="delete" onClick={handleDeleteMultiple}>
+                {checkedPresets.size === 0 ? 'Delete all' : `Delete ${checkedPresets.size} selected`}
               </s-button>
               <s-button
                 variant="secondary"
                 icon="export"
                 onClick={() =>
-                  exportPresets(
-                    checkedPresets.size === 0
-                      ? presets
-                      : presets.filter((p) => checkedPresets.has(p.id))
-                  )
-                }
-              >
-                {checkedPresets.size === 0
-                  ? 'Export all'
-                  : `Export ${checkedPresets.size} selected`}
+                  exportPresets(checkedPresets.size === 0 ? presets : presets.filter((p) => checkedPresets.has(p.id)))
+                }>
+                {checkedPresets.size === 0 ? 'Export all' : `Export ${checkedPresets.size} selected`}
               </s-button>
-              <s-button
-                variant="secondary"
-                icon="import"
-                onClick={handleImport}
-              >
+              <s-button variant="secondary" icon="import" onClick={handleImport}>
                 Import
               </s-button>
             </s-stack>
@@ -336,10 +300,7 @@ export default function App() {
                   {presets.length > 0 && (
                     <input
                       type="checkbox"
-                      checked={
-                        presets.length > 0 &&
-                        checkedPresets.size === presets.length
-                      }
+                      checked={presets.length > 0 && checkedPresets.size === presets.length}
                       onChange={(e) => {
                         if ((e.target as HTMLInputElement).checked) {
                           setCheckedPresets(new Set(presets.map((p) => p.id)));
@@ -360,9 +321,7 @@ export default function App() {
                 {presets.length === 0 ? (
                   <s-table-row>
                     <s-table-cell></s-table-cell>
-                    <s-table-cell>
-                      No permissions presets saved yet.
-                    </s-table-cell>
+                    <s-table-cell>No permissions presets saved yet.</s-table-cell>
                     <s-table-cell></s-table-cell>
                     <s-table-cell></s-table-cell>
                     <s-table-cell></s-table-cell>
@@ -390,14 +349,9 @@ export default function App() {
                       <s-table-cell>
                         {preset.permissions
                           .slice(0, 2)
-                          .map((p) =>
-                            p.label.length > 15
-                              ? p.label.slice(0, 15) + '...'
-                              : p.label
-                          )
+                          .map((p) => (p.label.length > 15 ? p.label.slice(0, 15) + '...' : p.label))
                           .join(', ')}
-                        {preset.permissions.length > 3 &&
-                          `, +${preset.permissions.length - 3} more`}
+                        {preset.permissions.length > 3 && `, +${preset.permissions.length - 3} more`}
                       </s-table-cell>
                       <s-table-cell>
                         {preset.customMessage ? (
@@ -406,17 +360,14 @@ export default function App() {
                           <s-icon type="x-circle"></s-icon>
                         )}
                       </s-table-cell>
-                      <s-table-cell>
-                        {formatTimeAgo(preset.createdAt)}
-                      </s-table-cell>
+                      <s-table-cell>{formatTimeAgo(preset.createdAt)}</s-table-cell>
                       <s-table-cell>
                         <s-stack direction="inline" gap="small-200">
                           <s-button
                             icon="check-circle-filled"
                             accessibilityLabel="Apply preset"
                             variant="primary"
-                            onClick={() => handleApplyPreset(preset)}
-                          >
+                            onClick={() => handleApplyPreset(preset)}>
                             Apply
                           </s-button>
                           <s-button

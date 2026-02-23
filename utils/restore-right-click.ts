@@ -7,14 +7,7 @@
  * that have their own custom context menus.
  */
 
-const blockedEvents = [
-  'contextmenu',
-  'copy',
-  'cut',
-  'paste',
-  'selectstart',
-  'dragstart',
-];
+const blockedEvents = ['contextmenu', 'copy', 'cut', 'paste', 'selectstart', 'dragstart'];
 
 /**
  * Early Shopify detection using HTML elements (available before JS globals).
@@ -60,9 +53,7 @@ export const initRestoreRightClick = (): void => {
   const restoreRightClickDOM = () => {
     // Remove inline handlers
     document
-      .querySelectorAll(
-        '[oncontextmenu], [oncopy], [oncut], [onpaste], [onselectstart], [ondragstart]'
-      )
+      .querySelectorAll('[oncontextmenu], [oncopy], [oncut], [onpaste], [onselectstart], [ondragstart]')
       .forEach((el) => {
         el.removeAttribute('oncontextmenu');
         el.removeAttribute('oncopy');

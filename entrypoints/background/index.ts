@@ -30,10 +30,7 @@ export default defineBackground(() => {
     pendingNavigations.delete(details.tabId);
 
     // If we ended up on /password, save the original URL for redirect after password entry
-    if (
-      committedUrl.pathname === '/password' ||
-      committedUrl.pathname === '/password/'
-    ) {
+    if (committedUrl.pathname === '/password' || committedUrl.pathname === '/password/') {
       if (originalUrl && isValidReturnUrl(originalUrl)) {
         saveReturnUrl(originalUrl).catch(() => {});
       }
@@ -70,27 +67,22 @@ export default defineBackground(() => {
   });
 
   // Listen for tracking messages from content scripts
-  browser.runtime.onMessage.addListener(
-    (message: { type?: string; [key: string]: unknown }) => {
-      if (message.type === 'track_action') {
-        try {
-          trackAction(
-            message.action as AnalyticsAction,
-            message.metadata as Record<string, unknown>
-          );
-        } catch (error) {
-          console.error('Failed to track action:', error);
-        }
+  browser.runtime.onMessage.addListener((message: { type?: string; [key: string]: unknown }) => {
+    if (message.type === 'track_action') {
+      try {
+        trackAction(message.action as AnalyticsAction, message.metadata as Record<string, unknown>);
+      } catch (error) {
+        console.error('Failed to track action:', error);
       }
     }
-  );
+  });
 
   // Open changelog page when extension is updated
   if (!import.meta.env.DEV) {
     browser.runtime.onInstalled.addListener((details) => {
       if (details.reason === 'update') {
         browser.tabs.create({
-          url: browser.runtime.getURL('/options.html?page=changelog'),
+          url: browser.runtime.getURL('/options.html?page=changelog')
         });
       }
     });

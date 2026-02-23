@@ -13,6 +13,7 @@
 ### Task 1: Add TypeScript types
 
 **Files:**
+
 - Modify: `global.d.ts:51` (add `exitThemePreview` to shortcuts settings)
 - Modify: `global.d.ts:118` (add `exitThemePreview` to WindowWithAlfred)
 
@@ -29,7 +30,7 @@ In `global.d.ts`, inside the `shortcuts` interface (around line 51-59), add afte
 In `global.d.ts`, inside the `Alfred` property of `WindowWithAlfred` (around line 118), add after `openSectionInCodeEditor`:
 
 ```typescript
-    exitThemePreview: () => boolean;
+exitThemePreview: () => boolean;
 ```
 
 **Step 3: Commit**
@@ -43,6 +44,7 @@ feat: add exitThemePreview types to global declarations
 ### Task 2: Implement `exitThemePreview()` in the Alfred main world API
 
 **Files:**
+
 - Modify: `entrypoints/alfred-main-world.ts` (add method after `copyThemePreviewUrl`, before `clearCart`)
 
 **Step 1: Add the `exitThemePreview` method**
@@ -121,6 +123,7 @@ feat: implement exitThemePreview in Alfred main world API
 ### Task 3: Register context menu item
 
 **Files:**
+
 - Modify: `entrypoints/background/shortcuts.ts` (add menu item registration)
 
 **Step 1: Add `exitThemePreview` to the defaults object**
@@ -136,33 +139,31 @@ In the `shortcuts` defaults object (around line 14-23), add after `openImageInAd
 Insert after the "Copy Theme Preview URL" block (after line 169) and before the "Clear Cart" block:
 
 ```typescript
-  // Exit Theme Preview
-  if (shortcuts.exitThemePreview !== false) {
-    create(
-      {
-        id: 'exit-theme-preview',
-        title: 'Exit Theme Preview',
-        parentId: alfredMenuId,
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (
-                  window as unknown as WindowWithAlfred
-                ).Alfred.exitThemePreview();
-              },
-              world: 'MAIN',
-            });
-          } catch (error) {
-            console.error('Error exiting theme preview:', error);
-          }
-        })();
-      }
-    );
-  }
+// Exit Theme Preview
+if (shortcuts.exitThemePreview !== false) {
+  create(
+    {
+      id: 'exit-theme-preview',
+      title: 'Exit Theme Preview',
+      parentId: alfredMenuId
+    },
+    (_info, tab: Browser.tabs.Tab) => {
+      void (async () => {
+        try {
+          await browser.scripting.executeScript({
+            target: { tabId: tab.id! },
+            func: () => {
+              void (window as unknown as WindowWithAlfred).Alfred.exitThemePreview();
+            },
+            world: 'MAIN'
+          });
+        } catch (error) {
+          console.error('Error exiting theme preview:', error);
+        }
+      })();
+    }
+  );
+}
 ```
 
 **Step 3: Commit**
@@ -176,6 +177,7 @@ feat: register Exit Theme Preview context menu item
 ### Task 4: Add settings toggle
 
 **Files:**
+
 - Modify: `entrypoints/options/components/settings/ShortcutsSettings.tsx` (add item to array)
 
 **Step 1: Add the shortcut item to `shortcutItems` array**

@@ -9,5 +9,5 @@ export default defineContentScript({
     setupResizers();
     setupInspector();
     setupThemeList();
-  },
+  }
 });

@@ -6,21 +6,12 @@ import styles from './App.module.css';
 import builtForShopifyIcon from '@/assets/icon-built-for-shopify.svg';
 import exportIcon from '@/assets/icon-export.svg';
 
-const SortableHeader = ({
-  label,
-  column,
-  align = 'left',
-  sortState,
-  onSort,
-}: SortableHeaderProps) => {
+const SortableHeader = ({ label, column, align = 'left', sortState, onSort }: SortableHeaderProps) => {
   return (
     <th
       className={`${styles.sortable} ${sortState.column === column ? styles.sortableActive : ''}`}
       style={{ textAlign: align }}
-      onClick={() =>
-        onSort(column, sortState.direction === 'asc' ? 'desc' : 'asc')
-      }
-    >
+      onClick={() => onSort(column, sortState.direction === 'asc' ? 'desc' : 'asc')}>
       <div style={{ display: 'inline-flex', alignItems: 'center' }}>
         <span>{label}</span>
         <span
@@ -30,8 +21,7 @@ const SortableHeader = ({
                 ? styles.sortIconAsc
                 : styles.sortIconDesc
               : styles.sortIconBoth
-          }
-        ></span>
+          }></span>
       </div>
     </th>
   );
@@ -41,11 +31,7 @@ const SummaryCard = ({ app, className }: SummaryCardProps) => {
   return (
     <div className={className}>
       <div className={styles.summaryHeader}>
-        <img
-          src={app.iconUrl}
-          alt={`${app.name} icon`}
-          className={styles.summaryIcon}
-        />
+        <img src={app.iconUrl} alt={`${app.name} icon`} className={styles.summaryIcon} />
         <div className={styles.summaryAppName}>{app.name}</div>
       </div>
       <div className={styles.summarySection}>
@@ -85,8 +71,7 @@ const SummaryCard = ({ app, className }: SummaryCardProps) => {
                 <a
                   href={app.developer.website}
                   target="_blank"
-                  style={{ color: 'rgb(44, 110, 203)', textDecoration: 'none' }}
-                >
+                  style={{ color: 'rgb(44, 110, 203)', textDecoration: 'none' }}>
                   {app.developer.website}
                 </a>
               </div>
@@ -95,9 +80,7 @@ const SummaryCard = ({ app, className }: SummaryCardProps) => {
           {app.developer.address && (
             <div className={styles.summaryDetail}>
               <div className={styles.summaryDetailLabel}>Address:</div>
-              <div className={styles.summaryDetailValue}>
-                {app.developer.address}
-              </div>
+              <div className={styles.summaryDetailValue}>{app.developer.address}</div>
             </div>
           )}
         </div>
@@ -106,11 +89,7 @@ const SummaryCard = ({ app, className }: SummaryCardProps) => {
         <div className={styles.summarySectionTitle}>Resources</div>
         <div className={styles.summaryResources}>
           {app.resources.map((resource) => (
-            <a
-              href={resource.url}
-              target="_blank"
-              className={styles.summaryResourceLink}
-            >
+            <a href={resource.url} target="_blank" className={styles.summaryResourceLink}>
               <span className={styles.summaryResourceIcon}>
                 <img src={getResourceIcon(resource)} alt={resource.title} />
               </span>
@@ -129,9 +108,7 @@ export default function App() {
     column: keyof App | null;
     direction: 'asc' | 'desc' | null;
   }>({ column: null, direction: null });
-  const [activeSummaryCard, setActiveSummaryCard] = useState<string | null>(
-    null
-  );
+  const [activeSummaryCard, setActiveSummaryCard] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -142,9 +119,7 @@ export default function App() {
         setError(null);
 
         // Find all app cards on the page
-        const appCards = document.querySelectorAll(
-          `[data-controller="app-card"]`
-        );
+        const appCards = document.querySelectorAll(`[data-controller="app-card"]`);
         if (!appCards || appCards.length === 0) {
           setError('No app cards found on the page');
           return;
@@ -155,24 +130,17 @@ export default function App() {
           // Extract all the synchronous data as before
           const name = card.getAttribute('data-app-card-name-value') ?? '';
           const handle = card.getAttribute('data-app-card-handle-value') ?? '';
-          const iconUrl =
-            card.getAttribute('data-app-card-icon-url-value') ?? '';
+          const iconUrl = card.getAttribute('data-app-card-icon-url-value') ?? '';
           const link = card.getAttribute('data-app-card-app-link-value') ?? '';
 
           // Extract UI elements
           const iconFigure = card.querySelector('figure');
-          const infoRow = card.querySelector(
-            'div > div > div:nth-child(1) > div:nth-child(2)'
-          );
-          const descriptionElement = card.querySelector(
-            'div > div > div:nth-child(1) > div:nth-child(3)'
-          );
+          const infoRow = card.querySelector('div > div > div:nth-child(1) > div:nth-child(2)');
+          const descriptionElement = card.querySelector('div > div > div:nth-child(1) > div:nth-child(3)');
           const installedElement = card.querySelector(
             'div > div > div:nth-child(1) > div.tw-text-notifications-success-primary'
           );
-          const builtForShopifyElement = card.querySelector(
-            '.built-for-shopify-badge'
-          );
+          const builtForShopifyElement = card.querySelector('.built-for-shopify-badge');
 
           // Extract rating, reviews, and pricing
           let rating = '—';
@@ -180,19 +148,14 @@ export default function App() {
           let pricing = '—';
 
           if (infoRow) {
-            const spansRow = infoRow.querySelector(
-              'div.tw-relative.tw-flex.tw-items-center'
-            );
+            const spansRow = infoRow.querySelector('div.tw-relative.tw-flex.tw-items-center');
             if (spansRow) {
               const spans = spansRow.querySelectorAll('span');
-              if (
-                spans.length > 0 &&
-                !spans[0]?.classList.contains('tw-overflow-hidden')
-              ) {
+              if (spans.length > 0 && !spans[0]?.classList.contains('tw-overflow-hidden')) {
                 const firstSpan = spans[0];
-                const firstTextNode = Array.from(
-                  firstSpan?.childNodes ?? []
-                ).find((n): n is Text => n.nodeType === Node.TEXT_NODE);
+                const firstTextNode = Array.from(firstSpan?.childNodes ?? []).find(
+                  (n): n is Text => n.nodeType === Node.TEXT_NODE
+                );
                 rating = firstTextNode
                   ? (firstTextNode.textContent?.trim() ?? 'N/A')
                   : (firstSpan?.textContent?.trim() ?? 'N/A');
@@ -200,18 +163,9 @@ export default function App() {
               for (const span of spans) {
                 if (span.classList.contains('tw-overflow-hidden')) {
                   pricing = span?.textContent?.trim() ?? 'N/A';
-                } else if (
-                  span?.hasAttribute('aria-hidden') &&
-                  /^\(.*\)$/.test(span?.textContent?.trim() ?? '')
-                ) {
+                } else if (span?.hasAttribute('aria-hidden') && /^\(.*\)$/.test(span?.textContent?.trim() ?? '')) {
                   reviewCount =
-                    parseInt(
-                      (span?.textContent ?? '')
-                        .replace(/[(),]/g, '')
-                        .trim()
-                        .replace(/,/g, ''),
-                      10
-                    ) || 0;
+                    parseInt((span?.textContent ?? '').replace(/[(),]/g, '').trim().replace(/,/g, ''), 10) || 0;
                 }
               }
             }
@@ -222,9 +176,7 @@ export default function App() {
             handle,
             iconUrl,
             link,
-            iconFigure: iconFigure
-              ? (iconFigure.cloneNode(true) as HTMLElement)
-              : null,
+            iconFigure: iconFigure ? (iconFigure.cloneNode(true) as HTMLElement) : null,
             rating,
             reviewCount,
             pricing,
@@ -235,7 +187,7 @@ export default function App() {
             age: null,
             detailedAge: null,
             developer: { website: null, address: null },
-            resources: [],
+            resources: []
           };
         });
 
@@ -252,13 +204,12 @@ export default function App() {
           metadata: {
             app_count: initialApps.length,
             page_url: window.location.href,
-            page_type: 'appstore_partners',
-          },
+            page_type: 'appstore_partners'
+          }
         });
 
         // Add delay function
-        const delay = (ms: number) =>
-          new Promise((resolve) => setTimeout(resolve, ms));
+        const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
         // Fetch additional data for each app individually with a delay between each
         for (const app of initialApps) {
@@ -268,27 +219,18 @@ export default function App() {
             // Update state immediately after each app's data is fetched
             setApps((currentApps) =>
               currentApps.map((currentApp) =>
-                currentApp.handle === app.handle
-                  ? { ...currentApp, ...appData }
-                  : currentApp
+                currentApp.handle === app.handle ? { ...currentApp, ...appData } : currentApp
               )
             );
 
             // Wait 2 seconds before fetching the next app
             await delay(250);
           } catch (error) {
-            console.error(
-              `Error fetching additional data for ${app.name}:`,
-              error
-            );
+            console.error(`Error fetching additional data for ${app.name}:`, error);
           }
         }
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'An error occurred while fetching app data'
-        );
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching app data');
         setIsLoading(false);
       }
     };
@@ -308,8 +250,8 @@ export default function App() {
         sort_by: column,
         sort_direction: direction,
         page_url: window.location.href,
-        page_type: 'appstore_partners',
-      },
+        page_type: 'appstore_partners'
+      }
     });
 
     const sortedData = [...apps].sort((a, b) => {
@@ -333,10 +275,8 @@ export default function App() {
         // Default to string comparison
         const aVal = a[column];
         const bVal = b[column];
-        aValue =
-          typeof aVal === 'string' || typeof aVal === 'number' ? aVal : '';
-        bValue =
-          typeof bVal === 'string' || typeof bVal === 'number' ? bVal : '';
+        aValue = typeof aVal === 'string' || typeof aVal === 'number' ? aVal : '';
+        bValue = typeof bVal === 'string' || typeof bVal === 'number' ? bVal : '';
       }
 
       // Sort based on direction
@@ -366,8 +306,7 @@ export default function App() {
           className={styles.exportButton}
           onClick={() => {
             downloadCSV(apps);
-          }}
-        >
+          }}>
           <img src={exportIcon} alt="Export to CSV" />
           Export to CSV
         </button>
@@ -377,42 +316,12 @@ export default function App() {
           <thead>
             <tr>
               <th style={{ width: '50px' }}></th>
-              <SortableHeader
-                label="Name"
-                column="name"
-                sortState={sortState}
-                onSort={handleSort}
-              />
-              <SortableHeader
-                label="Rating"
-                column="rating"
-                sortState={sortState}
-                onSort={handleSort}
-              />
-              <SortableHeader
-                label="Reviews"
-                column="reviewCount"
-                sortState={sortState}
-                onSort={handleSort}
-              />
-              <SortableHeader
-                label="Pricing"
-                column="pricing"
-                sortState={sortState}
-                onSort={handleSort}
-              />
-              <SortableHeader
-                label="Age"
-                column="age"
-                sortState={sortState}
-                onSort={handleSort}
-              />
-              <SortableHeader
-                label="Installed"
-                column="isInstalled"
-                sortState={sortState}
-                onSort={handleSort}
-              />
+              <SortableHeader label="Name" column="name" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Rating" column="rating" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Reviews" column="reviewCount" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Pricing" column="pricing" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Age" column="age" sortState={sortState} onSort={handleSort} />
+              <SortableHeader label="Installed" column="isInstalled" sortState={sortState} onSort={handleSort} />
               <SortableHeader
                 label="Built for Shopify"
                 column="isBuiltForShopify"
@@ -428,70 +337,43 @@ export default function App() {
                   {app.iconFigure ? (
                     <span
                       dangerouslySetInnerHTML={{
-                        __html: app.iconFigure.outerHTML,
+                        __html: app.iconFigure.outerHTML
                       }}
                     />
                   ) : (
-                    <img
-                      src={app.iconUrl}
-                      alt={`${app.name} icon`}
-                      className={styles.appIcon}
-                    />
+                    <img src={app.iconUrl} alt={`${app.name} icon`} className={styles.appIcon} />
                   )}
                 </td>
                 <td
                   onMouseEnter={() => setActiveSummaryCard(app.handle)}
                   onMouseLeave={() => setActiveSummaryCard(null)}
-                  style={{ position: 'relative' }}
-                >
+                  style={{ position: 'relative' }}>
                   <a href={app.link} className={styles.appName}>
                     {app.name}
                   </a>
                   <div className={styles.appDescription}>{app.description}</div>
                   <SummaryCard
                     app={app}
-                    className={
-                      (activeSummaryCard === app.handle
-                        ? styles.summaryCardActive
-                        : styles.summaryCard) ?? ''
-                    }
+                    className={(activeSummaryCard === app.handle ? styles.summaryCardActive : styles.summaryCard) ?? ''}
                   />
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <div className={styles.ratingContainer}>{app.rating}</div>
                 </td>
-                <td style={{ textAlign: 'center' }}>
-                  {app.reviewCount.toLocaleString()}
-                </td>
+                <td style={{ textAlign: 'center' }}>{app.reviewCount.toLocaleString()}</td>
                 <td>{app.pricing}</td>
                 <td>
                   <span style={{ marginBottom: '2px' }}>{app.age}</span>
                   <div className={styles.appDescription}>{app.launchDate}</div>
                 </td>
                 <td style={{ textAlign: 'center' }}>
-                  <span
-                    className={
-                      app.isInstalled
-                        ? styles.statusSuccess
-                        : styles.statusNeutral
-                    }
-                  >
+                  <span className={app.isInstalled ? styles.statusSuccess : styles.statusNeutral}>
                     {app.isInstalled ? '✓' : '—'}
                   </span>
                 </td>
                 <td style={{ textAlign: 'center' }}>
-                  <span
-                    className={
-                      app.isBuiltForShopify
-                        ? styles.shopifyBadge
-                        : styles.statusNeutral
-                    }
-                  >
-                    {app.isBuiltForShopify ? (
-                      <img src={builtForShopifyIcon} alt="Built for Shopify" />
-                    ) : (
-                      '—'
-                    )}
+                  <span className={app.isBuiltForShopify ? styles.shopifyBadge : styles.statusNeutral}>
+                    {app.isBuiltForShopify ? <img src={builtForShopifyIcon} alt="Built for Shopify" /> : '—'}
                   </span>
                 </td>
               </tr>

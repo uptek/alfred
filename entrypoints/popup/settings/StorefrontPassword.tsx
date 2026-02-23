@@ -1,19 +1,12 @@
 import { useEffect, useState } from 'preact/hooks';
-import {
-  getPasswordEntry,
-  savePassword,
-  deletePassword,
-  setPasswordEnabled,
-} from '@/utils/storefrontPasswords';
+import { getPasswordEntry, savePassword, deletePassword, setPasswordEnabled } from '@/utils/storefrontPasswords';
 import type { StoreInfo } from '../types';
 
 interface StorefrontPasswordProps {
   storeInfo: StoreInfo;
 }
 
-export default function StorefrontPassword({
-  storeInfo,
-}: StorefrontPasswordProps) {
+export default function StorefrontPassword({ storeInfo }: StorefrontPasswordProps) {
   const [domain, setDomain] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [autoFillPassword, setAutoFillPassword] = useState(true);
@@ -83,9 +76,7 @@ export default function StorefrontPassword({
     return (
       <div className="py-3.5">
         <div className="text-center py-8">
-          <p className="text-sm text-slate-500">
-            Unable to detect current store domain
-          </p>
+          <p className="text-sm text-slate-500">Unable to detect current store domain</p>
         </div>
       </div>
     );
@@ -94,23 +85,15 @@ export default function StorefrontPassword({
   return (
     <div className="py-3.5 border-t border-slate-100">
       <div className="flex items-center justify-between mb-3">
-        <label
-          htmlFor="storefrontPassword"
-          className="text-sm font-semibold text-slate-500 cursor-pointer"
-        >
+        <label htmlFor="storefrontPassword" className="text-sm font-semibold text-slate-500 cursor-pointer">
           Storefront password:
         </label>
-        <label
-          htmlFor="autoFillPassword"
-          className="flex items-center gap-2 cursor-pointer"
-        >
+        <label htmlFor="autoFillPassword" className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             id="autoFillPassword"
             checked={autoFillPassword}
-            onChange={(e) =>
-              handleAutoFillPasswordChange(e.currentTarget.checked)
-            }
+            onChange={(e) => handleAutoFillPasswordChange(e.currentTarget.checked)}
             className="w-4 h-4 text-indigo-500 border-slate-300 rounded focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
           />
           <span className="text-xs text-slate-600">Auto-fill password?</span>
@@ -133,8 +116,7 @@ export default function StorefrontPassword({
             onClick={() => setShowPassword(!showPassword)}
             disabled={!autoFillPassword}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-          >
+            aria-label={showPassword ? 'Hide password' : 'Show password'}>
             {showPassword ? (
               <svg className="w-4 h-4" viewBox="0 0 20 20">
                 <path d="M11.977 4.751a7.598 7.598 0 0 0-1.977-.251c-2.444 0-4.196 1.045-5.325 2.233a7.188 7.188 0 0 0-1.243 1.773c-.26.532-.432 1.076-.432 1.494 0 .418.171.962.432 1.493.172.354.4.734.687 1.116l1.074-1.074a5.388 5.388 0 0 1-.414-.7c-.221-.453-.279-.753-.279-.835 0-.082.058-.382.279-.835a5.71 5.71 0 0 1 .983-1.398c.89-.937 2.264-1.767 4.238-1.767.24 0 .471.012.693.036l1.284-1.285Z" />
@@ -161,24 +143,11 @@ export default function StorefrontPassword({
           onClick={handleSavePassword}
           disabled={saving || !autoFillPassword}
           className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${
-            saving
-              ? 'bg-green-500 text-white'
-              : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
-          } disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+            saving ? 'bg-green-500 text-white' : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
+          } disabled:opacity-50 disabled:cursor-not-allowed`}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {saving ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             ) : (
               <path
                 strokeLinecap="round"
