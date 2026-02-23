@@ -1,5 +1,22 @@
 [
   {
+    "version": "2026.02.23",
+    "date": "2026-02-23",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Shopify Admin > Themes: Added Preview and Edit Code buttons to each theme.",
+          "Shopify Admin > Themes: Added Theme ID and Preview URL fields with one-click copy."
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/admin-themes-utils.mp4"
+      }
+    ]
+  },
+  {
     "version": "2026.02.20",
     "date": "2026-02-20",
     "changes": [

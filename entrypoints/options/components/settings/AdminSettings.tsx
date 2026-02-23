@@ -22,6 +22,12 @@ const settingsItems: SettingItem[] = [
     details:
       'Show a confirmation dialog before closing the theme code editor page',
   },
+  {
+    key: 'themeListUtils',
+    label: 'Theme list utilities',
+    details:
+      'Adds quick-access buttons and info (Preview, Edit Code, Theme ID, Preview URL) to each theme on the themes list page',
+  },
 ];
 
 export function AdminSettings() {

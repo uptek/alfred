@@ -1,4 +1,17 @@
+import { getItem } from '~/utils/storage';
+
 const INJECTED_ATTR = 'data-alfred-theme-list';
+
+const trackThemeListAction = (
+  action: string,
+  metadata: Record<string, unknown> = {}
+) => {
+  browser.runtime.sendMessage({
+    type: 'track_action',
+    action,
+    metadata,
+  });
+};
 
 interface ThemeData {
   themeId: string;
@@ -12,7 +25,9 @@ const extractThemeData = (listItem: HTMLElement): ThemeData | null => {
   const editLink = listItem.querySelector<HTMLAnchorElement>(
     'a[href*="/themes/"][href*="/editor"]'
   );
-  if (!editLink) return null;
+  if (!editLink) {
+    return null;
+  }
 
   const href = editLink.getAttribute('href') ?? '';
   const themeId = /\/themes\/(\d+)\//.exec(href)?.[1] ?? '';
@@ -31,91 +46,73 @@ const extractThemeData = (listItem: HTMLElement): ThemeData | null => {
   return { themeId, storeName, themeName, previewUrl, codeEditorUrl };
 };
 
-const el = (
-  tag: string,
-  attrs: Record<string, string> = {},
-  children: (HTMLElement | string)[] = []
-): HTMLElement => {
-  const element = document.createElement(tag);
-  for (const [key, value] of Object.entries(attrs)) {
-    element.setAttribute(key, value);
-  }
-  for (const child of children) {
-    if (typeof child === 'string') {
-      element.appendChild(document.createTextNode(child));
-    } else {
-      element.appendChild(child);
-    }
-  }
-  return element;
+const html = (template: string): HTMLElement => {
+  const container = document.createElement('div');
+  container.innerHTML = template.trim();
+  return container.firstElementChild as HTMLElement;
 };
 
-const createCopyField = (label: string, value: string) => {
-  const copyBtn = el('s-button', { variant: 'tertiary', icon: 'clipboard' });
-  copyBtn.title = 'Copy to clipboard';
-  copyBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(value);
-    copyBtn.setAttribute('icon', 'check');
-    setTimeout(() => {
-      copyBtn.setAttribute('icon', 'clipboard');
-    }, 1200);
-  });
+const createInfoRow = (
+  label: string,
+  value: string,
+  minWidth = '0',
+  trackingAction?: string
+) => {
+  const row = html(`
+    <s-stack direction="inline" gap="small-200" alignItems="center">
+      <span>${label}</span>
+      <input type="text" readonly value="${value}" style="
+        min-width:${minWidth};
+        border:1px solid #c9cccf;
+        border-radius:8px;
+        padding:4px 8px;
+        font-size:13px;
+        font-family:ui-monospace,SFMono-Regular,monospace;
+        color:#303030;
+        background:#f6f6f7;
+        line-height:20px;
+      " />
+      <s-button variant="tertiary" accessibilityLabel="Copy to clipboard" icon="clipboard" title="Copy to clipboard"></s-button>
+    </s-stack>
+  `);
 
-  const labelEl = el('s-text', { variant: 'bodySm', tone: 'subdued' }, [
-    label,
-  ]);
-  Object.assign(labelEl.style, { flexShrink: '0' });
+  row
+    .querySelector<HTMLElement>('[icon="clipboard"]')!
+    .addEventListener('click', (e) => {
+      e.stopPropagation();
+      const btn = e.currentTarget as HTMLElement;
+      navigator.clipboard.writeText(value);
+      btn.setAttribute('icon', 'check');
+      setTimeout(() => btn.setAttribute('icon', 'clipboard'), 1200);
+      if (trackingAction) {
+        trackThemeListAction(trackingAction);
+      }
+    });
 
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.readOnly = true;
-  input.value = value;
-  Object.assign(input.style, {
-    flex: '1',
-    minWidth: '0',
-    border: 'var(--p-border-width-025, 1px) solid var(--p-color-border, #8c9196)',
-    borderRadius: 'var(--p-border-radius-150, 6px)',
-    padding: 'var(--p-space-050, 2px) var(--p-space-200, 8px)',
-    fontSize: 'var(--p-font-size-275, 12px)',
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-    color: 'var(--p-color-text, #303030)',
-    background: 'var(--p-color-bg-surface-secondary, #f1f1f1)',
-    outline: 'none',
-    lineHeight: 'var(--p-font-line-height-400, 20px)',
-  });
-
-  return el(
-    's-stack',
-    { direction: 'inline', gap: 'small-200', 'block-align': 'center', wrap: 'nowrap' },
-    [labelEl, input, copyBtn]
-  );
+  return row;
 };
 
 const createButtonRow = (data: ThemeData) => {
-  const previewBtn = el(
-    's-button',
-    { variant: 'secondary', icon: 'external' },
-    ['Preview']
-  );
-  previewBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    window.open(data.previewUrl, '_blank');
-  });
+  const row = html(`
+    <s-stack direction="inline" gap="small-200" justifyContent="end">
+      <s-button variant="secondary" icon="external" href="${data.previewUrl}" target="_blank">Preview</s-button>
+      <s-button variant="secondary" icon="code" href="${data.codeEditorUrl}" target="_top">Edit Code</s-button>
+    </s-stack>
+  `);
 
-  const codeBtn = el('s-button', { variant: 'secondary', icon: 'code' }, [
-    'Edit Code',
-  ]);
-  codeBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    window.open(data.codeEditorUrl, '_top');
-  });
+  row
+    .querySelector<HTMLElement>('[icon="external"]')
+    ?.addEventListener('click', () => {
+      trackThemeListAction('theme_list_preview');
+    });
 
-  return el(
-    's-stack',
-    { direction: 'inline', gap: 'base', 'block-align': 'center' },
-    [previewBtn, codeBtn]
-  );
+  row
+    .querySelector<HTMLElement>('[icon="code"]')
+    ?.addEventListener('click', () => {
+      trackThemeListAction('theme_list_edit_code');
+    });
+
+  return row;
 };
 
 const injectIntoThemeList = () => {
@@ -130,52 +127,72 @@ const injectIntoThemeList = () => {
   let injected = false;
 
   themeListItems.forEach((listItem) => {
-    if (listItem.hasAttribute(INJECTED_ATTR)) return;
+    if (listItem.hasAttribute(INJECTED_ATTR)) {
+      return;
+    }
 
     const data = extractThemeData(listItem);
-    if (!data) return;
+    if (!data) {
+      return;
+    }
 
     const contextProvider = listItem.querySelector(
       's-internal-context-provider'
     );
     if (contextProvider) {
-      const wrapper = el('s-stack', {
-        gap: 'small-200',
-        'block-align': 'end',
-      });
+      const wrapper = html(`
+        <s-stack gap="small-200" block-align="end"></s-stack>
+      `);
       contextProvider.replaceWith(wrapper);
       wrapper.appendChild(contextProvider);
       wrapper.appendChild(createButtonRow(data));
-      wrapper.appendChild(createCopyField('ID', data.themeId));
-      wrapper.appendChild(createCopyField('Preview', data.previewUrl));
+      wrapper.appendChild(
+        createInfoRow('ID:', data.themeId, '0', 'theme_list_copy_id')
+      );
+      wrapper.appendChild(
+        createInfoRow(
+          'Preview URL:',
+          data.previewUrl,
+          '400px',
+          'theme_list_copy_preview_url'
+        )
+      );
     }
 
     listItem.setAttribute(INJECTED_ATTR, 'true');
+    listItem
+      .querySelector<HTMLElement>(':scope > s-stack')
+      ?.setAttribute('alignItems', 'end');
     injected = true;
   });
 
   return injected;
 };
 
-export const setupThemeList = () => {
-  if (!window.location.pathname.includes('/themes')) return;
+export const setupThemeList = async () => {
+  if (!window.location.pathname.endsWith('/themes')) {
+    return;
+  }
 
-  const success = injectIntoThemeList();
-  if (success) return;
+  const settings = await getItem<AlfredSettings>('settings');
+  if (settings?.admin?.themeListUtils === false) {
+    return;
+  }
 
+  injectIntoThemeList();
+
+  let queued = false;
   const observer = new MutationObserver(() => {
-    if (injectIntoThemeList()) {
-      observer.disconnect();
-    }
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      injectIntoThemeList();
+      queued = false;
+    });
   });
 
   observer.observe(document.body, {
     childList: true,
     subtree: true,
   });
-
-  setTimeout(() => {
-    injectIntoThemeList();
-    observer.disconnect();
-  }, 5000);
 };

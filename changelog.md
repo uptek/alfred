@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.02.23
+@ 2026-02-23
+- Shopify Admin > Themes: Added Preview and Edit Code buttons to each theme.
+- Shopify Admin > Themes: Added Theme ID and Preview URL fields with one-click copy.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/admin-themes-utils.mp4"></video>
+
 ## 2026.02.20
 @ 2026-02-20
 - Exit Theme Preview Shortcut: Added a new right-click shortcut to exit a Shopify theme preview and switch back to the live/published theme.

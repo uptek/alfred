@@ -25,7 +25,11 @@ export type AnalyticsAction =
   | 'detect_theme'
   | 'autofill_storefront_password'
   | 'open_image_in_admin'
-  | 'exit_theme_preview';
+  | 'exit_theme_preview'
+  | 'theme_list_copy_id'
+  | 'theme_list_copy_preview_url'
+  | 'theme_list_preview'
+  | 'theme_list_edit_code';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<
@@ -72,6 +76,10 @@ const TIME_SAVINGS: Record<
   autofill_storefront_password: 10,
   open_image_in_admin: 15,
   exit_theme_preview: 20,
+  theme_list_copy_id: 10,
+  theme_list_copy_preview_url: 10,
+  theme_list_preview: 5,
+  theme_list_edit_code: 5,
 };
 
 /**
