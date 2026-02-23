@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    // Preact doesn't need React import
+    "react/react-in-jsx-scope": "off",
+    // Browser extension callbacks often shadow outer vars (e.g. event handlers, observers)
+    "no-shadow": "off",
+    // Content scripts define helpers inside setup functions intentionally
+    "unicorn/consistent-function-scoping": "off",
+    // null is used throughout for DOM APIs and storage
+    "unicorn/no-null": "off",
+    // Mixed naming conventions (PascalCase components, camelCase utils, kebab-case content scripts)
+    "unicorn/filename-case": "off",
+    // Content scripts and background scripts can't use top-level await
+    "unicorn/prefer-top-level-await": "off",
+    // .sort() on spread copies is fine: [...arr].sort()
+    "unicorn/no-array-sort": "off",
+    // Allow function declarations and arrow functions
+    "func-style": "off",
+    // Common in DOM event handlers and browser API callbacks
+    "no-param-reassign": "off",
+    // Intentional sequential awaits (e.g. importing presets one by one)
+    "no-await-in-loop": "off",
+    // Static-only classes used for Toast API
+    "typescript/no-extraneous-class": "off",
+    // onchange handlers are fine for file inputs
+    "unicorn/prefer-add-event-listener": "off"
+  },
+  "ignorePatterns": [".output", ".wxt", "public", "node_modules", "*.config.*", "supabase"]
+}
