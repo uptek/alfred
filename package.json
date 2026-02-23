@@ -22,21 +22,21 @@
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^9.39.3",
     "@preact/preset-vite": "^2.10.3",
     "@shopify/app-bridge-ui-types": "^0.3.3",
-    "@wxt-dev/auto-icons": "^1.1.0",
+    "@wxt-dev/auto-icons": "^1.1.1",
     "chokidar-cli": "^3.0.0",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0",
-    "wxt": "^0.20.13"
+    "typescript-eslint": "^8.56.0",
+    "wxt": "^0.20.18"
   },
   "dependencies": {
-    "preact": "^10.28.2",
-    "tailwindcss": "^4.1.18",
-    "@tailwindcss/vite": "^4.1.18"
+    "preact": "^10.28.4",
+    "tailwindcss": "^4.2.0",
+    "@tailwindcss/vite": "^4.2.0"
   }
 }
