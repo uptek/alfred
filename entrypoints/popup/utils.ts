@@ -1,4 +1,5 @@
 import type { StoreInfo, Theme } from './types';
+import { lookupThemeStoreEntry } from './themeStoreLookup';
 
 export const getTheme = async (): Promise<StoreInfo | null> => {
   try {
@@ -20,13 +21,16 @@ export const getTheme = async (): Promise<StoreInfo | null> => {
         action: 'get_theme'
       });
 
+      const theme = response?.theme ?? null;
+
       // Transform response to StoreInfo format
       return {
         isShopify: response?.isShopify ?? false,
         domain: new URL(tab.url).hostname,
         shopDomain: response?.shop ?? null,
         page_url: tab.url,
-        theme: response?.theme ?? null
+        theme,
+        themeStoreEntry: lookupThemeStoreEntry(theme)
       };
     }
     return null;

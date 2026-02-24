@@ -7,6 +7,7 @@ import '@/assets/tailwind.css';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('theme');
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,13 +58,23 @@ export default function App() {
 
   return (
     <div className="bg-white min-h-[200px] p-4">
-      <div className="flex bg-black/5 p-1 rounded-lg gap-1">
+      <div
+        className="relative flex p-[3px] bg-[#f7f7f7] border border-[#e3e3e3] rounded-xl"
+        onMouseLeave={() => setHoveredTab(null)}>
+        <div
+          className="absolute inset-[3px] rounded-[10px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-none"
+          style={{
+            width: `calc((100% - 6px) / ${tabs.length})`,
+            transform: `translateX(${tabs.indexOf(tabs.find((t) => t.handle === (hoveredTab ?? activeTab))!) * 100}%)`
+          }}
+        />
         {tabs.map((tab) => (
           <button
-            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer ${
-              activeTab === tab.handle ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-            }`}
-            onClick={() => setActiveTab(tab.handle)}>
+            className={`relative z-10 flex-1 inline-flex items-center justify-center px-6 py-2 text-[13px] leading-snug bg-transparent border-none rounded-[10px] cursor-pointer transition-[color,font-weight] duration-200 ease-out ${
+              activeTab === tab.handle ? 'text-slate-900 font-semibold' : 'text-slate-500 font-medium'
+            } ${hoveredTab === tab.handle ? 'text-slate-900' : ''}`}
+            onClick={() => setActiveTab(tab.handle)}
+            onMouseEnter={() => setHoveredTab(tab.handle)}>
             {tab.name}
           </button>
         ))}

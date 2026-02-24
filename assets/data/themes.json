@@ -1,0 +1,2763 @@
+[
+  {
+    "name": "Monochrome",
+    "theme_store_id": 3425,
+    "version": "1.0.0",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/monochrome/styles/modern",
+    "developer": {
+      "name": "Superfine",
+      "url": "https://superfinedigital.com/"
+    }
+  },
+  {
+    "name": "Elixira",
+    "theme_store_id": 3264,
+    "version": "1.0.0",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/elixira/styles/electronics",
+    "developer": {
+      "name": "MUUP",
+      "url": "https://www.muup.co"
+    }
+  },
+  {
+    "name": "Desert",
+    "theme_store_id": 3313,
+    "version": "1.0.1",
+    "price": "150.00",
+    "theme_url": "https://themes.shopify.com/themes/desert/styles/luxury",
+    "developer": {
+      "name": "Crown Studio",
+      "url": "https://crownstudio.co/"
+    }
+  },
+  {
+    "name": "Charm",
+    "theme_store_id": 3312,
+    "version": "1.2.1",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/charm/styles/aura",
+    "developer": {
+      "name": "Sweetcode",
+      "url": ""
+    }
+  },
+  {
+    "name": "Volume",
+    "theme_store_id": 2837,
+    "version": "2.0.0",
+    "price": "290.00",
+    "theme_url": "https://themes.shopify.com/themes/volume/styles/crisp",
+    "developer": {
+      "name": "Staylime",
+      "url": "https://shopify.staylime.com"
+    }
+  },
+  {
+    "name": "Primavera",
+    "theme_store_id": 3365,
+    "version": "1.1.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/primavera/styles/precision",
+    "developer": {
+      "name": "Ultramarina",
+      "url": "https://ultramarinastudios.com"
+    }
+  },
+  {
+    "name": "Zero",
+    "theme_store_id": 3300,
+    "version": "1.1.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/zero/styles/energize",
+    "developer": {
+      "name": "Omelatte FZ-LLC",
+      "url": "https://omelatte.com/"
+    }
+  },
+  {
+    "name": "Etheryx",
+    "theme_store_id": 3248,
+    "version": "1.0.0",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/etheryx/styles/ethereal",
+    "developer": {
+      "name": "OpenThinking",
+      "url": "https://openthinking.net/"
+    }
+  },
+  {
+    "name": "Purely",
+    "theme_store_id": 3105,
+    "version": "1.0.1",
+    "price": "150.00",
+    "theme_url": "https://themes.shopify.com/themes/purely/styles/default",
+    "developer": {
+      "name": "BoostifyThemes",
+      "url": "https://boostifythemes.com"
+    }
+  },
+  {
+    "name": "Futurer",
+    "theme_store_id": 3341,
+    "version": "1.2.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/futurer/styles/default",
+    "developer": {
+      "name": "Xotiny",
+      "url": "https://xotiny.com"
+    }
+  },
+  {
+    "name": "Normcore",
+    "theme_store_id": 3269,
+    "version": "1.2.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/normcore/styles/fundamental",
+    "developer": {
+      "name": "SalesHunterThemes",
+      "url": "https://saleshunterthemes.com"
+    }
+  },
+  {
+    "name": "Stretch",
+    "theme_store_id": 1765,
+    "version": "1.4.1",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/stretch/styles/sand",
+    "developer": {
+      "name": "Maestrooo",
+      "url": "http://maestrooo.com"
+    }
+  },
+  {
+    "name": "Hyper",
+    "theme_store_id": 3247,
+    "version": "1.1.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/hyper/styles/garace",
+    "developer": {
+      "name": "FOXECOM",
+      "url": "https://foxecom.com"
+    }
+  },
+  {
+    "name": "Ascension",
+    "theme_store_id": 3223,
+    "version": "2.1.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/ascension/styles/default",
+    "developer": {
+      "name": "Fuel Themes",
+      "url": "https://fuelthemes.net/"
+    }
+  },
+  {
+    "name": "Lumin",
+    "theme_store_id": 3205,
+    "version": "1.3.4",
+    "price": "270.00",
+    "theme_url": "https://themes.shopify.com/themes/lumin/styles/default",
+    "developer": {
+      "name": "1o1development",
+      "url": "https://1o1development.com/"
+    }
+  },
+  {
+    "name": "San Francisco",
+    "theme_store_id": 3210,
+    "version": "2.1.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/san-francisco/styles/minimal",
+    "developer": {
+      "name": "Apparent Collective",
+      "url": "https://apparentcollective.com"
+    }
+  },
+  {
+    "name": "Bespoke",
+    "theme_store_id": 2732,
+    "version": "2.1.0",
+    "price": "180.00",
+    "theme_url": "https://themes.shopify.com/themes/bespoke/styles/default",
+    "developer": {
+      "name": "Red Plug Design Co.",
+      "url": "http://www.redplugdesign.com"
+    }
+  },
+  {
+    "name": "Azzel",
+    "theme_store_id": 3107,
+    "version": "2.0.0",
+    "price": "200.00",
+    "theme_url": "https://themes.shopify.com/themes/azzel/styles/primary",
+    "developer": {
+      "name": "Tapita",
+      "url": "https://tapita.io/"
+    }
+  },
+  {
+    "name": "Flux",
+    "theme_store_id": 3121,
+    "version": "1.7.0",
+    "price": "270.00",
+    "theme_url": "https://themes.shopify.com/themes/flux/styles/default",
+    "developer": {
+      "name": "Mana Themes",
+      "url": "https://manathemes.com/"
+    }
+  },
+  {
+    "name": "Master",
+    "theme_store_id": 3177,
+    "version": "1.0.1",
+    "price": "170.00",
+    "theme_url": "https://themes.shopify.com/themes/master/styles/guru",
+    "developer": {
+      "name": "Shine Dezign Infonet",
+      "url": "https://www.shinedezigninfonet.com"
+    }
+  },
+  {
+    "name": "Motto",
+    "theme_store_id": 3039,
+    "version": "1.2.0",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/motto/styles/connect",
+    "developer": {
+      "name": "Noord",
+      "url": "https://noordthemes.com/"
+    }
+  },
+  {
+    "name": "Swiss",
+    "theme_store_id": 3038,
+    "version": "1.0.1",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/swiss/styles/handloom",
+    "developer": {
+      "name": "Slash Themes",
+      "url": "https://www.slashthemes.com/"
+    }
+  },
+  {
+    "name": "Redefine",
+    "theme_store_id": 3007,
+    "version": "1.2.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/redefine/styles/craftopia",
+    "developer": {
+      "name": "Xotiny",
+      "url": "https://xotiny.com"
+    }
+  },
+  {
+    "name": "Nimbus",
+    "theme_store_id": 3094,
+    "version": "1.4.0",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/nimbus/styles/bright",
+    "developer": {
+      "name": "OranThemes",
+      "url": "https://oranthemes.com/"
+    }
+  },
+  {
+    "name": "Ascent",
+    "theme_store_id": 2989,
+    "version": "2.1.8",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/ascent/styles/tech",
+    "developer": {
+      "name": "Webvista Studio",
+      "url": "https://www.webvista.studio"
+    }
+  },
+  {
+    "name": "Boutique",
+    "theme_store_id": 3051,
+    "version": "1.4.0",
+    "price": "340.00",
+    "theme_url": "https://themes.shopify.com/themes/boutique/styles/noom",
+    "developer": {
+      "name": "UTD",
+      "url": "https://utdweb.team/"
+    }
+  },
+  {
+    "name": "Eclipse",
+    "theme_store_id": 3070,
+    "version": "3.0.0",
+    "price": "340.00",
+    "theme_url": "https://themes.shopify.com/themes/eclipse/styles/journey",
+    "developer": {
+      "name": "Fluorescent Design Inc.",
+      "url": "http://fluorescent.co"
+    }
+  },
+  {
+    "name": "Vincent",
+    "theme_store_id": 2913,
+    "version": "1.2.0",
+    "price": "340.00",
+    "theme_url": "https://themes.shopify.com/themes/vincent/styles/classic",
+    "developer": {
+      "name": "Moodboard Creations",
+      "url": "https://moodboard-creations.com/"
+    }
+  },
+  {
+    "name": "Keystone",
+    "theme_store_id": 2943,
+    "version": "1.2.0",
+    "price": "420.00",
+    "theme_url": "https://themes.shopify.com/themes/keystone/styles/knit",
+    "developer": {
+      "name": "Brickspace Lab",
+      "url": "https://brickspacelab.com/"
+    }
+  },
+  {
+    "name": "Divine",
+    "theme_store_id": 2931,
+    "version": "1.5.0",
+    "price": "120.00",
+    "theme_url": "https://themes.shopify.com/themes/divine/styles/madame",
+    "developer": {
+      "name": "Swissuplabs",
+      "url": "https://swissuplabs.com/"
+    }
+  },
+  {
+    "name": "Wonder",
+    "theme_store_id": 2684,
+    "version": "1.7.1",
+    "price": "390.00",
+    "theme_url": "https://themes.shopify.com/themes/wonder/styles/beauty",
+    "developer": {
+      "name": "NETHYPE",
+      "url": "https://www.nethype.co"
+    }
+  },
+  {
+    "name": "Noire",
+    "theme_store_id": 2926,
+    "version": "1.0.2",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/noire/styles/default",
+    "developer": {
+      "name": "BoostifyThemes",
+      "url": "https://boostifythemes.com"
+    }
+  },
+  {
+    "name": "Ultra",
+    "theme_store_id": 2967,
+    "version": "1.4.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/ultra/styles/gran-tech",
+    "developer": {
+      "name": "Arvest Digital",
+      "url": ""
+    }
+  },
+  {
+    "name": "Ignite",
+    "theme_store_id": 3027,
+    "version": "1.5.0",
+    "price": "340.00",
+    "theme_url": "https://themes.shopify.com/themes/ignite/styles/tech",
+    "developer": {
+      "name": "Benchmark Themes",
+      "url": "https://benchmarkthemes.com/"
+    }
+  },
+  {
+    "name": "Koto",
+    "theme_store_id": 3001,
+    "version": "1.0.2",
+    "price": "290.00",
+    "theme_url": "https://themes.shopify.com/themes/koto/styles/outfit",
+    "developer": {
+      "name": "Webibazaar Templates",
+      "url": "https://www.webibazaar.com"
+    }
+  },
+  {
+    "name": "Outsiders",
+    "theme_store_id": 2896,
+    "version": "1.0.4",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/outsiders/styles/outsiders",
+    "developer": {
+      "name": "Segment",
+      "url": "https://madebysegment.com/"
+    }
+  },
+  {
+    "name": "Satoshi",
+    "theme_store_id": 2881,
+    "version": "5.0.2",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/satoshi/styles/default",
+    "developer": {
+      "name": "Scandiweb",
+      "url": "https://scandiweb.com/"
+    }
+  },
+  {
+    "name": "Infinity",
+    "theme_store_id": 2061,
+    "version": "1.2.0",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/infinity/styles/radiant",
+    "developer": {
+      "name": "EM Softech  LLP",
+      "url": "https://www.emsoftech.com"
+    }
+  },
+  {
+    "name": "Madrid",
+    "theme_store_id": 2870,
+    "version": "1.2.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/madrid/styles/modern",
+    "developer": {
+      "name": "Apparent Collective",
+      "url": "https://apparentcollective.com"
+    }
+  },
+  {
+    "name": "Soul",
+    "theme_store_id": 2825,
+    "version": "3.0.0",
+    "price": "190.00",
+    "theme_url": "https://themes.shopify.com/themes/soul/styles/elegant",
+    "developer": {
+      "name": "HaloThemes",
+      "url": "https://halothemes.net/"
+    }
+  },
+  {
+    "name": "King",
+    "theme_store_id": 2948,
+    "version": "1.1.1",
+    "price": "350.00",
+    "theme_url": "https://themes.shopify.com/themes/king/styles/castle",
+    "developer": {
+      "name": "Shine Dezign Infonet",
+      "url": "https://www.shinedezigninfonet.com"
+    }
+  },
+  {
+    "name": "Nexa",
+    "theme_store_id": 2820,
+    "version": "1.0.0",
+    "price": "290.00",
+    "theme_url": "https://themes.shopify.com/themes/nexa/styles/default",
+    "developer": {
+      "name": "1o1development",
+      "url": "https://1o1development.com/"
+    }
+  },
+  {
+    "name": "Machina",
+    "theme_store_id": 2883,
+    "version": "1.4.0",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/machina/styles/anatomy",
+    "developer": {
+      "name": "Koding Themes",
+      "url": "https://kodingthemes.com"
+    }
+  },
+  {
+    "name": "Meka",
+    "theme_store_id": 2845,
+    "version": "4.0.0",
+    "price": "140.00",
+    "theme_url": "https://themes.shopify.com/themes/meka/styles/mechanic",
+    "developer": {
+      "name": "MUUP",
+      "url": "https://www.muup.co"
+    }
+  },
+  {
+    "name": "Refine",
+    "theme_store_id": 2782,
+    "version": "3.1.0",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/refine/styles/active",
+    "developer": {
+      "name": "AgniHD",
+      "url": "https://agnihd.com"
+    }
+  },
+  {
+    "name": "Pinnacle",
+    "theme_store_id": 2852,
+    "version": "4.0.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/pinnacle/styles/default",
+    "developer": {
+      "name": "Fuel Themes",
+      "url": "https://fuelthemes.net/"
+    }
+  },
+  {
+    "name": "Swipe",
+    "theme_store_id": 2737,
+    "version": "1.1.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/swipe/styles/modern",
+    "developer": {
+      "name": "Segment",
+      "url": "https://madebysegment.com/"
+    }
+  },
+  {
+    "name": "Piano",
+    "theme_store_id": 2812,
+    "version": "1.0.6",
+    "price": "150.00",
+    "theme_url": "https://themes.shopify.com/themes/piano/styles/fashion",
+    "developer": {
+      "name": "Webibazaar Templates",
+      "url": "https://www.webibazaar.com"
+    }
+  },
+  {
+    "name": "Space",
+    "theme_store_id": 2659,
+    "version": "2.0.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/space/styles/swift",
+    "developer": {
+      "name": "Brickspace Lab",
+      "url": "https://brickspacelab.com/"
+    }
+  },
+  {
+    "name": "Aisle",
+    "theme_store_id": 2378,
+    "version": "2.0.2",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/aisle/styles/grocery",
+    "developer": {
+      "name": "Electric Maybe",
+      "url": "https://electricmaybe.com"
+    }
+  },
+  {
+    "name": "Retro",
+    "theme_store_id": 2630,
+    "version": "1.0.3",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/retro/styles/summer",
+    "developer": {
+      "name": "Slash Themes",
+      "url": "https://www.slashthemes.com/"
+    }
+  },
+  {
+    "name": "Takeout",
+    "theme_store_id": 2534,
+    "version": "2.0.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/takeout/styles/fresh",
+    "developer": {
+      "name": "Ecom Noon",
+      "url": "https://ecomnoon.com"
+    }
+  },
+  {
+    "name": "Flawless",
+    "theme_store_id": 2847,
+    "version": "6.1.0",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/flawless/styles/glance",
+    "developer": {
+      "name": "Ascend Themes",
+      "url": "https://www.ascendthemes.com"
+    }
+  },
+  {
+    "name": "Urban",
+    "theme_store_id": 2405,
+    "version": "1.9.1",
+    "price": "270.00",
+    "theme_url": "https://themes.shopify.com/themes/urban/styles/furniture",
+    "developer": {
+      "name": "1o1development",
+      "url": "https://1o1development.com/"
+    }
+  },
+  {
+    "name": "Luxe",
+    "theme_store_id": 2779,
+    "version": "8.1.0",
+    "price": "480.00",
+    "theme_url": "https://themes.shopify.com/themes/luxe/styles/luxe",
+    "developer": {
+      "name": "Winter Studio",
+      "url": "https://winterstudio.co"
+    }
+  },
+  {
+    "name": "Paris",
+    "theme_store_id": 2702,
+    "version": "1.1.2",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/paris/styles/desire",
+    "developer": {
+      "name": "Crown Studio",
+      "url": "https://crownstudio.co/"
+    }
+  },
+  {
+    "name": "Sleek",
+    "theme_store_id": 2821,
+    "version": "1.8.0",
+    "price": "350.00",
+    "theme_url": "https://themes.shopify.com/themes/sleek/styles/glossy",
+    "developer": {
+      "name": "FOXECOM",
+      "url": "https://foxecom.com"
+    }
+  },
+  {
+    "name": "Noblesse",
+    "theme_store_id": 2546,
+    "version": "1.0.1",
+    "price": "180.00",
+    "theme_url": "https://themes.shopify.com/themes/noblesse/styles/riviera",
+    "developer": {
+      "name": "Vevol Themes",
+      "url": "https://www.vevolmedia.com"
+    }
+  },
+  {
+    "name": "Polyform",
+    "theme_store_id": 2493,
+    "version": "3.1.0",
+    "price": "340.00",
+    "theme_url": "https://themes.shopify.com/themes/polyform/styles/default",
+    "developer": {
+      "name": "SmartBase®",
+      "url": "https://en.smartbase.sk/"
+    }
+  },
+  {
+    "name": "Nordic",
+    "theme_store_id": 2801,
+    "version": "1.2.0",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/nordic/styles/white-oak",
+    "developer": {
+      "name": "Noord",
+      "url": "https://noordthemes.com/"
+    }
+  },
+  {
+    "name": "Energy",
+    "theme_store_id": 2717,
+    "version": "2.1.0",
+    "price": "160.00",
+    "theme_url": "https://themes.shopify.com/themes/energy/styles/active",
+    "developer": {
+      "name": "IT-Geeks",
+      "url": "http://itgeeks.com"
+    }
+  },
+  {
+    "name": "Release",
+    "theme_store_id": 2698,
+    "version": "1.1.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/release/styles/grasse",
+    "developer": {
+      "name": "DigiFist",
+      "url": "https://www.digifist.com/"
+    }
+  },
+  {
+    "name": "Sitar",
+    "theme_store_id": 2599,
+    "version": "1.0.5",
+    "price": "160.00",
+    "theme_url": "https://themes.shopify.com/themes/sitar/styles/home",
+    "developer": {
+      "name": "Winter Infotech",
+      "url": "https://support.winterinfotech.com"
+    }
+  },
+  {
+    "name": "Toyo",
+    "theme_store_id": 2358,
+    "version": "5.0.1",
+    "price": "140.00",
+    "theme_url": "https://themes.shopify.com/themes/toyo/styles/games-and-toys",
+    "developer": {
+      "name": "MUUP",
+      "url": "https://www.muup.co"
+    }
+  },
+  {
+    "name": "Agile",
+    "theme_store_id": 2346,
+    "version": "3.3.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/agile/styles/gorde",
+    "developer": {
+      "name": "Nextsky",
+      "url": "https://nextsky.co/"
+    }
+  },
+  {
+    "name": "Shine",
+    "theme_store_id": 2576,
+    "version": "2.0.0",
+    "price": "210.00",
+    "theme_url": "https://themes.shopify.com/themes/shine/styles/serene",
+    "developer": {
+      "name": "SalesHunterThemes",
+      "url": "https://saleshunterthemes.com"
+    }
+  },
+  {
+    "name": "Murmel",
+    "theme_store_id": 2512,
+    "version": "1.4",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/murmel/styles/default",
+    "developer": {
+      "name": "Prettifyweb",
+      "url": "https://prettifyweb.com/"
+    }
+  },
+  {
+    "name": "Elysian",
+    "theme_store_id": 2578,
+    "version": "1.7.0",
+    "price": "180.00",
+    "theme_url": "https://themes.shopify.com/themes/elysian/styles/district",
+    "developer": {
+      "name": "Koding Themes",
+      "url": "https://kodingthemes.com"
+    }
+  },
+  {
+    "name": "Trade",
+    "theme_store_id": 2699,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/trade/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Copenhagen",
+    "theme_store_id": 2564,
+    "version": "1.0.3",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/copenhagen/styles/primary",
+    "developer": {
+      "name": "Apparent Collective",
+      "url": "https://apparentcollective.com"
+    }
+  },
+  {
+    "name": "Shark",
+    "theme_store_id": 2619,
+    "version": "1.3.3",
+    "price": "180.00",
+    "theme_url": "https://themes.shopify.com/themes/shark/styles/bright",
+    "developer": {
+      "name": "Shine Dezign Infonet",
+      "url": "https://www.shinedezigninfonet.com"
+    }
+  },
+  {
+    "name": "Monk",
+    "theme_store_id": 2515,
+    "version": "1.0.3",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/monk/styles/monograph",
+    "developer": {
+      "name": "Slash Themes",
+      "url": "https://www.slashthemes.com/"
+    }
+  },
+  {
+    "name": "Essence",
+    "theme_store_id": 2366,
+    "version": "3.2.0",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/essence/styles/bold",
+    "developer": {
+      "name": "Alloy Themes",
+      "url": "https://alloythemes.co/"
+    }
+  },
+  {
+    "name": "Zora",
+    "theme_store_id": 2505,
+    "version": "1.5.0",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/zora/styles/default",
+    "developer": {
+      "name": "NOVL",
+      "url": "https://bynovl.com"
+    }
+  },
+  {
+    "name": "Iris",
+    "theme_store_id": 2489,
+    "version": "2.2.0",
+    "price": "390.00",
+    "theme_url": "https://themes.shopify.com/themes/iris/styles/clean",
+    "developer": {
+      "name": "Mana Themes",
+      "url": "https://manathemes.com/"
+    }
+  },
+  {
+    "name": "Tokyo",
+    "theme_store_id": 2629,
+    "version": "2.1.0",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/tokyo/styles/torque",
+    "developer": {
+      "name": "Truly Fine Pixels",
+      "url": "https://trulyfinepixels.com"
+    }
+  },
+  {
+    "name": "Digital",
+    "theme_store_id": 2539,
+    "version": "1.3.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/digital/styles/electric",
+    "developer": {
+      "name": "Segment",
+      "url": "https://madebysegment.com/"
+    }
+  },
+  {
+    "name": "Relax",
+    "theme_store_id": 2477,
+    "version": "2.4.0",
+    "price": "170.00",
+    "theme_url": "https://themes.shopify.com/themes/relax/styles/comfort",
+    "developer": {
+      "name": "Swissuplabs",
+      "url": "https://swissuplabs.com/"
+    }
+  },
+  {
+    "name": "Aesthetic",
+    "theme_store_id": 2514,
+    "version": "1.3.0",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/aesthetic/styles/wood-ash",
+    "developer": {
+      "name": "Noord",
+      "url": "https://noordthemes.com/"
+    }
+  },
+  {
+    "name": "Kidu",
+    "theme_store_id": 2268,
+    "version": "4.3.5",
+    "price": "270.00",
+    "theme_url": "https://themes.shopify.com/themes/kidu/styles/toys",
+    "developer": {
+      "name": "1o1development",
+      "url": "https://1o1development.com/"
+    }
+  },
+  {
+    "name": "Cello",
+    "theme_store_id": 2328,
+    "version": "2.0.3",
+    "price": "150.00",
+    "theme_url": "https://themes.shopify.com/themes/cello/styles/melody",
+    "developer": {
+      "name": "Webibazaar Templates",
+      "url": "https://www.webibazaar.com"
+    }
+  },
+  {
+    "name": "Veena",
+    "theme_store_id": 2566,
+    "version": "1.0.7",
+    "price": "340.00",
+    "theme_url": "https://themes.shopify.com/themes/veena/styles/megamall",
+    "developer": {
+      "name": "Webibazaar Templates",
+      "url": "https://www.webibazaar.com"
+    }
+  },
+  {
+    "name": "Essentials",
+    "theme_store_id": 2482,
+    "version": "1.1.0",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/essentials/styles/monochrome",
+    "developer": {
+      "name": "Noord",
+      "url": "https://noordthemes.com/"
+    }
+  },
+  {
+    "name": "Select",
+    "theme_store_id": 2372,
+    "version": "1.1.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/select/styles/refined",
+    "developer": {
+      "name": "Segment",
+      "url": "https://madebysegment.com/"
+    }
+  },
+  {
+    "name": "Concept",
+    "theme_store_id": 2412,
+    "version": "4.1.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/concept/styles/harmony",
+    "developer": {
+      "name": "RoarTheme",
+      "url": "https://roartheme.co"
+    }
+  },
+  {
+    "name": "Minimalista",
+    "theme_store_id": 2316,
+    "version": "1.4.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/minimalista/styles/graphite",
+    "developer": {
+      "name": "Segment",
+      "url": "https://madebysegment.com/"
+    }
+  },
+  {
+    "name": "Starlite",
+    "theme_store_id": 2455,
+    "version": "3.6.1",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/starlite/styles/echo",
+    "developer": {
+      "name": "Shine Dezign Infonet",
+      "url": "https://www.shinedezigninfonet.com"
+    }
+  },
+  {
+    "name": "Borders",
+    "theme_store_id": 2491,
+    "version": "1.3.4",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/borders/styles/raw",
+    "developer": {
+      "name": "Krown Themes",
+      "url": "https://krownthemes.com"
+    }
+  },
+  {
+    "name": "Distinctive",
+    "theme_store_id": 2431,
+    "version": "2.7.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/distinctive/styles/default",
+    "developer": {
+      "name": "Fuel Themes",
+      "url": "https://fuelthemes.net/"
+    }
+  },
+  {
+    "name": "Pesto",
+    "theme_store_id": 2275,
+    "version": "6.0.0",
+    "price": "260.00",
+    "theme_url": "https://themes.shopify.com/themes/pesto/styles/coffee",
+    "developer": {
+      "name": "ShopiDevs",
+      "url": "https://shopidevs.com/"
+    }
+  },
+  {
+    "name": "Igloo",
+    "theme_store_id": 2315,
+    "version": "2.2.0",
+    "price": "160.00",
+    "theme_url": "https://themes.shopify.com/themes/igloo/styles/cool",
+    "developer": {
+      "name": "IT-Geeks",
+      "url": "http://itgeeks.com"
+    }
+  },
+  {
+    "name": "Barcelona",
+    "theme_store_id": 2324,
+    "version": "1.0.6",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/barcelona/styles/clean",
+    "developer": {
+      "name": "Apparent Collective",
+      "url": "https://apparentcollective.com"
+    }
+  },
+  {
+    "name": "Divide",
+    "theme_store_id": 2273,
+    "version": "2.9.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/divide/styles/play",
+    "developer": {
+      "name": "Squiggle & Code",
+      "url": "https://squiggleandcode.com"
+    }
+  },
+  {
+    "name": "StyleScape",
+    "theme_store_id": 2238,
+    "version": "2.1.2",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/stylescape/styles/amber",
+    "developer": {
+      "name": "Baad Themes",
+      "url": "https://www.baadthemes.com"
+    }
+  },
+  {
+    "name": "Praise",
+    "theme_store_id": 2144,
+    "version": "3.1.0",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/praise/styles/bold",
+    "developer": {
+      "name": "Commence Commerce",
+      "url": "https://commencecommerce.com/"
+    }
+  },
+  {
+    "name": "Multi",
+    "theme_store_id": 2337,
+    "version": "2.2.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/multi/styles/spark",
+    "developer": {
+      "name": "Mile High Themes",
+      "url": "http://www.milehighthemes.com"
+    }
+  },
+  {
+    "name": "Avante",
+    "theme_store_id": 1667,
+    "version": "8.0.3",
+    "price": "290.00",
+    "theme_url": "https://themes.shopify.com/themes/avante/styles/fashion",
+    "developer": {
+      "name": "Staylime",
+      "url": "https://shopify.staylime.com"
+    }
+  },
+  {
+    "name": "Next",
+    "theme_store_id": 2240,
+    "version": "2.0.0",
+    "price": "120.00",
+    "theme_url": "https://themes.shopify.com/themes/next/styles/wood",
+    "developer": {
+      "name": "Someone You Know",
+      "url": "https://help.someoneyouknow.online/"
+    }
+  },
+  {
+    "name": "Cornerstone",
+    "theme_store_id": 2348,
+    "version": "3.0.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/cornerstone/styles/flair",
+    "developer": {
+      "name": "Fluorescent Design Inc.",
+      "url": "http://fluorescent.co"
+    }
+  },
+  {
+    "name": "Amber",
+    "theme_store_id": 2217,
+    "version": "2.3.1",
+    "price": "220.00",
+    "theme_url": "https://themes.shopify.com/themes/amber/styles/amber",
+    "developer": {
+      "name": "BigStart",
+      "url": "https://bigstart.io"
+    }
+  },
+  {
+    "name": "Area",
+    "theme_store_id": 2073,
+    "version": "1.5.1",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/area/styles/stylish",
+    "developer": {
+      "name": "Softali",
+      "url": "https://softali.net"
+    }
+  },
+  {
+    "name": "Monaco",
+    "theme_store_id": 2125,
+    "version": "1.0.8",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/monaco/styles/allure",
+    "developer": {
+      "name": "Apparent Collective",
+      "url": "https://apparentcollective.com"
+    }
+  },
+  {
+    "name": "Vivid",
+    "theme_store_id": 2285,
+    "version": "1.0.5",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/vivid/styles/ruby",
+    "developer": {
+      "name": "Slash Themes",
+      "url": "https://www.slashthemes.com/"
+    }
+  },
+  {
+    "name": "Cama",
+    "theme_store_id": 2204,
+    "version": "4.1.1",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/cama/styles/grace",
+    "developer": {
+      "name": "Trafik Plus",
+      "url": "https://trafik.plus"
+    }
+  },
+  {
+    "name": "Brava",
+    "theme_store_id": 2148,
+    "version": "4.7.0",
+    "price": "220.00",
+    "theme_url": "https://themes.shopify.com/themes/brava/styles/brava",
+    "developer": {
+      "name": "Koding Themes",
+      "url": "https://kodingthemes.com"
+    }
+  },
+  {
+    "name": "Woodstock",
+    "theme_store_id": 2239,
+    "version": "2.3.1",
+    "price": "270.00",
+    "theme_url": "https://themes.shopify.com/themes/woodstock/styles/light",
+    "developer": {
+      "name": "Boostheme",
+      "url": "https://boostheme.com"
+    }
+  },
+  {
+    "name": "Kairo",
+    "theme_store_id": 1843,
+    "version": "2.0.0",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/kairo/styles/default",
+    "developer": {
+      "name": "Harmoniks",
+      "url": "https://www.harmoniks.co"
+    }
+  },
+  {
+    "name": "Nostalgia",
+    "theme_store_id": 2175,
+    "version": "3.0.1",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/nostalgia/styles/earthy",
+    "developer": {
+      "name": "AgniHD",
+      "url": "https://agnihd.com"
+    }
+  },
+  {
+    "name": "Unicorn",
+    "theme_store_id": 2264,
+    "version": "3.1.0",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/unicorn/styles/valuable",
+    "developer": {
+      "name": "MPIthemes",
+      "url": "https://mpthemes.net/"
+    }
+  },
+  {
+    "name": "Abode",
+    "theme_store_id": 1918,
+    "version": "3.1.1",
+    "price": "140.00",
+    "theme_url": "https://themes.shopify.com/themes/abode/styles/furniture",
+    "developer": {
+      "name": "MUUP",
+      "url": "https://www.muup.co"
+    }
+  },
+  {
+    "name": "Xclusive",
+    "theme_store_id": 2221,
+    "version": "2.3.0",
+    "price": "120.00",
+    "theme_url": "https://themes.shopify.com/themes/xclusive/styles/couture",
+    "developer": {
+      "name": "Someone You Know",
+      "url": "https://help.someoneyouknow.online/"
+    }
+  },
+  {
+    "name": "Gem",
+    "theme_store_id": 2222,
+    "version": "3.1.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/gem/styles/garnet",
+    "developer": {
+      "name": "Archetype Themes",
+      "url": "https://archetypethemes.co"
+    }
+  },
+  {
+    "name": "Berlin",
+    "theme_store_id": 2138,
+    "version": "1.2.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/berlin/styles/lifestyle",
+    "developer": {
+      "name": "Apparent Collective",
+      "url": "https://apparentcollective.com"
+    }
+  },
+  {
+    "name": "Urge",
+    "theme_store_id": 2213,
+    "version": "1.0.0",
+    "price": "220.00",
+    "theme_url": "https://themes.shopify.com/themes/urge/styles/default",
+    "developer": {
+      "name": "BlueCap Commerce",
+      "url": "https://bluecapcommerce.com/"
+    }
+  },
+  {
+    "name": "Sydney",
+    "theme_store_id": 2117,
+    "version": "1.1.6",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/sydney/styles/sophisticated",
+    "developer": {
+      "name": "Apparent Collective",
+      "url": "https://apparentcollective.com"
+    }
+  },
+  {
+    "name": "Neat",
+    "theme_store_id": 1878,
+    "version": "2.0.8",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/neat/styles/white",
+    "developer": {
+      "name": "BoostifyThemes",
+      "url": "https://boostifythemes.com"
+    }
+  },
+  {
+    "name": "Charge",
+    "theme_store_id": 2063,
+    "version": "2.9.0",
+    "price": "170.00",
+    "theme_url": "https://themes.shopify.com/themes/charge/styles/default",
+    "developer": {
+      "name": "Swissuplabs",
+      "url": "https://swissuplabs.com/"
+    }
+  },
+  {
+    "name": "Electro",
+    "theme_store_id": 2164,
+    "version": "2.1.2",
+    "price": "200.00",
+    "theme_url": "https://themes.shopify.com/themes/electro/styles/audio",
+    "developer": {
+      "name": "SalesHunterThemes",
+      "url": "https://saleshunterthemes.com"
+    }
+  },
+  {
+    "name": "Exhibit",
+    "theme_store_id": 1828,
+    "version": "1.2.3",
+    "price": "350.00",
+    "theme_url": "https://themes.shopify.com/themes/exhibit/styles/art",
+    "developer": {
+      "name": "Switch",
+      "url": "http://www.switchthemes.co"
+    }
+  },
+  {
+    "name": "Huge",
+    "theme_store_id": 2158,
+    "version": "1.0.0",
+    "price": "290.00",
+    "theme_url": "https://themes.shopify.com/themes/huge/styles/default",
+    "developer": {
+      "name": "BlueCap Commerce",
+      "url": "https://bluecapcommerce.com/"
+    }
+  },
+  {
+    "name": "Lute",
+    "theme_store_id": 2171,
+    "version": "2.3.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/lute/styles/vibrant",
+    "developer": {
+      "name": "ThemeGoal",
+      "url": "https://themegoal.com"
+    }
+  },
+  {
+    "name": "Honey",
+    "theme_store_id": 2160,
+    "version": "9.0.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/honey/styles/paws",
+    "developer": {
+      "name": "Archer Commerce",
+      "url": "https://archer-commerce.helpscoutdocs.com/"
+    }
+  },
+  {
+    "name": "Maranello",
+    "theme_store_id": 2186,
+    "version": "3.1.0",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/maranello/styles/default",
+    "developer": {
+      "name": "Truly Fine Pixels",
+      "url": "https://trulyfinepixels.com"
+    }
+  },
+  {
+    "name": "Fame",
+    "theme_store_id": 2101,
+    "version": "6.4.2",
+    "price": "250.00",
+    "theme_url": "https://themes.shopify.com/themes/fame/styles/dark",
+    "developer": {
+      "name": "Shine Dezign Infonet",
+      "url": "https://www.shinedezigninfonet.com"
+    }
+  },
+  {
+    "name": "Stockmart",
+    "theme_store_id": 2105,
+    "version": "1.3.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/stockmart/styles/modern",
+    "developer": {
+      "name": "Segment",
+      "url": "https://madebysegment.com/"
+    }
+  },
+  {
+    "name": "Align",
+    "theme_store_id": 1966,
+    "version": "1.8.1",
+    "price": "390.00",
+    "theme_url": "https://themes.shopify.com/themes/align/styles/clean",
+    "developer": {
+      "name": "Company XYZ",
+      "url": "https://companyxyz.io/"
+    }
+  },
+  {
+    "name": "Gain",
+    "theme_store_id": 2077,
+    "version": "3.1.0",
+    "price": "260.00",
+    "theme_url": "https://themes.shopify.com/themes/gain/styles/gain",
+    "developer": {
+      "name": "UTD",
+      "url": "https://utdweb.team/"
+    }
+  },
+  {
+    "name": "Vision",
+    "theme_store_id": 2053,
+    "version": "9.0.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/vision/styles/default",
+    "developer": {
+      "name": "Fuel Themes",
+      "url": "https://fuelthemes.net/"
+    }
+  },
+  {
+    "name": "Atom",
+    "theme_store_id": 1974,
+    "version": "3.1.0",
+    "price": "160.00",
+    "theme_url": "https://themes.shopify.com/themes/atom/styles/entropy",
+    "developer": {
+      "name": "Koding Themes",
+      "url": "https://kodingthemes.com"
+    }
+  },
+  {
+    "name": "Aurora",
+    "theme_store_id": 1770,
+    "version": "3.5.1",
+    "price": "340.00",
+    "theme_url": "https://themes.shopify.com/themes/aurora/styles/pure",
+    "developer": {
+      "name": "Getsitecontrol",
+      "url": "https://getsitecontrol.com"
+    }
+  },
+  {
+    "name": "Enterprise",
+    "theme_store_id": 1657,
+    "version": "1.6.2",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/enterprise/styles/digital",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Eurus",
+    "theme_store_id": 2048,
+    "version": "8.6.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/eurus/styles/puff",
+    "developer": {
+      "name": "BSS Commerce",
+      "url": "https://omnithemes.com/eurus-theme/"
+    }
+  },
+  {
+    "name": "Bazaar",
+    "theme_store_id": 1448,
+    "version": "1.1.46",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/bazaar/styles/default",
+    "developer": {
+      "name": "QooQee Inc.",
+      "url": "http://www.qooqee.com"
+    }
+  },
+  {
+    "name": "Mavon",
+    "theme_store_id": 1979,
+    "version": "9.1.0",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/mavon/styles/fashion",
+    "developer": {
+      "name": "Gloryio",
+      "url": "https://mavon.gloryio.com/"
+    }
+  },
+  {
+    "name": "Creator",
+    "theme_store_id": 1922,
+    "version": "3.4.1",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/creator/styles/streamer",
+    "developer": {
+      "name": "Purple Labs",
+      "url": "http://purplelabs.co/"
+    }
+  },
+  {
+    "name": "Viola",
+    "theme_store_id": 1701,
+    "version": "2.0.0",
+    "price": "210.00",
+    "theme_url": "https://themes.shopify.com/themes/viola/styles/classic",
+    "developer": {
+      "name": "Webibazaar Templates",
+      "url": "https://www.webibazaar.com"
+    }
+  },
+  {
+    "name": "Sahara",
+    "theme_store_id": 1926,
+    "version": "1.2.10",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/sahara/styles/sahara",
+    "developer": {
+      "name": "DigiFist",
+      "url": "https://www.digifist.com/"
+    }
+  },
+  {
+    "name": "Portland",
+    "theme_store_id": 1924,
+    "version": "2.3.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/portland/styles/heartbeat",
+    "developer": {
+      "name": "Superfine",
+      "url": "https://superfinedigital.com/"
+    }
+  },
+  {
+    "name": "Fetch",
+    "theme_store_id": 1949,
+    "version": "3.1.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/fetch/styles/bark",
+    "developer": {
+      "name": "Archetype Themes",
+      "url": "https://archetypethemes.co"
+    }
+  },
+  {
+    "name": "Mono",
+    "theme_store_id": 1818,
+    "version": "1.1.0",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/mono/styles/vanilla",
+    "developer": {
+      "name": "Slash Themes",
+      "url": "https://www.slashthemes.com/"
+    }
+  },
+  {
+    "name": "Blum",
+    "theme_store_id": 1839,
+    "version": "2.3.1",
+    "price": "170.00",
+    "theme_url": "https://themes.shopify.com/themes/blum/styles/celia",
+    "developer": {
+      "name": "SalesHunterThemes",
+      "url": "https://saleshunterthemes.com"
+    }
+  },
+  {
+    "name": "Momentum",
+    "theme_store_id": 1600,
+    "version": "6.9.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/momentum/styles/default",
+    "developer": {
+      "name": "Eight Themes",
+      "url": "https://www.eightthemes.com"
+    }
+  },
+  {
+    "name": "Roam",
+    "theme_store_id": 1777,
+    "version": "5.2.3",
+    "price": "140.00",
+    "theme_url": "https://themes.shopify.com/themes/roam/styles/solo",
+    "developer": {
+      "name": "Red Plug Design Co.",
+      "url": "http://www.redplugdesign.com"
+    }
+  },
+  {
+    "name": "Taiga",
+    "theme_store_id": 1751,
+    "version": "3.9.0",
+    "price": "490.00",
+    "theme_url": "https://themes.shopify.com/themes/taiga/styles/sage",
+    "developer": {
+      "name": "Woolman",
+      "url": "https://woolman.co"
+    }
+  },
+  {
+    "name": "Marble",
+    "theme_store_id": 1907,
+    "version": "4.0.2",
+    "price": "290.00",
+    "theme_url": "https://themes.shopify.com/themes/marble/styles/marble",
+    "developer": {
+      "name": "BigStart",
+      "url": "https://bigstart.io"
+    }
+  },
+  {
+    "name": "Frame",
+    "theme_store_id": 1716,
+    "version": "6.1.5",
+    "price": "160.00",
+    "theme_url": "https://themes.shopify.com/themes/frame/styles/madison",
+    "developer": {
+      "name": "Archer Commerce",
+      "url": "https://archer-commerce.helpscoutdocs.com/"
+    }
+  },
+  {
+    "name": "Spotlight",
+    "theme_store_id": 1891,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/spotlight/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Creative",
+    "theme_store_id": 1829,
+    "version": "8.1.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/creative/styles/chalk",
+    "developer": {
+      "name": "Safe As Milk",
+      "url": "http://safeasmilk.co"
+    }
+  },
+  {
+    "name": "Modules",
+    "theme_store_id": 1795,
+    "version": "3.0.1",
+    "price": "200.00",
+    "theme_url": "https://themes.shopify.com/themes/modules/styles/sky",
+    "developer": {
+      "name": "Argo Themes",
+      "url": ""
+    }
+  },
+  {
+    "name": "Whisk",
+    "theme_store_id": 1819,
+    "version": "12.0.0",
+    "price": "310.00",
+    "theme_url": "https://themes.shopify.com/themes/whisk/styles/soft",
+    "developer": {
+      "name": "Coquelicot",
+      "url": "https://coquelicot.io"
+    }
+  },
+  {
+    "name": "Emporium",
+    "theme_store_id": 1854,
+    "version": "3.1.2",
+    "price": "230.00",
+    "theme_url": "https://themes.shopify.com/themes/emporium/styles/fruity",
+    "developer": {
+      "name": "Themu",
+      "url": "https://usethemu.com/"
+    }
+  },
+  {
+    "name": "Effortless",
+    "theme_store_id": 1743,
+    "version": "4.0.3",
+    "price": "190.00",
+    "theme_url": "https://themes.shopify.com/themes/effortless/styles/trend",
+    "developer": {
+      "name": "BlueCap Commerce",
+      "url": "https://bluecapcommerce.com/"
+    }
+  },
+  {
+    "name": "Combine",
+    "theme_store_id": 1826,
+    "version": "2.6.1",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/combine/styles/objects",
+    "developer": {
+      "name": "Krown Themes",
+      "url": "https://krownthemes.com"
+    }
+  },
+  {
+    "name": "Publisher",
+    "theme_store_id": 1864,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/publisher/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Origin",
+    "theme_store_id": 1841,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/origin/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Handmade",
+    "theme_store_id": 1791,
+    "version": "2.2.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/handmade/styles/dusty-brown",
+    "developer": {
+      "name": "Superfine",
+      "url": "https://superfinedigital.com/"
+    }
+  },
+  {
+    "name": "Erickson",
+    "theme_store_id": 1790,
+    "version": "8.0.0",
+    "price": "220.00",
+    "theme_url": "https://themes.shopify.com/themes/erickson/styles/origin",
+    "developer": {
+      "name": "Koding Themes",
+      "url": "https://kodingthemes.com"
+    }
+  },
+  {
+    "name": "Banjo",
+    "theme_store_id": 1778,
+    "version": "3.3.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/banjo/styles/creative",
+    "developer": {
+      "name": "ThemeGoal",
+      "url": "https://themegoal.com"
+    }
+  },
+  {
+    "name": "Reformation",
+    "theme_store_id": 1762,
+    "version": "8.4.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/reformation/styles/default",
+    "developer": {
+      "name": "Fuel Themes",
+      "url": "https://fuelthemes.net/"
+    }
+  },
+  {
+    "name": "Paper",
+    "theme_store_id": 1662,
+    "version": "8.0.1",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/paper/styles/poster",
+    "developer": {
+      "name": "Brickspace Lab",
+      "url": "https://brickspacelab.com/"
+    }
+  },
+  {
+    "name": "Impact",
+    "theme_store_id": 1190,
+    "version": "6.7.1",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/impact/styles/sound",
+    "developer": {
+      "name": "Maestrooo",
+      "url": "http://maestrooo.com"
+    }
+  },
+  {
+    "name": "Zest",
+    "theme_store_id": 1611,
+    "version": "9.0.0",
+    "price": "330.00",
+    "theme_url": "https://themes.shopify.com/themes/zest/styles/flairy",
+    "developer": {
+      "name": "FOXECOM",
+      "url": "https://foxecom.com"
+    }
+  },
+  {
+    "name": "Mode",
+    "theme_store_id": 1578,
+    "version": "4.1.2",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/mode/styles/orbit",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Xtra",
+    "theme_store_id": 1609,
+    "version": "5.3.0",
+    "price": "120.00",
+    "theme_url": "https://themes.shopify.com/themes/xtra/styles/maximum",
+    "developer": {
+      "name": "Someone You Know",
+      "url": "https://help.someoneyouknow.online/"
+    }
+  },
+  {
+    "name": "Mandolin",
+    "theme_store_id": 1696,
+    "version": "3.3.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/mandolin/styles/neat",
+    "developer": {
+      "name": "ThemeGoal",
+      "url": "https://themegoal.com"
+    }
+  },
+  {
+    "name": "Yuva",
+    "theme_store_id": 1615,
+    "version": "12.3.4",
+    "price": "310.00",
+    "theme_url": "https://themes.shopify.com/themes/yuva/styles/amaze",
+    "developer": {
+      "name": "Shine Dezign Infonet",
+      "url": "https://www.shinedezigninfonet.com"
+    }
+  },
+  {
+    "name": "Local",
+    "theme_store_id": 1651,
+    "version": "2.6.2",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/local/styles/light",
+    "developer": {
+      "name": "Krown Themes",
+      "url": "https://krownthemes.com"
+    }
+  },
+  {
+    "name": "Pursuit",
+    "theme_store_id": 1654,
+    "version": "1.3",
+    "price": "350.00",
+    "theme_url": "https://themes.shopify.com/themes/pursuit/styles/aspen",
+    "developer": {
+      "name": "Mile High Themes",
+      "url": "http://www.milehighthemes.com"
+    }
+  },
+  {
+    "name": "Stiletto",
+    "theme_store_id": 1621,
+    "version": "3.4.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/stiletto/styles/vogue",
+    "developer": {
+      "name": "Fluorescent Design Inc.",
+      "url": "http://fluorescent.co"
+    }
+  },
+  {
+    "name": "Chord",
+    "theme_store_id": 1584,
+    "version": "4.3.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/chord/styles/warm",
+    "developer": {
+      "name": "ThemeGoal",
+      "url": "https://themegoal.com"
+    }
+  },
+  {
+    "name": "Forge",
+    "theme_store_id": 1492,
+    "version": "4.0.1",
+    "price": "190.00",
+    "theme_url": "https://themes.shopify.com/themes/forge/styles/platinum",
+    "developer": {
+      "name": "We are Underground LLC",
+      "url": "https://www.weareunderground.com"
+    }
+  },
+  {
+    "name": "Athens",
+    "theme_store_id": 1608,
+    "version": "4.1.0",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/athens/styles/default",
+    "developer": {
+      "name": "Truly Fine Pixels",
+      "url": "https://trulyfinepixels.com"
+    }
+  },
+  {
+    "name": "Habitat",
+    "theme_store_id": 1581,
+    "version": "7.1.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/habitat/styles/default",
+    "developer": {
+      "name": "Fuel Themes",
+      "url": "https://fuelthemes.net/"
+    }
+  },
+  {
+    "name": "Minion",
+    "theme_store_id": 1571,
+    "version": "3.0.1",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/minion/styles/vertical",
+    "developer": {
+      "name": "Softali",
+      "url": "https://softali.net"
+    }
+  },
+  {
+    "name": "Refresh",
+    "theme_store_id": 1567,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/refresh/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Stockholm",
+    "theme_store_id": 1405,
+    "version": "2.2.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/stockholm/styles/default",
+    "developer": {
+      "name": "Superfine",
+      "url": "https://superfinedigital.com/"
+    }
+  },
+  {
+    "name": "Influence",
+    "theme_store_id": 1536,
+    "version": "4.8.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/influence/styles/default",
+    "developer": {
+      "name": "Eight Themes",
+      "url": "https://www.eightthemes.com"
+    }
+  },
+  {
+    "name": "Andaman",
+    "theme_store_id": 1390,
+    "version": "1.5.5",
+    "price": "290.00",
+    "theme_url": "https://themes.shopify.com/themes/andaman/styles/underwear",
+    "developer": {
+      "name": "Barracuda",
+      "url": "http://barracuda.to"
+    }
+  },
+  {
+    "name": "Shapes",
+    "theme_store_id": 1535,
+    "version": "3.0.5",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/shapes/styles/bold",
+    "developer": {
+      "name": "Switch",
+      "url": "http://www.switchthemes.co"
+    }
+  },
+  {
+    "name": "Mojave",
+    "theme_store_id": 1497,
+    "version": "2.0.15",
+    "price": "350.00",
+    "theme_url": "https://themes.shopify.com/themes/mojave/styles/mojave",
+    "developer": {
+      "name": "DigiFist",
+      "url": "https://www.digifist.com/"
+    }
+  },
+  {
+    "name": "North",
+    "theme_store_id": 1460,
+    "version": "6.2.0",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/north/styles/default",
+    "developer": {
+      "name": "Fuel Themes",
+      "url": "https://fuelthemes.net/"
+    }
+  },
+  {
+    "name": "Colorblock",
+    "theme_store_id": 1499,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/colorblock/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Ride",
+    "theme_store_id": 1500,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/ride/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Tailor",
+    "theme_store_id": 1457,
+    "version": "3.1.1",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/tailor/styles/cotton",
+    "developer": {
+      "name": "Pixel Union",
+      "url": "http://www.pixelunion.net/shopify-themes"
+    }
+  },
+  {
+    "name": "Studio",
+    "theme_store_id": 1431,
+    "version": "15.3.1",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/studio/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Taste",
+    "theme_store_id": 1434,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/taste/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Bullet",
+    "theme_store_id": 1114,
+    "version": "5.3.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/bullet/styles/default",
+    "developer": {
+      "name": "OpenThinking",
+      "url": "https://openthinking.net/"
+    }
+  },
+  {
+    "name": "Be Yours",
+    "theme_store_id": 1399,
+    "version": "8.2.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/be-yours/styles/beauty",
+    "developer": {
+      "name": "RoarTheme",
+      "url": "https://roartheme.co"
+    }
+  },
+  {
+    "name": "Sense",
+    "theme_store_id": 1356,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/sense/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Crave",
+    "theme_store_id": 1363,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/crave/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Craft",
+    "theme_store_id": 1368,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/craft/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Drop",
+    "theme_store_id": 1197,
+    "version": "4.1.0",
+    "price": "440.00",
+    "theme_url": "https://themes.shopify.com/themes/drop/styles/reveal",
+    "developer": {
+      "name": "We are Underground LLC",
+      "url": "https://www.weareunderground.com"
+    }
+  },
+  {
+    "name": "Dawn",
+    "theme_store_id": 887,
+    "version": "15.3.0",
+    "price": "0.00",
+    "theme_url": "https://themes.shopify.com/themes/dawn/styles/default",
+    "developer": {
+      "name": "Shopify",
+      "url": "https://shopify.com"
+    }
+  },
+  {
+    "name": "Beyond",
+    "theme_store_id": 939,
+    "version": "5.0.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/beyond/styles/organic",
+    "developer": {
+      "name": "Troop Themes",
+      "url": "http://troopthemes.com"
+    }
+  },
+  {
+    "name": "Foodie",
+    "theme_store_id": 918,
+    "version": "5.2.1",
+    "price": "150.00",
+    "theme_url": "https://themes.shopify.com/themes/foodie/styles/grind",
+    "developer": {
+      "name": "We are Underground LLC",
+      "url": "https://www.weareunderground.com"
+    }
+  },
+  {
+    "name": "Spark",
+    "theme_store_id": 911,
+    "version": "3.3.7",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/spark/styles/chic",
+    "developer": {
+      "name": "Fluorescent Design Inc.",
+      "url": "http://fluorescent.co"
+    }
+  },
+  {
+    "name": "Baseline",
+    "theme_store_id": 910,
+    "version": "3.3.4",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/baseline/styles/modern",
+    "developer": {
+      "name": "Switch",
+      "url": "http://www.switchthemes.co"
+    }
+  },
+  {
+    "name": "Highlight",
+    "theme_store_id": 903,
+    "version": "3.3.3",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/highlight/styles/modern",
+    "developer": {
+      "name": "Krown Themes",
+      "url": "https://krownthemes.com"
+    }
+  },
+  {
+    "name": "Expanse",
+    "theme_store_id": 902,
+    "version": "6.1.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/expanse/styles/modern",
+    "developer": {
+      "name": "Archetype Themes",
+      "url": "https://archetypethemes.co"
+    }
+  },
+  {
+    "name": "Streamline",
+    "theme_store_id": 872,
+    "version": "6.6.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/streamline/styles/core",
+    "developer": {
+      "name": "Archetype Themes",
+      "url": "https://archetypethemes.co"
+    }
+  },
+  {
+    "name": "Warehouse",
+    "theme_store_id": 871,
+    "version": "6.3.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/warehouse/styles/metal",
+    "developer": {
+      "name": "Maestrooo",
+      "url": "http://maestrooo.com"
+    }
+  },
+  {
+    "name": "Broadcast",
+    "theme_store_id": 868,
+    "version": "6.1.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/broadcast/styles/clean",
+    "developer": {
+      "name": "Presidio",
+      "url": "https://presidiodev.com"
+    }
+  },
+  {
+    "name": "Avenue",
+    "theme_store_id": 865,
+    "version": "11.0.2",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/avenue/styles/precise",
+    "developer": {
+      "name": "Red Plug Design Co.",
+      "url": "http://www.redplugdesign.com"
+    }
+  },
+  {
+    "name": "Story",
+    "theme_store_id": 864,
+    "version": "4.2.2",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/story/styles/bright",
+    "developer": {
+      "name": "Groupthought",
+      "url": "https://groupthought.com/"
+    }
+  },
+  {
+    "name": "Boost",
+    "theme_store_id": 863,
+    "version": "6.2.4",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/boost/styles/spark",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Cascade",
+    "theme_store_id": 859,
+    "version": "4.1.4",
+    "price": "350.00",
+    "theme_url": "https://themes.shopify.com/themes/cascade/styles/modern",
+    "developer": {
+      "name": "Switch",
+      "url": "http://www.switchthemes.co"
+    }
+  },
+  {
+    "name": "Impulse",
+    "theme_store_id": 857,
+    "version": "7.6.1",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/impulse/styles/modern",
+    "developer": {
+      "name": "Archetype Themes",
+      "url": "https://archetypethemes.co"
+    }
+  },
+  {
+    "name": "Prestige",
+    "theme_store_id": 855,
+    "version": "10.7.0",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/prestige/styles/allure",
+    "developer": {
+      "name": "Maestrooo",
+      "url": "http://maestrooo.com"
+    }
+  },
+  {
+    "name": "Galleria",
+    "theme_store_id": 851,
+    "version": "3.4.0",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/galleria/styles/empire",
+    "developer": {
+      "name": "Mile High Themes",
+      "url": "http://www.milehighthemes.com"
+    }
+  },
+  {
+    "name": "Modular",
+    "theme_store_id": 849,
+    "version": "4.1.3",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/modular/styles/mayfair",
+    "developer": {
+      "name": "Presidio",
+      "url": "https://presidiodev.com"
+    }
+  },
+  {
+    "name": "Motion",
+    "theme_store_id": 847,
+    "version": "10.6.1",
+    "price": "400.00",
+    "theme_url": "https://themes.shopify.com/themes/motion/styles/classic",
+    "developer": {
+      "name": "Archetype Themes",
+      "url": "https://archetypethemes.co"
+    }
+  },
+  {
+    "name": "Loft",
+    "theme_store_id": 846,
+    "version": "2.3.7",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/loft/styles/nashville",
+    "developer": {
+      "name": "Trailblaze Media",
+      "url": "https://trailblazemedia.com"
+    }
+  },
+  {
+    "name": "Split",
+    "theme_store_id": 842,
+    "version": "4.3.3",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/split/styles/cuber",
+    "developer": {
+      "name": "Krown Themes",
+      "url": "https://krownthemes.com"
+    }
+  },
+  {
+    "name": "Empire",
+    "theme_store_id": 838,
+    "version": "11.1.3",
+    "price": "340.00",
+    "theme_url": "https://themes.shopify.com/themes/empire/styles/supply",
+    "developer": {
+      "name": "Pixel Union",
+      "url": "http://www.pixelunion.net/shopify-themes"
+    }
+  },
+  {
+    "name": "Venue",
+    "theme_store_id": 836,
+    "version": "15.1.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/venue/styles/morning",
+    "developer": {
+      "name": "Safe As Milk",
+      "url": "http://safeasmilk.co"
+    }
+  },
+  {
+    "name": "Emerge",
+    "theme_store_id": 833,
+    "version": "8.0.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/emerge/styles/tones",
+    "developer": {
+      "name": "Troop Themes",
+      "url": "http://troopthemes.com"
+    }
+  },
+  {
+    "name": "Capital",
+    "theme_store_id": 812,
+    "version": "33.9.2",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/capital/styles/evoke",
+    "developer": {
+      "name": "Eight Themes",
+      "url": "https://www.eightthemes.com"
+    }
+  },
+  {
+    "name": "Flow",
+    "theme_store_id": 801,
+    "version": "39.9.1",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/flow/styles/nourish",
+    "developer": {
+      "name": "Eight Themes",
+      "url": "https://www.eightthemes.com"
+    }
+  },
+  {
+    "name": "Lorenza",
+    "theme_store_id": 798,
+    "version": "6.5.6",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/lorenza/styles/chic",
+    "developer": {
+      "name": "Fluorescent Design Inc.",
+      "url": "http://fluorescent.co"
+    }
+  },
+  {
+    "name": "Palo Alto",
+    "theme_store_id": 777,
+    "version": "6.2.0",
+    "price": "390.00",
+    "theme_url": "https://themes.shopify.com/themes/palo-alto/styles/vibrant",
+    "developer": {
+      "name": "Presidio",
+      "url": "https://presidiodev.com"
+    }
+  },
+  {
+    "name": "Maker",
+    "theme_store_id": 765,
+    "version": "10.0.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/maker/styles/bloom",
+    "developer": {
+      "name": "Troop Themes",
+      "url": "http://troopthemes.com"
+    }
+  },
+  {
+    "name": "Label",
+    "theme_store_id": 773,
+    "version": "3.6.2",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/label/styles/music",
+    "developer": {
+      "name": "Switch",
+      "url": "http://www.switchthemes.co"
+    }
+  },
+  {
+    "name": "Pipeline",
+    "theme_store_id": 739,
+    "version": "7.5.0",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/pipeline/styles/clean",
+    "developer": {
+      "name": "Groupthought",
+      "url": "https://groupthought.com/"
+    }
+  },
+  {
+    "name": "Colors",
+    "theme_store_id": 757,
+    "version": "9.13.0",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/colors/styles/generic",
+    "developer": {
+      "name": "Small Victories",
+      "url": "http://www.smallvictories.co/"
+    }
+  },
+  {
+    "name": "District",
+    "theme_store_id": 735,
+    "version": "5.0.5",
+    "price": "220.00",
+    "theme_url": "https://themes.shopify.com/themes/district/styles/district",
+    "developer": {
+      "name": "Style Hatch, Inc",
+      "url": "http://www.stylehatch.com"
+    }
+  },
+  {
+    "name": "Canopy",
+    "theme_store_id": 732,
+    "version": "6.3.2",
+    "price": "390.00",
+    "theme_url": "https://themes.shopify.com/themes/canopy/styles/natural",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Kingdom",
+    "theme_store_id": 725,
+    "version": "5.3.3",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/kingdom/styles/king",
+    "developer": {
+      "name": "Krown Themes",
+      "url": "https://krownthemes.com"
+    }
+  },
+  {
+    "name": "Grid",
+    "theme_store_id": 718,
+    "version": "6.3.2",
+    "price": "260.00",
+    "theme_url": "https://themes.shopify.com/themes/grid/styles/bright",
+    "developer": {
+      "name": "Pixel Union",
+      "url": "http://www.pixelunion.net/shopify-themes"
+    }
+  },
+  {
+    "name": "ShowTime",
+    "theme_store_id": 687,
+    "version": "7.14.0",
+    "price": "330.00",
+    "theme_url": "https://themes.shopify.com/themes/showtime/styles/cooktime",
+    "developer": {
+      "name": "Mile High Themes",
+      "url": "http://www.milehighthemes.com"
+    }
+  },
+  {
+    "name": "Focal",
+    "theme_store_id": 714,
+    "version": "12.5.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/focal/styles/carbon",
+    "developer": {
+      "name": "Maestrooo",
+      "url": "http://maestrooo.com"
+    }
+  },
+  {
+    "name": "California",
+    "theme_store_id": 691,
+    "version": "9.14.0",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/california/styles/generic",
+    "developer": {
+      "name": "Small Victories",
+      "url": "http://www.smallvictories.co/"
+    }
+  },
+  {
+    "name": "Icon",
+    "theme_store_id": 686,
+    "version": "11.1.0",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/icon/styles/dolce",
+    "developer": {
+      "name": "We are Underground LLC",
+      "url": "https://www.weareunderground.com"
+    }
+  },
+  {
+    "name": "Parallax",
+    "theme_store_id": 688,
+    "version": "6.1.2",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/parallax/styles/aspen",
+    "developer": {
+      "name": "Out of the Sandbox",
+      "url": "https://outofthesandbox.com"
+    }
+  },
+  {
+    "name": "Showcase",
+    "theme_store_id": 677,
+    "version": "7.1.6",
+    "price": "360.00",
+    "theme_url": "https://themes.shopify.com/themes/showcase/styles/betty",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Alchemy",
+    "theme_store_id": 657,
+    "version": "5.1.2",
+    "price": "420.00",
+    "theme_url": "https://themes.shopify.com/themes/alchemy/styles/sharp",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Startup",
+    "theme_store_id": 652,
+    "version": "12.3.3",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/startup/styles/tech",
+    "developer": {
+      "name": "Pixel Union",
+      "url": "http://www.pixelunion.net/shopify-themes"
+    }
+  },
+  {
+    "name": "Testament",
+    "theme_store_id": 623,
+    "version": "14.0.0",
+    "price": "350.00",
+    "theme_url": "https://themes.shopify.com/themes/testament/styles/genesis",
+    "developer": {
+      "name": "We are Underground LLC",
+      "url": "https://www.weareunderground.com"
+    }
+  },
+  {
+    "name": "Blockshop",
+    "theme_store_id": 606,
+    "version": "11.0.1",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/blockshop/styles/beauty",
+    "developer": {
+      "name": "Troop Themes",
+      "url": "http://troopthemes.com"
+    }
+  },
+  {
+    "name": "Retina",
+    "theme_store_id": 601,
+    "version": "7.3.2",
+    "price": "220.00",
+    "theme_url": "https://themes.shopify.com/themes/retina/styles/amsterdam",
+    "developer": {
+      "name": "Out of the Sandbox",
+      "url": "https://outofthesandbox.com"
+    }
+  },
+  {
+    "name": "Mr Parker",
+    "theme_store_id": 567,
+    "version": "10.1.1",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/mr-parker/styles/wardrobe",
+    "developer": {
+      "name": "We are Underground LLC",
+      "url": "https://www.weareunderground.com"
+    }
+  },
+  {
+    "name": "Providence",
+    "theme_store_id": 587,
+    "version": "6.1.0",
+    "price": "200.00",
+    "theme_url": "https://themes.shopify.com/themes/providence/styles/thunderbolt",
+    "developer": {
+      "name": "Skup",
+      "url": "https://skup.net"
+    }
+  },
+  {
+    "name": "Symmetry",
+    "theme_store_id": 568,
+    "version": "7.4.0",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/symmetry/styles/chantilly",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Atlantic",
+    "theme_store_id": 566,
+    "version": "18.2.2",
+    "price": "280.00",
+    "theme_url": "https://themes.shopify.com/themes/atlantic/styles/plush",
+    "developer": {
+      "name": "Pixel Union",
+      "url": "http://www.pixelunion.net/shopify-themes"
+    }
+  },
+  {
+    "name": "Vantage",
+    "theme_store_id": 459,
+    "version": "11.1.1",
+    "price": "230.00",
+    "theme_url": "https://themes.shopify.com/themes/vantage/styles/clean",
+    "developer": {
+      "name": "We are Underground LLC",
+      "url": "https://www.weareunderground.com"
+    }
+  },
+  {
+    "name": "Editions",
+    "theme_store_id": 457,
+    "version": "13.3.3",
+    "price": "100.00",
+    "theme_url": "https://themes.shopify.com/themes/editions/styles/spring",
+    "developer": {
+      "name": "Pixel Union",
+      "url": "http://www.pixelunion.net/shopify-themes"
+    }
+  },
+  {
+    "name": "Masonry",
+    "theme_store_id": 450,
+    "version": "6.1.4",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/masonry/styles/dragonfly",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Envy",
+    "theme_store_id": 411,
+    "version": "33.9.1",
+    "price": "380.00",
+    "theme_url": "https://themes.shopify.com/themes/envy/styles/luxe",
+    "developer": {
+      "name": "Eight Themes",
+      "url": "https://www.eightthemes.com"
+    }
+  },
+  {
+    "name": "Responsive",
+    "theme_store_id": 304,
+    "version": "9.1.2",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/responsive/styles/london",
+    "developer": {
+      "name": "Out of the Sandbox",
+      "url": "https://outofthesandbox.com"
+    }
+  },
+  {
+    "name": "Expression",
+    "theme_store_id": 230,
+    "version": "8.2.4",
+    "price": "300.00",
+    "theme_url": "https://themes.shopify.com/themes/expression/styles/naturale",
+    "developer": {
+      "name": "Clean Canvas Ltd",
+      "url": "http://www.cleancanvas.co.uk"
+    }
+  },
+  {
+    "name": "Fashionopolism",
+    "theme_store_id": 141,
+    "version": "9.6.2",
+    "price": "320.00",
+    "theme_url": "https://themes.shopify.com/themes/fashionopolism/styles/haute",
+    "developer": {
+      "name": "We are Underground LLC",
+      "url": "https://www.weareunderground.com"
+    }
+  },
+  {
+    "name": "Sunrise",
+    "theme_store_id": 57,
+    "version": "11.05.02",
+    "price": "240.00",
+    "theme_url": "https://themes.shopify.com/themes/sunrise/styles/spring",
+    "developer": {
+      "name": "Rawsterne Web Design & Illustration",
+      "url": "http://www.rawsterne.co.uk"
+    }
+  }
+]

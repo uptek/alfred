@@ -2,13 +2,25 @@ import { useEffect, useState } from 'preact/hooks';
 import { trackAction } from '@/utils/analytics';
 import type { InfoItemProps, StoreInfo } from './types';
 
-function InfoItem({ label, value, type = 'text', isLast = false, copyable = false }: InfoItemProps) {
+function withUtm(url: string, content: string): string {
+  try {
+    const u = new URL(url);
+    u.searchParams.set('utm_source', 'alfred');
+    u.searchParams.set('utm_medium', 'browser_extension');
+    u.searchParams.set('utm_campaign', 'theme_detector');
+    u.searchParams.set('utm_content', content);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+function CopyIcon({ text, className = '' }: { text: string; className?: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    if (!value) return;
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -16,6 +28,29 @@ function InfoItem({ label, value, type = 'text', isLast = false, copyable = fals
     }
   };
 
+  return (
+    <svg
+      className={`w-5 h-5 p-0.5 shrink-0 self-center cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors ${copied ? 'text-green-600' : ''} ${className}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      onClick={handleCopy}
+      title={copied ? 'Copied!' : 'Click to copy'}>
+      {copied ? (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      ) : (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+        />
+      )}
+    </svg>
+  );
+}
+
+function InfoItem({ label, value, type = 'text', isLast = false, copyable = false }: InfoItemProps) {
   const getValueClassName = () => {
     switch (type) {
       case 'url':
@@ -29,15 +64,9 @@ function InfoItem({ label, value, type = 'text', isLast = false, copyable = fals
   return (
     <div className={`flex justify-between items-center py-3.5 ${!isLast ? 'border-b border-slate-100' : ''}`}>
       <label className="text-sm font-semibold text-slate-500">{label}</label>
-      <span
-        onClick={copyable && value ? handleCopy : undefined}
-        className={`max-w-[60%] break-all text-right select-text ${getValueClassName()} ${
-          copyable && value
-            ? 'underline decoration-2 decoration-slate-300 cursor-pointer hover:decoration-slate-500'
-            : ''
-        } ${copied ? 'text-green-600' : ''}`}
-        title={copyable && value ? (copied ? 'Copied!' : 'Click to copy') : undefined}>
-        {value}
+      <span className={`flex items-center gap-1.5 max-w-[50%] text-right select-text ${getValueClassName()}`}>
+        <span className="overflow-x-auto whitespace-nowrap scrollbar-none">{value}</span>
+        {copyable && value && <CopyIcon text={value} />}
       </span>
     </div>
   );
@@ -81,16 +110,98 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
     });
   }, [storeInfo]);
 
+  const themeName = storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? 'Unknown';
+  const themeStoreUrl = storeInfo.themeStoreEntry?.theme_url;
+  const developer = storeInfo.themeStoreEntry?.developer.name;
+  const price = storeInfo.themeStoreEntry
+    ? storeInfo.themeStoreEntry.price === '0.00' || !storeInfo.themeStoreEntry.price
+      ? 'Free'
+      : `$${storeInfo.themeStoreEntry.price}`
+    : null;
+
   return (
-    <div className="flex flex-col">
-      <InfoItem label="Shopify URL:" value={storeInfo.shopDomain ?? 'N/A'} type="url" />
-      <InfoItem label="Theme name:" value={storeInfo.theme?.schema_name ?? 'N/A'} />
-      <InfoItem label="Theme version:" value={storeInfo.theme?.schema_version ?? 'N/A'} />
+    <div className="flex flex-col mt-3">
+      {/* Header */}
+      <div className="bg-slate-50 rounded-lg p-4 mb-3 text-center">
+        <div className="flex items-center justify-center gap-1.5">
+          {themeStoreUrl ? (
+            <a
+              href={withUtm(themeStoreUrl, 'theme_name')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-lg font-bold text-slate-900 underline decoration-2 decoration-slate-300 hover:decoration-slate-500"
+              title="Open theme store listing">
+              {themeName}
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            </a>
+          ) : (
+            <span className="text-lg font-bold text-slate-900">{themeName}</span>
+          )}
+        </div>
+        {storeInfo.shopDomain && (
+          <div className="flex items-center justify-center gap-1 mt-1">
+            <a
+              href={withUtm(`https://${storeInfo.shopDomain}`, 'store_url')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-indigo-500 font-mono hover:text-indigo-600">
+              {storeInfo.shopDomain}
+            </a>
+            <CopyIcon text={storeInfo.shopDomain} />
+          </div>
+        )}
+        <p className="text-xs text-slate-500 mt-1">
+          {storeInfo.themeStoreEntry ? (
+            <>
+              {developer && (
+                <>
+                  by{' '}
+                  {storeInfo.themeStoreEntry.developer.url ? (
+                    <a
+                      href={withUtm(storeInfo.themeStoreEntry.developer.url, 'developer')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-500 underline decoration-slate-300 hover:decoration-slate-500">
+                      {developer}
+                    </a>
+                  ) : (
+                    developer
+                  )}
+                </>
+              )}
+              {developer && (price || storeInfo.theme?.schema_version) && <> · </>}
+              {price}
+              {price && storeInfo.theme?.schema_version && <> · </>}
+              {storeInfo.theme?.schema_version && <>v{storeInfo.theme.schema_version}</>}
+            </>
+          ) : (
+            <>
+              {storeInfo.theme?.schema_version && <>v{storeInfo.theme.schema_version} · </>}
+              (Not listed on Shopify)
+            </>
+          )}
+        </p>
+      </div>
+
+      {/* Details */}
       <InfoItem label="Theme ID:" value={storeInfo.theme?.id?.toString() ?? 'N/A'} copyable />
       {storeInfo.theme?.name &&
         (!storeInfo.theme?.schema_name || storeInfo.theme.name !== storeInfo.theme.schema_name) && (
           <InfoItem label="Theme name (internal):" value={storeInfo.theme.name} copyable />
         )}
+      {storeInfo.themeStoreEntry && (
+        <InfoItem
+          label="Latest version available:"
+          value={storeInfo.themeStoreEntry.version || 'N/A'}
+        />
+      )}
       <div className="py-3.5 border-t border-slate-100">
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-semibold text-slate-500">Preview URL:</label>
@@ -119,21 +230,8 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
               setTimeout(() => setCopying(false), success ? 1500 : 0);
             }}
             disabled={copying || !storeInfo.theme?.id}
-            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${
-              copying ? 'bg-green-500 text-white' : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {copying ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              )}
-            </svg>
+            className={`w-[110px] py-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer ${copying ? 'bg-green-500 text-white' : 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}>
             <span>{copying ? 'Copied' : 'Copy'}</span>
           </button>
         </div>
