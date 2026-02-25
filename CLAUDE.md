@@ -112,3 +112,4 @@ options page.
     ```bash
     bun run changelog:gen
     ```
+
