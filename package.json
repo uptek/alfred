@@ -18,6 +18,7 @@
     "format:check": "oxfmt --check .",
     "changelog:gen": "bun scripts/generate-changelog.ts",
     "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
+    "submit": "bash scripts/submit.sh",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
