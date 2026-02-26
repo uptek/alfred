@@ -2,6 +2,7 @@ import { storage } from '#imports';
 import { registerShortcuts } from './shortcuts';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
+import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
 
 const UNINSTALL_SURVEY_URL = 'https://tally.so/r/zx79O8';
 
@@ -77,14 +78,15 @@ export default defineBackground(() => {
     }
   });
 
-  // Open changelog page when extension is updated
-  if (!import.meta.env.DEV) {
-    browser.runtime.onInstalled.addListener((details) => {
-      if (details.reason === 'update') {
-        browser.tabs.create({
-          url: browser.runtime.getURL('/options.html?page=changelog')
-        });
-      }
-    });
-  }
+  browser.runtime.onInstalled.addListener((details) => {
+    // Prefetch themes cache on install and update
+    refreshThemesCacheIfNeeded();
+
+    // Open changelog page when extension is updated
+    if (!import.meta.env.DEV && details.reason === 'update') {
+      browser.tabs.create({
+        url: browser.runtime.getURL('/options.html?page=changelog')
+      });
+    }
+  });
 });

@@ -1,17 +1,17 @@
-import themesData from '@/assets/data/themes.json';
 import type { Theme, ThemeStoreEntry } from './types';
-
-const themes = themesData as ThemeStoreEntry[];
+import { getThemes } from '@/utils/themesCache';
 
 /**
- * Look up enriched theme data from the bundled themes.json.
+ * Look up enriched theme data from cached/fetched themes.json.
  * Cascading strategy:
  * 1. Match by theme_store_id
  * 2. Match by schema_name against name
  * 3. Match by name against name
  */
-export function lookupThemeStoreEntry(theme: Theme | null): ThemeStoreEntry | null {
+export async function lookupThemeStoreEntry(theme: Theme | null): Promise<ThemeStoreEntry | null> {
   if (!theme) return null;
+
+  const themes = await getThemes();
 
   // 1. Match by theme_store_id
   if (theme.theme_store_id) {

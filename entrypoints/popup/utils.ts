@@ -30,7 +30,7 @@ export const getTheme = async (): Promise<StoreInfo | null> => {
         shopDomain: response?.shop ?? null,
         page_url: tab.url,
         theme,
-        themeStoreEntry: lookupThemeStoreEntry(theme)
+        themeStoreEntry: await lookupThemeStoreEntry(theme)
       };
     }
     return null;

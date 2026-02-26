@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.02.26
+@ 2026-02-26
+Theme data is now fetched from Alfred's CDN instead of being bundled with the extension, so theme information stays up to date automatically.
+
+
 ## 2026.02.25
 @ 2026-02-25
 Theme Detector now shows richer theme details — developer, price, latest version, and direct links to the Shopify Theme Store.

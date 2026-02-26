@@ -1,6 +1,7 @@
 node_modules
 .output
 .wxt
+.wrangler
 .DS_Store
 .env.submit
 playground
