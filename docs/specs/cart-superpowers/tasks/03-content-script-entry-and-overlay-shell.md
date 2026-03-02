@@ -1,6 +1,7 @@
 # Task 03: Content Script Entry and Overlay Shell
 
 **Phase**: 1 — UI Skeleton
+**Status**: ✅ Complete
 **Files to create**:
 - `entrypoints/cart-superpowers.content/index.ts`
 - `entrypoints/cart-superpowers.content/mount.ts`

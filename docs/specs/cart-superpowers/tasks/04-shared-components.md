@@ -1,6 +1,7 @@
 # Task 04: Shared Components (QuantityInput + KeyValueEditor)
 
 **Phase**: 1 — UI Skeleton
+**Status**: ✅ Complete
 **Files to create**:
 - `entrypoints/cart-superpowers.content/components/QuantityInput.svelte`
 - `entrypoints/cart-superpowers.content/components/KeyValueEditor.svelte`

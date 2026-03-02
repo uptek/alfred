@@ -1,6 +1,7 @@
 # Task 13: Context Menu Integration
 
 **Phase**: 3 — Integration
+**Status**: ✅ Complete
 **Files to modify**:
 - `entrypoints/background/shortcuts.ts`
 **Depends on**: Task 03 (content script entry), Task 12 (wired app)

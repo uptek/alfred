@@ -32,6 +32,7 @@ const defaultSettings: AlfredSettings = {
     copyCartJson: true,
     copyThemePreviewUrl: true,
     clearCart: true,
+    cartSuperpowers: true,
     openSectionInCodeEditor: true,
     openImageInAdmin: true
   },

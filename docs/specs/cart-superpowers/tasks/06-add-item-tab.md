@@ -1,6 +1,7 @@
 # Task 06: Add Item Tab
 
 **Phase**: 1 — UI Skeleton
+**Status**: ✅ Complete
 **Files to create**:
 - `entrypoints/cart-superpowers.content/components/AddItemTab.svelte`
 **Depends on**: Task 03, Task 04

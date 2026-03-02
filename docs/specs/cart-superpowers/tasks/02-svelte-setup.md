@@ -1,6 +1,7 @@
 # Task 02: Svelte Setup
 
 **Phase**: 1 — UI Skeleton
+**Status**: ✅ Complete
 **Files to modify**:
 - `package.json`
 - `wxt.config.ts`

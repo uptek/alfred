@@ -29,7 +29,15 @@ export type AnalyticsAction =
   | 'theme_list_copy_id'
   | 'theme_list_copy_preview_url'
   | 'theme_list_preview'
-  | 'theme_list_edit_code';
+  | 'theme_list_edit_code'
+  | 'cart_superpowers_open'
+  | 'cart_superpowers_add_item'
+  | 'cart_superpowers_update_quantity'
+  | 'cart_superpowers_remove_item'
+  | 'cart_superpowers_clear'
+  | 'cart_superpowers_apply_discount'
+  | 'cart_superpowers_update_note'
+  | 'cart_superpowers_calculate_shipping';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -71,7 +79,15 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   theme_list_copy_id: 10,
   theme_list_copy_preview_url: 10,
   theme_list_preview: 5,
-  theme_list_edit_code: 5
+  theme_list_edit_code: 5,
+  cart_superpowers_open: 0,
+  cart_superpowers_add_item: 30,
+  cart_superpowers_update_quantity: 15,
+  cart_superpowers_remove_item: 15,
+  cart_superpowers_clear: 30,
+  cart_superpowers_apply_discount: 20,
+  cart_superpowers_update_note: 15,
+  cart_superpowers_calculate_shipping: 30
 };
 
 /**
