@@ -1,6 +1,7 @@
 # Task 10: Cart API World Script
 
 **Phase**: 2 — Wiring
+**Status**: ✅ Complete
 **Files to create**:
 - `entrypoints/cart-superpowers-world.ts`
 **Depends on**: Task 01 (types)

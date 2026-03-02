@@ -20,7 +20,8 @@ export const registerShortcuts = async () => {
     exitThemePreview: true,
     copyProductJson: true,
     copyCartJson: true,
-    clearCart: true
+    clearCart: true,
+    cartSuperpowers: true
   };
 
   // Create main menu
@@ -288,6 +289,29 @@ export const registerShortcuts = async () => {
             });
           } catch (error) {
             console.error('Error clearing cart:', error);
+          }
+        })();
+      }
+    );
+  }
+
+  // Cart Superpowers
+  if (shortcuts.cartSuperpowers !== false) {
+    create(
+      {
+        id: 'cart-superpowers',
+        title: 'Cart Superpowers',
+        parentId: alfredMenuId
+      },
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.tabs.sendMessage(tab.id!, {
+              action: 'open_cart_superpowers'
+            });
+            trackAction('cart_superpowers_open');
+          } catch (error) {
+            console.error('Error opening Cart Superpowers:', error);
           }
         })();
       }

@@ -76,6 +76,11 @@ const shortcutCategories: ShortcutCategory[] = [
         key: 'clearCart',
         label: 'Clear Cart',
         details: 'Removes all items from the cart'
+      },
+      {
+        key: 'cartSuperpowers',
+        label: 'Cart Superpowers',
+        details: 'Opens a full-featured cart editor overlay'
       }
     ]
   }

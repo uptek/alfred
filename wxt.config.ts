@@ -1,5 +1,6 @@
 import { defineConfig } from 'wxt';
 import preact from '@preact/preset-vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 
 // See https://wxt.dev/api/config.html
@@ -27,10 +28,14 @@ export default defineConfig({
         resources: ['libs/shopify-polaris.js'],
         matches: ['<all_urls>'],
       },
+      {
+        resources: ['cart-superpowers-world.js'],
+        matches: ['<all_urls>'],
+      },
     ],
   },
   vite: () => ({
-    plugins: [preact(), tailwindcss()],
+    plugins: [preact(), svelte(), tailwindcss()],
   }),
   webExt: {
     chromiumArgs: [

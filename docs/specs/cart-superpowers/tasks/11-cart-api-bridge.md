@@ -1,6 +1,7 @@
 # Task 11: Cart API Bridge (Content Script Side)
 
 **Phase**: 2 — Wiring
+**Status**: ✅ Complete
 **Files to create**:
 - `entrypoints/cart-superpowers.content/cartApi.ts`
 **Files to modify**:

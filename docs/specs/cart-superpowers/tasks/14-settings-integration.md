@@ -1,6 +1,7 @@
 # Task 14: Settings Integration
 
 **Phase**: 3 — Integration
+**Status**: ✅ Complete
 **Files to modify**:
 - `global.d.ts` — add `cartSuperpowers` to `AlfredSettings.shortcuts`
 - `entrypoints/options/contexts/SettingsContext.tsx` — add default

@@ -1,6 +1,7 @@
 # Task 01: Types and Mock Data
 
 **Phase**: 1 — UI Skeleton
+**Status**: ✅ Complete
 **Files to create**:
 - `entrypoints/cart-superpowers.content/types.ts`
 - `entrypoints/cart-superpowers.content/mock-data.ts`

@@ -29,10 +29,12 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.10.3",
     "@shopify/app-bridge-ui-types": "^0.3.3",
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "@wxt-dev/auto-icons": "^1.1.1",
     "chokidar-cli": "^3.0.0",
     "oxfmt": "^0.34.0",
     "oxlint": "^1.49.0",
+    "svelte": "^5.53.6",
     "typescript": "^5.9.3",
     "wrangler": "^4.68.1",
     "wxt": "^0.20.18"

@@ -1,6 +1,7 @@
 # Task 07: Metadata Tab
 
 **Phase**: 1 — UI Skeleton
+**Status**: ✅ Complete
 **Files to create**:
 - `entrypoints/cart-superpowers.content/components/MetadataTab.svelte`
 **Depends on**: Task 03, Task 04

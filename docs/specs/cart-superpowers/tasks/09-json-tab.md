@@ -1,6 +1,7 @@
 # Task 09: JSON Tab
 
 **Phase**: 1 — UI Skeleton
+**Status**: ✅ Complete
 **Files to create**:
 - `entrypoints/cart-superpowers.content/components/JsonTab.svelte`
 **Depends on**: Task 03
