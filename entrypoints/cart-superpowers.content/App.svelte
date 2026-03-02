@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import * as api from './cartApi';
   import { trackAction } from '@/utils/analytics';
-  import type { AddItemPayload, CartData, TabId } from './types';
+  import type { AddItemPayload, CartData, CartItem, TabId } from './types';
   import ItemsTab from './components/ItemsTab.svelte';
   import AddItemTab from './components/AddItemTab.svelte';
   import MetadataTab from './components/MetadataTab.svelte';
@@ -15,7 +15,9 @@
   let activeTab: TabId = $state('items');
   let isLoading = $state(true);
   let isUpdating = $state(false);
+  let pendingMutations = $state(0);
   let error: string | null = $state(null);
+  let mutateQueue: Promise<void> = Promise.resolve();
 
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: 'items', label: 'Items' },
@@ -37,16 +39,24 @@
     }
   }
 
-  async function mutate(fn: () => Promise<CartData>) {
+  function mutate(fn: () => Promise<CartData>): Promise<void> {
+    pendingMutations++;
     isUpdating = true;
-    error = null;
-    try {
-      cart = await fn();
-    } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
-      isUpdating = false;
-    }
+
+    const run = async () => {
+      error = null;
+      try {
+        cart = await fn();
+      } catch (err) {
+        error = err instanceof Error ? err.message : String(err);
+      } finally {
+        pendingMutations--;
+        if (pendingMutations === 0) isUpdating = false;
+      }
+    };
+
+    mutateQueue = mutateQueue.then(run);
+    return mutateQueue;
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -119,11 +129,23 @@
         {#if activeTab === 'items'}
           <ItemsTab
             {cart}
-            onUpdateQuantity={(key, qty) => { mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cart_superpowers_update_quantity'); }}
-            onRemoveItem={(key) => { mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cart_superpowers_remove_item'); }}
+            onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cart_superpowers_update_quantity'); }}
+            onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cart_superpowers_remove_item'); }}
             onUpdateProperties={(key, qty, props) => mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }))}
-            onClearCart={() => { mutate(() => api.clearCart()); trackAction('cart_superpowers_clear'); }}
+            onClearCart={async () => { await mutate(() => api.clearCart()); trackAction('cart_superpowers_clear'); }}
             onSwitchTab={(tab) => activeTab = tab as TabId}
+            onSwitchVariant={(key, oldItem, newVariantId) => {
+              return mutate(async () => {
+                await api.changeItem({ id: key, quantity: 0 });
+                return api.addItem({
+                  id: newVariantId,
+                  quantity: oldItem.quantity,
+                  ...(oldItem.properties && Object.keys(oldItem.properties).length > 0 ? { properties: oldItem.properties } : {}),
+                  ...(oldItem.selling_plan_allocation ? { selling_plan: oldItem.selling_plan_allocation.selling_plan.id } : {}),
+                });
+              });
+            }}
+            onFetchProduct={(url) => api.getProductByUrl(url)}
           />
         {:else if activeTab === 'add'}
           <AddItemTab
