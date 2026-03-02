@@ -11,6 +11,11 @@
 
   let { onClose }: { onClose: () => void } = $props();
 
+  type Theme = 'light' | 'dark';
+  let theme: Theme = $state(
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  );
+
   let cart: CartData | null = $state(null);
   let activeTab: TabId = $state('items');
   let isLoading = $state(true);
@@ -75,7 +80,7 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="overlay" onclick={(e: MouseEvent) => { if (e.target === e.currentTarget) onClose(); }}>
+<div class="overlay" class:light={theme === 'light'} onclick={(e: MouseEvent) => { if (e.target === e.currentTarget) onClose(); }}>
   <div class="panel">
     <header class="header">
       <div class="header-left">
@@ -84,7 +89,12 @@
           <span class="badge">{cart.item_count} items</span>
         {/if}
       </div>
-      <button class="close-btn" onclick={onClose}>&#x2715;</button>
+      <div class="header-right">
+        <button class="theme-toggle" onclick={() => theme = theme === 'dark' ? 'light' : 'dark'} title="Toggle theme">
+          {#if theme === 'dark'}&#x2600;{:else}&#x263E;{/if}
+        </button>
+        <button class="close-btn" onclick={onClose}>&#x2715;</button>
+      </div>
     </header>
 
     {#if isLoading}
@@ -203,6 +213,25 @@
     --cs-radius-sm: 4px;
   }
 
+  .overlay.light {
+    background: rgba(0, 0, 0, 0.3);
+    color: #1a1a1a;
+
+    --cs-bg-primary: #ffffff;
+    --cs-bg-secondary: #f5f5f5;
+    --cs-bg-tertiary: #ebebeb;
+    --cs-bg-hover: #e0e0e0;
+    --cs-text-primary: #1a1a1a;
+    --cs-text-secondary: #555555;
+    --cs-text-muted: #999999;
+    --cs-accent: #4f46e5;
+    --cs-accent-hover: #6366f1;
+    --cs-border: #e0e0e0;
+    --cs-danger: #dc2626;
+    --cs-danger-hover: #ef4444;
+    --cs-success: #16a34a;
+  }
+
   .panel {
     position: relative;
     background: var(--cs-bg-primary);
@@ -214,6 +243,10 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
+
+  .light .panel {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   }
 
   .header {
@@ -245,6 +278,31 @@
     border-radius: 10px;
     font-size: 12px;
     font-weight: 500;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .theme-toggle {
+    all: unset;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--cs-radius-sm);
+    color: var(--cs-text-secondary);
+    font-size: 16px;
+    transition: background 150ms, color 150ms;
+  }
+
+  .theme-toggle:hover {
+    background: var(--cs-bg-tertiary);
+    color: var(--cs-text-primary);
   }
 
   .close-btn {
@@ -397,8 +455,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px 20px;
-    background: rgba(239, 68, 68, 0.1);
-    border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    background: color-mix(in srgb, var(--cs-danger) 10%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--cs-danger) 20%, transparent);
     color: var(--cs-danger);
     font-size: 13px;
     flex-shrink: 0;
