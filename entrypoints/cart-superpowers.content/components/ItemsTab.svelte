@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { CartData } from '../types';
+  import type { CartData, CartItem, ProductData } from '../types';
   import QuantityInput from './QuantityInput.svelte';
   import KeyValueEditor from './KeyValueEditor.svelte';
 
@@ -10,16 +10,73 @@
     onUpdateProperties,
     onClearCart,
     onSwitchTab,
+    onSwitchVariant,
+    onFetchProduct,
   }: {
     cart: CartData;
-    onUpdateQuantity: (key: string, quantity: number) => void;
-    onRemoveItem: (key: string) => void;
-    onUpdateProperties: (key: string, quantity: number, properties: Record<string, string>) => void;
-    onClearCart: () => void;
+    onUpdateQuantity: (key: string, quantity: number) => Promise<void>;
+    onRemoveItem: (key: string) => Promise<void>;
+    onUpdateProperties: (key: string, quantity: number, properties: Record<string, string>) => Promise<void>;
+    onClearCart: () => Promise<void>;
     onSwitchTab: (tab: string) => void;
+    onSwitchVariant: (itemKey: string, oldItem: CartItem, newVariantId: number) => Promise<void>;
+    onFetchProduct: (url: string) => Promise<ProductData>;
   } = $props();
 
   let expandedItemKey: string | null = $state(null);
+
+  // Per-item busy state
+  let busyKeys: Set<string> = $state(new Set());
+
+  async function withBusy(key: string, fn: () => Promise<void>) {
+    busyKeys.add(key);
+    busyKeys = new Set(busyKeys); // trigger reactivity
+    try {
+      await fn();
+    } finally {
+      busyKeys.delete(key);
+      busyKeys = new Set(busyKeys);
+    }
+  }
+
+  // Variant switching state
+  let variantEditKey: string | null = $state(null);
+  let variantProductCache: Record<number, ProductData> = $state({});
+  let variantLoading: string | null = $state(null);
+
+  async function openVariantPicker(item: CartItem) {
+    if (item.product_has_only_default_variant) return;
+
+    // Toggle off if already open
+    if (variantEditKey === item.key) {
+      variantEditKey = null;
+      return;
+    }
+
+    variantEditKey = item.key;
+
+    // Fetch product data if not cached
+    if (!variantProductCache[item.product_id]) {
+      variantLoading = item.key;
+      try {
+        const product = await onFetchProduct(item.url);
+        variantProductCache[item.product_id] = product;
+      } catch {
+        variantEditKey = null;
+      } finally {
+        variantLoading = null;
+      }
+    }
+  }
+
+  function handleVariantSelect(item: CartItem, newVariantId: number) {
+    if (newVariantId === item.variant_id) {
+      variantEditKey = null;
+      return;
+    }
+    variantEditKey = null;
+    withBusy(item.key, () => onSwitchVariant(item.key, item, newVariantId));
+  }
 
   function formatPrice(cents: number): string {
     return `$${(cents / 100).toFixed(2)}`;
@@ -64,7 +121,7 @@
 
   function handlePropertiesChange(itemKey: string, quantity: number, entries: Array<{ key: string; value: string }>) {
     propertyEntries[itemKey] = entries;
-    onUpdateProperties(itemKey, quantity, entriesToProps(entries));
+    withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, entriesToProps(entries)));
   }
 </script>
 
@@ -92,7 +149,7 @@
     </thead>
     <tbody>
       {#each cart.items as item, i (item.key)}
-        <tr>
+        <tr class:row-busy={busyKeys.has(item.key)}>
           <td class="row-num">{i + 1}</td>
           <td>
             {#if item.image}
@@ -105,7 +162,45 @@
             <div class="product-title">
               <a href={item.url} target="_blank" rel="noopener noreferrer">{item.product_title}</a>
             </div>
-            {#if item.variant_title}
+            {#if !item.product_has_only_default_variant}
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <div
+                class="variant-title variant-switchable"
+                class:variant-active={variantEditKey === item.key}
+                onclick={() => openVariantPicker(item)}
+              >
+                {#if variantLoading === item.key}
+                  <span class="variant-loading">Loading...</span>
+                {:else}
+                  <span>{item.variant_title || 'Default'}</span>
+                  <span class="variant-switch-icon">{variantEditKey === item.key ? '▾' : '▸'}</span>
+                {/if}
+              </div>
+              {#if variantEditKey === item.key && variantProductCache[item.product_id]}
+                <div class="variant-picker">
+                  {#each variantProductCache[item.product_id].variants as variant (variant.id)}
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <div
+                      class="variant-option"
+                      class:variant-current={variant.id === item.variant_id}
+                      class:variant-unavailable={!variant.available}
+                      onclick={() => handleVariantSelect(item, variant.id)}
+                    >
+                      <span class="variant-option-title">{variant.title}</span>
+                      <span class="variant-option-price">{formatPrice(variant.price)}</span>
+                      {#if !variant.available}
+                        <span class="variant-option-badge">Sold out</span>
+                      {/if}
+                      {#if variant.id === item.variant_id}
+                        <span class="variant-option-badge variant-option-current-badge">Current</span>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
+              {/if}
+            {:else if item.variant_title}
               <div class="variant-title">{item.variant_title}</div>
             {/if}
             {#if item.sku}
@@ -117,7 +212,8 @@
               value={item.quantity}
               min={0}
               max={99}
-              onchange={(qty) => onUpdateQuantity(item.key, qty)}
+              disabled={busyKeys.has(item.key)}
+              onchange={(qty) => withBusy(item.key, () => onUpdateQuantity(item.key, qty))}
             />
           </td>
           <td>
@@ -148,7 +244,7 @@
             {/if}
           </td>
           <td>
-            <button class="remove-btn" onclick={() => onRemoveItem(item.key)} title="Remove item">
+            <button class="remove-btn" disabled={busyKeys.has(item.key)} onclick={() => withBusy(item.key, () => onRemoveItem(item.key))} title="Remove item">
               &#x1D5EB;
             </button>
           </td>
@@ -214,6 +310,12 @@
     background: var(--cs-bg-secondary);
   }
 
+  .items-table tbody tr.row-busy td {
+    opacity: 0.45;
+    pointer-events: none;
+    transition: opacity 150ms;
+  }
+
   .row-num {
     color: var(--cs-text-muted);
     font-size: 12px;
@@ -251,6 +353,90 @@
     font-size: 12px;
     color: var(--cs-text-secondary);
     margin-top: 2px;
+  }
+
+  .variant-switchable {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    margin: 2px 0 0 -6px;
+    border-radius: var(--cs-radius-sm);
+    transition: background 150ms, color 150ms;
+  }
+
+  .variant-switchable:hover,
+  .variant-active {
+    background: var(--cs-bg-tertiary);
+    color: var(--cs-text-primary);
+  }
+
+  .variant-switch-icon {
+    font-size: 10px;
+    color: var(--cs-text-muted);
+  }
+
+  .variant-loading {
+    color: var(--cs-text-muted);
+    font-style: italic;
+  }
+
+  .variant-picker {
+    margin-top: 4px;
+    background: var(--cs-bg-secondary);
+    border: 1px solid var(--cs-border);
+    border-radius: var(--cs-radius-sm);
+    overflow: hidden;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .variant-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 150ms;
+  }
+
+  .variant-option:hover {
+    background: var(--cs-bg-hover);
+  }
+
+  .variant-current {
+    background: var(--cs-bg-tertiary);
+  }
+
+  .variant-unavailable {
+    opacity: 0.5;
+  }
+
+  .variant-option-title {
+    color: var(--cs-text-primary);
+    flex: 1;
+  }
+
+  .variant-option-price {
+    color: var(--cs-text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .variant-option-badge {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--cs-bg-hover);
+    color: var(--cs-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .variant-option-current-badge {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--cs-accent);
   }
 
   .item-sku {
