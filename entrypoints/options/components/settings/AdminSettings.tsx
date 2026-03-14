@@ -24,7 +24,7 @@ const settingsItems: SettingItem[] = [
     key: 'themeListUtils',
     label: 'Theme list utilities',
     details:
-      'Adds quick-access buttons and info (Preview, Edit Code, Theme ID, Preview URL) to each theme on the themes list page'
+      'Adds copy buttons for Theme ID and Preview URL to each theme on the themes list page'
   }
 ];
 
