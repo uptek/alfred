@@ -2,11 +2,16 @@ import { getItem } from '~/utils/storage';
 
 const INJECTED_ATTR = 'data-alfred-theme-list';
 
+/**
+ * Sends a tracking event to the background script for analytics.
+ * @param action - The action name to track.
+ * @param metadata - Optional key-value pairs to include with the event.
+ */
 const trackThemeListAction = (action: string, metadata: Record<string, unknown> = {}) => {
   browser.runtime.sendMessage({
     type: 'track_action',
     action,
-    metadata
+    metadata,
   });
 };
 
@@ -15,9 +20,13 @@ interface ThemeData {
   storeName: string;
   themeName: string;
   previewUrl: string;
-  codeEditorUrl: string;
 }
 
+/**
+ * Extracts theme ID, store name, and preview URL from a theme list item's editor link.
+ * @param listItem - A ThemeListItem DOM element.
+ * @returns The parsed theme data, or `null` if no editor link is found.
+ */
 const extractThemeData = (listItem: HTMLElement): ThemeData | null => {
   const editLink = listItem.querySelector<HTMLAnchorElement>('a[href*="/themes/"][href*="/editor"]');
   if (!editLink) {
@@ -31,69 +40,41 @@ const extractThemeData = (listItem: HTMLElement): ThemeData | null => {
 
   const previewUrl = storeName ? `https://${storeName}.myshopify.com/?preview_theme_id=${themeId}` : '';
 
-  const codeEditorUrl = storeName ? `https://admin.shopify.com/store/${storeName}/themes/${themeId}` : '';
-
-  return { themeId, storeName, themeName, previewUrl, codeEditorUrl };
+  return { themeId, storeName, themeName, previewUrl };
 };
 
+/**
+ * Parses an HTML string and returns the first element.
+ * @param template - The HTML string to parse.
+ * @returns The first child element of the parsed HTML.
+ */
 const html = (template: string): HTMLElement => {
   const container = document.createElement('div');
   container.innerHTML = template.trim();
   return container.firstElementChild as HTMLElement;
 };
 
-const createInfoRow = (label: string, value: string, minWidth = '0', trackingAction?: string) => {
-  const row = html(`
-    <s-stack direction="inline" gap="small-200" alignItems="center">
-      <span>${label}</span>
-      <input type="text" readonly value="${value}" style="
-        min-width:${minWidth};
-        border:1px solid #c9cccf;
-        border-radius:8px;
-        padding:4px 8px;
-        font-size:13px;
-        font-family:ui-monospace,SFMono-Regular,monospace;
-        color:#303030;
-        background:#f6f6f7;
-        line-height:20px;
-      " />
-      <s-button variant="tertiary" accessibilityLabel="Copy to clipboard" icon="clipboard" title="Copy to clipboard"></s-button>
-    </s-stack>
-  `);
-
-  row.querySelector<HTMLElement>('[icon="clipboard"]')!.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const btn = e.currentTarget as HTMLElement;
-    navigator.clipboard.writeText(value);
-    btn.setAttribute('icon', 'check');
-    setTimeout(() => btn.setAttribute('icon', 'clipboard'), 1200);
-    if (trackingAction) {
-      trackThemeListAction(trackingAction);
-    }
-  });
-
-  return row;
+/**
+ * Copies the button's `data-copy-value` to clipboard and briefly swaps the icon to a checkmark.
+ * @param e - The click event from an `s-button` element.
+ */
+const handleCopyClick = (e: Event) => {
+  e.stopPropagation();
+  const btn = e.currentTarget as HTMLElement;
+  const value = btn.getAttribute('data-copy-value') ?? '';
+  const action = btn.getAttribute('data-track-action');
+  navigator.clipboard.writeText(value);
+  btn.setAttribute('icon', 'check');
+  setTimeout(() => btn.setAttribute('icon', 'clipboard'), 1200);
+  if (action) {
+    trackThemeListAction(action);
+  }
 };
 
-const createButtonRow = (data: ThemeData) => {
-  const row = html(`
-    <s-stack direction="inline" gap="small-200" justifyContent="end">
-      <s-button variant="secondary" icon="external" href="${data.previewUrl}" target="_blank">Preview</s-button>
-      <s-button variant="secondary" icon="code" href="${data.codeEditorUrl}" target="_top">Edit Code</s-button>
-    </s-stack>
-  `);
-
-  row.querySelector<HTMLElement>('[icon="external"]')?.addEventListener('click', () => {
-    trackThemeListAction('theme_list_preview');
-  });
-
-  row.querySelector<HTMLElement>('[icon="code"]')?.addEventListener('click', () => {
-    trackThemeListAction('theme_list_edit_code');
-  });
-
-  return row;
-};
-
+/**
+ * Scans the theme list and injects copy-ID / copy-preview-URL buttons into each unprocessed item.
+ * @returns `true` if at least one item was injected, `false` if none were found or all were already processed.
+ */
 const injectIntoThemeList = () => {
   const themeListItems = document.querySelectorAll<HTMLElement>('ul[class*="ThemeList"] div[class*="ThemeListItem"]');
 
@@ -116,13 +97,17 @@ const injectIntoThemeList = () => {
     const contextProvider = listItem.querySelector('s-internal-context-provider');
     if (contextProvider) {
       const wrapper = html(`
-        <s-stack gap="small-200" block-align="end"></s-stack>
+        <s-stack gap="small-200">
+          <s-stack direction="inline" gap="small-500">
+            <s-button variant="tertiary" icon="clipboard" data-copy-value="${data.themeId}" data-track-action="theme_list_copy_id">ID</s-button>
+            <s-button variant="tertiary" icon="clipboard" data-copy-value="${data.previewUrl}" data-track-action="theme_list_copy_preview_url">Preview URL</s-button>
+          </s-stack>
+        </s-stack>
       `);
+      const buttons = wrapper.querySelectorAll<HTMLElement>('s-button');
+      buttons.forEach((btn) => btn.addEventListener('click', handleCopyClick));
       contextProvider.replaceWith(wrapper);
-      wrapper.appendChild(contextProvider);
-      wrapper.appendChild(createButtonRow(data));
-      wrapper.appendChild(createInfoRow('ID:', data.themeId, '0', 'theme_list_copy_id'));
-      wrapper.appendChild(createInfoRow('Preview URL:', data.previewUrl, '400px', 'theme_list_copy_preview_url'));
+      wrapper.prepend(contextProvider);
     }
 
     listItem.setAttribute(INJECTED_ATTR, 'true');
@@ -133,6 +118,10 @@ const injectIntoThemeList = () => {
   return injected;
 };
 
+/**
+ * Initializes the theme list enhancements on /themes pages and re-injects on DOM changes.
+ * Sets up a MutationObserver to handle dynamically loaded theme list items.
+ */
 export const setupThemeList = async () => {
   if (!window.location.pathname.endsWith('/themes')) {
     return;
@@ -157,6 +146,6 @@ export const setupThemeList = async () => {
 
   observer.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
   });
 };
