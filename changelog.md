@@ -9,6 +9,11 @@ Mantle integration — preset hotlinks work as Mantle custom actions. Now you ca
 
 <video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-preset-hotlinks.mp4"></video>
 
+## 2026.03.15
+@ 2026-03-15
+Shopify Admin > Themes: Simplified the theme list utilities — replaced the info fields and action buttons with compact copy buttons for Theme ID and Preview URL.
+
+
 ## 2026.02.26
 @ 2026-02-26
 Theme data is now fetched from Alfred's CDN instead of being bundled with the extension, so theme information stays up to date automatically.

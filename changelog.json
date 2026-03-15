@@ -18,6 +18,16 @@
     ]
   },
   {
+    "version": "2026.03.15",
+    "date": "2026-03-15",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Shopify Admin > Themes: Simplified the theme list utilities — replaced the info fields and action buttons with compact copy buttons for Theme ID and Preview URL."
+      }
+    ]
+  },
+  {
     "version": "2026.02.26",
     "date": "2026-02-26",
     "changes": [
