@@ -1,13 +1,28 @@
 import { useEffect, useState, useRef } from 'preact/hooks';
-import { generatePresetId, getPresets, savePreset, deletePreset, exportPresets, importPresets } from './utils';
-import { formatTimeAgo } from '@/utils/helpers';
+import {
+  buildHotlinkUrl,
+  generatePresetId,
+  getPresets,
+  savePreset,
+  deletePreset,
+  exportPresets,
+  importPresets,
+  normalizePresetHandle
+} from './utils';
+import { Toast } from '@/utils/toast';
 import type { Permission, PermissionPreset } from './types';
+
+const AUTO_APPLY_PRESET_PARAM = 'alfred_preset';
+const HOTLINK_MODAL_ID = 'alfred-hotlink-modal';
 
 export default function App() {
   const [presets, setPresets] = useState<PermissionPreset[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<PermissionPreset | null>(null);
   const [checkedPresets, setCheckedPresets] = useState<Set<string>>(new Set());
+  const [hotlinkUrl, setHotlinkUrl] = useState<string>('');
+  const [hotlinkHandle, setHotlinkHandle] = useState<string>('');
   const selectRef = useRef<HTMLSelectElement | null>(null);
+  const autoApplyAttemptedRef = useRef(false);
 
   useEffect(() => {
     // Load presets from storage on component mount
@@ -59,7 +74,7 @@ export default function App() {
     };
   }, [presets]);
 
-  const handleApplyPreset = async (presetToApply?: PermissionPreset) => {
+  const handleApplyPreset = async (presetToApply?: PermissionPreset, source: 'manual' | 'url_param' = 'manual') => {
     const preset = presetToApply ?? selectedPreset;
 
     if (!preset) {
@@ -100,9 +115,15 @@ export default function App() {
       }
     }
 
+    window.setTimeout(() => {
+      window.scrollTo({
+        top: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+        behavior: 'smooth'
+      });
+    }, 150);
+
     // Update the lastUsed timestamp
-    const updatedPreset = { ...preset, lastUsed: Date.now() };
-    await savePreset(updatedPreset);
+    const updatedPreset = await savePreset({ ...preset, lastUsed: Date.now() });
 
     // Update local state
     setPresets((prevPresets) => prevPresets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p)));
@@ -118,33 +139,79 @@ export default function App() {
       action: 'apply_preset',
       metadata: {
         permissions_count: preset.permissions.length,
-        has_custom_message: !!preset.customMessage
+        has_custom_message: !!preset.customMessage,
+        source
       }
     });
+
+    Toast.success(`Applied preset "${updatedPreset.name}"`);
   };
 
+  useEffect(() => {
+    if (autoApplyAttemptedRef.current || presets.length === 0) {
+      return;
+    }
+
+    const presetNameFromUrl = new URLSearchParams(window.location.search).get(AUTO_APPLY_PRESET_PARAM);
+    if (!presetNameFromUrl?.trim()) {
+      autoApplyAttemptedRef.current = true;
+      return;
+    }
+
+    autoApplyAttemptedRef.current = true;
+
+    const matchingByHandle = presets.filter((preset) => preset.handle === normalizePresetHandle(presetNameFromUrl));
+
+    if (matchingByHandle.length === 1) {
+      void handleApplyPreset(matchingByHandle[0], 'url_param');
+      return;
+    }
+
+    const matchingPresets = presets.filter(
+      (preset) => preset.name.trim().toLowerCase() === presetNameFromUrl.trim().toLowerCase()
+    );
+
+    if (matchingPresets.length === 0) {
+      Toast.error(`Preset "${presetNameFromUrl}" not found`);
+      return;
+    }
+
+    if (matchingPresets.length > 1) {
+      Toast.error(`Multiple presets named "${presetNameFromUrl}" found`);
+      return;
+    }
+
+    void handleApplyPreset(matchingPresets[0], 'url_param');
+  }, [presets]);
+
   const handleEditPreset = async (preset: PermissionPreset) => {
-    const newName = prompt('Enter new name for the preset:', preset.name);
+    const newName = prompt(
+      'Enter new name for the preset.\n\nNote: Renaming changes the handle and breaks existing hotlinks.',
+      preset.name
+    );
 
     if (!newName || newName.trim() === preset.name) {
       return;
     }
 
-    const updatedPreset = {
-      ...preset,
-      name: newName.trim()
-    };
-
     try {
-      await savePreset(updatedPreset);
+      const updatedPreset = await savePreset({
+        ...preset,
+        name: newName.trim(),
+        handle: newName.trim()
+      });
+
       // Update local state
       setPresets(presets.map((p) => (p.id === preset.id ? updatedPreset : p)));
       // Update selected preset if it was edited
       if (selectedPreset?.id === preset.id) {
         setSelectedPreset(updatedPreset);
       }
+
+      Toast.success(`Updated preset "${updatedPreset.name}".`);
     } catch (error) {
       console.error('Failed to update preset:', error);
+      Toast.error('Failed to update preset');
     }
   };
 
@@ -158,9 +225,31 @@ export default function App() {
         if (selectedPreset?.id === presetId) {
           setSelectedPreset(null);
         }
+
+        Toast.success('Preset deleted');
       } catch (error) {
         console.error('Failed to delete preset:', error);
+        Toast.error('Failed to delete preset');
       }
+    }
+  };
+
+  const handleOpenHotlinkModal = (preset: PermissionPreset) => {
+    setHotlinkUrl(buildHotlinkUrl(preset.handle));
+    setHotlinkHandle(preset.handle);
+  };
+
+  const handleCopyHotlinkUrl = async () => {
+    if (!hotlinkUrl) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(hotlinkUrl);
+      Toast.success('URL copied');
+    } catch (error) {
+      console.error('Failed to copy hotlink URL:', error);
+      Toast.error('Failed to copy URL');
     }
   };
 
@@ -180,10 +269,10 @@ export default function App() {
       // Clear checked presets since IDs have changed
       setCheckedPresets(new Set());
 
-      alert(`Successfully imported ${count} preset${count !== 1 ? 's' : ''}.`);
+      Toast.success(`Imported ${count} preset${count !== 1 ? 's' : ''}`);
     } catch (error) {
       console.error('Import failed:', error);
-      alert('Failed to import presets. Please check the file format.');
+      Toast.error('Failed to import presets');
     }
   };
 
@@ -204,8 +293,16 @@ export default function App() {
       if (selectedPreset && presetsToDelete.includes(selectedPreset.id)) {
         setSelectedPreset(null);
       }
+
+      Toast.success(`Deleted ${presetsToDelete.length} preset${presetsToDelete.length !== 1 ? 's' : ''}`);
     }
   };
+
+  useEffect(() => {
+    const handler = () => handleSavePreset();
+    document.addEventListener('alfred:save-preset', handler);
+    return () => document.removeEventListener('alfred:save-preset', handler);
+  }, []);
 
   const handleSavePreset = async () => {
     const checkedCheckboxes = document.querySelectorAll(
@@ -243,15 +340,16 @@ export default function App() {
     const newPreset: PermissionPreset = {
       id: generatePresetId(),
       name: presetName.trim(),
+      handle: presetName.trim(),
       permissions,
       customMessage,
       createdAt: Date.now()
     };
 
     try {
-      await savePreset(newPreset);
+      const savedPreset = await savePreset(newPreset);
       // Add the new preset to the local state
-      setPresets([...presets, newPreset]);
+      setPresets((currentPresets) => [...currentPresets, savedPreset]);
 
       // Track the save preset action
       browser.runtime.sendMessage({
@@ -262,13 +360,46 @@ export default function App() {
           has_custom_message: !!customMessage
         }
       });
+
+      Toast.success(`Saved preset "${savedPreset.name}"`);
     } catch (error) {
       console.error('Failed to save preset:', error);
+      Toast.error('Failed to save preset');
     }
   };
 
   return (
     <>
+      <s-modal id={HOTLINK_MODAL_ID} heading="Preset hotlink" accessibilityLabel="Preset Hotlink Modal">
+        <s-stack gap="base">
+          <s-paragraph>
+            Auto-apply this preset using the URL parameter{' '}
+            <em>
+              <code>alfred_preset={hotlinkHandle}</code>
+            </em>{' '}
+            . Use it as a bookmark, a shared link, or a platform integration.
+          </s-paragraph>
+          <s-paragraph>
+            <em>Note: Renaming the preset changes the handle and breaks existing hotlinks.</em>
+          </s-paragraph>
+          <s-divider></s-divider>
+          <s-paragraph>
+            <strong>Mantle</strong> — Use as a Mantle custom action by pasting the following URL into the custom
+            action's URL field.
+          </s-paragraph>
+          <s-stack direction="inline" gap="small-200" alignItems="center">
+            <div style={{ flex: '1 1 auto' }}>
+              <s-text-field value={hotlinkUrl} readOnly />
+            </div>
+            <s-button variant="secondary" icon="clipboard" accessibilityLabel="Copy URL" onClick={handleCopyHotlinkUrl}>
+              Copy
+            </s-button>
+          </s-stack>
+        </s-stack>
+        <s-button slot="primary-action" variant="primary" commandFor={HOTLINK_MODAL_ID} command="--hide">
+          Close
+        </s-button>
+      </s-modal>
       <s-divider></s-divider>
       <s-box padding="large">
         <s-stack gap="base">
@@ -312,9 +443,9 @@ export default function App() {
                   )}
                 </s-table-header>
                 <s-table-header listSlot="primary">Name</s-table-header>
+                <s-table-header>Handle</s-table-header>
                 <s-table-header>Permissions</s-table-header>
                 <s-table-header>Message</s-table-header>
-                <s-table-header>Created</s-table-header>
                 <s-table-header>Actions</s-table-header>
               </s-table-header-row>
               <s-table-body>
@@ -347,6 +478,9 @@ export default function App() {
                       </s-table-cell>
                       <s-table-cell>{preset.name}</s-table-cell>
                       <s-table-cell>
+                        <code style={{ fontSize: '12px', color: 'rgb(97, 107, 117)' }}>{preset.handle}</code>
+                      </s-table-cell>
+                      <s-table-cell>
                         {preset.permissions
                           .slice(0, 2)
                           .map((p) => (p.label.length > 15 ? p.label.slice(0, 15) + '...' : p.label))
@@ -360,8 +494,8 @@ export default function App() {
                           <s-icon type="x-circle"></s-icon>
                         )}
                       </s-table-cell>
-                      <s-table-cell>{formatTimeAgo(preset.createdAt)}</s-table-cell>
                       <s-table-cell>
+                        {/* Actions */}
                         <s-stack direction="inline" gap="small-200">
                           <s-button
                             icon="check-circle-filled"
@@ -381,6 +515,15 @@ export default function App() {
                             accessibilityLabel="Delete preset"
                             onClick={() => handleDeletePreset(preset.id)}
                           />
+                          <s-divider direction="block"></s-divider>
+                          <s-button
+                            accessibilityLabel="Hotlink"
+                            icon="link"
+                            commandFor={HOTLINK_MODAL_ID}
+                            command="--show"
+                            onClick={() => handleOpenHotlinkModal(preset)}>
+                            Hotlink
+                          </s-button>
                         </s-stack>
                       </s-table-cell>
                     </s-table-row>

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026.03.15.1
+@ 2026-03-15
+Introducing preset hotlinks — generate a shareable URL for any preset that auto-applies the preset's permissions. Use it as a bookmark, a shared link, or a platform integration.
+
+Mantle integration — preset hotlinks work as Mantle custom actions. Now you can request collaborator access right from your Mantle dashboard with the right permissions auto-applied for you.
+
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-preset-hotlinks.mp4"></video>
+
 ## 2026.03.15
 @ 2026-03-15
 Shopify Admin > Themes: Simplified the theme list utilities — replaced the info fields and action buttons with compact copy buttons for Theme ID and Preview URL.
