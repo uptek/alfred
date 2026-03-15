@@ -142,24 +142,25 @@
 
 {#if cart.items.length === 0}
   <div class="empty">
+    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
     <p class="empty-title">Your cart is empty</p>
     <p>Add items using the Add Item tab</p>
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <span class="empty-link" onclick={() => onSwitchTab('add')}>Go to Add Item</span>
+    <span class="empty-link" onclick={() => onSwitchTab('add')}>Go to Add Item &rarr;</span>
   </div>
 {:else}
   <table class="items-table">
     <thead>
       <tr>
         <th style="width: 40px">#</th>
-        <th style="width: 48px">Image</th>
+        <th style="width: 52px">Image</th>
         <th>Product</th>
         <th style="width: 120px">Qty</th>
         <th style="width: 160px">Properties</th>
         <th style="width: 160px">Selling Plan</th>
         <th style="width: 100px; text-align: right">Price</th>
-        <th style="width: 40px"></th>
+        <th style="width: 44px"></th>
       </tr>
     </thead>
     <tbody>
@@ -170,7 +171,9 @@
             {#if item.image}
               <img class="item-image" src={item.image} alt={item.product_title} />
             {:else}
-              <div class="item-image item-image-placeholder"></div>
+              <div class="item-image item-image-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              </div>
             {/if}
           </td>
           <td>
@@ -189,7 +192,7 @@
                   <span class="variant-loading">Loading...</span>
                 {:else}
                   <span>{item.variant_title || 'Default'}</span>
-                  <span class="variant-switch-icon">{variantEditKey === item.key ? '▾' : '▸'}</span>
+                  <svg class="chevron" class:chevron-open={variantEditKey === item.key} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 {/if}
               </div>
               {#if variantEditKey === item.key && variantProductCache[item.product_id]}
@@ -235,7 +238,7 @@
             {#if propsCount(item.properties) > 0}
               <button class="props-toggle" onclick={() => toggleProperties(item.key, item.properties)}>
                 {propsCount(item.properties)} prop{propsCount(item.properties) !== 1 ? 's' : ''}
-                <span class="props-chevron">{expandedItemKey === item.key ? '▾' : '▸'}</span>
+                <svg class="chevron-sm" class:chevron-open={expandedItemKey === item.key} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
               </button>
             {:else}
               <button class="props-toggle props-toggle-empty" onclick={() => toggleProperties(item.key, item.properties)}>
@@ -260,7 +263,7 @@
           </td>
           <td>
             <button class="remove-btn" disabled={busyKeys.has(item.key)} onclick={() => withBusy(item.key, () => onRemoveItem(item.key))} title="Remove item">
-              &#x1D5EB;
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             </button>
           </td>
         </tr>
@@ -289,7 +292,10 @@
   </table>
 
   <div class="footer">
-    <button class="clear-btn" onclick={onClearCart}>Clear Cart</button>
+    <button class="clear-btn" onclick={onClearCart}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      Clear Cart
+    </button>
     <div class="total">
       {#if cart.total_discount > 0}
         <div class="discount-amount">Discount: &minus;{formatPrice(cart.total_discount)}</div>
@@ -334,7 +340,7 @@
   .items-table tbody tr.row-busy td {
     opacity: 0.45;
     pointer-events: none;
-    transition: opacity 150ms;
+    transition: opacity 200ms;
   }
 
   .row-num {
@@ -344,16 +350,26 @@
   }
 
   .item-image {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--cs-radius-sm);
     object-fit: cover;
     background: var(--cs-bg-tertiary);
     display: block;
   }
 
   .item-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--cs-bg-tertiary);
+    color: var(--cs-text-muted);
+  }
+
+  .item-image-placeholder svg {
+    width: 20px;
+    height: 20px;
+    opacity: 0.4;
   }
 
   .product-title {
@@ -364,6 +380,7 @@
   .product-title a {
     color: var(--cs-text-primary);
     text-decoration: none;
+    transition: color 200ms;
   }
 
   .product-title a:hover {
@@ -381,10 +398,10 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 1px 6px;
+    padding: 2px 6px;
     margin: 2px 0 0 -6px;
     border-radius: var(--cs-radius-sm);
-    transition: background 150ms, color 150ms;
+    transition: background 200ms, color 200ms;
   }
 
   .variant-switchable:hover,
@@ -393,9 +410,28 @@
     color: var(--cs-text-primary);
   }
 
-  .variant-switch-icon {
-    font-size: 10px;
+  .chevron {
+    width: 12px;
+    height: 12px;
     color: var(--cs-text-muted);
+    transition: transform 200ms ease;
+    flex-shrink: 0;
+  }
+
+  .chevron-open {
+    transform: rotate(90deg);
+  }
+
+  .chevron-sm {
+    width: 10px;
+    height: 10px;
+    color: var(--cs-text-muted);
+    transition: transform 200ms ease;
+    flex-shrink: 0;
+  }
+
+  .chevron-sm.chevron-open {
+    transform: rotate(90deg);
   }
 
   .variant-loading {
@@ -404,7 +440,7 @@
   }
 
   .variant-picker {
-    margin-top: 4px;
+    margin-top: 6px;
     background: var(--cs-bg-secondary);
     border: 1px solid var(--cs-border);
     border-radius: var(--cs-radius-sm);
@@ -417,10 +453,10 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 10px;
+    padding: 8px 10px;
     font-size: 12px;
     cursor: pointer;
-    transition: background 150ms;
+    transition: background 200ms;
   }
 
   .variant-option:hover {
@@ -447,35 +483,36 @@
 
   .variant-option-badge {
     font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 3px;
+    padding: 1px 6px;
+    border-radius: 4px;
     background: var(--cs-bg-hover);
     color: var(--cs-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    font-weight: 550;
   }
 
   .variant-option-current-badge {
-    background: rgba(99, 102, 241, 0.15);
+    background: var(--cs-accent-subtle, rgba(124, 106, 246, 0.08));
     color: var(--cs-accent);
   }
 
   .item-sku {
     font-size: 11px;
     color: var(--cs-text-muted);
-    font-family: monospace;
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, Menlo, Monaco, Consolas, monospace;
     margin-top: 2px;
   }
 
   .props-toggle {
     all: unset;
     cursor: pointer;
-    padding: 3px 8px;
+    padding: 4px 8px;
     border-radius: var(--cs-radius-sm);
     font-size: 12px;
     color: var(--cs-text-secondary);
     background: var(--cs-bg-tertiary);
-    transition: background 150ms;
+    transition: background 200ms;
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -488,10 +525,6 @@
   .props-toggle-empty {
     background: transparent;
     color: var(--cs-text-muted);
-  }
-
-  .props-chevron {
-    font-size: 10px;
   }
 
   .no-props {
@@ -526,15 +559,19 @@
   .remove-btn {
     all: unset;
     cursor: pointer;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--cs-radius-sm);
     color: var(--cs-text-muted);
-    font-size: 14px;
-    transition: color 150ms, background 150ms;
+    transition: color 200ms, background 200ms;
+  }
+
+  .remove-btn svg {
+    width: 15px;
+    height: 15px;
   }
 
   .remove-btn:hover {
@@ -577,7 +614,7 @@
     border-radius: var(--cs-radius-sm);
     font-size: 12px;
     font-weight: 600;
-    transition: background 150ms;
+    transition: background 200ms;
   }
 
   .props-save-btn:hover:not(:disabled) {
@@ -601,12 +638,20 @@
   .clear-btn {
     all: unset;
     cursor: pointer;
-    padding: 6px 12px;
+    padding: 7px 14px;
     border-radius: var(--cs-radius-sm);
     font-size: 13px;
     font-weight: 500;
     color: var(--cs-danger);
-    transition: background 150ms;
+    transition: background 200ms;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .clear-btn svg {
+    width: 14px;
+    height: 14px;
   }
 
   .clear-btn:hover {
@@ -639,6 +684,14 @@
     gap: 8px;
   }
 
+  .empty-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--cs-text-muted);
+    opacity: 0.35;
+    margin-bottom: 8px;
+  }
+
   .empty p {
     margin: 0;
   }
@@ -653,6 +706,7 @@
     color: var(--cs-accent);
     cursor: pointer;
     font-size: 13px;
+    transition: color 200ms;
   }
 
   .empty-link:hover {

@@ -50,7 +50,9 @@
 </script>
 
 <div class="qty">
-  <button class="qty-btn" disabled={disabled || value <= min} onclick={decrement}>&minus;</button>
+  <button class="qty-btn" disabled={disabled || value <= min} onclick={decrement}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
+  </button>
   <input
     class="qty-input"
     type="number"
@@ -61,7 +63,9 @@
     {min}
     {max}
   />
-  <button class="qty-btn" disabled={disabled || value >= max} onclick={increment}>+</button>
+  <button class="qty-btn" disabled={disabled || value >= max} onclick={increment}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
 </div>
 
 <style>
@@ -77,17 +81,20 @@
   .qty-btn {
     all: unset;
     cursor: pointer;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--cs-bg-tertiary);
     color: var(--cs-text-primary);
-    font-size: 14px;
-    font-weight: 600;
-    transition: background 150ms;
+    transition: background 200ms;
     user-select: none;
+  }
+
+  .qty-btn svg {
+    width: 14px;
+    height: 14px;
   }
 
   .qty-btn:hover:not(:disabled) {
@@ -102,13 +109,14 @@
   .qty-input {
     all: unset;
     width: 40px;
-    height: 28px;
+    height: 30px;
     text-align: center;
     font-size: 13px;
     color: var(--cs-text-primary);
     background: var(--cs-bg-secondary);
     border-left: 1px solid var(--cs-border);
     border-right: 1px solid var(--cs-border);
+    font-variant-numeric: tabular-nums;
     -moz-appearance: textfield;
   }
 

@@ -90,7 +90,13 @@
       disabled={isFetching}
     />
     <button class="lookup-btn" onclick={fetchProduct} disabled={isFetching || !productUrl.trim()}>
-      {isFetching ? 'Fetching\u2026' : 'Fetch'}
+      {#if isFetching}
+        <svg class="btn-icon spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Fetching&hellip;
+      {:else}
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Fetch
+      {/if}
     </button>
   </div>
   {#if fetchError}
@@ -104,7 +110,9 @@
       {#if product.images.length > 0}
         <img class="preview-image" src={product.images[0]} alt={product.title} />
       {:else}
-        <div class="preview-image preview-image-placeholder"></div>
+        <div class="preview-image preview-image-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        </div>
       {/if}
       <div class="preview-info">
         <h3 class="preview-title">{product.title}</h3>
@@ -185,10 +193,12 @@
     <div class="config-actions">
       <button class="add-btn" onclick={addToCart} disabled={isAdding}>
         {#if addedSuccess}
-          &#x2713; Added!
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          Added!
         {:else if isAdding}
           Adding&hellip;
         {:else}
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
           Add to Cart
         {/if}
       </button>
@@ -229,7 +239,7 @@
     color: var(--cs-text-primary);
     font-size: 13px;
     font-family: inherit;
-    transition: border-color 150ms;
+    transition: border-color 200ms, box-shadow 200ms;
   }
 
   .lookup-input::placeholder {
@@ -238,6 +248,7 @@
 
   .lookup-input:focus {
     border-color: var(--cs-accent);
+    box-shadow: 0 0 0 3px var(--cs-accent-subtle, rgba(124, 106, 246, 0.08));
   }
 
   .lookup-btn {
@@ -249,8 +260,11 @@
     border-radius: var(--cs-radius-sm);
     font-size: 13px;
     font-weight: 600;
-    transition: background 150ms;
+    transition: background 200ms;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .lookup-btn:hover:not(:disabled) {
@@ -260,6 +274,20 @@
   .lookup-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .btn-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+  }
+
+  .spinning {
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
   .lookup-error {
@@ -272,7 +300,7 @@
     margin-bottom: 24px;
     padding: 16px;
     background: var(--cs-bg-secondary);
-    border-radius: var(--cs-radius);
+    border-radius: var(--cs-radius, 12px);
     border: 1px solid var(--cs-border);
   }
 
@@ -292,7 +320,16 @@
   }
 
   .preview-image-placeholder {
-    background: var(--cs-bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cs-text-muted);
+  }
+
+  .preview-image-placeholder svg {
+    width: 28px;
+    height: 28px;
+    opacity: 0.35;
   }
 
   .preview-info {
@@ -352,7 +389,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    transition: border-color 150ms, background 150ms;
+    transition: border-color 200ms, background 200ms;
   }
 
   .variant-card:hover {
@@ -361,6 +398,7 @@
 
   .variant-card.selected {
     border-color: var(--cs-accent);
+    background: var(--cs-accent-subtle, rgba(124, 106, 246, 0.08));
   }
 
   .variant-card.unavailable {
@@ -389,12 +427,12 @@
   }
 
   .variant-badge.out-of-stock {
-    background: rgba(239, 68, 68, 0.15);
+    background: rgba(239, 68, 68, 0.12);
     color: var(--cs-danger);
   }
 
   .variant-badge.on-sale {
-    background: rgba(34, 197, 94, 0.15);
+    background: rgba(34, 197, 94, 0.12);
     color: var(--cs-success);
   }
 
@@ -434,11 +472,12 @@
     font-size: 13px;
     font-family: inherit;
     cursor: pointer;
-    transition: border-color 150ms;
+    transition: border-color 200ms, box-shadow 200ms;
   }
 
   .config-select:focus {
     border-color: var(--cs-accent);
+    box-shadow: 0 0 0 3px var(--cs-accent-subtle, rgba(124, 106, 246, 0.08));
   }
 
   .config-actions {
@@ -458,9 +497,13 @@
     border-radius: var(--cs-radius-sm);
     font-size: 14px;
     font-weight: 600;
-    transition: background 150ms;
+    transition: background 200ms;
     min-width: 120px;
     text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
 
   .add-btn:hover:not(:disabled) {

@@ -33,12 +33,16 @@
 
 {#if !cart.requires_shipping}
   <div class="no-shipping">
+    <svg class="no-shipping-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
     <p class="no-shipping-title">Shipping not required</p>
     <p class="no-shipping-desc">All items in the cart are digital or do not require shipping.</p>
   </div>
 {:else}
   <div class="address-form">
-    <h3 class="form-title">Shipping Calculator</h3>
+    <div class="form-title-row">
+      <svg class="form-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+      <h3 class="form-title">Shipping Calculator</h3>
+    </div>
     <p class="form-subtitle">Enter a destination to calculate available shipping rates</p>
 
     <div class="form-grid">
@@ -80,7 +84,12 @@
       onclick={calculateRates}
       disabled={isCalculating || !zip.trim() || !country.trim()}
     >
-      {isCalculating ? 'Calculating\u2026' : 'Calculate Shipping Rates'}
+      {#if isCalculating}
+        <svg class="btn-icon spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Calculating&hellip;
+      {:else}
+        Calculate Shipping Rates
+      {/if}
     </button>
 
     {#if calculateError}
@@ -123,6 +132,7 @@
         </table>
       {:else}
         <div class="rates-empty">
+          <svg class="rates-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
           <p>No shipping rates available for this destination.</p>
           <p class="rates-empty-hint">This may mean the store doesn't ship to this location, or the address is invalid.</p>
         </div>
@@ -136,13 +146,26 @@
     margin-bottom: 24px;
   }
 
+  .form-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .form-title-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--cs-text-muted);
+    flex-shrink: 0;
+  }
+
   .form-title {
     all: unset;
     display: block;
     font-size: 14px;
     font-weight: 600;
     color: var(--cs-text-primary);
-    margin-bottom: 4px;
   }
 
   .form-subtitle {
@@ -181,7 +204,7 @@
     color: var(--cs-text-primary);
     font-size: 13px;
     font-family: inherit;
-    transition: border-color 150ms;
+    transition: border-color 200ms, box-shadow 200ms;
   }
 
   .field-input::placeholder {
@@ -190,6 +213,7 @@
 
   .field-input:focus {
     border-color: var(--cs-accent);
+    box-shadow: 0 0 0 3px var(--cs-accent-subtle, rgba(124, 106, 246, 0.08));
   }
 
   .calculate-btn {
@@ -201,7 +225,24 @@
     border-radius: var(--cs-radius-sm);
     font-size: 13px;
     font-weight: 600;
-    transition: background 150ms;
+    transition: background 200ms;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+  }
+
+  .spinning {
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
   .calculate-btn:hover:not(:disabled) {
@@ -222,7 +263,7 @@
   .rates-section {
     padding: 20px;
     background: var(--cs-bg-secondary);
-    border-radius: var(--cs-radius);
+    border-radius: var(--cs-radius, 12px);
     border: 1px solid var(--cs-border);
   }
 
@@ -288,6 +329,17 @@
     text-align: center;
     padding: 24px;
     color: var(--cs-text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .rates-empty-icon {
+    width: 32px;
+    height: 32px;
+    opacity: 0.4;
+    margin-bottom: 8px;
   }
 
   .rates-empty p {
@@ -306,7 +358,15 @@
     align-items: center;
     justify-content: center;
     padding: 60px 20px;
-    gap: 4px;
+    gap: 8px;
+  }
+
+  .no-shipping-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--cs-text-muted);
+    opacity: 0.35;
+    margin-bottom: 8px;
   }
 
   .no-shipping-title {

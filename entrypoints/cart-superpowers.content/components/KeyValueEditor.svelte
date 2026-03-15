@@ -50,7 +50,7 @@
         {disabled}
       />
       <button class="kv-remove" onclick={() => removeEntry(i)} {disabled} title="Remove">
-        &times;
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
   {/each}
@@ -60,7 +60,8 @@
   {/if}
 
   <button class="kv-add" onclick={addEntry} {disabled}>
-    + {addLabel}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    {addLabel}
   </button>
 </div>
 
@@ -80,14 +81,14 @@
   .kv-input {
     all: unset;
     flex: 1;
-    padding: 6px 10px;
+    padding: 8px 10px;
     background: var(--cs-bg-secondary);
     border: 1px solid var(--cs-border);
     border-radius: var(--cs-radius-sm);
     color: var(--cs-text-primary);
     font-size: 13px;
     font-family: inherit;
-    transition: border-color 150ms;
+    transition: border-color 200ms, box-shadow 200ms;
   }
 
   .kv-value {
@@ -100,21 +101,26 @@
 
   .kv-input:focus {
     border-color: var(--cs-accent);
+    box-shadow: 0 0 0 3px var(--cs-accent-subtle, rgba(124, 106, 246, 0.08));
   }
 
   .kv-remove {
     all: unset;
     cursor: pointer;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--cs-radius-sm);
     color: var(--cs-text-muted);
-    font-size: 16px;
     flex-shrink: 0;
-    transition: color 150ms, background 150ms;
+    transition: color 200ms, background 200ms;
+  }
+
+  .kv-remove svg {
+    width: 14px;
+    height: 14px;
   }
 
   .kv-remove:hover {
@@ -136,8 +142,16 @@
     font-size: 13px;
     font-weight: 500;
     padding: 4px 0;
-    transition: color 150ms;
+    transition: color 200ms;
     align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .kv-add svg {
+    width: 14px;
+    height: 14px;
   }
 
   .kv-add:hover {
