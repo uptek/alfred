@@ -42,6 +42,10 @@ class AlfredToast extends HTMLElement {
   }
 }
 
+type ToastElement = HTMLElement & {
+  timeout?: ReturnType<typeof setTimeout> | null;
+};
+
 export class Toast {
   private static toastCounter = 0;
   private static customElementDefined = false;
@@ -146,11 +150,45 @@ export class Toast {
     }
   `;
 
+  private static getCustomElementRegistry(): CustomElementRegistry | null {
+    return globalThis.customElements ?? document.defaultView?.customElements ?? null;
+  }
+
   private static defineCustomElement() {
-    if (!this.customElementDefined && !customElements.get(this.defaults.hostTag)) {
-      customElements.define(this.defaults.hostTag, AlfredToast);
+    const registry = this.getCustomElementRegistry();
+    if (!registry) {
+      return;
+    }
+
+    if (!this.customElementDefined && !registry.get(this.defaults.hostTag)) {
+      registry.define(this.defaults.hostTag, AlfredToast);
       this.customElementDefined = true;
     }
+  }
+
+  private static setAutoHide(toastElement: ToastElement, duration: number) {
+    if (toastElement.timeout) {
+      clearTimeout(toastElement.timeout);
+    }
+
+    toastElement.timeout = setTimeout(() => {
+      this.hideToast(toastElement);
+    }, duration);
+  }
+
+  private static hideToast(toastElement: ToastElement) {
+    if (toastElement.timeout) {
+      clearTimeout(toastElement.timeout);
+      toastElement.timeout = null;
+    }
+
+    toastElement.classList.remove('alfred-toast--show');
+    toastElement.classList.add('alfred-toast--hide');
+
+    setTimeout(() => {
+      toastElement.hidePopover?.();
+      toastElement.remove();
+    }, 400);
   }
 
   static show(message: string, type: 'success' | 'error' = 'success', duration: number = this.defaults.duration) {
@@ -163,7 +201,7 @@ export class Toast {
     // If there are existing toasts, wait for them to hide before showing new one
     if (existingToasts.length > 0) {
       existingToasts.forEach((toast) => {
-        (toast as AlfredToast).hide();
+        this.hideToast(toast as ToastElement);
       });
 
       // Delay showing new toast until old one has mostly faded out
@@ -179,9 +217,11 @@ export class Toast {
 
   private static create(message: string, type: 'success' | 'error', duration: number) {
     // Create new toast element
-    const toastElement = document.createElement(this.defaults.hostTag) as AlfredToast;
+    const toastElement = document.createElement(this.defaults.hostTag) as ToastElement;
     const toastId = `alfred-toast-${++this.toastCounter}`;
     toastElement.id = toastId;
+    toastElement.setAttribute('popover', 'manual');
+    toastElement.classList.add('alfred-toast');
 
     // Check for PBarNextFrameWrapper and adjust bottom position
     const pBarWrapper = document.querySelector<HTMLElement>('#PBarNextFrameWrapper');
@@ -217,7 +257,7 @@ export class Toast {
 
     // Add event listener to close button
     const closeBtn = toast.querySelector('.alfred-toast__close')!;
-    closeBtn.addEventListener('click', () => toastElement.hide());
+    closeBtn.addEventListener('click', () => this.hideToast(toastElement));
 
     shadowRoot.appendChild(toast);
 
@@ -225,7 +265,7 @@ export class Toast {
     document.body.appendChild(toastElement);
 
     // Show popover
-    toastElement.showPopover();
+    toastElement.showPopover?.();
 
     // Add show class after next frame to trigger animation
     requestAnimationFrame(() => {
@@ -234,7 +274,7 @@ export class Toast {
 
     // Set auto-hide if duration is specified
     if (duration > 0) {
-      toastElement.setAutoHide(duration);
+      this.setAutoHide(toastElement, duration);
     }
   }
 

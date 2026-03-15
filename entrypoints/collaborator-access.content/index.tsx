@@ -54,6 +54,21 @@ export default defineContentScript({
       }
     });
 
+    // Insert a "Save preset" proxy button before the create-new-store button
+    const createStoreBtn = await waitForElement('#create-new-store-button');
+    if (createStoreBtn) {
+      const proxyBtn = document.createElement('button');
+      proxyBtn.type = 'button';
+      proxyBtn.textContent = 'Save preset';
+      proxyBtn.className = 'Polaris-Button';
+      proxyBtn.style.cssText = 'margin-right: 8px;';
+      proxyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent('alfred:save-preset'));
+      });
+      createStoreBtn.parentElement?.insertBefore(proxyBtn, createStoreBtn);
+    }
+
     // Explicitly mount the UI
     ui.mount();
 

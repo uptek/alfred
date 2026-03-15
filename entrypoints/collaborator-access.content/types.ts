@@ -6,6 +6,7 @@ export interface Permission {
 export interface PermissionPreset {
   id: string;
   name: string;
+  handle: string;
   permissions: Permission[];
   customMessage?: string;
   createdAt: number;
