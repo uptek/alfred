@@ -33,14 +33,17 @@
   ];
 
   async function loadCart() {
-    isLoading = true;
+    const isInitial = !cart;
+    if (isInitial) isLoading = true;
+    else isUpdating = true;
     error = null;
     try {
       cart = await api.getCart();
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
     } finally {
-      isLoading = false;
+      if (isInitial) isLoading = false;
+      else isUpdating = false;
     }
   }
 
@@ -90,6 +93,9 @@
         {/if}
       </div>
       <div class="header-right">
+        <button class="refresh-btn" onclick={loadCart} disabled={isLoading || isUpdating} title="Refresh cart">
+          <span class:spinning={isLoading}>&#x21BB;</span>
+        </button>
         <button class="theme-toggle" onclick={() => theme = theme === 'dark' ? 'light' : 'dark'} title="Toggle theme">
           {#if theme === 'dark'}&#x2600;{:else}&#x263E;{/if}
         </button>
@@ -284,6 +290,35 @@
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+
+  .refresh-btn {
+    all: unset;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--cs-radius-sm);
+    color: var(--cs-text-secondary);
+    font-size: 18px;
+    transition: background 150ms, color 150ms;
+  }
+
+  .refresh-btn:hover:not(:disabled) {
+    background: var(--cs-bg-tertiary);
+    color: var(--cs-text-primary);
+  }
+
+  .refresh-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .spinning {
+    display: inline-block;
+    animation: spin 0.6s linear infinite;
   }
 
   .theme-toggle {

@@ -19,8 +19,9 @@
   let noteValue = $state(cart.note || '');
   let discountCode = $state('');
 
-  let attributeEntries: Array<{ key: string; value: string }> =
-    Object.entries(cart.attributes).map(([key, value]) => ({ key, value }));
+  let attributeEntries = $state<Array<{ key: string; value: string }>>(
+    Object.entries(cart.attributes).map(([key, value]) => ({ key, value })),
+  );
 
   // Track modifications
   let noteModified = $derived(noteValue !== (cart.note || ''));
