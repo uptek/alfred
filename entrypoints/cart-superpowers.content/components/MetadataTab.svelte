@@ -58,7 +58,10 @@
 
 <section class="meta-section">
   <div class="meta-header">
-    <h3 class="meta-title">Cart Note</h3>
+    <div class="meta-header-left">
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <h3 class="meta-title">Cart Note</h3>
+    </div>
     {#if noteModified}
       <button class="meta-save" onclick={saveNote}>Save</button>
     {/if}
@@ -76,7 +79,10 @@
 
 <section class="meta-section">
   <div class="meta-header">
-    <h3 class="meta-title">Cart Attributes</h3>
+    <div class="meta-header-left">
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      <h3 class="meta-title">Cart Attributes</h3>
+    </div>
     {#if attributesModified}
       <button class="meta-save" onclick={saveAttributes}>Save</button>
     {/if}
@@ -91,7 +97,12 @@
 </section>
 
 <section class="meta-section">
-  <h3 class="meta-title">Discount Codes</h3>
+  <div class="meta-header">
+    <div class="meta-header-left">
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+      <h3 class="meta-title">Discount Codes</h3>
+    </div>
+  </div>
 
   <div class="discount-input-row">
     <input
@@ -120,6 +131,7 @@
         </div>
       {/each}
       <button class="discount-remove" onclick={onRemoveDiscount}>
+        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
         Remove all discounts
       </button>
     </div>
@@ -132,7 +144,7 @@
   .meta-section {
     padding: 20px;
     background: var(--cs-bg-secondary);
-    border-radius: var(--cs-radius);
+    border-radius: var(--cs-radius, 12px);
     border: 1px solid var(--cs-border);
     margin-bottom: 16px;
   }
@@ -144,16 +156,24 @@
     margin-bottom: 12px;
   }
 
+  .meta-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--cs-text-muted);
+    flex-shrink: 0;
+  }
+
   .meta-title {
     all: unset;
     font-size: 14px;
     font-weight: 600;
     color: var(--cs-text-primary);
-    margin-bottom: 12px;
-  }
-
-  .meta-header .meta-title {
-    margin-bottom: 0;
   }
 
   .meta-save {
@@ -165,7 +185,7 @@
     border-radius: var(--cs-radius-sm);
     font-size: 12px;
     font-weight: 600;
-    transition: background 150ms;
+    transition: background 200ms;
   }
 
   .meta-save:hover {
@@ -193,7 +213,7 @@
     line-height: 1.5;
     resize: vertical;
     box-sizing: border-box;
-    transition: border-color 150ms;
+    transition: border-color 200ms, box-shadow 200ms;
   }
 
   .note-input::placeholder {
@@ -202,6 +222,7 @@
 
   .note-input:focus {
     border-color: var(--cs-accent);
+    box-shadow: 0 0 0 3px var(--cs-accent-subtle, rgba(124, 106, 246, 0.08));
   }
 
   .discount-input-row {
@@ -219,10 +240,10 @@
     border-radius: var(--cs-radius-sm);
     color: var(--cs-text-primary);
     font-size: 13px;
-    font-family: monospace;
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, Menlo, Monaco, Consolas, monospace;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: border-color 150ms;
+    transition: border-color 200ms, box-shadow 200ms;
   }
 
   .discount-input::placeholder {
@@ -234,6 +255,7 @@
 
   .discount-input:focus {
     border-color: var(--cs-accent);
+    box-shadow: 0 0 0 3px var(--cs-accent-subtle, rgba(124, 106, 246, 0.08));
   }
 
   .discount-apply {
@@ -245,7 +267,7 @@
     border-radius: var(--cs-radius-sm);
     font-size: 13px;
     font-weight: 600;
-    transition: background 150ms;
+    transition: background 200ms;
     white-space: nowrap;
   }
 
@@ -295,7 +317,7 @@
     font-size: 13px;
     font-weight: 500;
     color: var(--cs-text-primary);
-    font-family: monospace;
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, Menlo, Monaco, Consolas, monospace;
   }
 
   .discount-value {
@@ -311,7 +333,16 @@
     font-size: 12px;
     font-weight: 500;
     color: var(--cs-danger);
-    transition: color 150ms;
+    transition: color 200ms;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-icon-sm {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
   }
 
   .discount-remove:hover {
