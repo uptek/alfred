@@ -101,7 +101,7 @@
   }
 
   // Local entries state for expanded property editors, keyed by item key
-  let propertyEntries: Record<string, Array<{ key: string; value: string }>> = {};
+  let propertyEntries: Record<string, Array<{ key: string; value: string }>> = $state({});
 
   function initEntries(itemKey: string, properties: Record<string, string> | null) {
     if (!(itemKey in propertyEntries)) {
@@ -119,9 +119,24 @@
     }
   }
 
-  function handlePropertiesChange(itemKey: string, quantity: number, entries: Array<{ key: string; value: string }>) {
-    propertyEntries[itemKey] = entries;
-    withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, entriesToProps(entries)));
+  function handlePropertiesChange(itemKey: string, entries: Array<{ key: string; value: string }>) {
+    propertyEntries[itemKey] = [...entries];
+  }
+
+  function isPropertiesModified(itemKey: string, currentProperties: Record<string, string> | null): boolean {
+    if (!(itemKey in propertyEntries)) return false;
+    return JSON.stringify(entriesToProps(propertyEntries[itemKey])) !== JSON.stringify(currentProperties || {});
+  }
+
+  async function saveProperties(itemKey: string, quantity: number) {
+    const entries = propertyEntries[itemKey];
+    if (!entries) return;
+    await withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, entriesToProps(entries)));
+    // Re-sync local entries from the updated cart so dirty detection resets
+    const updatedItem = cart.items.find((item) => item.key === itemKey);
+    if (updatedItem) {
+      propertyEntries[itemKey] = propsToEntries(updatedItem.properties);
+    }
   }
 </script>
 
@@ -257,8 +272,14 @@
                   bind:entries={propertyEntries[item.key]}
                   keyPlaceholder="Property name"
                   valuePlaceholder="Property value"
-                  onchange={(entries) => handlePropertiesChange(item.key, item.quantity, entries)}
+                  onchange={(entries) => handlePropertiesChange(item.key, entries)}
                 />
+                {#if isPropertiesModified(item.key, item.properties)}
+                  <div class="props-save-row">
+                    <span class="props-hint">Unsaved changes</span>
+                    <button class="props-save-btn" onclick={() => saveProperties(item.key, item.quantity)} disabled={busyKeys.has(item.key)}>Save</button>
+                  </div>
+                {/if}
               </div>
             </td>
           </tr>
@@ -532,6 +553,40 @@
 
   .expanded-content {
     max-width: 500px;
+  }
+
+  .props-save-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .props-hint {
+    font-size: 12px;
+    color: var(--cs-text-muted);
+    font-style: italic;
+  }
+
+  .props-save-btn {
+    all: unset;
+    cursor: pointer;
+    padding: 6px 16px;
+    background: var(--cs-accent);
+    color: white;
+    border-radius: var(--cs-radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 150ms;
+  }
+
+  .props-save-btn:hover:not(:disabled) {
+    background: var(--cs-accent-hover);
+  }
+
+  .props-save-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .footer {
