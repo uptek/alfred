@@ -131,7 +131,13 @@
   async function saveProperties(itemKey: string, quantity: number) {
     const entries = propertyEntries[itemKey];
     if (!entries) return;
-    await withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, entriesToProps(entries)));
+
+    // Shopify's change.js overwrites the entire properties object, so sending
+    // only the remaining keys drops any removed ones. However, setting properties
+    // to {} is a no-op — the parent handler deals with that via remove+re-add.
+    const newProps = entriesToProps(entries);
+
+    await withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, newProps));
     // Re-sync local entries from the updated cart so dirty detection resets
     const updatedItem = cart.items.find((item) => item.key === itemKey);
     if (updatedItem) {
@@ -544,6 +550,7 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+    color: var(--cs-text-primary);
   }
 
   .price-original {

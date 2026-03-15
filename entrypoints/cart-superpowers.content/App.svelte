@@ -87,10 +87,9 @@
   <div class="panel">
     <header class="header">
       <div class="header-left">
-        <svg class="icon-zap" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         <h1>Cart Superpowers</h1>
         {#if cart}
-          <span class="badge">{cart.item_count} items</span>
+          <span class="badge">{cart.item_count} {cart.item_count === 1 ? 'item' : 'items'}</span>
         {/if}
       </div>
       <div class="header-right">
@@ -168,7 +167,21 @@
             {cart}
             onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cart_superpowers_update_quantity'); }}
             onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cart_superpowers_remove_item'); }}
-            onUpdateProperties={(key, qty, props) => mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }))}
+            onUpdateProperties={(key, qty, props) => {
+              // Shopify can't set properties to {} — must remove and re-add the item without properties
+              if (Object.keys(props).length === 0) {
+                const item = cart!.items.find(i => i.key === key);
+                return mutate(async () => {
+                  await api.changeItem({ id: key, quantity: 0 });
+                  return api.addItem({
+                    id: item!.variant_id,
+                    quantity: qty,
+                    ...(item!.selling_plan_allocation ? { selling_plan: item!.selling_plan_allocation.selling_plan.id } : {}),
+                  });
+                });
+              }
+              return mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }));
+            }}
             onClearCart={async () => { await mutate(() => api.clearCart()); trackAction('cart_superpowers_clear'); }}
             onSwitchTab={(tab) => activeTab = tab as TabId}
             onSwitchVariant={(key, oldItem, newVariantId) => {
@@ -213,7 +226,7 @@
     position: fixed;
     inset: 0;
     z-index: 2147483647;
-    background: rgba(0, 0, 0, 0.65);
+    background: hsla(210, 34%, 13%, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -225,18 +238,18 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
-    /* Design tokens — dark theme */
-    --cs-bg-primary: #111116;
-    --cs-bg-secondary: #1a1a22;
-    --cs-bg-tertiary: #242430;
-    --cs-bg-hover: #2d2d3a;
-    --cs-text-primary: #ededf2;
-    --cs-text-secondary: #8b8ba0;
-    --cs-text-muted: #555570;
+    /* Design tokens — dark theme (matte, dim) */
+    --cs-bg-primary: hsl(210, 34%, 13%);
+    --cs-bg-secondary: hsl(210, 25%, 16%);
+    --cs-bg-tertiary: hsl(210, 24%, 20%);
+    --cs-bg-hover: hsl(210, 20%, 24%);
+    --cs-text-primary: hsl(210, 20%, 88%);
+    --cs-text-secondary: hsl(210, 11%, 60%);
+    --cs-text-muted: hsl(210, 11%, 45%);
     --cs-accent: #7c6af6;
     --cs-accent-hover: #8f7fff;
-    --cs-accent-subtle: rgba(124, 106, 246, 0.08);
-    --cs-border: #2a2a38;
+    --cs-accent-subtle: rgba(124, 106, 246, 0.1);
+    --cs-border: hsl(210, 16%, 26%);
     --cs-danger: #ef4444;
     --cs-danger-hover: #f87171;
     --cs-success: #22c55e;
@@ -325,19 +338,11 @@
     gap: 10px;
   }
 
-  .icon-zap {
-    width: 18px;
-    height: 18px;
-    color: #fbbf24;
-    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.35));
-    flex-shrink: 0;
-  }
-
   .header h1 {
     all: unset;
     font-size: 15px;
     font-weight: 650;
-    color: var(--cs-text-primary);
+    color: var(--cs-text-primary) !important;
     letter-spacing: -0.01em;
   }
 

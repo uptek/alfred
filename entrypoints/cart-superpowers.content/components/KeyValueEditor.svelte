@@ -31,7 +31,7 @@
 </script>
 
 <div class="kv-editor">
-  {#each entries as entry, i (i)}
+  {#each entries as entry, i}
     <div class="kv-row">
       <input
         class="kv-input"
