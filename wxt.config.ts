@@ -9,7 +9,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred - Shopify Theme Detector',
     description: 'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
-    version: '2026.03.15.1',
+    version: '2026.03.16',
     action: {
       default_title: 'Alfred',
     },

@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.03.16
+@ 2026-03-16
+Cart Superpowers — a full cart editor overlay for Shopify developers. Edit quantities, switch variants, manage line item properties, selling plans, cart notes, attributes, discount codes, and calculate shipping rates — all from a single dev-tools-style panel.
+
+- Open via right-click > Alfred > Cart Superpowers, or add ?alfred=cart to any store URL.
+- Items tab: edit quantities, switch variants, manage line item properties inline.
+- Add Item tab: fetch any product by URL or handle, pick a variant, set properties and selling plans.
+- Metadata tab: edit cart note, cart attributes, and apply or remove discount codes.
+- Shipping tab: calculate shipping rates for any destination.
+- JSON tab: view and copy the full cart JSON.
+- Light and dark theme with system preference detection.
+- Fully isolated via Shadow DOM — no style conflicts with any Shopify theme.
+
 ## 2026.03.15.1
 @ 2026-03-15
 Introducing preset hotlinks — generate a shareable URL for any preset that auto-applies the preset's permissions. Use it as a bookmark, a shared link, or a platform integration.
@@ -7,7 +20,7 @@ Introducing preset hotlinks — generate a shareable URL for any preset that aut
 Mantle integration — preset hotlinks work as Mantle custom actions. Now you can request collaborator access right from your Mantle dashboard with the right permissions auto-applied for you.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-preset-hotlinks.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-preset-hotlinks.mp4"></video>
 
 ## 2026.03.15
 @ 2026-03-15
