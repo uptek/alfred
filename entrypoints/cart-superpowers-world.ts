@@ -5,7 +5,7 @@ import type {
   ShippingAddress,
   ShippingRate,
   CartData,
-  ProductData,
+  ProductData
 } from './cart-superpowers.content/types';
 
 export default defineUnlistedScript(() => {
@@ -23,7 +23,7 @@ export default defineUnlistedScript(() => {
     const res = await fetch('/cart/add.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
@@ -37,7 +37,7 @@ export default defineUnlistedScript(() => {
     const res = await fetch('/cart/update.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
+      body: JSON.stringify(updates)
     });
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
@@ -50,7 +50,7 @@ export default defineUnlistedScript(() => {
     const res = await fetch('/cart/change.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(change),
+      body: JSON.stringify(change)
     });
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
@@ -62,7 +62,7 @@ export default defineUnlistedScript(() => {
   async function clearCart(): Promise<CartData> {
     const res = await fetch('/cart/clear.js', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' }
     });
     if (!res.ok) throw new Error(`Failed to clear cart: ${res.status}`);
     return res.json();
@@ -72,11 +72,11 @@ export default defineUnlistedScript(() => {
     const params = new URLSearchParams({
       'shipping_address[zip]': address.zip,
       'shipping_address[country]': address.country,
-      'shipping_address[province]': address.province,
+      'shipping_address[province]': address.province
     });
 
     const prepRes = await fetch(`/cart/prepare_shipping_rates.json?${params}`, {
-      method: 'POST',
+      method: 'POST'
     });
     if (!prepRes.ok) throw new Error(`Failed to prepare shipping rates: ${prepRes.status}`);
 
@@ -126,7 +126,7 @@ export default defineUnlistedScript(() => {
     changeItem: (payload) => changeItem(payload),
     clearCart: () => clearCart(),
     getShippingRates: (payload) => getShippingRates(payload),
-    getProductByUrl: (payload) => getProductByUrl(payload),
+    getProductByUrl: (payload) => getProductByUrl(payload)
   };
 
   window.addEventListener('message', async (event) => {
@@ -137,27 +137,36 @@ export default defineUnlistedScript(() => {
     const handler = methodMap[method];
 
     if (!handler) {
-      window.postMessage({
-        type: 'alfred:cart_response',
-        requestId,
-        error: `Unknown method: ${method}`,
-      }, window.location.origin);
+      window.postMessage(
+        {
+          type: 'alfred:cart_response',
+          requestId,
+          error: `Unknown method: ${method}`
+        },
+        window.location.origin
+      );
       return;
     }
 
     try {
       const data = await handler(payload);
-      window.postMessage({
-        type: 'alfred:cart_response',
-        requestId,
-        data,
-      }, window.location.origin);
+      window.postMessage(
+        {
+          type: 'alfred:cart_response',
+          requestId,
+          data
+        },
+        window.location.origin
+      );
     } catch (err) {
-      window.postMessage({
-        type: 'alfred:cart_response',
-        requestId,
-        error: err instanceof Error ? err.message : String(err),
-      }, window.location.origin);
+      window.postMessage(
+        {
+          type: 'alfred:cart_response',
+          requestId,
+          error: err instanceof Error ? err.message : String(err)
+        },
+        window.location.origin
+      );
     }
   });
 });

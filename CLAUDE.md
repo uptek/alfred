@@ -31,4 +31,3 @@ skill. It handles CalVer format, file updates, and changelog entries.
 
 When `assets/data/themes.json` is updated with fresh scraped data, use the
 `/prune-themes-json` skill to strip unused fields.
-

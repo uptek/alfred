@@ -33,5 +33,5 @@ export default defineContentScript({
       }
       return false;
     });
-  },
+  }
 });

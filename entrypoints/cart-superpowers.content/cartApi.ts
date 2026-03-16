@@ -5,7 +5,7 @@ import type {
   ChangePayload,
   ShippingAddress,
   ShippingRate,
-  ProductData,
+  ProductData
 } from './types';
 
 const TIMEOUT_MS = 10_000;
@@ -41,12 +41,15 @@ function callCartApi<T>(method: string, payload?: unknown): Promise<T> {
       reject(new Error(`Cart API timeout: ${method} did not respond within ${TIMEOUT_MS}ms`));
     }, TIMEOUT_MS);
 
-    window.postMessage({
-      type: 'alfred:cart_request',
-      requestId,
-      method,
-      payload,
-    }, window.location.origin);
+    window.postMessage(
+      {
+        type: 'alfred:cart_request',
+        requestId,
+        method,
+        payload
+      },
+      window.location.origin
+    );
   });
 }
 

@@ -3,12 +3,13 @@
 **Phase**: 2 — Wiring
 **Status**: ✅ Complete
 **Files to modify**:
+
 - `entrypoints/cart-superpowers.content/App.svelte`
 - `entrypoints/cart-superpowers.content/components/ItemsTab.svelte`
 - `entrypoints/cart-superpowers.content/components/AddItemTab.svelte`
 - `entrypoints/cart-superpowers.content/components/MetadataTab.svelte`
 - `entrypoints/cart-superpowers.content/components/ShippingTab.svelte`
-**Depends on**: Task 10, Task 11, Tasks 05–09
+  **Depends on**: Task 10, Task 11, Tasks 05–09
 
 ## Objective
 
@@ -19,6 +20,7 @@ Replace all mock data and mock callbacks with real API calls via `cartApi.ts`. A
 ### Replace Mock Data with API Fetch
 
 **Before** (Phase 1):
+
 ```svelte
 <script>
   import { MOCK_CART } from './mock-data';
@@ -27,6 +29,7 @@ Replace all mock data and mock callbacks with real API calls via `cartApi.ts`. A
 ```
 
 **After** (Phase 2):
+
 ```svelte
 <script>
   import { onMount } from 'svelte';
@@ -149,10 +152,22 @@ When `isUpdating` is true, show a subtle indicator (e.g., a thin progress bar at
 }
 
 @keyframes progress {
-  0% { transform: scaleX(0); transform-origin: left; }
-  50% { transform: scaleX(1); transform-origin: left; }
-  50.1% { transform: scaleX(1); transform-origin: right; }
-  100% { transform: scaleX(0); transform-origin: right; }
+  0% {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  50% {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  50.1% {
+    transform: scaleX(1);
+    transform-origin: right;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right;
+  }
 }
 ```
 
@@ -214,6 +229,7 @@ async function fetchProduct() {
 **After**: `onAddItem(payload)` calls `api.addItem(payload)` which adds to real cart
 
 After successful add:
+
 - Cart state in App.svelte updates automatically (mutation wrapper handles it)
 - Switch to Items tab to show the new item (optional — could stay on Add tab)
 - Clear the form or keep product loaded for adding another variant
@@ -236,6 +252,7 @@ After successful add:
 
 **Before**: mock discount added to local array
 **After**:
+
 - Apply: `onApplyDiscount(code)` calls `updateCart({ discount: code })`. Shopify applies the code and returns updated cart with `cart_level_discount_applications`.
 - Remove: `onRemoveDiscount()` calls `updateCart({ discount: '' })`. Passing empty string clears all discount codes.
 
@@ -278,6 +295,7 @@ When `cart` is reassigned in App.svelte (`cart = await fn()`), Svelte automatica
 ### Stale State Prevention
 
 After every mutation, the cart is refetched (either from the API response or via an explicit `getCart()` call). This ensures:
+
 - Line item keys are always current
 - Totals, discounts, and counts are accurate
 - No stale state from optimistic updates
@@ -285,6 +303,7 @@ After every mutation, the cart is refetched (either from the API response or via
 ### Concurrent Mutation Prevention
 
 While `isUpdating` is true, disable UI controls that trigger mutations. This prevents race conditions where two mutations fire simultaneously. Implementation:
+
 - Pass `isUpdating` prop to tabs that have mutation controls
 - Disable quantity steppers, remove buttons, save buttons, add button during updates
 - The updating bar provides visual feedback

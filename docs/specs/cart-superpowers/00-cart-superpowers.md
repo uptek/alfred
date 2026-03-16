@@ -33,6 +33,7 @@ Trigger (?alfred=cart or context menu)
 ```
 
 **Protocol**: RPC-style request/response with `requestId` correlation:
+
 - Request: `{ type: 'alfred:cart_request', requestId, method, payload }`
 - Response: `{ type: 'alfred:cart_response', requestId, data, error? }`
 
@@ -40,16 +41,16 @@ The main world script (`cart-superpowers-world.ts`) exposes cart API methods on 
 
 ### Cart Ajax API Endpoints Used
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/cart.js` | GET | Fetch full cart state |
-| `/cart/add.js` | POST | Add items (variant ID, qty, properties, selling_plan) |
-| `/cart/update.js` | POST | Batch update quantities, note, attributes, discount codes |
-| `/cart/change.js` | POST | Precise single line item changes (qty, properties, selling_plan) |
-| `/cart/clear.js` | POST | Clear all items |
-| `/cart/prepare_shipping_rates.json` | POST | Initiate shipping rate calculation |
-| `/cart/async_shipping_rates.json` | GET | Poll for calculated shipping rates |
-| `{product_url}.js` | GET | Fetch product data for Add Items feature |
+| Endpoint                            | Method | Purpose                                                          |
+| ----------------------------------- | ------ | ---------------------------------------------------------------- |
+| `/cart.js`                          | GET    | Fetch full cart state                                            |
+| `/cart/add.js`                      | POST   | Add items (variant ID, qty, properties, selling_plan)            |
+| `/cart/update.js`                   | POST   | Batch update quantities, note, attributes, discount codes        |
+| `/cart/change.js`                   | POST   | Precise single line item changes (qty, properties, selling_plan) |
+| `/cart/clear.js`                    | POST   | Clear all items                                                  |
+| `/cart/prepare_shipping_rates.json` | POST   | Initiate shipping rate calculation                               |
+| `/cart/async_shipping_rates.json`   | GET    | Poll for calculated shipping rates                               |
+| `{product_url}.js`                  | GET    | Fetch product data for Add Items feature                         |
 
 ## File Structure
 
@@ -79,22 +80,22 @@ entrypoints/
 
 ### Modified Files (minimal — integration only)
 
-| File | Change |
-|---|---|
-| `wxt.config.ts` | Add `cart-superpowers-world.js` to `web_accessible_resources`, add Svelte Vite plugin |
-| `package.json` | Add `svelte` and `@sveltejs/vite-plugin-svelte` as dev dependencies |
-| `global.d.ts` | Add `cartSuperpowers?: boolean` to `AlfredSettings.shortcuts` (1 line) |
-| `entrypoints/background/shortcuts.ts` | Add "Cart Superpowers" context menu entry under the Cart separator |
-| `entrypoints/options/components/settings/ShortcutsSettings.tsx` | Add toggle for Cart Superpowers shortcut |
-| `entrypoints/options/contexts/SettingsContext.tsx` | Add `cartSuperpowers: true` default |
+| File                                                            | Change                                                                                |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `wxt.config.ts`                                                 | Add `cart-superpowers-world.js` to `web_accessible_resources`, add Svelte Vite plugin |
+| `package.json`                                                  | Add `svelte` and `@sveltejs/vite-plugin-svelte` as dev dependencies                   |
+| `global.d.ts`                                                   | Add `cartSuperpowers?: boolean` to `AlfredSettings.shortcuts` (1 line)                |
+| `entrypoints/background/shortcuts.ts`                           | Add "Cart Superpowers" context menu entry under the Cart separator                    |
+| `entrypoints/options/components/settings/ShortcutsSettings.tsx` | Add toggle for Cart Superpowers shortcut                                              |
+| `entrypoints/options/contexts/SettingsContext.tsx`              | Add `cartSuperpowers: true` default                                                   |
 
 ### NOT Modified (isolation boundary)
 
-| File | Why unchanged |
-|---|---|
-| `entrypoints/alfred-main-world.ts` | Cart API lives in its own `cart-superpowers-world.ts`, not here |
-| `global.d.ts` (cart types) | All cart types live in `cart-superpowers.content/types.ts`, not global |
-| `entrypoints/main.content.ts` | No bridge code added here; cart superpowers has its own content script |
+| File                               | Why unchanged                                                          |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| `entrypoints/alfred-main-world.ts` | Cart API lives in its own `cart-superpowers-world.ts`, not here        |
+| `global.d.ts` (cart types)         | All cart types live in `cart-superpowers.content/types.ts`, not global |
+| `entrypoints/main.content.ts`      | No bridge code added here; cart superpowers has its own content script |
 
 ## Implementation Phases
 
@@ -103,21 +104,25 @@ entrypoints/
 Build the complete visual interface with hardcoded mock data. No API calls, no postMessage bridge — just the UI components rendered with realistic fake cart data. This lets us iterate on layout, interactions, and visual polish before wiring anything.
 
 **1.1 Types + mock data** in `cart-superpowers.content/types.ts` and `cart-superpowers.content/mock-data.ts`:
+
 - Define all types: `CartData`, `CartItem`, `AddItemPayload`, `UpdatePayload`, `ChangePayload`, `ShippingAddress`, `ShippingRate`, `ProductData`
 - Create a `MOCK_CART` constant with 3-4 realistic line items (varied images, properties, selling plans, discounts)
 - Create a `MOCK_PRODUCT` constant for the Add Item tab preview
 
 **1.2 Svelte setup**:
+
 - Install `svelte` and `@sveltejs/vite-plugin-svelte` as dev dependencies
 - Add Svelte plugin to `wxt.config.ts` Vite config (alongside existing Preact plugin — both coexist, each entrypoint uses one framework)
 
 **1.3 Content script entry + overlay shell**:
+
 - `cart-superpowers.content/index.ts` — content script with URL param detection (`?alfred=cart`), dynamic `import('./mount')`
 - `cart-superpowers.content/mount.ts` — `createIntegratedUi` + Svelte `mount()`, follows `appstore-partners.content/index.tsx` pattern but uses Svelte mounting instead of Preact render
 - `App.svelte` — overlay container, header bar (title + item count badge + close button), tab navigation, Escape key dismiss. Scoped `<style>` block with dark theme design tokens as CSS custom properties on the overlay root, fixed overlay (`position: fixed; inset: 0; z-index: 2147483647`), backdrop, style reset (`all: initial`)
 - State: `let cart = MOCK_CART`, `let activeTab = 'items'` — Svelte reactive variables, no hooks needed
 
 **1.4 Items tab** — the core experience:
+
 - `ItemsTab.svelte` — table with columns: #, Image (40x40 thumbnail), Title/Variant, Quantity, Properties, Selling Plan, Price, Actions
 - `QuantityInput.svelte` — +/- stepper with `bind:value`, dispatches `change` event
 - Properties column: collapsed summary showing key count, expandable inline `KeyValueEditor`
@@ -127,6 +132,7 @@ Build the complete visual interface with hardcoded mock data. No API calls, no p
 - Empty state with `{#if}` when no items
 
 **1.5 Add Item tab**:
+
 - `AddItemTab.svelte` — URL input field + "Fetch" button
 - On "fetch": show mock product preview (image, title, description)
 - Variant `<select>` populated from mock product data
@@ -136,18 +142,21 @@ Build the complete visual interface with hardcoded mock data. No API calls, no p
 - "Add to Cart" button
 
 **1.6 Metadata tab**:
+
 - `MetadataTab.svelte`:
 - **Cart Note** section: `<textarea bind:value>` with mock note text
 - **Cart Attributes** section: `KeyValueEditor` with 2-3 mock attributes
 - **Discount Codes** section: input field + "Apply" button, `{#each}` list of applied mock discounts with remove (x) buttons
 
 **1.7 Shipping tab**:
+
 - `ShippingTab.svelte`:
 - Country, province, ZIP text inputs with `bind:value`
 - "Calculate Rates" button
 - Mock results table: 2-3 shipping methods with name, price, delivery estimate
 
 **1.8 JSON tab**:
+
 - `JsonTab.svelte`:
 - `<pre>` block with `JSON.stringify(cart, null, 2)` in monospace font
 - "Copy to Clipboard" button (top-right)
@@ -157,6 +166,7 @@ Build the complete visual interface with hardcoded mock data. No API calls, no p
 Replace mock data with real Shopify Cart Ajax API calls. All cart API logic is self-contained — no modifications to `alfred-main-world.ts`.
 
 **2.1 Create `entrypoints/cart-superpowers-world.ts`** (unlisted main world script):
+
 - `defineUnlistedScript` — only injected by `mount.ts` when feature opens
 - Exposes `window.__alfredCartApi` with all cart methods:
   - `getCart()` — `GET /cart.js`
@@ -170,15 +180,18 @@ Replace mock data with real Shopify Cart Ajax API calls. All cart API logic is s
 - Add `cart-superpowers-world.js` to `web_accessible_resources` in `wxt.config.ts`
 
 **2.2 Update `mount.ts`** to inject the world script:
+
 - Call `injectScript('/cart-superpowers-world.js')` before mounting Svelte app
 - The world script is now available for postMessage communication
 
 **2.3 Create `cartApi.ts`** utility module (in `cart-superpowers.content/`):
+
 - Exports a `callCartApi(method, payload)` function wrapping the postMessage bridge (request/response with requestId correlation, 10s timeout)
 - Exports typed wrappers: `getCart()`, `addItem()`, `updateCart()`, `changeItem()`, `clearCart()`, `getShippingRates()`, `getProductByUrl()`
 - Plain TypeScript module — no framework dependency, importable from any Svelte component
 
 **2.4 Wire `App.svelte`**:
+
 - Replace `MOCK_CART` with `onMount` → `getCart()` call
 - Reactive: `let cart`, `let isLoading = true`, `let isUpdating = false`, `let error = null`
 - Every mutation returns updated cart → `cart = response` triggers Svelte reactivity
@@ -188,30 +201,34 @@ Replace mock data with real Shopify Cart Ajax API calls. All cart API logic is s
 **2.5 Wire all tabs** to use real API calls instead of mock state mutations
 
 **2.5 Minimal integration touches**:
+
 - `global.d.ts` — add `cartSuperpowers?: boolean` to `AlfredSettings.shortcuts` (1 line)
 
 ### Phase 3: Integration
 
 **3.1 Context menu entry** in `shortcuts.ts`:
+
 - Add under the Cart separator, after "Clear Cart"
 - Uses `browser.tabs.sendMessage(tab.id!, { action: 'open_cart_superpowers' })`
 
 **3.2 Settings** in options page:
+
 - Add `cartSuperpowers` toggle to ShortcutsSettings under Cart category
 - Add default `cartSuperpowers: true` in SettingsContext
 
 **3.3 Analytics tracking**:
+
 - Track: `cart_superpowers_open`, `cart_superpowers_add_item`, `cart_superpowers_update_quantity`, `cart_superpowers_clear`, `cart_superpowers_apply_discount`
 
 ## Key Patterns to Reuse
 
-| Pattern | Source File | Reuse For |
-|---|---|---|
-| Content script + `createIntegratedUi` | `appstore-partners.content/index.tsx` | Reference for content script mounting (adapt for Svelte instead of Preact) |
-| Unlisted script + `injectScript()` | `alfred-main-world.ts` + `main.content.ts` | Reference pattern for `cart-superpowers-world.ts` injection |
-| PostMessage bridge (request/response with requestId) | `main.content.ts` lines 52-65 | Reference for the cart RPC protocol |
-| Context menu registration | `background/shortcuts.ts` | Adding "Cart Superpowers" entry |
-| `getItem<AlfredSettings>('settings')` | `utils/storage.ts` | Checking if feature is enabled |
+| Pattern                                              | Source File                                | Reuse For                                                                  |
+| ---------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------- |
+| Content script + `createIntegratedUi`                | `appstore-partners.content/index.tsx`      | Reference for content script mounting (adapt for Svelte instead of Preact) |
+| Unlisted script + `injectScript()`                   | `alfred-main-world.ts` + `main.content.ts` | Reference pattern for `cart-superpowers-world.ts` injection                |
+| PostMessage bridge (request/response with requestId) | `main.content.ts` lines 52-65              | Reference for the cart RPC protocol                                        |
+| Context menu registration                            | `background/shortcuts.ts`                  | Adding "Cart Superpowers" entry                                            |
+| `getItem<AlfredSettings>('settings')`                | `utils/storage.ts`                         | Checking if feature is enabled                                             |
 
 ### Svelte-specific notes
 

@@ -3,6 +3,7 @@
 **Phase**: 1 — UI Skeleton
 **Status**: ✅ Complete
 **Files to modify**:
+
 - `package.json`
 - `wxt.config.ts`
 
@@ -28,8 +29,8 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 export default defineConfig({
   // ... existing config ...
   vite: () => ({
-    plugins: [preact(), tailwindcss(), svelte()],
-  }),
+    plugins: [preact(), tailwindcss(), svelte()]
+  })
 });
 ```
 
@@ -51,6 +52,7 @@ This makes the unlisted world script injectable via `injectScript()` when needed
 ### 2.4 Verify the build
 
 Run the build to confirm:
+
 - Existing Preact entrypoints (popup, options, content scripts) still compile without errors
 - The new Svelte plugin doesn't interfere with existing code
 - No TypeScript errors introduced

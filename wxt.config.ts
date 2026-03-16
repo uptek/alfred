@@ -8,38 +8,39 @@ export default defineConfig({
   modules: ['@wxt-dev/auto-icons'],
   manifest: {
     name: 'Alfred - Shopify Theme Detector',
-    description: 'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
+    description:
+      'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
     version: '2026.03.16',
     action: {
-      default_title: 'Alfred',
+      default_title: 'Alfred'
     },
     permissions: ['contextMenus', 'scripting', 'tabs', 'activeTab', 'storage', 'webNavigation'],
     host_permissions: ['<all_urls>'],
     web_accessible_resources: [
       {
         resources: ['alfred-main-world.js'],
-        matches: ['<all_urls>'],
+        matches: ['<all_urls>']
       },
       {
         resources: ['alfred-toast.js'],
-        matches: ['<all_urls>'],
+        matches: ['<all_urls>']
       },
       {
         resources: ['libs/shopify-polaris.js'],
-        matches: ['<all_urls>'],
+        matches: ['<all_urls>']
       },
       {
         resources: ['cart-superpowers-world.js'],
-        matches: ['<all_urls>'],
+        matches: ['<all_urls>']
       },
       {
         resources: ['content-scripts/cart-superpowers.css'],
-        matches: ['<all_urls>'],
-      },
-    ],
+        matches: ['<all_urls>']
+      }
+    ]
   },
   vite: () => ({
-    plugins: [preact(), svelte(), tailwindcss()],
+    plugins: [preact(), svelte(), tailwindcss()]
   }),
   webExt: {
     chromiumArgs: [
@@ -51,7 +52,7 @@ export default defineConfig({
       // 'https://junaid-workspace.myshopify.com/',
       // 'https://partners.shopify.com/1750954/stores/new?store_type=managed_store',
       // 'https://admin.shopify.com/store/junaid-workspace/themes',
-      'https://partners.shopify.com/1750954/stores/new?store_domain=zeeshan-h-bhatti.myshopify.com&store_type=managed_store',
-    ],
-  },
+      'https://partners.shopify.com/1750954/stores/new?store_domain=zeeshan-h-bhatti.myshopify.com&store_type=managed_store'
+    ]
+  }
 });

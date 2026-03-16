@@ -3,9 +3,10 @@
 **Phase**: 1 — UI Skeleton
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers.content/components/QuantityInput.svelte`
 - `entrypoints/cart-superpowers.content/components/KeyValueEditor.svelte`
-**Depends on**: Task 03
+  **Depends on**: Task 03
 
 ## Objective
 
@@ -18,15 +19,18 @@ Build two reusable components used across multiple tabs: a quantity stepper and 
 A compact +/- stepper with a numeric input in the middle.
 
 ### Props
+
 - `value: number` — the current quantity (bindable)
 - `min: number = 0` — minimum allowed value
 - `max: number = 99` — maximum allowed value (reasonable default)
 - `disabled: boolean = false`
 
 ### Events
+
 - `change` — dispatched when the value changes, with `detail: { value: number }`
 
 ### Behavior
+
 - Clicking `-` decrements by 1 (clamped to `min`)
 - Clicking `+` increments by 1 (clamped to `max`)
 - Direct input: typing a number updates the value on blur or Enter
@@ -120,11 +124,13 @@ A compact +/- stepper with a numeric input in the middle.
 ## 4.2 KeyValueEditor.svelte
 
 An editable list of key-value pairs with add and remove functionality. Used by:
+
 - **ItemsTab**: editing line item properties
 - **MetadataTab**: editing cart attributes
 - **AddItemTab**: adding properties to new items
 
 ### Props
+
 - `entries: Array<{ key: string; value: string }>` — the key-value pairs (bindable)
 - `keyPlaceholder: string = "Key"` — placeholder for key inputs
 - `valuePlaceholder: string = "Value"` — placeholder for value inputs
@@ -132,9 +138,11 @@ An editable list of key-value pairs with add and remove functionality. Used by:
 - `addLabel: string = "Add property"` — label for the add button
 
 ### Events
+
 - `change` — dispatched when entries change, with `detail: { entries }`
 
 ### Behavior
+
 - Each row has: key input, value input, remove (x) button
 - "Add" button appends a new empty row `{ key: '', value: '' }`
 - Remove button removes the row at that index
@@ -208,7 +216,7 @@ An editable list of key-value pairs with add and remove functionality. Used by:
 }
 
 .kv-value {
-  flex: 2;    /* value column wider than key column */
+  flex: 2; /* value column wider than key column */
 }
 
 .kv-input::placeholder {
@@ -231,7 +239,9 @@ An editable list of key-value pairs with add and remove functionality. Used by:
   color: var(--cs-text-muted);
   font-size: 16px;
   flex-shrink: 0;
-  transition: color 150ms, background 150ms;
+  transition:
+    color 150ms,
+    background 150ms;
 }
 
 .kv-remove:hover {
@@ -265,6 +275,7 @@ An editable list of key-value pairs with add and remove functionality. Used by:
 ## Acceptance Criteria
 
 ### QuantityInput
+
 - Renders a compact +/- stepper with a numeric input
 - Clicking +/- changes the value and dispatches `change` event
 - Direct input works: typing a number and pressing Enter or blurring updates the value
@@ -273,6 +284,7 @@ An editable list of key-value pairs with add and remove functionality. Used by:
 - Matches the dark theme
 
 ### KeyValueEditor
+
 - Renders a list of key/value input rows
 - "Add property" button appends a new empty row
 - Remove (x) button removes the row

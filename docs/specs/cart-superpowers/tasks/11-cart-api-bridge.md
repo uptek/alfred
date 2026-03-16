@@ -3,10 +3,11 @@
 **Phase**: 2 — Wiring
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers.content/cartApi.ts`
-**Files to modify**:
+  **Files to modify**:
 - `entrypoints/cart-superpowers.content/mount.ts` (inject world script)
-**Depends on**: Task 03 (mount.ts), Task 10 (world script)
+  **Depends on**: Task 03 (mount.ts), Task 10 (world script)
 
 ## Objective
 
@@ -19,7 +20,15 @@ A plain TypeScript module — no framework dependency. Importable from any Svelt
 ### Core RPC Function
 
 ```typescript
-import type { CartData, AddItemPayload, UpdatePayload, ChangePayload, ShippingAddress, ShippingRate, ProductData } from './types';
+import type {
+  CartData,
+  AddItemPayload,
+  UpdatePayload,
+  ChangePayload,
+  ShippingAddress,
+  ShippingRate,
+  ProductData
+} from './types';
 
 const TIMEOUT_MS = 10_000;
 
@@ -58,7 +67,7 @@ function callCartApi<T>(method: string, payload?: any): Promise<T> {
       type: 'alfred:cart_request',
       requestId,
       method,
-      payload,
+      payload
     });
   });
 }
@@ -97,6 +106,7 @@ export async function getProductByUrl(url: string): Promise<ProductData> {
 ```
 
 Each function:
+
 1. Sends a postMessage request with a unique `requestId`
 2. Waits for the matching response
 3. Returns the data or throws an error
@@ -107,7 +117,7 @@ Each function:
 Update `mount.ts` to inject the world script before mounting the Svelte app:
 
 ```typescript
-import { injectScript } from '#imports';  // WXT auto-import
+import { injectScript } from '#imports'; // WXT auto-import
 
 export async function mountCartSuperpowers(ctx: any, onClose: () => void) {
   // Inject cart API world script into the main world

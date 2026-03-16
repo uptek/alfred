@@ -3,8 +3,9 @@
 **Phase**: 1 — UI Skeleton
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers.content/components/JsonTab.svelte`
-**Depends on**: Task 03
+  **Depends on**: Task 03
 
 ## Objective
 
@@ -61,7 +62,9 @@ async function copyJson() {
     await navigator.clipboard.writeText(jsonString);
     copied = true;
     clearTimeout(copyTimeout);
-    copyTimeout = setTimeout(() => { copied = false; }, 2000);
+    copyTimeout = setTimeout(() => {
+      copied = false;
+    }, 2000);
   } catch {
     // Fallback: use document.execCommand (for content scripts where clipboard API may not work)
     const textarea = document.createElement('textarea');
@@ -74,7 +77,9 @@ async function copyJson() {
     document.body.removeChild(textarea);
     copied = true;
     clearTimeout(copyTimeout);
-    copyTimeout = setTimeout(() => { copied = false; }, 2000);
+    copyTimeout = setTimeout(() => {
+      copied = false;
+    }, 2000);
   }
 }
 ```

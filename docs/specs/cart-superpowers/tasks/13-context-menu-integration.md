@@ -3,8 +3,9 @@
 **Phase**: 3 — Integration
 **Status**: ✅ Complete
 **Files to modify**:
+
 - `entrypoints/background/shortcuts.ts`
-**Depends on**: Task 03 (content script entry), Task 12 (wired app)
+  **Depends on**: Task 03 (content script entry), Task 12 (wired app)
 
 ## Objective
 
@@ -66,7 +67,7 @@ const shortcuts = settings?.shortcuts ?? {
   copyProductJson: true,
   copyCartJson: true,
   clearCart: true,
-  cartSuperpowers: true,  // ← add this
+  cartSuperpowers: true // ← add this
 };
 ```
 
@@ -95,6 +96,7 @@ Alfred
 ## Error Handling
 
 `browser.tabs.sendMessage` will throw if:
+
 - The tab doesn't have the content script loaded (e.g., non-http pages, browser internal pages)
 - The tab ID is invalid
 

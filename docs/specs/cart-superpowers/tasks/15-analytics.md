@@ -3,8 +3,9 @@
 **Phase**: 3 — Integration
 **Status**: ✅ Complete
 **Files to modify**:
+
 - `entrypoints/cart-superpowers.content/App.svelte` (or wherever mutation callbacks live)
-**Depends on**: Task 12 (wired app), Task 13 (context menu)
+  **Depends on**: Task 12 (wired app), Task 13 (context menu)
 
 ## Objective
 
@@ -12,16 +13,16 @@ Add analytics tracking for key Cart Superpowers actions using the existing `trac
 
 ## Events to Track
 
-| Event Name | Trigger | Location |
-|---|---|---|
-| `cart_superpowers_open` | Feature is opened (via URL param or context menu) | `index.ts` (content script entry) or `shortcuts.ts` (context menu callback) |
-| `cart_superpowers_add_item` | Item is added to cart | `App.svelte` add item callback |
-| `cart_superpowers_update_quantity` | Quantity is changed on a line item | `App.svelte` quantity update callback |
-| `cart_superpowers_remove_item` | Item is removed from cart | `App.svelte` remove item callback |
-| `cart_superpowers_clear` | Cart is cleared | `App.svelte` clear cart callback |
-| `cart_superpowers_apply_discount` | Discount code is applied | `App.svelte` apply discount callback |
-| `cart_superpowers_update_note` | Cart note is updated | `App.svelte` update note callback |
-| `cart_superpowers_calculate_shipping` | Shipping rates are calculated | `ShippingTab.svelte` or `App.svelte` |
+| Event Name                            | Trigger                                           | Location                                                                    |
+| ------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------- |
+| `cart_superpowers_open`               | Feature is opened (via URL param or context menu) | `index.ts` (content script entry) or `shortcuts.ts` (context menu callback) |
+| `cart_superpowers_add_item`           | Item is added to cart                             | `App.svelte` add item callback                                              |
+| `cart_superpowers_update_quantity`    | Quantity is changed on a line item                | `App.svelte` quantity update callback                                       |
+| `cart_superpowers_remove_item`        | Item is removed from cart                         | `App.svelte` remove item callback                                           |
+| `cart_superpowers_clear`              | Cart is cleared                                   | `App.svelte` clear cart callback                                            |
+| `cart_superpowers_apply_discount`     | Discount code is applied                          | `App.svelte` apply discount callback                                        |
+| `cart_superpowers_update_note`        | Cart note is updated                              | `App.svelte` update note callback                                           |
+| `cart_superpowers_calculate_shipping` | Shipping rates are calculated                     | `ShippingTab.svelte` or `App.svelte`                                        |
 
 ## Implementation
 
@@ -74,7 +75,9 @@ const open = async () => {
   mounted = true;
   trackAction('cart_superpowers_open');
   const { mountCartSuperpowers } = await import('./mount');
-  mountCartSuperpowers(ctx, () => { mounted = false; });
+  mountCartSuperpowers(ctx, () => {
+    mounted = false;
+  });
 };
 ```
 

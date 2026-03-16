@@ -3,8 +3,9 @@
 **Phase**: 1 — UI Skeleton
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers.content/components/ShippingTab.svelte`
-**Depends on**: Task 03
+  **Depends on**: Task 03
 
 ## Objective
 

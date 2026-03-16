@@ -23,8 +23,8 @@ export async function mountCartSuperpowers(ctx: ContentScriptContext, onClose: (
         props: {
           onClose: () => {
             ui.remove();
-          },
-        },
+          }
+        }
       });
       return app;
     },
@@ -34,7 +34,7 @@ export async function mountCartSuperpowers(ctx: ContentScriptContext, onClose: (
         app = undefined;
       }
       onClose();
-    },
+    }
   });
 
   ui.mount();

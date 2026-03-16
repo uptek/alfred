@@ -3,8 +3,9 @@
 **Phase**: 2 — Wiring
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers-world.ts`
-**Depends on**: Task 01 (types)
+  **Depends on**: Task 01 (types)
 
 ## Objective
 
@@ -58,7 +59,7 @@ async function addItem(items: AddItemPayload | AddItemPayload[]): Promise<CartDa
   const res = await fetch('/cart/add.js', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
@@ -79,7 +80,7 @@ async function updateCart(updates: UpdatePayload): Promise<CartData> {
   const res = await fetch('/cart/update.js', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates),
+    body: JSON.stringify(updates)
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
@@ -98,7 +99,7 @@ async function changeItem(change: ChangePayload): Promise<CartData> {
   const res = await fetch('/cart/change.js', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(change),
+    body: JSON.stringify(change)
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
@@ -116,7 +117,7 @@ async function changeItem(change: ChangePayload): Promise<CartData> {
 async function clearCart(): Promise<CartData> {
   const res = await fetch('/cart/clear.js', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' }
   });
   if (!res.ok) throw new Error(`Failed to clear cart: ${res.status}`);
   return res.json();
@@ -131,11 +132,11 @@ async function getShippingRates(address: ShippingAddress): Promise<ShippingRate[
   const params = new URLSearchParams({
     'shipping_address[zip]': address.zip,
     'shipping_address[country]': address.country,
-    'shipping_address[province]': address.province,
+    'shipping_address[province]': address.province
   });
 
   const prepRes = await fetch(`/cart/prepare_shipping_rates.json?${params}`, {
-    method: 'POST',
+    method: 'POST'
   });
   if (!prepRes.ok) throw new Error(`Failed to prepare shipping rates: ${prepRes.status}`);
 
@@ -201,7 +202,7 @@ const methodMap: Record<string, (...args: any[]) => Promise<any>> = {
   changeItem,
   clearCart,
   getShippingRates,
-  getProductByUrl,
+  getProductByUrl
 };
 
 window.addEventListener('message', async (event) => {
@@ -215,7 +216,7 @@ window.addEventListener('message', async (event) => {
     window.postMessage({
       type: 'alfred:cart_response',
       requestId,
-      error: `Unknown method: ${method}`,
+      error: `Unknown method: ${method}`
     });
     return;
   }
@@ -225,13 +226,13 @@ window.addEventListener('message', async (event) => {
     window.postMessage({
       type: 'alfred:cart_response',
       requestId,
-      data,
+      data
     });
   } catch (err) {
     window.postMessage({
       type: 'alfred:cart_response',
       requestId,
-      error: err instanceof Error ? err.message : String(err),
+      error: err instanceof Error ? err.message : String(err)
     });
   }
 });
@@ -240,6 +241,7 @@ window.addEventListener('message', async (event) => {
 ### RPC Protocol
 
 **Request** (content script → main world):
+
 ```typescript
 {
   type: 'alfred:cart_request',
@@ -250,6 +252,7 @@ window.addEventListener('message', async (event) => {
 ```
 
 **Response** (main world → content script):
+
 ```typescript
 {
   type: 'alfred:cart_response',
@@ -277,6 +280,7 @@ The script may be injected multiple times if the overlay is opened/closed/opened
 ## Type Safety
 
 The world script needs the same types as the content script. Since it runs in a separate context:
+
 - **Option A**: Duplicate the interface definitions inline (pragmatic, avoids import complexity)
 - **Option B**: Import from `../cart-superpowers.content/types.ts` (may work since it's the same build)
 

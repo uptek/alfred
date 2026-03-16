@@ -246,7 +246,10 @@
       },
       {
         "type": "list",
-        "content": ["View store URL, theme name, and version.", "Works automatically on any Shopify store, no external API required."]
+        "content": [
+          "View store URL, theme name, and version.",
+          "Works automatically on any Shopify store, no external API required."
+        ]
       },
       {
         "type": "divider"
@@ -606,7 +609,10 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Add context menu to open current page in admin", "Add context menu to open current page in customizer"]
+        "content": [
+          "Add context menu to open current page in admin",
+          "Add context menu to open current page in customizer"
+        ]
       }
     ]
   },

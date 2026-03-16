@@ -9,19 +9,19 @@ return, with a concrete execution plan for each.
 
 ### What Alfred Does Today
 
-| Feature | Audience |
-|---|---|
-| Theme Detector (popup) — name, version, developer, price, theme store link, preview URL | Merchants, designers, agencies |
-| Right-click shortcuts — open in admin, open in customizer, copy product/cart JSON, clear cart, copy preview URL, exit theme preview, open image in admin | Developers, merchants |
-| Collaborator Access Presets — save/apply permission sets | Agencies, freelancers |
-| App Store Partner Table — enriched sortable table + CSV export on partner pages | App developers |
-| App Store Search Indexing — position numbers on search results | App developers |
-| Storefront Password Autofill — save and auto-fill passwords | Developers, QA |
-| Theme Customizer Resizers — resizable panels in theme editor | Developers, designers |
-| Theme Inspector toggle — disable/remember inspector state | Developers |
-| Admin Sidebar Toggle — collapse Shopify admin nav | Merchants, developers |
-| Restore Right-Click — re-enable blocked context menus | Everyone |
-| Close Editor Warning — prevent accidental tab close | Developers |
+| Feature                                                                                                                                                  | Audience                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Theme Detector (popup) — name, version, developer, price, theme store link, preview URL                                                                  | Merchants, designers, agencies |
+| Right-click shortcuts — open in admin, open in customizer, copy product/cart JSON, clear cart, copy preview URL, exit theme preview, open image in admin | Developers, merchants          |
+| Collaborator Access Presets — save/apply permission sets                                                                                                 | Agencies, freelancers          |
+| App Store Partner Table — enriched sortable table + CSV export on partner pages                                                                          | App developers                 |
+| App Store Search Indexing — position numbers on search results                                                                                           | App developers                 |
+| Storefront Password Autofill — save and auto-fill passwords                                                                                              | Developers, QA                 |
+| Theme Customizer Resizers — resizable panels in theme editor                                                                                             | Developers, designers          |
+| Theme Inspector toggle — disable/remember inspector state                                                                                                | Developers                     |
+| Admin Sidebar Toggle — collapse Shopify admin nav                                                                                                        | Merchants, developers          |
+| Restore Right-Click — re-enable blocked context menus                                                                                                    | Everyone                       |
+| Close Editor Warning — prevent accidental tab close                                                                                                      | Developers                     |
 
 ### Current Infrastructure
 
@@ -44,12 +44,12 @@ developer sites. Some of these developers run affiliate programs.
 
 #### 1A. Theme Developer Affiliates
 
-| Developer | Commission | Cookie | Platform | Notes |
-|---|---|---|---|---|
-| **Pixel Union / Out of the Sandbox** (Turbo, Flex, Superstore, Pacific) | 15% (20% promos) | 90 days | PartnerStack | Combined program. Themes sold on their own site, not just theme store. |
-| **Booster Theme** | 20-30% (volume) | Unknown | Tapfiliate | AOV ~$399, so ~$80-120 per sale. Contact partners@boostertheme.com for volume tier. |
-| **Debutify** | 25% new, 15% renewals | Unknown | Own program | Subscription model = recurring income. |
-| **Archetype Themes** | Has partner program | Unknown | Own site | Contact directly via archetypethemes.co/pages/partners |
+| Developer                                                               | Commission            | Cookie  | Platform     | Notes                                                                               |
+| ----------------------------------------------------------------------- | --------------------- | ------- | ------------ | ----------------------------------------------------------------------------------- |
+| **Pixel Union / Out of the Sandbox** (Turbo, Flex, Superstore, Pacific) | 15% (20% promos)      | 90 days | PartnerStack | Combined program. Themes sold on their own site, not just theme store.              |
+| **Booster Theme**                                                       | 20-30% (volume)       | Unknown | Tapfiliate   | AOV ~$399, so ~$80-120 per sale. Contact partners@boostertheme.com for volume tier. |
+| **Debutify**                                                            | 25% new, 15% renewals | Unknown | Own program  | Subscription model = recurring income.                                              |
+| **Archetype Themes**                                                    | Has partner program   | Unknown | Own site     | Contact directly via archetypethemes.co/pages/partners                              |
 
 **How it works technically:**
 
@@ -91,15 +91,15 @@ Scales linearly with users.
 Alfred already enhances app store partner pages and could detect apps on
 storefronts. Many Shopify apps run affiliate programs:
 
-| App | Commission | Duration | Platform |
-|---|---|---|---|
-| **PageFly** | 50% first month, 30% recurring | Lifetime | Own program |
-| **GemPages** | Up to 50% recurring | Lifetime | Own program |
-| **Omnisend** | 20% recurring | 24 months | Impact |
-| **Loox** | 20% | 12 months | Own program |
-| **Bold Commerce** | 20-30% | Recurring | Own program |
-| **ReCharge** | 10% revenue share | Per referral | Own program |
-| **Koala Inspector** | 35% recurring | Lifetime | Own program |
+| App                 | Commission                     | Duration     | Platform    |
+| ------------------- | ------------------------------ | ------------ | ----------- |
+| **PageFly**         | 50% first month, 30% recurring | Lifetime     | Own program |
+| **GemPages**        | Up to 50% recurring            | Lifetime     | Own program |
+| **Omnisend**        | 20% recurring                  | 24 months    | Impact      |
+| **Loox**            | 20%                            | 12 months    | Own program |
+| **Bold Commerce**   | 20-30%                         | Recurring    | Own program |
+| **ReCharge**        | 10% revenue share              | Per referral | Own program |
+| **Koala Inspector** | 35% recurring                  | Lifetime     | Own program |
 
 **Requires new feature**: App detection on storefronts (see Stream 3 below).
 Once Alfred can detect installed apps, it can show them in the popup with
@@ -118,23 +118,23 @@ Everything Alfred does today. Never remove existing free features.
 
 #### Premium Features to Build
 
-| Feature | Value Prop | Effort |
-|---|---|---|
-| **App Detection** | See all Shopify apps installed on any store | Medium |
-| **Store Analytics** | Estimated traffic, revenue, best-sellers for any store | High |
-| **Bulk Store Analysis** | Analyze multiple stores at once, export reports | Medium |
-| **Theme Change Alerts** | Get notified when a competitor changes their theme | Medium |
-| **Historical Data** | See when a store last changed themes/apps | High |
-| **Advanced Export** | PDF reports, branded reports for client presentations | Low |
-| **Unlimited Lookups** | Free tier: 50/month. Pro: unlimited | Low (gating logic) |
+| Feature                 | Value Prop                                             | Effort             |
+| ----------------------- | ------------------------------------------------------ | ------------------ |
+| **App Detection**       | See all Shopify apps installed on any store            | Medium             |
+| **Store Analytics**     | Estimated traffic, revenue, best-sellers for any store | High               |
+| **Bulk Store Analysis** | Analyze multiple stores at once, export reports        | Medium             |
+| **Theme Change Alerts** | Get notified when a competitor changes their theme     | Medium             |
+| **Historical Data**     | See when a store last changed themes/apps              | High               |
+| **Advanced Export**     | PDF reports, branded reports for client presentations  | Low                |
+| **Unlimited Lookups**   | Free tier: 50/month. Pro: unlimited                    | Low (gating logic) |
 
 #### Pricing Model
 
-| Tier | Price | Includes |
-|---|---|---|
-| **Free** | $0 | All current features + 50 theme lookups/month |
-| **Pro** | $9/month | Unlimited lookups, app detection, theme change alerts, CSV/PDF export |
-| **Agency** | $29/month | Everything in Pro + bulk analysis, branded reports, team sharing |
+| Tier       | Price     | Includes                                                              |
+| ---------- | --------- | --------------------------------------------------------------------- |
+| **Free**   | $0        | All current features + 50 theme lookups/month                         |
+| **Pro**    | $9/month  | Unlimited lookups, app detection, theme change alerts, CSV/PDF export |
+| **Agency** | $29/month | Everything in Pro + bulk analysis, branded reports, team sharing      |
 
 #### Technical Implementation
 
@@ -209,12 +209,12 @@ event. With app detection added, this becomes a full technology profile.
 
 #### Who Buys This Data
 
-| Buyer | What They Want | Price Range |
-|---|---|---|
-| **Theme developers** | Which themes are losing/gaining market share | $100-500/month |
-| **App developers** | Which stores use competitor apps, market size | $200-1,000/month |
-| **Agencies** | Competitive intelligence for pitches | $50-200/month |
-| **Investors / analysts** | Shopify ecosystem trends | $500-2,000/month |
+| Buyer                    | What They Want                                | Price Range      |
+| ------------------------ | --------------------------------------------- | ---------------- |
+| **Theme developers**     | Which themes are losing/gaining market share  | $100-500/month   |
+| **App developers**       | Which stores use competitor apps, market size | $200-1,000/month |
+| **Agencies**             | Competitive intelligence for pitches          | $50-200/month    |
+| **Investors / analysts** | Shopify ecosystem trends                      | $500-2,000/month |
 
 #### Product Options
 
@@ -254,11 +254,11 @@ placements.
 
 #### Sponsorship Opportunities
 
-| Placement | Description | Pricing Model |
-|---|---|---|
+| Placement                          | Description                                                | Pricing Model    |
+| ---------------------------------- | ---------------------------------------------------------- | ---------------- |
 | **"Recommended" section in popup** | Small card below theme info: "Try [Theme/App] — Sponsored" | Flat monthly fee |
-| **Options page banner** | Non-intrusive banner on settings/changelog page | Flat monthly fee |
-| **Changelog mentions** | "This update sponsored by [Company]" | Per-release fee |
+| **Options page banner**            | Non-intrusive banner on settings/changelog page            | Flat monthly fee |
+| **Changelog mentions**             | "This update sponsored by [Company]"                       | Per-release fee  |
 
 #### Target Sponsors
 
@@ -283,11 +283,12 @@ at this scale and easier to sell.
 Shopify's own affiliate program pays when someone signs up for a paid Shopify
 plan through your referral link. Commission structure is performance-based.
 
-**Why it's low return for Alfred:** Alfred's users are *already* Shopify
+**Why it's low return for Alfred:** Alfred's users are _already_ Shopify
 merchants. They already have Shopify plans. The conversion opportunity is
 minimal.
 
 **Where it could work:**
+
 - If Alfred expands to non-Shopify audiences (e.g., "What platform is this
   store using?" detection), it could refer non-Shopify store owners to try
   Shopify.
@@ -303,16 +304,16 @@ Shopify merchants.
 
 **Goal:** Start generating affiliate revenue with minimal code changes.
 
-| Task | Effort | Impact |
-|---|---|---|
-| Sign up for Pixel Union/OOTS PartnerStack affiliate program | 1 hour | Enables commissions |
-| Sign up for Booster Theme affiliate program (Tapfiliate) | 30 min | Enables commissions |
-| Sign up for Debutify affiliate program | 30 min | Enables commissions |
-| Add `affiliate_url` field to theme data pipeline | 2 hours | Technical foundation |
-| Update `Theme.tsx` to prefer affiliate links where available | 1 hour | Revenue starts |
-| Add FTC-compliant affiliate disclosure tooltip | 30 min | Legal compliance |
-| Add `click_affiliate_link` analytics event | 30 min | Track performance |
-| Update privacy policy on Chrome Web Store listing | 1 hour | Compliance |
+| Task                                                         | Effort  | Impact               |
+| ------------------------------------------------------------ | ------- | -------------------- |
+| Sign up for Pixel Union/OOTS PartnerStack affiliate program  | 1 hour  | Enables commissions  |
+| Sign up for Booster Theme affiliate program (Tapfiliate)     | 30 min  | Enables commissions  |
+| Sign up for Debutify affiliate program                       | 30 min  | Enables commissions  |
+| Add `affiliate_url` field to theme data pipeline             | 2 hours | Technical foundation |
+| Update `Theme.tsx` to prefer affiliate links where available | 1 hour  | Revenue starts       |
+| Add FTC-compliant affiliate disclosure tooltip               | 30 min  | Legal compliance     |
+| Add `click_affiliate_link` analytics event                   | 30 min  | Track performance    |
+| Update privacy policy on Chrome Web Store listing            | 1 hour  | Compliance           |
 
 **Expected outcome:** Passive affiliate income from existing traffic. Even
 $20-50/month is validation.
@@ -322,14 +323,14 @@ $20-50/month is validation.
 **Goal:** Build the app detection feature to unlock app affiliate revenue and
 make the extension significantly more valuable.
 
-| Task | Effort | Impact |
-|---|---|---|
-| Research and build initial app fingerprint database (top 50 apps) | 1 week | Core feature |
-| Implement detection logic in main world script | 3 days | Core feature |
-| Add "Apps" tab to popup UI | 2 days | User-facing |
-| Sign up for app affiliate programs (PageFly, GemPages, Loox, etc.) | 2 hours | Revenue |
-| Add affiliate links to detected apps | 1 day | Revenue |
-| Track app detection events in Supabase | 1 day | Data asset |
+| Task                                                               | Effort  | Impact       |
+| ------------------------------------------------------------------ | ------- | ------------ |
+| Research and build initial app fingerprint database (top 50 apps)  | 1 week  | Core feature |
+| Implement detection logic in main world script                     | 3 days  | Core feature |
+| Add "Apps" tab to popup UI                                         | 2 days  | User-facing  |
+| Sign up for app affiliate programs (PageFly, GemPages, Loox, etc.) | 2 hours | Revenue      |
+| Add affiliate links to detected apps                               | 1 day   | Revenue      |
+| Track app detection events in Supabase                             | 1 day   | Data asset   |
 
 **Expected outcome:** App detection makes Alfred a full competitive
 intelligence tool. Affiliate revenue from app links adds to theme affiliates.
@@ -338,16 +339,16 @@ intelligence tool. Affiliate revenue from app links adds to theme affiliates.
 
 **Goal:** Launch a paid tier with enough value to justify $9-29/month.
 
-| Task | Effort | Impact |
-|---|---|---|
-| Set up payment infrastructure (LemonSqueezy or Stripe) | 2 days | Foundation |
-| Implement license key validation and plan storage | 2 days | Foundation |
-| Build usage counter / gating for free tier limits | 1 day | Conversion driver |
-| Build theme change alerts feature (background polling) | 3 days | Premium value |
-| Build bulk analysis feature | 3 days | Agency value |
-| Build PDF/branded report export | 2 days | Agency value |
-| Create pricing page on marketing site | 1 day | Conversion |
-| Add upgrade prompts in extension UI | 1 day | Conversion |
+| Task                                                   | Effort | Impact            |
+| ------------------------------------------------------ | ------ | ----------------- |
+| Set up payment infrastructure (LemonSqueezy or Stripe) | 2 days | Foundation        |
+| Implement license key validation and plan storage      | 2 days | Foundation        |
+| Build usage counter / gating for free tier limits      | 1 day  | Conversion driver |
+| Build theme change alerts feature (background polling) | 3 days | Premium value     |
+| Build bulk analysis feature                            | 3 days | Agency value      |
+| Build PDF/branded report export                        | 2 days | Agency value      |
+| Create pricing page on marketing site                  | 1 day  | Conversion        |
+| Add upgrade prompts in extension UI                    | 1 day  | Conversion        |
 
 **Expected outcome:** Recurring revenue from power users and agencies.
 
@@ -355,13 +356,13 @@ intelligence tool. Affiliate revenue from app links adds to theme affiliates.
 
 **Goal:** Monetize the aggregated data Alfred collects.
 
-| Task | Effort | Impact |
-|---|---|---|
-| Build aggregation queries in Supabase | 3 days | Foundation |
-| Create trends dashboard web app | 1-2 weeks | Product |
-| Build API for technology lookups | 1 week | Product |
-| Create "State of Shopify Themes" report | 3 days | Marketing + revenue |
-| Market to theme/app developers | Ongoing | Sales |
+| Task                                    | Effort    | Impact              |
+| --------------------------------------- | --------- | ------------------- |
+| Build aggregation queries in Supabase   | 3 days    | Foundation          |
+| Create trends dashboard web app         | 1-2 weeks | Product             |
+| Build API for technology lookups        | 1 week    | Product             |
+| Create "State of Shopify Themes" report | 3 days    | Marketing + revenue |
+| Market to theme/app developers          | Ongoing   | Sales               |
 
 **Expected outcome:** High-margin recurring revenue from data subscriptions.
 
@@ -375,31 +376,31 @@ Alfred's monetization scales with users. Here's how to grow:
 
 #### Organic / SEO
 
-| Channel | Action |
-|---|---|
-| **Chrome Web Store SEO** | Optimize listing title, description, screenshots. Target: "Shopify theme detector", "Shopify developer tools", "Shopify app detector" |
-| **Landing page** | uptek.com/alfred with demo video, feature list, download CTA |
-| **Blog content** | "What theme is [Popular Brand] using?" posts targeting long-tail queries. Auto-generate using theme detection data. |
-| **Shopify Theme Store trends** | Publish monthly "Top Shopify Themes" blog post using aggregated data. Attracts links and organic traffic. |
+| Channel                        | Action                                                                                                                                |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Chrome Web Store SEO**       | Optimize listing title, description, screenshots. Target: "Shopify theme detector", "Shopify developer tools", "Shopify app detector" |
+| **Landing page**               | uptek.com/alfred with demo video, feature list, download CTA                                                                          |
+| **Blog content**               | "What theme is [Popular Brand] using?" posts targeting long-tail queries. Auto-generate using theme detection data.                   |
+| **Shopify Theme Store trends** | Publish monthly "Top Shopify Themes" blog post using aggregated data. Attracts links and organic traffic.                             |
 
 #### Community
 
-| Channel | Action |
-|---|---|
-| **r/shopify** | Share useful insights, mention Alfred when relevant (not spammy) |
-| **Shopify Community forums** | Answer theme-related questions, link to Alfred |
-| **Twitter/X** | Share "Theme of the Week" using detection data |
-| **LinkedIn** | Target Shopify agency owners with posts about developer productivity |
-| **YouTube** | Short demos of each feature (theme detection, app detection, shortcuts) |
+| Channel                      | Action                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------- |
+| **r/shopify**                | Share useful insights, mention Alfred when relevant (not spammy)        |
+| **Shopify Community forums** | Answer theme-related questions, link to Alfred                          |
+| **Twitter/X**                | Share "Theme of the Week" using detection data                          |
+| **LinkedIn**                 | Target Shopify agency owners with posts about developer productivity    |
+| **YouTube**                  | Short demos of each feature (theme detection, app detection, shortcuts) |
 
 #### Partnerships
 
-| Partner Type | Action |
-|---|---|
-| **Theme developers** | Offer them free analytics on their theme's market share in exchange for promoting Alfred to their users |
-| **Shopify agencies** | Free Agency tier in exchange for case studies and referrals |
-| **Shopify YouTubers** | Sponsor mentions or provide free pro access for review |
-| **Shopify newsletter authors** | Sponsored placement or affiliate arrangement |
+| Partner Type                   | Action                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **Theme developers**           | Offer them free analytics on their theme's market share in exchange for promoting Alfred to their users |
+| **Shopify agencies**           | Free Agency tier in exchange for case studies and referrals                                             |
+| **Shopify YouTubers**          | Sponsor mentions or provide free pro access for review                                                  |
+| **Shopify newsletter authors** | Sponsored placement or affiliate arrangement                                                            |
 
 #### Paid Acquisition (Later)
 
@@ -413,33 +414,33 @@ Alfred's monetization scales with users. Here's how to grow:
 
 ### Conservative Scenario (1,000 MAU)
 
-| Stream | Monthly Revenue |
-|---|---|
-| Theme affiliates | $30-80 |
-| App affiliates | $50-150 |
-| Premium subscriptions | $200-400 |
-| **Total** | **$280-630/month** |
+| Stream                | Monthly Revenue    |
+| --------------------- | ------------------ |
+| Theme affiliates      | $30-80             |
+| App affiliates        | $50-150            |
+| Premium subscriptions | $200-400           |
+| **Total**             | **$280-630/month** |
 
 ### Growth Scenario (10,000 MAU)
 
-| Stream | Monthly Revenue |
-|---|---|
-| Theme affiliates | $300-800 |
-| App affiliates | $500-1,500 |
-| Premium subscriptions | $2,000-4,000 |
-| Sponsorships | $500-1,000 |
-| Data/API subscriptions | $500-2,000 |
-| **Total** | **$3,800-9,300/month** |
+| Stream                 | Monthly Revenue        |
+| ---------------------- | ---------------------- |
+| Theme affiliates       | $300-800               |
+| App affiliates         | $500-1,500             |
+| Premium subscriptions  | $2,000-4,000           |
+| Sponsorships           | $500-1,000             |
+| Data/API subscriptions | $500-2,000             |
+| **Total**              | **$3,800-9,300/month** |
 
 ### Ambitious Scenario (50,000+ MAU)
 
-| Stream | Monthly Revenue |
-|---|---|
-| Theme + App affiliates | $2,000-5,000 |
-| Premium subscriptions | $10,000-25,000 |
-| Sponsorships | $2,000-5,000 |
-| Data/API subscriptions | $5,000-15,000 |
-| **Total** | **$19,000-50,000/month** |
+| Stream                 | Monthly Revenue          |
+| ---------------------- | ------------------------ |
+| Theme + App affiliates | $2,000-5,000             |
+| Premium subscriptions  | $10,000-25,000           |
+| Sponsorships           | $2,000-5,000             |
+| Data/API subscriptions | $5,000-15,000            |
+| **Total**              | **$19,000-50,000/month** |
 
 For reference, Koala Inspector has 250,000+ users with a $0-22/month pricing
 model. The Shopify tools market is proven and growing.
@@ -448,13 +449,13 @@ model. The Shopify tools market is proven and growing.
 
 ## Competitive Landscape
 
-| Competitor | Features | Pricing | Users | Alfred's Edge |
-|---|---|---|---|---|
-| **Koala Inspector** | Theme + app detection, store analytics, best sellers | Free / $10-22/mo | 250k+ | Alfred has deeper dev tools (shortcuts, customizer, presets) |
-| **ShopScan** | Theme + app detection, revenue estimates | Free / Paid | Unknown | Alfred is more developer-focused |
-| **Shopify Theme Detector** (shopthemedetector.com) | Web-based theme lookup | Free (affiliate revenue) | N/A | Alfred works inline, no copy-pasting URLs |
-| **BuiltWith** | Full technology detection | $295-995/mo | Enterprise | Alfred is Shopify-specialized and cheaper |
-| **Wappalyzer** | Technology detection | Free / $250-850/mo | 2M+ | Alfred provides Shopify-specific depth |
+| Competitor                                         | Features                                             | Pricing                  | Users      | Alfred's Edge                                                |
+| -------------------------------------------------- | ---------------------------------------------------- | ------------------------ | ---------- | ------------------------------------------------------------ |
+| **Koala Inspector**                                | Theme + app detection, store analytics, best sellers | Free / $10-22/mo         | 250k+      | Alfred has deeper dev tools (shortcuts, customizer, presets) |
+| **ShopScan**                                       | Theme + app detection, revenue estimates             | Free / Paid              | Unknown    | Alfred is more developer-focused                             |
+| **Shopify Theme Detector** (shopthemedetector.com) | Web-based theme lookup                               | Free (affiliate revenue) | N/A        | Alfred works inline, no copy-pasting URLs                    |
+| **BuiltWith**                                      | Full technology detection                            | $295-995/mo              | Enterprise | Alfred is Shopify-specialized and cheaper                    |
+| **Wappalyzer**                                     | Technology detection                                 | Free / $250-850/mo       | 2M+        | Alfred provides Shopify-specific depth                       |
 
 **Alfred's unique position:** No other extension combines theme/app detection
 with deep Shopify admin productivity tools. The developer-focused features

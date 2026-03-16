@@ -3,10 +3,11 @@
 **Phase**: 1 — UI Skeleton
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers.content/index.ts`
 - `entrypoints/cart-superpowers.content/mount.ts`
 - `entrypoints/cart-superpowers.content/App.svelte`
-**Depends on**: Task 01, Task 02
+  **Depends on**: Task 01, Task 02
 
 ## Objective
 
@@ -41,7 +42,9 @@ export default defineContentScript({
       if (mounted) return;
       mounted = true;
       const { mountCartSuperpowers } = await import('./mount');
-      mountCartSuperpowers(ctx, () => { mounted = false; });
+      mountCartSuperpowers(ctx, () => {
+        mounted = false;
+      });
     };
 
     // URL parameter trigger
@@ -73,13 +76,18 @@ entrypoints/cart-superpowers.content/mount.ts
 - Accept an `onClose` callback to tell `index.ts` when the overlay is dismissed (so `mounted` flag resets)
 
 **Svelte 5 mounting pattern**:
+
 ```typescript
 import { mount, unmount } from 'svelte';
 import App from './App.svelte';
 
 const app = mount(App, {
   target: container,
-  props: { onClose: () => { /* cleanup */ } }
+  props: {
+    onClose: () => {
+      /* cleanup */
+    }
+  }
 });
 
 // Later: unmount(app);
@@ -96,9 +104,11 @@ entrypoints/cart-superpowers.content/App.svelte
 The root Svelte component. Contains the overlay backdrop, header, tab bar, and content area.
 
 ### Props
+
 - `onClose: () => void` — callback to unmount the overlay
 
 ### State
+
 - `let cart: CartData = MOCK_CART` — imported from mock-data.ts (replaced with real data in Phase 2)
 - `let activeTab: TabId = 'items'`
 
@@ -157,7 +167,7 @@ const tabs: Array<{ id: TabId; label: string }> = [
   { id: 'add', label: 'Add Item' },
   { id: 'metadata', label: 'Metadata' },
   { id: 'shipping', label: 'Shipping' },
-  { id: 'json', label: 'JSON' },
+  { id: 'json', label: 'JSON' }
 ];
 ```
 
@@ -183,6 +193,7 @@ onDestroy(() => {
 ### Backdrop Click
 
 Clicking the semi-transparent overlay area (outside the panel) should also close:
+
 ```svelte
 <div class="overlay" on:click|self={onClose}>
 ```
@@ -201,7 +212,7 @@ Dark dev-tools aesthetic with CSS custom properties for design tokens:
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: #e3e3e3;
@@ -214,8 +225,8 @@ Dark dev-tools aesthetic with CSS custom properties for design tokens:
   --cs-text-primary: #e3e3e3;
   --cs-text-secondary: #a0a0a0;
   --cs-text-muted: #707070;
-  --cs-accent: #6366f1;        /* indigo-500 */
-  --cs-accent-hover: #818cf8;  /* indigo-400 */
+  --cs-accent: #6366f1; /* indigo-500 */
+  --cs-accent-hover: #818cf8; /* indigo-400 */
   --cs-border: #3c3c3c;
   --cs-danger: #ef4444;
   --cs-danger-hover: #f87171;
@@ -278,7 +289,9 @@ Dark dev-tools aesthetic with CSS custom properties for design tokens:
   border-radius: var(--cs-radius-sm);
   color: var(--cs-text-secondary);
   font-size: 16px;
-  transition: background 150ms, color 150ms;
+  transition:
+    background 150ms,
+    color 150ms;
 }
 
 .close-btn:hover {
@@ -302,7 +315,9 @@ Dark dev-tools aesthetic with CSS custom properties for design tokens:
   font-weight: 500;
   color: var(--cs-text-secondary);
   border-bottom: 2px solid transparent;
-  transition: color 150ms, border-color 150ms;
+  transition:
+    color 150ms,
+    border-color 150ms;
   display: flex;
   align-items: center;
   gap: 6px;

@@ -3,8 +3,9 @@
 **Phase**: 1 — UI Skeleton
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers.content/components/AddItemTab.svelte`
-**Depends on**: Task 03, Task 04
+  **Depends on**: Task 03, Task 04
 
 ## Objective
 
@@ -342,7 +343,9 @@ let isAdding = false;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  transition: border-color 150ms, background 150ms;
+  transition:
+    border-color 150ms,
+    background 150ms;
 }
 
 .variant-card:hover {

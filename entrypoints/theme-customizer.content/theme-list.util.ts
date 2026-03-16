@@ -11,7 +11,7 @@ const trackThemeListAction = (action: string, metadata: Record<string, unknown> 
   browser.runtime.sendMessage({
     type: 'track_action',
     action,
-    metadata,
+    metadata
   });
 };
 
@@ -146,6 +146,6 @@ export const setupThemeList = async () => {
 
   observer.observe(document.body, {
     childList: true,
-    subtree: true,
+    subtree: true
   });
 };

@@ -3,8 +3,9 @@
 **Phase**: 1 — UI Skeleton
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers.content/components/ItemsTab.svelte`
-**Depends on**: Task 03, Task 04
+  **Depends on**: Task 03, Task 04
 
 ## Objective
 
@@ -20,52 +21,59 @@ Build the core Items tab — a data table displaying all cart line items with in
 
 ## Table Layout
 
-| Column | Width | Content |
-|---|---|---|
-| # | 40px | Row number (1-indexed) |
-| Image | 48px | Product image thumbnail |
-| Product | flex | Product title, variant title, SKU |
-| Qty | 120px | `<QuantityInput>` component |
-| Properties | 160px | Collapsed summary / expandable editor |
-| Selling Plan | 160px | Plan name or "—" |
-| Price | 100px | Formatted line price |
-| Actions | 40px | Remove button (trash icon) |
+| Column       | Width | Content                               |
+| ------------ | ----- | ------------------------------------- |
+| #            | 40px  | Row number (1-indexed)                |
+| Image        | 48px  | Product image thumbnail               |
+| Product      | flex  | Product title, variant title, SKU     |
+| Qty          | 120px | `<QuantityInput>` component           |
+| Properties   | 160px | Collapsed summary / expandable editor |
+| Selling Plan | 160px | Plan name or "—"                      |
+| Price        | 100px | Formatted line price                  |
+| Actions      | 40px  | Remove button (trash icon)            |
 
 ## Detailed Column Specs
 
 ### Image Column
+
 - 40x40 rounded thumbnail from `item.image`
 - Fallback: gray placeholder square if `item.image` is empty
 - `object-fit: cover`, `border-radius: 4px`
 
 ### Product Column
+
 - **Line 1**: `item.product_title` — primary text, font-weight 500
 - **Line 2**: `item.variant_title` — secondary text, smaller, muted color. Show only if not null/empty
 - **Line 3**: `item.sku` — monospace, very small, muted. Show only if not empty
 - Product title links to `item.url` (opens in new tab)
 
 ### Quantity Column
+
 - Renders `<QuantityInput>` with `bind:value={item.quantity}`
 - On change: calls `onUpdateQuantity(item.key, newQuantity)`
 - Setting quantity to 0 is equivalent to removing the item
 
 ### Properties Column
+
 - **Collapsed state**: Shows property count badge (e.g., "2 props") or "—" if none
 - **Expanded state**: Click to toggle, shows inline `<KeyValueEditor>` below the row
 - On change: calls `onUpdateProperties(item.key, item.quantity, newProperties)`
 - Use a toggle button/icon to expand/collapse
 
 ### Selling Plan Column
+
 - If `item.selling_plan_allocation` exists: show `item.selling_plan_allocation.selling_plan.name`
 - Truncate long names with ellipsis
 - If no selling plan: show "—" in muted color
 
 ### Price Column
+
 - Format: `$XX.XX` using `item.line_price / 100` with `cart.currency`
 - If `item.total_discount > 0`: show original price struck through above the discounted price
 - Right-aligned
 
 ### Actions Column
+
 - Trash/remove icon button
 - On click: calls `onRemoveItem(item.key)`
 - Hover: icon turns red (`--cs-danger`)
@@ -76,6 +84,7 @@ Build the core Items tab — a data table displaying all cart line items with in
 When a user clicks the properties toggle on a row, an additional row spans the full table width below that item. It contains a `<KeyValueEditor>` pre-filled with the item's properties. Changes are local until the user clicks away or triggers a save.
 
 Implementation approach:
+
 - Track `expandedItemKey: string | null` in component state
 - When expanded, render a `<tr>` with `colspan` spanning all columns, containing the `<KeyValueEditor>`
 - Only one item can be expanded at a time
@@ -83,6 +92,7 @@ Implementation approach:
 ## Footer
 
 Below the table, a footer bar with:
+
 - **Left side**: "Clear Cart" button (danger style — red text, hover red background)
 - **Right side**: Total price display: "Total: $XXX.XX" with `cart.total_price / 100`
   - If `cart.total_discount > 0`: show "Discount: -$XX.XX" in green above the total
@@ -90,6 +100,7 @@ Below the table, a footer bar with:
 ## Empty State
 
 When `cart.items.length === 0`:
+
 - Hide the table entirely
 - Show a centered empty state with:
   - A subtle icon or illustration (optional, can be text-only)
@@ -212,7 +223,9 @@ When `cart.items.length === 0`:
   justify-content: center;
   border-radius: var(--cs-radius-sm);
   color: var(--cs-text-muted);
-  transition: color 150ms, background 150ms;
+  transition:
+    color 150ms,
+    background 150ms;
 }
 
 .remove-btn:hover {
@@ -288,6 +301,7 @@ When `cart.items.length === 0`:
 ## Mock Behavior (Phase 1)
 
 For now, the callbacks update the local `cart` state in `App.svelte`:
+
 - `onUpdateQuantity`: update `cart.items` quantity for matching key, recalculate totals
 - `onRemoveItem`: filter out item from `cart.items`, recalculate totals
 - `onUpdateProperties`: update properties for matching key

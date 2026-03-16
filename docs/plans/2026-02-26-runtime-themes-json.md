@@ -8,17 +8,18 @@ The JSON will be hosted on `bucket.alfred.uptek.com` and cached locally via `chr
 
 ## Files to Change
 
-| File | Action |
-|------|--------|
-| `utils/themesCache.ts` | **CREATE** — cache management (fetch, store, TTL, fallback) |
-| `entrypoints/popup/themeStoreLookup.ts` | **MODIFY** — remove static import, make async, use cache |
-| `entrypoints/popup/utils.ts` | **MODIFY** — add `await` to `lookupThemeStoreEntry()` call |
-| `entrypoints/background/index.ts` | **MODIFY** — add cache refresh on startup/install + daily alarm |
-| `assets/data/themes.json` | **DELETE** — no longer bundled |
+| File                                    | Action                                                          |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `utils/themesCache.ts`                  | **CREATE** — cache management (fetch, store, TTL, fallback)     |
+| `entrypoints/popup/themeStoreLookup.ts` | **MODIFY** — remove static import, make async, use cache        |
+| `entrypoints/popup/utils.ts`            | **MODIFY** — add `await` to `lookupThemeStoreEntry()` call      |
+| `entrypoints/background/index.ts`       | **MODIFY** — add cache refresh on startup/install + daily alarm |
+| `assets/data/themes.json`               | **DELETE** — no longer bundled                                  |
 
 ## Step 1: Create `utils/themesCache.ts`
 
 New module with:
+
 - `getThemes()` — returns cached themes if fresh, otherwise fetches from `https://bucket.alfred.uptek.com/themes.json`
 - `fetchAndCacheThemes()` — fetches remote JSON, validates, stores in `chrome.storage.local`
 - `refreshThemesCacheIfNeeded()` — for background script, silently refreshes if stale
@@ -51,6 +52,7 @@ Keep the file in the repo (used as source for R2 uploads and the `/prune-themes-
 ## Step 6: Create `/deploy-themes` skill
 
 Create `.claude/skills/deploy-themes/SKILL.md` that:
+
 - Runs the prune skill first (if data was freshly scraped)
 - Uploads `assets/data/themes.json` to Cloudflare R2 via `wrangler r2 object put`
 

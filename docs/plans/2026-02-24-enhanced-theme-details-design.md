@@ -13,6 +13,7 @@
 ### Task 1: Add ThemeStoreEntry type
 
 **Files:**
+
 - Modify: `entrypoints/popup/types.ts`
 
 **Step 1: Add the type**
@@ -63,6 +64,7 @@ git commit -m "feat: add ThemeStoreEntry type"
 ### Task 2: Add theme store lookup utility
 
 **Files:**
+
 - Create: `entrypoints/popup/themeStoreLookup.ts`
 
 **Step 1: Create the lookup module**
@@ -119,6 +121,7 @@ git commit -m "feat: add cascading theme store lookup utility"
 ### Task 3: Wire lookup into popup data flow
 
 **Files:**
+
 - Modify: `entrypoints/popup/utils.ts`
 
 **Step 1: Import and call lookup**
@@ -149,6 +152,7 @@ git commit -m "feat: wire theme store lookup into popup data flow"
 ### Task 4: Display enriched fields in Theme component
 
 **Files:**
+
 - Modify: `entrypoints/popup/Theme.tsx`
 
 **Step 1: Add a relative date helper**
@@ -176,34 +180,27 @@ function timeAgo(dateString: string): string {
 After the existing InfoItem rows (after the conditional internal theme name row at ~line 93), add:
 
 ```tsx
-{storeInfo.themeStoreEntry && (
-  <>
-    <InfoItem
-      label="Developer:"
-      value={storeInfo.themeStoreEntry.developer.name || 'N/A'}
-    />
-    <InfoItem
-      label="Price:"
-      value={storeInfo.themeStoreEntry.price === '0.00' || !storeInfo.themeStoreEntry.price
-        ? 'Free'
-        : `$${storeInfo.themeStoreEntry.price}`}
-    />
-    <InfoItem
-      label="Latest version:"
-      value={storeInfo.themeStoreEntry.version || 'N/A'}
-    />
-    <InfoItem
-      label="Store status:"
-      value={storeInfo.themeStoreEntry.store_status || 'N/A'}
-    />
-    <InfoItem
-      label="Last updated:"
-      value={storeInfo.themeStoreEntry.last_updated
-        ? timeAgo(storeInfo.themeStoreEntry.last_updated)
-        : 'N/A'}
-    />
-  </>
-)}
+{
+  storeInfo.themeStoreEntry && (
+    <>
+      <InfoItem label="Developer:" value={storeInfo.themeStoreEntry.developer.name || 'N/A'} />
+      <InfoItem
+        label="Price:"
+        value={
+          storeInfo.themeStoreEntry.price === '0.00' || !storeInfo.themeStoreEntry.price
+            ? 'Free'
+            : `$${storeInfo.themeStoreEntry.price}`
+        }
+      />
+      <InfoItem label="Latest version:" value={storeInfo.themeStoreEntry.version || 'N/A'} />
+      <InfoItem label="Store status:" value={storeInfo.themeStoreEntry.store_status || 'N/A'} />
+      <InfoItem
+        label="Last updated:"
+        value={storeInfo.themeStoreEntry.last_updated ? timeAgo(storeInfo.themeStoreEntry.last_updated) : 'N/A'}
+      />
+    </>
+  );
+}
 ```
 
 **Step 3: Add theme store link**
@@ -211,18 +208,19 @@ After the existing InfoItem rows (after the conditional internal theme name row 
 Below the enriched InfoItems (still inside the `themeStoreEntry` conditional), add a link to the theme store listing:
 
 ```tsx
-{storeInfo.themeStoreEntry.theme_url && (
-  <div className="py-3.5 border-b border-slate-100">
-    <a
-      href={storeInfo.themeStoreEntry.theme_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-sm text-indigo-500 hover:text-indigo-600 font-semibold"
-    >
-      View theme store listing
-    </a>
-  </div>
-)}
+{
+  storeInfo.themeStoreEntry.theme_url && (
+    <div className="py-3.5 border-b border-slate-100">
+      <a
+        href={storeInfo.themeStoreEntry.theme_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-indigo-500 hover:text-indigo-600 font-semibold">
+        View theme store listing
+      </a>
+    </div>
+  );
+}
 ```
 
 **Step 4: Commit**
@@ -239,6 +237,7 @@ git commit -m "feat: display enriched theme details in popup"
 **Step 1: Ask user to build and test**
 
 Ask the user to run `bun run dev` and test on a Shopify store with a known theme (e.g., Dawn by Shopify) to verify:
+
 - Lookup by `theme_store_id` works
 - Fallback to `schema_name` works
 - Fallback to `name` works

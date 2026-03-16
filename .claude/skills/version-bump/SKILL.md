@@ -29,11 +29,13 @@ description: Bump version using CalVer (YYYY.MM.DD) and add a changelog entry
 ## Files to update
 
 ### package.json
+
 ```json
 "version": "YYYY.MM.DD"
 ```
 
 ### wxt.config.ts
+
 ```ts
 version: 'YYYY.MM.DD',
 ```
@@ -44,37 +46,45 @@ Prepend a new entry to the beginning of the array. The `changes` array supports
 mixing the content block types below in any order.
 
 #### Entry structure
+
 ```json
 {
   "version": "YYYY.MM.DD",
   "date": "YYYY-MM-DD",
-  "changes": [ /* content blocks */ ]
+  "changes": [
+    /* content blocks */
+  ]
 }
 ```
 
 #### Content block types
 
 **Paragraph** — a single descriptive sentence or short paragraph:
+
 ```json
 { "type": "paragraph", "content": "Theme data is now fetched at runtime." }
 ```
 
 **List** — bullet points for multiple related changes:
+
 ```json
 { "type": "list", "content": ["Added X feature.", "Improved Y behavior."] }
 ```
 
 **Image** — screenshot or visual with alt text:
+
 ```json
 { "type": "image", "content": "https://bucket.alfred.uptek.com/screenshot.png", "alt": "New feature screenshot" }
 ```
 
 **Video** — demo video:
+
 ```json
 { "type": "video", "content": "https://bucket.alfred.uptek.com/demo.mp4" }
 ```
 
 #### Typical patterns
+
 - Single feature: one `paragraph`
 - Multiple small changes: one `list`
 - Feature with demo: `paragraph` + `video` or `paragraph` + `image`

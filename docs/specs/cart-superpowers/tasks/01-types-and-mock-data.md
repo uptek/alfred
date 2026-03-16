@@ -3,6 +3,7 @@
 **Phase**: 1 — UI Skeleton
 **Status**: ✅ Complete
 **Files to create**:
+
 - `entrypoints/cart-superpowers.content/types.ts`
 - `entrypoints/cart-superpowers.content/mock-data.ts`
 
@@ -21,15 +22,15 @@ interface CartData {
   token: string;
   note: string | null;
   attributes: Record<string, string>;
-  original_total_price: number;       // in subunits (cents)
-  total_price: number;                // in subunits
-  total_discount: number;             // in subunits
-  total_weight: number;               // in grams
+  original_total_price: number; // in subunits (cents)
+  total_price: number; // in subunits
+  total_discount: number; // in subunits
+  total_weight: number; // in grams
   item_count: number;
   items: CartItem[];
   requires_shipping: boolean;
-  currency: string;                   // ISO 4217 (e.g., "USD")
-  items_subtotal_price: number;       // in subunits
+  currency: string; // ISO 4217 (e.g., "USD")
+  items_subtotal_price: number; // in subunits
   cart_level_discount_applications: DiscountApplication[];
 }
 ```
@@ -40,13 +41,13 @@ A single line item in the cart:
 
 ```typescript
 interface CartItem {
-  id: number;                         // variant ID
-  key: string;                        // line item key (variant_id:hash) — use this for change/update
+  id: number; // variant ID
+  key: string; // line item key (variant_id:hash) — use this for change/update
   properties: Record<string, string> | null;
   quantity: number;
   variant_id: number;
   product_id: number;
-  title: string;                      // "Product Title - Variant Title"
+  title: string; // "Product Title - Variant Title"
   product_title: string;
   product_description: string;
   product_type: string;
@@ -59,18 +60,18 @@ interface CartItem {
   taxable: boolean;
   requires_shipping: boolean;
   gift_card: boolean;
-  url: string;                        // product page URL
-  image: string;                      // image URL
+  url: string; // product page URL
+  image: string; // image URL
   featured_image: {
     url: string;
     aspect_ratio: number;
     alt: string;
   } | null;
   handle: string;
-  price: number;                      // unit price in subunits
+  price: number; // unit price in subunits
   original_price: number;
   discounted_price: number;
-  line_price: number;                 // quantity * price
+  line_price: number; // quantity * price
   original_line_price: number;
   total_discount: number;
   discounts: Array<{ amount: number; title: string }>;
@@ -114,22 +115,22 @@ interface DiscountApplication {
 
 ```typescript
 interface AddItemPayload {
-  id: number;              // variant_id
+  id: number; // variant_id
   quantity: number;
   properties?: Record<string, string>;
   selling_plan?: number;
 }
 
 interface UpdatePayload {
-  updates?: Record<string, number>;     // key -> quantity
+  updates?: Record<string, number>; // key -> quantity
   note?: string;
   attributes?: Record<string, string>;
-  discount?: string;                    // code or "" to clear
+  discount?: string; // code or "" to clear
 }
 
 interface ChangePayload {
-  id?: string;             // line item key (preferred)
-  line?: number;           // 1-based index (alternative)
+  id?: string; // line item key (preferred)
+  line?: number; // 1-based index (alternative)
   quantity: number;
   properties?: Record<string, string>;
   selling_plan?: number | null;
@@ -148,7 +149,7 @@ interface ShippingAddress {
 interface ShippingRate {
   name: string;
   code: string;
-  price: string;           // formatted price string
+  price: string; // formatted price string
   source: string;
   delivery_date: string | null;
   delivery_days: number | null;
@@ -211,6 +212,7 @@ type TabId = 'items' | 'add' | 'metadata' | 'shipping' | 'json';
 ### MOCK_CART
 
 Create a `CartData` object with:
+
 - `token`: any string
 - `note`: `"Please gift wrap the blue t-shirt"`
 - `attributes`: `{ "Gift wrap": "Yes", "Delivery instructions": "Leave at door" }`
@@ -220,21 +222,25 @@ Create a `CartData` object with:
 - 4 line items covering different scenarios:
 
 **Item 1 — Simple product, no properties**:
+
 - T-Shirt, Blue / Medium, quantity 2, $29.99 each
 - Image: use `https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_large.png`
 - No properties, no selling plan, no discounts
 
 **Item 2 — Product with line item properties**:
+
 - Custom Engraved Bracelet, Gold, quantity 1, $49.99
 - Properties: `{ "Engraving": "To my love", "Font": "Script" }`
 - No selling plan
 
 **Item 3 — Product with selling plan (subscription)**:
+
 - Organic Coffee Beans, 1kg, quantity 1, $24.99
 - Selling plan: monthly delivery, save 15%
 - `selling_plan_allocation` with plan name "Deliver every month — save 15%"
 
 **Item 4 — Product with discount applied**:
+
 - Wireless Headphones, Black, quantity 1, $89.99, discounted to $71.99
 - `total_discount`: 1800 (i.e., $18.00)
 - `discounts`: `[{ amount: 1800, title: "SUMMER20" }]`
@@ -244,6 +250,7 @@ Set `cart_level_discount_applications` to include `SUMMER20` discount.
 ### MOCK_PRODUCT
 
 Create a `ProductData` object for testing the Add Item tab:
+
 - Title: "Classic Leather Wallet"
 - 3 variants: Brown/$39.99/available, Black/$39.99/available, Tan/$44.99/out of stock
 - 2 options: Color (Brown, Black, Tan)
@@ -254,9 +261,23 @@ Create a `ProductData` object for testing the Add Item tab:
 
 ```typescript
 const MOCK_SHIPPING_RATES: ShippingRate[] = [
-  { name: "Standard Shipping", code: "standard", price: "5.99", source: "shopify", delivery_date: null, delivery_days: 7 },
-  { name: "Express Shipping", code: "express", price: "12.99", source: "shopify", delivery_date: null, delivery_days: 3 },
-  { name: "Overnight", code: "overnight", price: "24.99", source: "shopify", delivery_date: null, delivery_days: 1 },
+  {
+    name: 'Standard Shipping',
+    code: 'standard',
+    price: '5.99',
+    source: 'shopify',
+    delivery_date: null,
+    delivery_days: 7
+  },
+  {
+    name: 'Express Shipping',
+    code: 'express',
+    price: '12.99',
+    source: 'shopify',
+    delivery_date: null,
+    delivery_days: 3
+  },
+  { name: 'Overnight', code: 'overnight', price: '24.99', source: 'shopify', delivery_date: null, delivery_days: 1 }
 ];
 ```
 

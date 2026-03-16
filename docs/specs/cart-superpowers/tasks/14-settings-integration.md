@@ -3,10 +3,11 @@
 **Phase**: 3 — Integration
 **Status**: ✅ Complete
 **Files to modify**:
+
 - `global.d.ts` — add `cartSuperpowers` to `AlfredSettings.shortcuts`
 - `entrypoints/options/contexts/SettingsContext.tsx` — add default
 - `entrypoints/options/components/settings/ShortcutsSettings.tsx` — add toggle
-**Depends on**: Task 13 (context menu)
+  **Depends on**: Task 13 (context menu)
 
 ## Objective
 
