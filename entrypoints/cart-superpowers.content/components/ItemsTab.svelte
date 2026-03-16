@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { CartData, CartItem, ProductData } from '../types';
+  import { entriesToRecord, recordToEntries } from '../utils';
   import QuantityInput from './QuantityInput.svelte';
   import KeyValueEditor from './KeyValueEditor.svelte';
 
@@ -87,18 +88,8 @@
     return Object.keys(properties).length;
   }
 
-  function propsToEntries(properties: Record<string, string> | null): Array<{ key: string; value: string }> {
-    if (!properties) return [];
-    return Object.entries(properties).map(([key, value]) => ({ key, value }));
-  }
-
-  function entriesToProps(entries: Array<{ key: string; value: string }>): Record<string, string> {
-    const result: Record<string, string> = {};
-    for (const { key, value } of entries) {
-      if (key.trim()) result[key.trim()] = value;
-    }
-    return result;
-  }
+  const propsToEntries = recordToEntries;
+  const entriesToProps = entriesToRecord;
 
   // Local entries state for expanded property editors, keyed by item key
   let propertyEntries: Record<string, Array<{ key: string; value: string }>> = $state({});
@@ -210,7 +201,7 @@
                       class="variant-option"
                       class:variant-current={variant.id === item.variant_id}
                       class:variant-unavailable={!variant.available}
-                      onclick={() => handleVariantSelect(item, variant.id)}
+                      onclick={() => variant.available && handleVariantSelect(item, variant.id)}
                     >
                       <span class="variant-option-title">{variant.title}</span>
                       <span class="variant-option-price">{formatPrice(variant.price)}</span>
@@ -475,6 +466,8 @@
 
   .variant-unavailable {
     opacity: 0.5;
+    pointer-events: none;
+    cursor: default;
   }
 
   .variant-option-title {

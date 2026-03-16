@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { CartData } from '../types';
+  import { entriesToRecord } from '../utils';
   import KeyValueEditor from './KeyValueEditor.svelte';
 
   let {
@@ -20,22 +21,18 @@
   let discountCode = $state('');
 
   let attributeEntries = $state<Array<{ key: string; value: string }>>(
-    Object.entries(cart.attributes).map(([key, value]) => ({ key, value })),
+    Object.keys(cart.attributes).length > 0
+      ? Object.entries(cart.attributes).map(([key, value]) => ({ key, value }))
+      : [{ key: '', value: '' }],
   );
+
+  const entriesToAttributes = entriesToRecord;
 
   // Track modifications
   let noteModified = $derived(noteValue !== (cart.note || ''));
   let attributesModified = $derived(
     JSON.stringify(entriesToAttributes(attributeEntries)) !== JSON.stringify(cart.attributes),
   );
-
-  function entriesToAttributes(entries: Array<{ key: string; value: string }>): Record<string, string> {
-    const result: Record<string, string> = {};
-    for (const { key, value } of entries) {
-      if (key.trim()) result[key.trim()] = value;
-    }
-    return result;
-  }
 
   function saveNote() {
     onUpdateNote(noteValue);

@@ -348,8 +348,8 @@
   }
 
   .rates-empty-hint {
-    margin-top: 4px !important;
-    font-size: 12px !important;
+    margin-top: 4px;
+    font-size: 12px;
   }
 
   .no-shipping {

@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import * as api from './cartApi';
   import { trackAction } from '@/utils/analytics';
-  import type { AddItemPayload, CartData, CartItem, TabId } from './types';
+  import type { AddItemPayload, CartData, TabId } from './types';
   import ItemsTab from './components/ItemsTab.svelte';
   import AddItemTab from './components/AddItemTab.svelte';
   import MetadataTab from './components/MetadataTab.svelte';
@@ -67,6 +67,18 @@
     return mutateQueue;
   }
 
+  /**
+   * Shopify can't update a line item to have no properties — the only way is
+   * to remove the item and re-add it with the desired payload. Used by both
+   * property clearing and variant switching.
+  */
+  function replaceItem(key: string, addPayload: AddItemPayload): Promise<void> {
+    return mutate(async () => {
+      await api.changeItem({ id: key, quantity: 0 });
+      return api.addItem(addPayload);
+    });
+  }
+
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
   }
@@ -122,10 +134,6 @@
         <button class="retry-btn" onclick={loadCart}>Retry</button>
       </div>
     {:else if cart}
-      {#if isUpdating}
-        <div class="updating-bar"></div>
-      {/if}
-
       {#if error}
         <div class="error-banner">
           <span>{error}</span>
@@ -162,22 +170,23 @@
       </nav>
 
       <main class="content">
+        {#if isUpdating}
+          <div class="content-overlay">
+            <div class="loading-spinner"></div>
+          </div>
+        {/if}
         {#if activeTab === 'items'}
           <ItemsTab
             {cart}
             onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cart_superpowers_update_quantity'); }}
             onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cart_superpowers_remove_item'); }}
             onUpdateProperties={(key, qty, props) => {
-              // Shopify can't set properties to {} — must remove and re-add the item without properties
               if (Object.keys(props).length === 0) {
-                const item = cart!.items.find(i => i.key === key);
-                return mutate(async () => {
-                  await api.changeItem({ id: key, quantity: 0 });
-                  return api.addItem({
-                    id: item!.variant_id,
-                    quantity: qty,
-                    ...(item!.selling_plan_allocation ? { selling_plan: item!.selling_plan_allocation.selling_plan.id } : {}),
-                  });
+                const item = cart!.items.find(i => i.key === key)!;
+                return replaceItem(key, {
+                  id: item.variant_id,
+                  quantity: qty,
+                  ...(item.selling_plan_allocation ? { selling_plan: item.selling_plan_allocation.selling_plan.id } : {}),
                 });
               }
               return mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }));
@@ -185,14 +194,11 @@
             onClearCart={async () => { await mutate(() => api.clearCart()); trackAction('cart_superpowers_clear'); }}
             onSwitchTab={(tab) => activeTab = tab as TabId}
             onSwitchVariant={(key, oldItem, newVariantId) => {
-              return mutate(async () => {
-                await api.changeItem({ id: key, quantity: 0 });
-                return api.addItem({
-                  id: newVariantId,
-                  quantity: oldItem.quantity,
-                  ...(oldItem.properties && Object.keys(oldItem.properties).length > 0 ? { properties: oldItem.properties } : {}),
-                  ...(oldItem.selling_plan_allocation ? { selling_plan: oldItem.selling_plan_allocation.selling_plan.id } : {}),
-                });
+              return replaceItem(key, {
+                id: newVariantId,
+                quantity: oldItem.quantity,
+                ...(oldItem.properties && Object.keys(oldItem.properties).length > 0 ? { properties: oldItem.properties } : {}),
+                ...(oldItem.selling_plan_allocation ? { selling_plan: oldItem.selling_plan_allocation.selling_plan.id } : {}),
               });
             }}
             onFetchProduct={(url) => api.getProductByUrl(url)}
@@ -342,7 +348,7 @@
     all: unset;
     font-size: 15px;
     font-weight: 650;
-    color: var(--cs-text-primary) !important;
+    color: var(--cs-text-primary);
     letter-spacing: -0.01em;
   }
 
@@ -464,6 +470,7 @@
   }
 
   .content {
+    position: relative;
     flex: 1;
     overflow-y: auto;
     padding: 20px;
@@ -556,22 +563,16 @@
     background: var(--cs-accent-hover);
   }
 
-  .updating-bar {
+  .content-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--cs-accent);
-    animation: progress 1.2s ease-in-out infinite;
-    z-index: 3;
-  }
-
-  @keyframes progress {
-    0% { transform: scaleX(0); transform-origin: left; }
-    50% { transform: scaleX(1); transform-origin: left; }
-    50.1% { transform: scaleX(1); transform-origin: right; }
-    100% { transform: scaleX(0); transform-origin: right; }
+    inset: 0;
+    background: var(--cs-bg-primary);
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4;
+    border-radius: 0 0 var(--cs-radius) var(--cs-radius);
   }
 
   .error-banner {

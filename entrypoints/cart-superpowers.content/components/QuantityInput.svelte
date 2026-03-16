@@ -76,6 +76,7 @@
     border: 1px solid var(--cs-border);
     border-radius: var(--cs-radius-sm);
     overflow: hidden;
+    width: fit-content;
   }
 
   .qty-btn {

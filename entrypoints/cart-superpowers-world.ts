@@ -99,10 +99,12 @@ export default defineUnlistedScript(() => {
 
   async function getProductByUrl(url: string): Promise<ProductData> {
     let pathname: string;
-    try {
+
+    // If it looks like a URL (contains / or .), parse it; otherwise treat as a plain handle
+    if (url.includes('/') || url.includes('.')) {
       const parsed = new URL(url, window.location.origin);
       pathname = parsed.pathname;
-    } catch {
+    } else {
       pathname = `/products/${url}`;
     }
 

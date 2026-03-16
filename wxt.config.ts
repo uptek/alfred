@@ -32,6 +32,10 @@ export default defineConfig({
         resources: ['cart-superpowers-world.js'],
         matches: ['<all_urls>'],
       },
+      {
+        resources: ['content-scripts/cart-superpowers.css'],
+        matches: ['<all_urls>'],
+      },
     ],
   },
   vite: () => ({
