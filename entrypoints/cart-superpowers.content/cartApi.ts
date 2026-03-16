@@ -46,7 +46,7 @@ function callCartApi<T>(method: string, payload?: unknown): Promise<T> {
       requestId,
       method,
       payload,
-    });
+    }, window.location.origin);
   });
 }
 

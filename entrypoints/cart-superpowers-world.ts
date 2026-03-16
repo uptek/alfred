@@ -141,7 +141,7 @@ export default defineUnlistedScript(() => {
         type: 'alfred:cart_response',
         requestId,
         error: `Unknown method: ${method}`,
-      });
+      }, window.location.origin);
       return;
     }
 
@@ -151,13 +151,13 @@ export default defineUnlistedScript(() => {
         type: 'alfred:cart_response',
         requestId,
         data,
-      });
+      }, window.location.origin);
     } catch (err) {
       window.postMessage({
         type: 'alfred:cart_response',
         requestId,
         error: err instanceof Error ? err.message : String(err),
-      });
+      }, window.location.origin);
     }
   });
 });

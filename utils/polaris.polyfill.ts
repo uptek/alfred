@@ -45,11 +45,12 @@ export function onChoiceListChange(
     }
   };
 
-  choiceList.addEventListener('change', () => void handler());
+  const listener = () => void handler();
+  choiceList.addEventListener('change', listener);
 
   // Return cleanup function
   return () => {
-    choiceList.removeEventListener('change', () => void handler());
+    choiceList.removeEventListener('change', listener);
   };
 }
 
@@ -100,10 +101,11 @@ export function onCheckboxChange(
     await onChange(input.checked);
   };
 
-  checkbox.addEventListener('change', () => void handler());
+  const listener = () => void handler();
+  checkbox.addEventListener('change', listener);
 
   // Return cleanup function
   return () => {
-    checkbox.removeEventListener('change', () => void handler());
+    checkbox.removeEventListener('change', listener);
   };
 }

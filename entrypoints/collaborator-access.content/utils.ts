@@ -21,7 +21,7 @@ export function generatePresetId(): string {
  */
 export function buildHotlinkUrl(handle: string): string {
   const url = new URL(window.location.href);
-  const partnerId = url.pathname.split('/').filter(Boolean)[0];
+  const partnerId = url.pathname.split('/').find(Boolean);
 
   return `${url.host}/${partnerId}/stores/new?store_domain={{ customer.shopifyDomain }}&store_type=managed_store&${HOTLINK_PRESET_PARAM}=${handle}`;
 }
