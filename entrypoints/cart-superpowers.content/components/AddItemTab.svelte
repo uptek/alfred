@@ -18,7 +18,7 @@
   let selectedVariant: ProductVariant | null = $state(null);
   let quantity = $state(1);
   let selectedSellingPlan: number | null = $state(null);
-  let properties: Array<{ key: string; value: string }> = $state([]);
+  let properties: Array<{ key: string; value: string }> = $state([{ key: '', value: '' }]);
   let isAdding = $state(false);
   let addedSuccess = $state(false);
 
@@ -33,7 +33,7 @@
       selectedSellingPlan = selectedVariant?.requires_selling_plan && selectedVariant.selling_plan_allocations.length > 0
         ? selectedVariant.selling_plan_allocations[0].selling_plan_id
         : null;
-      properties = [];
+      properties = [{ key: '', value: '' }];
     } catch (err) {
       fetchError = err instanceof Error ? err.message : String(err);
       product = null;
@@ -69,7 +69,7 @@
         payload.selling_plan = selectedSellingPlan;
       }
 
-      onAddItem(payload);
+      await onAddItem(payload);
       addedSuccess = true;
       setTimeout(() => { addedSuccess = false; }, 2000);
     } finally {
@@ -180,7 +180,7 @@
       </div>
     {/if}
 
-    <div class="config-row">
+    <div class="config-row config-row-half">
       <label class="config-label">Line Item Properties (optional)</label>
       <KeyValueEditor
         bind:entries={properties}
@@ -446,6 +446,16 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .config-row-half {
+    width: 50%;
+  }
+
+  @media (max-width: 1200px) {
+    .config-row-half {
+      width: 100%;
+    }
   }
 
   .config-field {

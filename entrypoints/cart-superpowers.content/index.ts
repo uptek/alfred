@@ -4,6 +4,7 @@ import { trackAction } from '@/utils/analytics';
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
+  cssInjectionMode: 'ui',
   async main(ctx) {
     const settings = await getItem<AlfredSettings>('settings');
     if (settings?.shortcuts?.cartSuperpowers === false) return;
