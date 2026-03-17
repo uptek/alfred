@@ -23,6 +23,8 @@
   let pendingMutations = $state(0);
   let error: string | null = $state(null);
   let mutateQueue: Promise<void> = Promise.resolve();
+  let jsonInspected = false;
+  let jsonDwellTimer: ReturnType<typeof setTimeout> | null = null;
 
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: 'items', label: 'Items' },
@@ -78,6 +80,18 @@
       return api.addItem(addPayload);
     });
   }
+
+  $effect(() => {
+    if (activeTab === 'json' && !jsonInspected) {
+      jsonDwellTimer = setTimeout(() => {
+        jsonInspected = true;
+        trackAction('cart_superpowers_inspect_json');
+      }, 3000);
+    } else if (jsonDwellTimer) {
+      clearTimeout(jsonDwellTimer);
+      jsonDwellTimer = null;
+    }
+  });
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
@@ -137,7 +151,7 @@
       {#if error}
         <div class="error-banner">
           <span>{error}</span>
-          <button class="error-dismiss" onclick={() => error = null}>
+          <button aria-label="Dismiss error" class="error-dismiss" onclick={loadCart}>
             <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
@@ -181,6 +195,7 @@
             onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cart_superpowers_update_quantity'); }}
             onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cart_superpowers_remove_item'); }}
             onUpdateProperties={(key, qty, props) => {
+              trackAction('cart_superpowers_update_properties');
               if (Object.keys(props).length === 0) {
                 const item = cart!.items.find(i => i.key === key)!;
                 return replaceItem(key, {
@@ -194,6 +209,7 @@
             onClearCart={async () => { await mutate(() => api.clearCart()); trackAction('cart_superpowers_clear'); }}
             onSwitchTab={(tab) => activeTab = tab as TabId}
             onSwitchVariant={(key, oldItem, newVariantId) => {
+              trackAction('cart_superpowers_switch_variant');
               return replaceItem(key, {
                 id: newVariantId,
                 quantity: oldItem.quantity,
@@ -212,9 +228,9 @@
           <MetadataTab
             {cart}
             onUpdateNote={(note) => { mutate(() => api.updateCart({ note })); trackAction('cart_superpowers_update_note'); }}
-            onUpdateAttributes={(attrs) => mutate(() => api.updateCart({ attributes: attrs }))}
+            onUpdateAttributes={(attrs) => { mutate(() => api.updateCart({ attributes: attrs })); trackAction('cart_superpowers_update_attributes'); }}
             onApplyDiscount={(code) => { mutate(() => api.updateCart({ discount: code })); trackAction('cart_superpowers_apply_discount'); }}
-            onRemoveDiscount={() => mutate(() => api.updateCart({ discount: '' }))}
+            onRemoveDiscount={() => { mutate(() => api.updateCart({ discount: '' })); trackAction('cart_superpowers_remove_discount'); }}
           />
         {:else if activeTab === 'shipping'}
           <ShippingTab {cart} onCalculateRates={(addr) => { trackAction('cart_superpowers_calculate_shipping'); return api.getShippingRates(addr); }} />

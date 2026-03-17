@@ -37,7 +37,12 @@ export type AnalyticsAction =
   | 'cart_superpowers_clear'
   | 'cart_superpowers_apply_discount'
   | 'cart_superpowers_update_note'
-  | 'cart_superpowers_calculate_shipping';
+  | 'cart_superpowers_calculate_shipping'
+  | 'cart_superpowers_update_properties'
+  | 'cart_superpowers_switch_variant'
+  | 'cart_superpowers_update_attributes'
+  | 'cart_superpowers_remove_discount'
+  | 'cart_superpowers_inspect_json';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -81,13 +86,18 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   theme_list_preview: 5,
   theme_list_edit_code: 5,
   cart_superpowers_open: 0,
-  cart_superpowers_add_item: 30,
+  cart_superpowers_add_item: 60,
   cart_superpowers_update_quantity: 15,
   cart_superpowers_remove_item: 15,
   cart_superpowers_clear: 30,
   cart_superpowers_apply_discount: 20,
   cart_superpowers_update_note: 15,
-  cart_superpowers_calculate_shipping: 30
+  cart_superpowers_calculate_shipping: 60,
+  cart_superpowers_update_properties: 60,
+  cart_superpowers_switch_variant: 120,
+  cart_superpowers_update_attributes: 60,
+  cart_superpowers_remove_discount: 15,
+  cart_superpowers_inspect_json: 45,
 };
 
 /**
@@ -111,7 +121,7 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       action,
       time_saved: timeSaved,
       version,
-      metadata: metadata ?? {}
+      metadata: metadata ?? {},
     };
 
     // Disable analytics in development
@@ -125,9 +135,9 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify(eventData)
+      body: JSON.stringify(eventData),
     }).catch(() => {
       // Silently ignore errors - analytics should never break the user experience
     });
