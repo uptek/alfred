@@ -35,8 +35,22 @@
     isFetching = true;
     fetchError = null;
     try {
+      // Extract ?variant=<id> from URL before fetching (the world script strips query params)
+      let preselectedVariantId: number | null = null;
+      try {
+        const parsed = new URL(productUrl.trim(), window.location.origin);
+        const variantParam = parsed.searchParams.get('variant');
+        if (variantParam) preselectedVariantId = parseInt(variantParam, 10) || null;
+      } catch {
+        // Not a valid URL — no variant to preselect
+      }
+
       product = await onFetchProduct(productUrl.trim());
-      selectedVariant = product.variants.find((v) => v.available) ?? product.variants[0] ?? null;
+      selectedVariant =
+        (preselectedVariantId && product.variants.find((v) => v.id === preselectedVariantId)) ||
+        product.variants.find((v) => v.available) ||
+        product.variants[0] ||
+        null;
       quantity = 1;
       selectedSellingPlan = getDefaultSellingPlanId(selectedVariant);
       properties = [{ key: '', value: '' }];
@@ -158,37 +172,37 @@
 
 {#if selectedVariant && product}
   <div class="config">
-    <div class="config-row">
+    <div class="config-row config-row-inline">
       <div class="config-field">
         <label class="config-label">Quantity</label>
         <QuantityInput bind:value={quantity} min={1} max={99} />
       </div>
-    </div>
 
-    {#if selectedVariant && selectedVariant.selling_plan_allocations.length > 0}
-      {@const allocatedPlanIds = new Set(selectedVariant.selling_plan_allocations.map(a => a.selling_plan_id))}
-      <div class="config-row">
-        <label class="config-label">Selling Plan {selectedVariant.requires_selling_plan ? '' : '(optional)'}</label>
-        <select class="config-select" bind:value={selectedSellingPlan}>
-          {#if !selectedVariant.requires_selling_plan}
-            <option value={null}>One-time purchase</option>
-          {/if}
-          {#each product.selling_plan_groups as group}
-            {@const availablePlans = group.selling_plans.filter(p => allocatedPlanIds.has(p.id))}
-            {#if availablePlans.length > 0}
-              <optgroup label={group.name}>
-                {#each availablePlans as plan}
-                  {@const allocation = selectedVariant.selling_plan_allocations.find(a => a.selling_plan_id === plan.id)}
-                  <option value={plan.id}>
-                    {plan.name}{allocation ? ` — $${(allocation.price / 100).toFixed(2)}` : ''}
-                  </option>
-                {/each}
-              </optgroup>
+      {#if selectedVariant && selectedVariant.selling_plan_allocations.length > 0}
+        {@const allocatedPlanIds = new Set(selectedVariant.selling_plan_allocations.map(a => a.selling_plan_id))}
+        <div class="config-field config-field-grow">
+          <label class="config-label">Selling Plan {selectedVariant.requires_selling_plan ? '' : '(optional)'}</label>
+          <select class="config-select" bind:value={selectedSellingPlan}>
+            {#if !selectedVariant.requires_selling_plan}
+              <option value={null}>One-time purchase</option>
             {/if}
-          {/each}
-        </select>
-      </div>
-    {/if}
+            {#each product.selling_plan_groups as group}
+              {@const availablePlans = group.selling_plans.filter(p => allocatedPlanIds.has(p.id))}
+              {#if availablePlans.length > 0}
+                <optgroup label={group.name}>
+                  {#each availablePlans as plan}
+                    {@const allocation = selectedVariant.selling_plan_allocations.find(a => a.selling_plan_id === plan.id)}
+                    <option value={plan.id}>
+                      {plan.name}{allocation ? ` — $${(allocation.price / 100).toFixed(2)}` : ''}
+                    </option>
+                  {/each}
+                </optgroup>
+              {/if}
+            {/each}
+          </select>
+        </div>
+      {/if}
+    </div>
 
     <div class="config-row config-row-half">
       <label class="config-label">Line Item Properties (optional)</label>
@@ -456,6 +470,17 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .config-row-inline {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 16px;
+  }
+
+  .config-field-grow {
+    flex: 1;
+    min-width: 0;
   }
 
   .config-row-half {
