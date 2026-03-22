@@ -309,7 +309,6 @@ export const registerShortcuts = async () => {
             await browser.tabs.sendMessage(tab.id!, {
               action: 'open_cart_superpowers'
             });
-            trackAction('cart_superpowers_open');
           } catch (error) {
             console.error('Error opening Cart Superpowers:', error);
           }

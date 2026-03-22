@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { CartData } from '../types';
-  import { entriesToRecord } from '../utils';
+  import { entriesToRecord, recordToEntries } from '../utils';
   import KeyValueEditor from './KeyValueEditor.svelte';
 
   let {
@@ -11,20 +11,27 @@
     onRemoveDiscount,
   }: {
     cart: CartData;
-    onUpdateNote: (note: string) => void;
-    onUpdateAttributes: (attributes: Record<string, string>) => void;
-    onApplyDiscount: (code: string) => void;
-    onRemoveDiscount: () => void;
+    onUpdateNote: (note: string) => Promise<void>;
+    onUpdateAttributes: (attributes: Record<string, string>) => Promise<void>;
+    onApplyDiscount: (code: string) => Promise<void>;
+    onRemoveDiscount: () => Promise<void>;
   } = $props();
 
   let noteValue = $state(cart.note || '');
   let discountCode = $state('');
 
-  let attributeEntries = $state<Array<{ key: string; value: string }>>(
-    Object.keys(cart.attributes).length > 0
-      ? Object.entries(cart.attributes).map(([key, value]) => ({ key, value }))
-      : [{ key: '', value: '' }],
-  );
+  function attributesToEntries(attributes: Record<string, string>): Array<{ key: string; value: string }> {
+    const entries = recordToEntries(attributes);
+    return entries.length > 0 ? entries : [{ key: '', value: '' }];
+  }
+
+  function serializeEntries(entries: Array<{ key: string; value: string }>): string {
+    return JSON.stringify(entriesToRecord(entries));
+  }
+
+  let attributeEntries = $state<Array<{ key: string; value: string }>>(attributesToEntries(cart.attributes));
+  let lastSyncedNote = $state(cart.note || '');
+  let lastSyncedAttributes = $state(serializeEntries(attributesToEntries(cart.attributes)));
 
   const entriesToAttributes = entriesToRecord;
 
@@ -34,22 +41,61 @@
     JSON.stringify(entriesToAttributes(attributeEntries)) !== JSON.stringify(cart.attributes),
   );
 
-  function saveNote() {
-    onUpdateNote(noteValue);
+  $effect(() => {
+    const nextNote = cart.note || '';
+    if (noteValue === lastSyncedNote) {
+      noteValue = nextNote;
+    }
+    lastSyncedNote = nextNote;
+  });
+
+  $effect(() => {
+    const nextEntries = attributesToEntries(cart.attributes);
+    const nextSerializedAttributes = serializeEntries(nextEntries);
+
+    if (serializeEntries(attributeEntries) === lastSyncedAttributes) {
+      attributeEntries = nextEntries;
+    }
+
+    lastSyncedAttributes = nextSerializedAttributes;
+  });
+
+  async function saveNote() {
+    try {
+      await onUpdateNote(noteValue);
+    } catch {
+      // Parent handles error presentation.
+    }
   }
 
-  function saveAttributes() {
-    onUpdateAttributes(entriesToAttributes(attributeEntries));
+  async function saveAttributes() {
+    try {
+      await onUpdateAttributes(entriesToAttributes(attributeEntries));
+    } catch {
+      // Parent handles error presentation.
+    }
   }
 
   function handleAttributeChange(entries: Array<{ key: string; value: string }>) {
     attributeEntries = entries;
   }
 
-  function applyDiscount() {
+  async function applyDiscount() {
     if (!discountCode.trim()) return;
-    onApplyDiscount(discountCode.trim().toUpperCase());
-    discountCode = '';
+    try {
+      await onApplyDiscount(discountCode.trim().toUpperCase());
+      discountCode = '';
+    } catch {
+      // Parent handles error presentation.
+    }
+  }
+
+  async function removeDiscount() {
+    try {
+      await onRemoveDiscount();
+    } catch {
+      // Parent handles error presentation.
+    }
   }
 </script>
 
@@ -127,7 +173,7 @@
           </div>
         </div>
       {/each}
-      <button class="discount-remove" onclick={onRemoveDiscount}>
+      <button class="discount-remove" onclick={removeDiscount}>
         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
         Remove all discounts
       </button>

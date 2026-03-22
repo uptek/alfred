@@ -7,7 +7,7 @@
     onAddItem,
     onFetchProduct,
   }: {
-    onAddItem: (payload: AddItemPayload) => void;
+    onAddItem: (payload: AddItemPayload) => Promise<void>;
     onFetchProduct: (url: string) => Promise<ProductData>;
   } = $props();
 
@@ -21,6 +21,14 @@
   let properties: Array<{ key: string; value: string }> = $state([{ key: '', value: '' }]);
   let isAdding = $state(false);
   let addedSuccess = $state(false);
+  let addError: string | null = $state(null);
+
+  function getDefaultSellingPlanId(variant: ProductVariant | null): number | null {
+    if (!variant?.requires_selling_plan) return null;
+
+    const firstAllocation = variant.selling_plan_allocations[0];
+    return firstAllocation?.selling_plan_id ?? null;
+  }
 
   async function fetchProduct() {
     if (!productUrl.trim()) return;
@@ -30,9 +38,7 @@
       product = await onFetchProduct(productUrl.trim());
       selectedVariant = product.variants.find((v) => v.available) ?? product.variants[0] ?? null;
       quantity = 1;
-      selectedSellingPlan = selectedVariant?.requires_selling_plan && selectedVariant.selling_plan_allocations.length > 0
-        ? selectedVariant.selling_plan_allocations[0].selling_plan_id
-        : null;
+      selectedSellingPlan = getDefaultSellingPlanId(selectedVariant);
       properties = [{ key: '', value: '' }];
     } catch (err) {
       fetchError = err instanceof Error ? err.message : String(err);
@@ -44,14 +50,13 @@
 
   function selectVariant(variant: ProductVariant) {
     selectedVariant = variant;
-    selectedSellingPlan = variant.requires_selling_plan && variant.selling_plan_allocations.length > 0
-      ? variant.selling_plan_allocations[0].selling_plan_id
-      : null;
+    selectedSellingPlan = getDefaultSellingPlanId(variant);
   }
 
   async function addToCart() {
     if (!selectedVariant) return;
     isAdding = true;
+    addError = null;
     try {
       const propsObject: Record<string, string> = {};
       for (const { key, value } of properties) {
@@ -72,6 +77,8 @@
       await onAddItem(payload);
       addedSuccess = true;
       setTimeout(() => { addedSuccess = false; }, 2000);
+    } catch (err) {
+      addError = err instanceof Error ? err.message : String(err);
     } finally {
       isAdding = false;
     }
@@ -101,6 +108,9 @@
   </div>
   {#if fetchError}
     <p class="lookup-error">{fetchError}</p>
+  {/if}
+  {#if addError}
+    <p class="lookup-error">{addError}</p>
   {/if}
 </div>
 

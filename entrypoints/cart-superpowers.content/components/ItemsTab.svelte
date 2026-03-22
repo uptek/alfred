@@ -29,11 +29,14 @@
   // Per-item busy state
   let busyKeys: Set<string> = $state(new Set());
 
-  async function withBusy(key: string, fn: () => Promise<void>) {
+  async function withBusy(key: string, fn: () => Promise<void>): Promise<boolean> {
     busyKeys.add(key);
     busyKeys = new Set(busyKeys); // trigger reactivity
     try {
       await fn();
+      return true;
+    } catch {
+      return false;
     } finally {
       busyKeys.delete(key);
       busyKeys = new Set(busyKeys);
@@ -128,11 +131,21 @@
     // to {} is a no-op — the parent handler deals with that via remove+re-add.
     const newProps = entriesToProps(entries);
 
-    await withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, newProps));
+    const didSave = await withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, newProps));
+    if (!didSave) return;
+
     // Re-sync local entries from the updated cart so dirty detection resets
     const updatedItem = cart.items.find((item) => item.key === itemKey);
     if (updatedItem) {
       propertyEntries[itemKey] = propsToEntries(updatedItem.properties);
+    }
+  }
+
+  async function clearCart() {
+    try {
+      await onClearCart();
+    } catch {
+      // Parent handles error presentation.
     }
   }
 </script>
@@ -289,7 +302,7 @@
   </table>
 
   <div class="footer">
-    <button class="clear-btn" onclick={onClearCart}>
+    <button class="clear-btn" onclick={clearCart}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
       Clear Cart
     </button>

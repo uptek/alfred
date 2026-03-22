@@ -58,15 +58,22 @@
       try {
         cart = await fn();
       } catch (err) {
-        error = err instanceof Error ? err.message : String(err);
+        const normalizedError = err instanceof Error ? err : new Error(String(err));
+        error = normalizedError.message;
+        throw normalizedError;
       } finally {
         pendingMutations--;
         if (pendingMutations === 0) isUpdating = false;
       }
     };
 
-    mutateQueue = mutateQueue.then(run);
-    return mutateQueue;
+    const queuedMutation = mutateQueue.then(run, run);
+    mutateQueue = queuedMutation.then(
+      () => {},
+      () => {}
+    );
+
+    return queuedMutation;
   }
 
   /**
@@ -194,46 +201,58 @@
             {cart}
             onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cart_superpowers_update_quantity'); }}
             onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cart_superpowers_remove_item'); }}
-            onUpdateProperties={(key, qty, props) => {
-              trackAction('cart_superpowers_update_properties');
+            onUpdateProperties={async (key, qty, props) => {
               if (Object.keys(props).length === 0) {
                 const item = cart!.items.find(i => i.key === key)!;
-                return replaceItem(key, {
+                await replaceItem(key, {
                   id: item.variant_id,
                   quantity: qty,
                   ...(item.selling_plan_allocation ? { selling_plan: item.selling_plan_allocation.selling_plan.id } : {}),
                 });
+              } else {
+                await mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }));
               }
-              return mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }));
+              trackAction('cart_superpowers_update_properties');
             }}
             onClearCart={async () => { await mutate(() => api.clearCart()); trackAction('cart_superpowers_clear'); }}
             onSwitchTab={(tab) => activeTab = tab as TabId}
-            onSwitchVariant={(key, oldItem, newVariantId) => {
-              trackAction('cart_superpowers_switch_variant');
-              return replaceItem(key, {
+            onSwitchVariant={async (key, oldItem, newVariantId) => {
+              await replaceItem(key, {
                 id: newVariantId,
                 quantity: oldItem.quantity,
                 ...(oldItem.properties && Object.keys(oldItem.properties).length > 0 ? { properties: oldItem.properties } : {}),
                 ...(oldItem.selling_plan_allocation ? { selling_plan: oldItem.selling_plan_allocation.selling_plan.id } : {}),
               });
+              trackAction('cart_superpowers_switch_variant');
             }}
             onFetchProduct={(url) => api.getProductByUrl(url)}
           />
         {:else if activeTab === 'add'}
           <AddItemTab
-            onAddItem={(payload: AddItemPayload) => { mutate(() => api.addItem(payload)); activeTab = 'items'; trackAction('cart_superpowers_add_item'); }}
+            onAddItem={async (payload: AddItemPayload) => {
+              await mutate(() => api.addItem(payload));
+              activeTab = 'items';
+              trackAction('cart_superpowers_add_item');
+            }}
             onFetchProduct={(url: string) => api.getProductByUrl(url)}
           />
         {:else if activeTab === 'metadata'}
           <MetadataTab
             {cart}
-            onUpdateNote={(note) => { mutate(() => api.updateCart({ note })); trackAction('cart_superpowers_update_note'); }}
-            onUpdateAttributes={(attrs) => { mutate(() => api.updateCart({ attributes: attrs })); trackAction('cart_superpowers_update_attributes'); }}
-            onApplyDiscount={(code) => { mutate(() => api.updateCart({ discount: code })); trackAction('cart_superpowers_apply_discount'); }}
-            onRemoveDiscount={() => { mutate(() => api.updateCart({ discount: '' })); trackAction('cart_superpowers_remove_discount'); }}
+            onUpdateNote={async (note) => { await mutate(() => api.updateCart({ note })); trackAction('cart_superpowers_update_note'); }}
+            onUpdateAttributes={async (attrs) => { await mutate(() => api.updateCart({ attributes: attrs })); trackAction('cart_superpowers_update_attributes'); }}
+            onApplyDiscount={async (code) => { await mutate(() => api.updateCart({ discount: code })); trackAction('cart_superpowers_apply_discount'); }}
+            onRemoveDiscount={async () => { await mutate(() => api.updateCart({ discount: '' })); trackAction('cart_superpowers_remove_discount'); }}
           />
         {:else if activeTab === 'shipping'}
-          <ShippingTab {cart} onCalculateRates={(addr) => { trackAction('cart_superpowers_calculate_shipping'); return api.getShippingRates(addr); }} />
+          <ShippingTab
+            {cart}
+            onCalculateRates={async (addr) => {
+              const rates = await api.getShippingRates(addr);
+              trackAction('cart_superpowers_calculate_shipping');
+              return rates;
+            }}
+          />
         {:else if activeTab === 'json'}
           <JsonTab {cart} />
         {/if}
