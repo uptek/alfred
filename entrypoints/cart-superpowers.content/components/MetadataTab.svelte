@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { CartData } from '../types';
   import { entriesToRecord, recordToEntries } from '../utils';
   import KeyValueEditor from './KeyValueEditor.svelte';
@@ -41,23 +42,29 @@
     JSON.stringify(entriesToAttributes(attributeEntries)) !== JSON.stringify(cart.attributes),
   );
 
+  // Sync note from cart prop when it changes externally (not locally edited).
+  // untrack() prevents reading noteValue/lastSyncedNote from becoming dependencies,
+  // so this effect only re-runs when cart.note changes.
   $effect(() => {
     const nextNote = cart.note || '';
-    if (noteValue === lastSyncedNote) {
+    const currentNote = untrack(() => noteValue);
+    const synced = untrack(() => lastSyncedNote);
+    if (currentNote === synced) {
       noteValue = nextNote;
     }
     lastSyncedNote = nextNote;
   });
 
+  // Sync attributes from cart prop when they change externally.
   $effect(() => {
     const nextEntries = attributesToEntries(cart.attributes);
-    const nextSerializedAttributes = serializeEntries(nextEntries);
-
-    if (serializeEntries(attributeEntries) === lastSyncedAttributes) {
+    const nextSerialized = serializeEntries(nextEntries);
+    const currentSerialized = untrack(() => serializeEntries(attributeEntries));
+    const synced = untrack(() => lastSyncedAttributes);
+    if (currentSerialized === synced) {
       attributeEntries = nextEntries;
     }
-
-    lastSyncedAttributes = nextSerializedAttributes;
+    lastSyncedAttributes = nextSerialized;
   });
 
   async function saveNote() {
