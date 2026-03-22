@@ -97,7 +97,7 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   cart_superpowers_switch_variant: 120,
   cart_superpowers_update_attributes: 60,
   cart_superpowers_remove_discount: 15,
-  cart_superpowers_inspect_json: 45,
+  cart_superpowers_inspect_json: 45
 };
 
 /**
@@ -121,7 +121,7 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       action,
       time_saved: timeSaved,
       version,
-      metadata: metadata ?? {},
+      metadata: metadata ?? {}
     };
 
     // Disable analytics in development
@@ -135,9 +135,9 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
       },
-      body: JSON.stringify(eventData),
+      body: JSON.stringify(eventData)
     }).catch(() => {
       // Silently ignore errors - analytics should never break the user experience
     });

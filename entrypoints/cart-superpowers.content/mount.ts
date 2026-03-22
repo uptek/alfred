@@ -8,7 +8,11 @@ export async function mountCartSuperpowers(ctx: ContentScriptContext, onClose: (
   const script = document.createElement('script');
   script.src = browser.runtime.getURL('/cart-superpowers-world.js');
   document.documentElement.appendChild(script);
-  await new Promise((resolve) => script.addEventListener('load', resolve));
+  await new Promise<void>((resolve, reject) => {
+    script.addEventListener('load', () => resolve());
+    script.addEventListener('error', () => reject(new Error('Failed to load cart API script')));
+    setTimeout(() => reject(new Error('Cart API script load timed out')), 5000);
+  });
 
   let app: Record<string, unknown> | undefined;
 

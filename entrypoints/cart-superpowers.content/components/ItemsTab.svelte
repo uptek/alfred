@@ -134,10 +134,16 @@
     const didSave = await withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, newProps));
     if (!didSave) return;
 
-    // Re-sync local entries from the updated cart so dirty detection resets
+    // Re-sync local entries from the updated cart so dirty detection resets.
+    // Note: if replaceItem was used (props cleared to empty), the item key changes —
+    // clean up orphaned state and collapse the editor.
     const updatedItem = cart.items.find((item) => item.key === itemKey);
     if (updatedItem) {
       propertyEntries[itemKey] = propsToEntries(updatedItem.properties);
+    } else {
+      // Item key changed after replaceItem — clean up stale state
+      delete propertyEntries[itemKey];
+      if (expandedItemKey === itemKey) expandedItemKey = null;
     }
   }
 

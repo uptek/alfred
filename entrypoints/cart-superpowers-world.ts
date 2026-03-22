@@ -112,6 +112,11 @@ export default defineUnlistedScript(() => {
       pathname = pathname.replace(/\/$/, '') + '.js';
     }
 
+    // Security: only allow fetching product endpoints
+    if (!pathname.startsWith('/products/')) {
+      throw new Error('Invalid product URL: must be a /products/ path');
+    }
+
     const res = await fetch(pathname);
     if (!res.ok) throw new Error(`Failed to fetch product: ${res.status}`);
 

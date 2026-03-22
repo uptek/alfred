@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import type { CartData } from '../types';
 
   let { cart }: { cart: CartData } = $props();
@@ -6,6 +7,8 @@
   let jsonString = $derived(JSON.stringify(cart, null, 2));
   let copied = $state(false);
   let copyTimeout: ReturnType<typeof setTimeout>;
+
+  onDestroy(() => { clearTimeout(copyTimeout); });
 
   async function copyJson() {
     try {

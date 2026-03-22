@@ -80,11 +80,40 @@
    * Shopify can't update a line item to have no properties — the only way is
    * to remove the item and re-add it with the desired payload. Used by both
    * property clearing and variant switching.
+   *
+   * If the re-add fails after removal, attempts to restore the original item
+   * to prevent data loss.
   */
   function replaceItem(key: string, addPayload: AddItemPayload): Promise<void> {
+    const originalItem = cart?.items.find(i => i.key === key);
     return mutate(async () => {
       await api.changeItem({ id: key, quantity: 0 });
-      return api.addItem(addPayload);
+      try {
+        return await api.addItem(addPayload);
+      } catch (addErr) {
+        // Attempt to restore the original item
+        if (originalItem) {
+          try {
+            return await api.addItem({
+              id: originalItem.variant_id,
+              quantity: originalItem.quantity,
+              ...(originalItem.properties && Object.keys(originalItem.properties).length > 0
+                ? { properties: originalItem.properties }
+                : {}),
+              ...(originalItem.selling_plan_allocation
+                ? { selling_plan: originalItem.selling_plan_allocation.selling_plan.id }
+                : {}),
+            });
+          } catch {
+            // Recovery failed — throw original error with context
+            throw new Error(
+              `Failed to update item and could not restore original (variant ${originalItem.variant_id}). ` +
+              `${addErr instanceof Error ? addErr.message : String(addErr)}`
+            );
+          }
+        }
+        throw addErr;
+      }
     });
   }
 
@@ -111,6 +140,7 @@
 
   onDestroy(() => {
     document.removeEventListener('keydown', handleKeydown);
+    if (jsonDwellTimer) clearTimeout(jsonDwellTimer);
   });
 </script>
 

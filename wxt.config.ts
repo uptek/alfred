@@ -49,10 +49,10 @@ export default defineConfig({
       '--disable-features=BlockThirdPartyCookies', // Allows third-party cookies
       // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
       // 'https://uptek.com',
-      // 'https://junaid-workspace.myshopify.com/',
+      'https://junaid-workspace.myshopify.com/cart'
       // 'https://partners.shopify.com/1750954/stores/new?store_type=managed_store',
       // 'https://admin.shopify.com/store/junaid-workspace/themes',
-      'https://partners.shopify.com/1750954/stores/new?store_domain=zeeshan-h-bhatti.myshopify.com&store_type=managed_store'
+      // 'https://partners.shopify.com/1750954/stores/new?store_domain=zeeshan-h-bhatti.myshopify.com&store_type=managed_store'
     ]
   }
 });

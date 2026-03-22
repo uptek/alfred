@@ -9,12 +9,13 @@ import type {
 } from './types';
 
 const TIMEOUT_MS = 10_000;
+const SHIPPING_TIMEOUT_MS = 30_000;
 
 function generateRequestId(): string {
   return `cart_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function callCartApi<T>(method: string, payload?: unknown): Promise<T> {
+function callCartApi<T>(method: string, payload?: unknown, timeoutMs?: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const requestId = generateRequestId();
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -36,10 +37,11 @@ function callCartApi<T>(method: string, payload?: unknown): Promise<T> {
 
     window.addEventListener('message', handler);
 
+    const effectiveTimeout = timeoutMs ?? TIMEOUT_MS;
     timeoutId = setTimeout(() => {
       window.removeEventListener('message', handler);
-      reject(new Error(`Cart API timeout: ${method} did not respond within ${TIMEOUT_MS}ms`));
-    }, TIMEOUT_MS);
+      reject(new Error(`Cart API timeout: ${method} did not respond within ${effectiveTimeout}ms`));
+    }, effectiveTimeout);
 
     window.postMessage(
       {
@@ -74,7 +76,7 @@ export async function clearCart(): Promise<CartData> {
 }
 
 export async function getShippingRates(address: ShippingAddress): Promise<ShippingRate[]> {
-  return callCartApi<ShippingRate[]>('getShippingRates', address);
+  return callCartApi<ShippingRate[]>('getShippingRates', address, SHIPPING_TIMEOUT_MS);
 }
 
 export async function getProductByUrl(url: string): Promise<ProductData> {
