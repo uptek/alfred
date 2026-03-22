@@ -167,15 +167,19 @@
     </button>
   </div>
 
-  {#if cart.cart_level_discount_applications.length > 0}
+  {#if cart.discount_codes.length > 0}
     <div class="discount-active">
-      <h4 class="discount-active-title">Active Discounts</h4>
-      {#each cart.cart_level_discount_applications as discount}
+      <h4 class="discount-active-title">Discount Codes</h4>
+      {#each cart.discount_codes as dc}
         <div class="discount-row">
           <div class="discount-info">
-            <span class="discount-name">{discount.title}</span>
-            <span class="discount-value">
-              {discount.value_type === 'percentage' ? `${discount.value}%` : `$${(discount.total_allocated_amount / 100).toFixed(2)}`}
+            <span class="discount-name">{dc.code}</span>
+            <span class="discount-status" class:applicable={dc.applicable} class:not-applicable={!dc.applicable}>
+              {#if dc.applicable}
+                -${(dc.amount / 100).toFixed(2)}
+              {:else}
+                Not applicable
+              {/if}
             </span>
           </div>
         </div>
@@ -185,7 +189,25 @@
         Remove all discounts
       </button>
     </div>
-  {:else}
+  {/if}
+
+  {#if cart.cart_level_discount_applications.length > 0}
+    <div class="discount-active" style="margin-top: 12px;">
+      <h4 class="discount-active-title">Cart-Level Discounts</h4>
+      {#each cart.cart_level_discount_applications as discount}
+        <div class="discount-row">
+          <div class="discount-info">
+            <span class="discount-name">{discount.title}</span>
+            <span class="discount-status applicable">
+              {discount.value_type === 'percentage' ? `${discount.value}%` : `$${(discount.total_allocated_amount / 100).toFixed(2)}`}
+            </span>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
+
+  {#if cart.discount_codes.length === 0 && cart.cart_level_discount_applications.length === 0}
     <p class="discount-empty">No discount codes applied</p>
   {/if}
 </section>
@@ -370,10 +392,21 @@
     font-family: 'SF Mono', 'Fira Code', ui-monospace, Menlo, Monaco, Consolas, monospace;
   }
 
-  .discount-value {
+  .discount-status {
     font-size: 13px;
-    color: var(--cs-success);
     font-variant-numeric: tabular-nums;
+  }
+
+  .discount-status.applicable {
+    color: var(--cs-success);
+  }
+
+  .discount-status.not-applicable {
+    color: var(--cs-danger);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
   }
 
   .discount-remove {
