@@ -12,15 +12,30 @@ export default defineUnlistedScript(() => {
   if ((window as any).__alfredCartApiInitialized) return;
   (window as any).__alfredCartApiInitialized = true;
 
+  async function fetchWithRetry(
+    input: RequestInfo,
+    init?: RequestInit,
+    retries = 3
+  ): Promise<Response> {
+    const res = await fetch(input, init);
+    if (res.status === 429 && retries > 0) {
+      const retryAfter = res.headers.get('Retry-After');
+      const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : 500 * 2 ** (3 - retries);
+      await new Promise((r) => setTimeout(r, delay));
+      return fetchWithRetry(input, init, retries - 1);
+    }
+    return res;
+  }
+
   async function getCart(): Promise<CartData> {
-    const res = await fetch('/cart.js');
+    const res = await fetchWithRetry('/cart.js');
     if (!res.ok) throw new Error(`Failed to fetch cart: ${res.status}`);
     return res.json();
   }
 
   async function addItem(items: AddItemPayload | AddItemPayload[]): Promise<CartData> {
     const payload = Array.isArray(items) ? { items } : { items: [items] };
-    const res = await fetch('/cart/add.js', {
+    const res = await fetchWithRetry('/cart/add.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -34,7 +49,7 @@ export default defineUnlistedScript(() => {
   }
 
   async function updateCart(updates: UpdatePayload): Promise<CartData> {
-    const res = await fetch('/cart/update.js', {
+    const res = await fetchWithRetry('/cart/update.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
@@ -47,7 +62,7 @@ export default defineUnlistedScript(() => {
   }
 
   async function changeItem(change: ChangePayload): Promise<CartData> {
-    const res = await fetch('/cart/change.js', {
+    const res = await fetchWithRetry('/cart/change.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(change)
@@ -60,7 +75,7 @@ export default defineUnlistedScript(() => {
   }
 
   async function clearCart(): Promise<CartData> {
-    const res = await fetch('/cart/clear.js', {
+    const res = await fetchWithRetry('/cart/clear.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -75,7 +90,7 @@ export default defineUnlistedScript(() => {
       'shipping_address[province]': address.province
     });
 
-    const prepRes = await fetch(`/cart/prepare_shipping_rates.json?${params}`, {
+    const prepRes = await fetchWithRetry(`/cart/prepare_shipping_rates.json?${params}`, {
       method: 'POST'
     });
     if (!prepRes.ok) throw new Error(`Failed to prepare shipping rates: ${prepRes.status}`);
@@ -86,7 +101,7 @@ export default defineUnlistedScript(() => {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
 
-      const ratesRes = await fetch(`/cart/async_shipping_rates.json?${params}`);
+      const ratesRes = await fetchWithRetry(`/cart/async_shipping_rates.json?${params}`);
       if (ratesRes.status === 202) continue;
       if (!ratesRes.ok) throw new Error(`Failed to fetch shipping rates: ${ratesRes.status}`);
 
@@ -117,7 +132,7 @@ export default defineUnlistedScript(() => {
       throw new Error('Invalid product URL: must be a /products/ path');
     }
 
-    const res = await fetch(pathname);
+    const res = await fetchWithRetry(pathname);
     if (!res.ok) throw new Error(`Failed to fetch product: ${res.status}`);
 
     const data = await res.json();
