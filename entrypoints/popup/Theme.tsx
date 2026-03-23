@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
-import { trackAction } from '@/utils/analytics';
+import { trackAction, getUsageStats, isReviewDismissed, dismissReview } from '@/utils/analytics';
+import InsightsCard from './InsightsCard';
 import type { InfoItemProps, StoreInfo } from './types';
 
 function withUtm(url: string, content: string): string {
@@ -99,6 +100,8 @@ async function copyThemePreviewUrl(storeInfo: StoreInfo, disablePreviewBar: bool
 export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
   const [copying, setCopying] = useState(false);
   const [disablePreviewBar, setDisablePreviewBar] = useState(false);
+  const [usageStats, setUsageStats] = useState<{ milestoneReached: boolean } | null>(null);
+  const [reviewDismissed, setReviewDismissed] = useState(true);
 
   useEffect(() => {
     trackAction('detect_theme', {
@@ -107,6 +110,14 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
       shop_domain: storeInfo.shopDomain ?? '',
       theme_name: storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? '',
       theme_version: storeInfo.theme?.schema_version ?? ''
+    });
+
+    Promise.all([getUsageStats(), isReviewDismissed()]).then(([stats, dismissed]) => {
+      setUsageStats(stats);
+      setReviewDismissed(dismissed);
+      if (stats.milestoneReached && !dismissed) {
+        trackAction('review_nudge_shown');
+      }
     });
   }, [storeInfo]);
 
@@ -234,6 +245,22 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
           </button>
         </div>
       </div>
+
+      {usageStats?.milestoneReached && (
+        <InsightsCard
+          reviewDismissed={reviewDismissed}
+          onDismiss={async () => {
+            await dismissReview();
+            trackAction('review_nudge_dismissed');
+            setReviewDismissed(true);
+          }}
+          onReviewClick={async () => {
+            await dismissReview();
+            trackAction('review_nudge_clicked');
+            setReviewDismissed(true);
+          }}
+        />
+      )}
     </div>
   );
 }

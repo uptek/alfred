@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'content-type'
 };
 
-// Valid actions
+// Valid actions — must match AnalyticsAction type in utils/analytics.ts
 const VALID_ACTIONS = [
   'open_in_admin',
   'open_in_customizer',
@@ -23,7 +23,30 @@ const VALID_ACTIONS = [
   'disable_theme_inspector',
   'resize_theme_customizer',
   'toggle_admin_sidebar',
-  'detect_theme'
+  'detect_theme',
+  'autofill_storefront_password',
+  'open_image_in_admin',
+  'exit_theme_preview',
+  'theme_list_copy_id',
+  'theme_list_copy_preview_url',
+  'theme_list_preview',
+  'theme_list_edit_code',
+  'cartograph_open',
+  'cartograph_add_item',
+  'cartograph_update_quantity',
+  'cartograph_remove_item',
+  'cartograph_clear',
+  'cartograph_apply_discount',
+  'cartograph_update_note',
+  'cartograph_calculate_shipping',
+  'cartograph_update_properties',
+  'cartograph_switch_variant',
+  'cartograph_update_attributes',
+  'cartograph_remove_discount',
+  'cartograph_inspect_json',
+  'review_nudge_shown',
+  'review_nudge_clicked',
+  'review_nudge_dismissed'
 ];
 
 serve(async (req) => {
