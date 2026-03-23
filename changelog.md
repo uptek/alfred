@@ -8,6 +8,8 @@ Introducing Cartograph — a unified cart editor that lets you do everything tha
 - JSON tab for viewing and copying the full cart payload.
 - Light and dark theme with system preference detection.
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-cartograph.mp4"></video>
+
 ## 2026.03.15.1
 @ 2026-03-15
 Introducing preset hotlinks — generate a shareable URL for any preset that auto-applies the preset's permissions. Use it as a bookmark, a shared link, or a platform integration.

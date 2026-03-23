@@ -14,6 +14,10 @@
           "JSON tab for viewing and copying the full cart payload.",
           "Light and dark theme with system preference detection."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-cartograph.mp4"
       }
     ]
   },
