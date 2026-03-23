@@ -23,8 +23,7 @@ const settingsItems: SettingItem[] = [
   {
     key: 'themeListUtils',
     label: 'Theme list utilities',
-    details:
-      'Adds copy buttons for Theme ID and Preview URL to each theme on the themes list page'
+    details: 'Adds copy buttons for Theme ID and Preview URL to each theme on the themes list page'
   }
 ];
 

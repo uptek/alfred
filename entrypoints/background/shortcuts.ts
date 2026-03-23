@@ -20,7 +20,8 @@ export const registerShortcuts = async () => {
     exitThemePreview: true,
     copyProductJson: true,
     copyCartJson: true,
-    clearCart: true
+    clearCart: true,
+    cartograph: true
   };
 
   // Create main menu
@@ -267,6 +268,28 @@ export const registerShortcuts = async () => {
   // ── Cart ──
 
   createSeparator('separator-cart', alfredMenuId);
+
+  // Cartograph
+  if (shortcuts.cartograph !== false) {
+    create(
+      {
+        id: 'cartograph',
+        title: 'Cartograph',
+        parentId: alfredMenuId
+      },
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.tabs.sendMessage(tab.id!, {
+              action: 'open_cartograph'
+            });
+          } catch (error) {
+            console.error('Error opening Cartograph:', error);
+          }
+        })();
+      }
+    );
+  }
 
   // Clear Cart
   if (shortcuts.clearCart !== false) {

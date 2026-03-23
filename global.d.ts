@@ -52,6 +52,7 @@ declare interface AlfredSettings {
     copyCartJson?: boolean;
     copyThemePreviewUrl?: boolean;
     clearCart?: boolean;
+    cartograph?: boolean;
     openSectionInCodeEditor?: boolean;
     openImageInAdmin?: boolean;
     exitThemePreview?: boolean;

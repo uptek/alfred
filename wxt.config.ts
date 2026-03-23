@@ -1,5 +1,6 @@
 import { defineConfig } from 'wxt';
 import preact from '@preact/preset-vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 
 // See https://wxt.dev/api/config.html
@@ -8,7 +9,7 @@ export default defineConfig({
   manifest: {
     name: 'Alfred - Shopify Theme Detector',
     description: 'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
-    version: '2026.03.15.1',
+    version: '2026.03.23',
     action: {
       default_title: 'Alfred',
     },
@@ -27,10 +28,18 @@ export default defineConfig({
         resources: ['libs/shopify-polaris.js'],
         matches: ['<all_urls>'],
       },
+      {
+        resources: ['cartograph-world.js'],
+        matches: ['<all_urls>'],
+      },
+      {
+        resources: ['content-scripts/cartograph.css'],
+        matches: ['<all_urls>'],
+      },
     ],
   },
   vite: () => ({
-    plugins: [preact(), tailwindcss()],
+    plugins: [preact(), svelte(), tailwindcss()],
   }),
   webExt: {
     chromiumArgs: [
@@ -39,10 +48,10 @@ export default defineConfig({
       '--disable-features=BlockThirdPartyCookies', // Allows third-party cookies
       // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
       // 'https://uptek.com',
-      // 'https://junaid-workspace.myshopify.com/',
+      'https://junaid-workspace.myshopify.com/cart',
       // 'https://partners.shopify.com/1750954/stores/new?store_type=managed_store',
       // 'https://admin.shopify.com/store/junaid-workspace/themes',
-      'https://partners.shopify.com/1750954/stores/new?store_domain=zeeshan-h-bhatti.myshopify.com&store_type=managed_store',
+      // 'https://partners.shopify.com/1750954/stores/new?store_domain=zeeshan-h-bhatti.myshopify.com&store_type=managed_store'
     ],
   },
 });

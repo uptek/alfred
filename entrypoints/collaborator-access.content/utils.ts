@@ -21,7 +21,7 @@ export function generatePresetId(): string {
  */
 export function buildHotlinkUrl(handle: string): string {
   const url = new URL(window.location.href);
-  const partnerId = url.pathname.split('/').filter(Boolean)[0];
+  const partnerId = url.pathname.split('/').find(Boolean);
 
   return `${url.host}/${partnerId}/stores/new?store_domain={{ customer.shopifyDomain }}&store_type=managed_store&${HOTLINK_PRESET_PARAM}=${handle}`;
 }
@@ -48,8 +48,14 @@ export function normalizePresetHandle(value: string | undefined): string | null 
  * @param currentPresetId - Current preset ID when updating an existing preset
  * @returns A unique handle
  */
-function ensureUniquePresetHandle(handle: string | undefined, presets: PermissionPreset[], currentPresetId?: string): string {
-  const existingHandles = new Set(presets.filter((preset) => preset.id !== currentPresetId).map((preset) => preset.handle));
+function ensureUniquePresetHandle(
+  handle: string | undefined,
+  presets: PermissionPreset[],
+  currentPresetId?: string
+): string {
+  const existingHandles = new Set(
+    presets.filter((preset) => preset.id !== currentPresetId).map((preset) => preset.handle)
+  );
 
   const preferredHandle = normalizePresetHandle(handle);
   if (preferredHandle && !existingHandles.has(preferredHandle)) {
@@ -79,7 +85,7 @@ function normalizePreset(preset: StoredPermissionPreset, presets: PermissionPres
     ...preset,
     name: preset.name.trim(),
     handle: ensureUniquePresetHandle(preset.handle ?? preset.name, presets, preset.id),
-    createdAt: preset.createdAt || Date.now(),
+    createdAt: preset.createdAt || Date.now()
   };
 }
 
@@ -101,7 +107,7 @@ export async function getPresets(): Promise<PermissionPreset[]> {
       (preset, index) =>
         preset.handle !== normalizedPresets[index]?.handle ||
         preset.name !== normalizedPresets[index]?.name ||
-        preset.createdAt !== normalizedPresets[index]?.createdAt,
+        preset.createdAt !== normalizedPresets[index]?.createdAt
     )
   ) {
     await setItem(STORAGE_KEY, { presets: normalizedPresets });
@@ -204,7 +210,7 @@ export function importPresets(): Promise<number | null> {
           const newPreset: StoredPermissionPreset = {
             ...importedPreset,
             id: generatePresetId(),
-            createdAt: importedPreset.createdAt || Date.now(),
+            createdAt: importedPreset.createdAt || Date.now()
           };
 
           await savePreset(newPreset);

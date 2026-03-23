@@ -52,7 +52,7 @@ async function fetchAndCacheThemes(): Promise<ThemeStoreEntry[] | null> {
     await setItem<ThemesCacheData>(STORAGE_KEY, {
       themes,
       fetchedAt: Date.now(),
-      version: browser.runtime.getManifest().version,
+      version: browser.runtime.getManifest().version
     });
 
     return themes;

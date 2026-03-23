@@ -29,7 +29,20 @@ export type AnalyticsAction =
   | 'theme_list_copy_id'
   | 'theme_list_copy_preview_url'
   | 'theme_list_preview'
-  | 'theme_list_edit_code';
+  | 'theme_list_edit_code'
+  | 'cartograph_open'
+  | 'cartograph_add_item'
+  | 'cartograph_update_quantity'
+  | 'cartograph_remove_item'
+  | 'cartograph_clear'
+  | 'cartograph_apply_discount'
+  | 'cartograph_update_note'
+  | 'cartograph_calculate_shipping'
+  | 'cartograph_update_properties'
+  | 'cartograph_switch_variant'
+  | 'cartograph_update_attributes'
+  | 'cartograph_remove_discount'
+  | 'cartograph_inspect_json';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -71,7 +84,20 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   theme_list_copy_id: 10,
   theme_list_copy_preview_url: 10,
   theme_list_preview: 5,
-  theme_list_edit_code: 5
+  theme_list_edit_code: 5,
+  cartograph_open: 0,
+  cartograph_add_item: 60,
+  cartograph_update_quantity: 15,
+  cartograph_remove_item: 15,
+  cartograph_clear: 30,
+  cartograph_apply_discount: 20,
+  cartograph_update_note: 15,
+  cartograph_calculate_shipping: 60,
+  cartograph_update_properties: 60,
+  cartograph_switch_variant: 120,
+  cartograph_update_attributes: 60,
+  cartograph_remove_discount: 15,
+  cartograph_inspect_json: 45
 };
 
 /**

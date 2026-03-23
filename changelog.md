@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.03.23
+@ 2026-03-16
+Introducing Cartograph — a unified cart editor that lets you do everything that the Cart AJAX API offers and then some. Add items, switch variants, manage selling plans, apply discount codes, calculate shipping rates, and more — all without touching the API.
+
+- Open via right-click > Alfred > Cartograph, or add ?alfred=cart to any store URL.
+- JSON tab for viewing and copying the full cart payload.
+- Light and dark theme with system preference detection.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-cartograph.mp4"></video>
+
 ## 2026.03.15.1
 @ 2026-03-15
 Introducing preset hotlinks — generate a shareable URL for any preset that auto-applies the preset's permissions. Use it as a bookmark, a shared link, or a platform integration.
@@ -7,7 +17,7 @@ Introducing preset hotlinks — generate a shareable URL for any preset that aut
 Mantle integration — preset hotlinks work as Mantle custom actions. Now you can request collaborator access right from your Mantle dashboard with the right permissions auto-applied for you.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-preset-hotlinks.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-preset-hotlinks.mp4"></video>
 
 ## 2026.03.15
 @ 2026-03-15

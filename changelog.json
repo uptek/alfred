@@ -1,5 +1,27 @@
 [
   {
+    "version": "2026.03.23",
+    "date": "2026-03-16",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Introducing Cartograph — a unified cart editor that lets you do everything that the Cart AJAX API offers and then some. Add items, switch variants, manage selling plans, apply discount codes, calculate shipping rates, and more — all without touching the API."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Open via right-click > Alfred > Cartograph, or add ?alfred=cart to any store URL.",
+          "JSON tab for viewing and copying the full cart payload.",
+          "Light and dark theme with system preference detection."
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-cartograph.mp4"
+      }
+    ]
+  },
+  {
     "version": "2026.03.15.1",
     "date": "2026-03-15",
     "changes": [
