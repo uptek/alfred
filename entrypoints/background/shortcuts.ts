@@ -269,6 +269,28 @@ export const registerShortcuts = async () => {
 
   createSeparator('separator-cart', alfredMenuId);
 
+  // Cartograph
+  if (shortcuts.cartograph !== false) {
+    create(
+      {
+        id: 'cartograph',
+        title: 'Cartograph',
+        parentId: alfredMenuId
+      },
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await browser.tabs.sendMessage(tab.id!, {
+              action: 'open_cartograph'
+            });
+          } catch (error) {
+            console.error('Error opening Cartograph:', error);
+          }
+        })();
+      }
+    );
+  }
+
   // Clear Cart
   if (shortcuts.clearCart !== false) {
     create(
@@ -289,28 +311,6 @@ export const registerShortcuts = async () => {
             });
           } catch (error) {
             console.error('Error clearing cart:', error);
-          }
-        })();
-      }
-    );
-  }
-
-  // Cartograph
-  if (shortcuts.cartograph !== false) {
-    create(
-      {
-        id: 'cartograph',
-        title: 'Cartograph',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.tabs.sendMessage(tab.id!, {
-              action: 'open_cartograph'
-            });
-          } catch (error) {
-            console.error('Error opening Cartograph:', error);
           }
         })();
       }

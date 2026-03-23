@@ -85,9 +85,15 @@
    * to prevent data loss.
   */
   function replaceItem(key: string, addPayload: AddItemPayload): Promise<void> {
-    const originalItem = cart?.items.find(i => i.key === key);
     return mutate(async () => {
-      await api.changeItem({ id: key, quantity: 0 });
+      // Read item from live cart state inside the queue (not stale closure)
+      const originalItem = cart?.items.find(i => i.key === key);
+      // Use 1-based line index — more reliable than key for selling plan items
+      const lineIndex = cart?.items.findIndex(i => i.key === key);
+      if (lineIndex === undefined || lineIndex === -1) {
+        throw new Error('Item not found in cart');
+      }
+      await api.changeItem({ line: lineIndex + 1, quantity: 0 });
       try {
         return await api.addItem(addPayload);
       } catch (addErr) {
@@ -251,7 +257,6 @@
                 id: newVariantId,
                 quantity: oldItem.quantity,
                 ...(oldItem.properties && Object.keys(oldItem.properties).length > 0 ? { properties: oldItem.properties } : {}),
-                ...(oldItem.selling_plan_allocation ? { selling_plan: oldItem.selling_plan_allocation.selling_plan.id } : {}),
               });
               trackAction('cartograph_switch_variant');
             }}

@@ -82,8 +82,8 @@
   .qty-btn {
     all: unset;
     cursor: pointer;
-    width: 30px;
-    height: 30px;
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -109,8 +109,8 @@
 
   .qty-input {
     all: unset;
-    width: 40px;
-    height: 30px;
+    width: 44px;
+    height: 38px;
     text-align: center;
     font-size: 13px;
     color: var(--cs-text-primary);

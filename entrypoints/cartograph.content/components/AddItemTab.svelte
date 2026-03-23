@@ -181,7 +181,7 @@
       {#if selectedVariant && selectedVariant.selling_plan_allocations.length > 0}
         {@const allocatedPlanIds = new Set(selectedVariant.selling_plan_allocations.map(a => a.selling_plan_id))}
         <div class="config-field config-field-grow">
-          <label class="config-label">Selling Plan {selectedVariant.requires_selling_plan ? '' : '(optional)'}</label>
+          <label class="config-label">Selling Plan</label>
           <select class="config-select" bind:value={selectedSellingPlan}>
             {#if !selectedVariant.requires_selling_plan}
               <option value={null}>One-time purchase</option>
@@ -205,7 +205,7 @@
     </div>
 
     <div class="config-row config-row-half">
-      <label class="config-label">Line Item Properties (optional)</label>
+      <label class="config-label">Line Item Properties</label>
       <KeyValueEditor
         bind:entries={properties}
         keyPlaceholder="Property name"
@@ -509,7 +509,7 @@
 
   .config-select {
     all: unset;
-    padding: 10px 14px;
+    padding: 9.25px 14px;
     background: var(--cs-bg-secondary);
     border: 1px solid var(--cs-border);
     border-radius: var(--cs-radius-sm);
