@@ -1,0 +1,35 @@
+{
+  "date": "2026-03-22",
+  "window": "7d",
+  "metrics": {
+    "commits": 2,
+    "contributors": 1,
+    "prs_merged": 2,
+    "insertions": 460,
+    "deletions": 186,
+    "net_loc": 274,
+    "test_loc": 0,
+    "test_ratio": 0,
+    "active_days": 1,
+    "sessions": 2,
+    "deep_sessions": 0,
+    "avg_session_minutes": 0,
+    "loc_per_session_hour": 0,
+    "feat_pct": 0.50,
+    "fix_pct": 0,
+    "peak_hour": 3,
+    "ai_assisted_commits": 1
+  },
+  "authors": {
+    "Junaid Ahmed": {
+      "commits": 2,
+      "insertions": 460,
+      "deletions": 186,
+      "test_ratio": 0,
+      "top_area": "entrypoints/"
+    }
+  },
+  "version_range": ["2026.02.26", "2026.03.15.1"],
+  "streak_days": 0,
+  "tweetable": "Week of Mar 15: 2 commits, 460 LOC, 0% tests, 2 PRs, peak: 3am | Streak: 0d"
+}
