@@ -21,7 +21,7 @@ export const registerShortcuts = async () => {
     copyProductJson: true,
     copyCartJson: true,
     clearCart: true,
-    cartSuperpowers: true
+    cartograph: true
   };
 
   // Create main menu
@@ -295,22 +295,22 @@ export const registerShortcuts = async () => {
     );
   }
 
-  // Cart Superpowers
-  if (shortcuts.cartSuperpowers !== false) {
+  // Cartograph
+  if (shortcuts.cartograph !== false) {
     create(
       {
-        id: 'cart-superpowers',
-        title: 'Cart Superpowers',
+        id: 'cartograph',
+        title: 'Cartograph',
         parentId: alfredMenuId
       },
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
           try {
             await browser.tabs.sendMessage(tab.id!, {
-              action: 'open_cart_superpowers'
+              action: 'open_cartograph'
             });
           } catch (error) {
-            console.error('Error opening Cart Superpowers:', error);
+            console.error('Error opening Cartograph:', error);
           }
         })();
       }

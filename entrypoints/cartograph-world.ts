@@ -6,7 +6,7 @@ import type {
   ShippingRate,
   CartData,
   ProductData
-} from './cart-superpowers.content/types';
+} from './cartograph.content/types';
 
 export default defineUnlistedScript(() => {
   if ((window as any).__alfredCartApiInitialized) return;

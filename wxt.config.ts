@@ -8,39 +8,38 @@ export default defineConfig({
   modules: ['@wxt-dev/auto-icons'],
   manifest: {
     name: 'Alfred - Shopify Theme Detector',
-    description:
-      'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
-    version: '2026.03.16',
+    description: 'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
+    version: '2026.03.23',
     action: {
-      default_title: 'Alfred'
+      default_title: 'Alfred',
     },
     permissions: ['contextMenus', 'scripting', 'tabs', 'activeTab', 'storage', 'webNavigation'],
     host_permissions: ['<all_urls>'],
     web_accessible_resources: [
       {
         resources: ['alfred-main-world.js'],
-        matches: ['<all_urls>']
+        matches: ['<all_urls>'],
       },
       {
         resources: ['alfred-toast.js'],
-        matches: ['<all_urls>']
+        matches: ['<all_urls>'],
       },
       {
         resources: ['libs/shopify-polaris.js'],
-        matches: ['<all_urls>']
+        matches: ['<all_urls>'],
       },
       {
-        resources: ['cart-superpowers-world.js'],
-        matches: ['<all_urls>']
+        resources: ['cartograph-world.js'],
+        matches: ['<all_urls>'],
       },
       {
-        resources: ['content-scripts/cart-superpowers.css'],
-        matches: ['<all_urls>']
-      }
-    ]
+        resources: ['content-scripts/cartograph.css'],
+        matches: ['<all_urls>'],
+      },
+    ],
   },
   vite: () => ({
-    plugins: [preact(), svelte(), tailwindcss()]
+    plugins: [preact(), svelte(), tailwindcss()],
   }),
   webExt: {
     chromiumArgs: [
@@ -49,10 +48,10 @@ export default defineConfig({
       '--disable-features=BlockThirdPartyCookies', // Allows third-party cookies
       // 'chrome-extension://lepphhjodhfojboecomikglfppimdkmj/options.html',
       // 'https://uptek.com',
-      'https://junaid-workspace.myshopify.com/cart'
+      'https://junaid-workspace.myshopify.com/cart',
       // 'https://partners.shopify.com/1750954/stores/new?store_type=managed_store',
       // 'https://admin.shopify.com/store/junaid-workspace/themes',
       // 'https://partners.shopify.com/1750954/stores/new?store_domain=zeeshan-h-bhatti.myshopify.com&store_type=managed_store'
-    ]
-  }
+    ],
+  },
 });

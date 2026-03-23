@@ -7,16 +7,16 @@ export default defineContentScript({
   cssInjectionMode: 'ui',
   async main(ctx) {
     const settings = await getItem<AlfredSettings>('settings');
-    if (settings?.shortcuts?.cartSuperpowers === false) return;
+    if (settings?.shortcuts?.cartograph === false) return;
 
     let mounted = false;
 
     const open = async () => {
       if (mounted) return;
       mounted = true;
-      trackAction('cart_superpowers_open');
-      const { mountCartSuperpowers } = await import('./mount');
-      mountCartSuperpowers(ctx, () => {
+      trackAction('cartograph_open');
+      const { mountCartograph } = await import('./mount');
+      mountCartograph(ctx, () => {
         mounted = false;
       });
     };
@@ -28,7 +28,7 @@ export default defineContentScript({
 
     // Context menu trigger (via background script message)
     browser.runtime.onMessage.addListener((msg) => {
-      if (msg.action === 'open_cart_superpowers') {
+      if (msg.action === 'open_cartograph') {
         open().catch(console.error);
       }
       return false;

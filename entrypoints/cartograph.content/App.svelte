@@ -121,7 +121,7 @@
     if (activeTab === 'json' && !jsonInspected) {
       jsonDwellTimer = setTimeout(() => {
         jsonInspected = true;
-        trackAction('cart_superpowers_inspect_json');
+        trackAction('cartograph_inspect_json');
       }, 3000);
     } else if (jsonDwellTimer) {
       clearTimeout(jsonDwellTimer);
@@ -150,7 +150,7 @@
   <div class="panel">
     <header class="header">
       <div class="header-left">
-        <h1>Cart Superpowers</h1>
+        <h1>Cartograph</h1>
         {#if cart}
           <span class="badge">{cart.item_count} {cart.item_count === 1 ? 'item' : 'items'}</span>
         {/if}
@@ -229,8 +229,8 @@
         {#if activeTab === 'items'}
           <ItemsTab
             {cart}
-            onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cart_superpowers_update_quantity'); }}
-            onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cart_superpowers_remove_item'); }}
+            onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cartograph_update_quantity'); }}
+            onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cartograph_remove_item'); }}
             onUpdateProperties={async (key, qty, props) => {
               if (Object.keys(props).length === 0) {
                 const item = cart!.items.find(i => i.key === key)!;
@@ -242,9 +242,9 @@
               } else {
                 await mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }));
               }
-              trackAction('cart_superpowers_update_properties');
+              trackAction('cartograph_update_properties');
             }}
-            onClearCart={async () => { await mutate(() => api.clearCart()); trackAction('cart_superpowers_clear'); }}
+            onClearCart={async () => { await mutate(() => api.clearCart()); trackAction('cartograph_clear'); }}
             onSwitchTab={(tab) => activeTab = tab as TabId}
             onSwitchVariant={async (key, oldItem, newVariantId) => {
               await replaceItem(key, {
@@ -253,7 +253,7 @@
                 ...(oldItem.properties && Object.keys(oldItem.properties).length > 0 ? { properties: oldItem.properties } : {}),
                 ...(oldItem.selling_plan_allocation ? { selling_plan: oldItem.selling_plan_allocation.selling_plan.id } : {}),
               });
-              trackAction('cart_superpowers_switch_variant');
+              trackAction('cartograph_switch_variant');
             }}
             onFetchProduct={(url) => api.getProductByUrl(url)}
           />
@@ -262,24 +262,24 @@
             onAddItem={async (payload: AddItemPayload) => {
               await mutate(() => api.addItem(payload));
               activeTab = 'items';
-              trackAction('cart_superpowers_add_item');
+              trackAction('cartograph_add_item');
             }}
             onFetchProduct={(url: string) => api.getProductByUrl(url)}
           />
         {:else if activeTab === 'metadata'}
           <MetadataTab
             {cart}
-            onUpdateNote={async (note) => { await mutate(() => api.updateCart({ note })); trackAction('cart_superpowers_update_note'); }}
-            onUpdateAttributes={async (attrs) => { await mutate(() => api.updateCart({ attributes: attrs })); trackAction('cart_superpowers_update_attributes'); }}
-            onApplyDiscount={async (code) => { await mutate(() => api.updateCart({ discount: code })); trackAction('cart_superpowers_apply_discount'); }}
-            onRemoveDiscount={async () => { await mutate(() => api.updateCart({ discount: '' })); trackAction('cart_superpowers_remove_discount'); }}
+            onUpdateNote={async (note) => { await mutate(() => api.updateCart({ note })); trackAction('cartograph_update_note'); }}
+            onUpdateAttributes={async (attrs) => { await mutate(() => api.updateCart({ attributes: attrs })); trackAction('cartograph_update_attributes'); }}
+            onApplyDiscount={async (code) => { await mutate(() => api.updateCart({ discount: code })); trackAction('cartograph_apply_discount'); }}
+            onRemoveDiscount={async () => { await mutate(() => api.updateCart({ discount: '' })); trackAction('cartograph_remove_discount'); }}
           />
         {:else if activeTab === 'shipping'}
           <ShippingTab
             {cart}
             onCalculateRates={async (addr) => {
               const rates = await api.getShippingRates(addr);
-              trackAction('cart_superpowers_calculate_shipping');
+              trackAction('cartograph_calculate_shipping');
               return rates;
             }}
           />

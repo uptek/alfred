@@ -1,17 +1,12 @@
 # Changelog
 
-## 2026.03.16
+## 2026.03.23
 @ 2026-03-16
-Cart Superpowers — a full cart editor overlay for Shopify developers. Edit quantities, switch variants, manage line item properties, selling plans, cart notes, attributes, discount codes, and calculate shipping rates — all from a single dev-tools-style panel.
+Introducing Cartograph — a unified cart editor that lets you do everything that the Cart AJAX API offers and then some. Add items, switch variants, manage selling plans, apply discount codes, calculate shipping rates, and more — all without touching the API.
 
-- Open via right-click > Alfred > Cart Superpowers, or add ?alfred=cart to any store URL.
-- Items tab: edit quantities, switch variants, manage line item properties inline.
-- Add Item tab: fetch any product by URL or handle, pick a variant, set properties and selling plans.
-- Metadata tab: edit cart note, cart attributes, and apply or remove discount codes.
-- Shipping tab: calculate shipping rates for any destination.
-- JSON tab: view and copy the full cart JSON.
+- Open via right-click > Alfred > Cartograph, or add ?alfred=cart to any store URL.
+- JSON tab for viewing and copying the full cart payload.
 - Light and dark theme with system preference detection.
-- Fully isolated via Shadow DOM — no style conflicts with any Shopify theme.
 
 ## 2026.03.15.1
 @ 2026-03-15
