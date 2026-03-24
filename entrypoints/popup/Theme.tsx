@@ -204,7 +204,7 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
       {storeInfo.themeStoreEntry && (
         <InfoItem label="Latest version available:" value={storeInfo.themeStoreEntry.version || 'N/A'} />
       )}
-      <div className="py-3.5 border-t border-slate-100">
+      <div className="py-3.5">
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-semibold text-slate-500">Preview URL:</label>
           <label className="flex items-center gap-2 cursor-pointer">

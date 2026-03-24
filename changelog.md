@@ -1,16 +1,5 @@
 # Changelog
 
-## 2026.03.24
-@ 2026-03-24
-
-### Added
-- Star rating review nudge — after meaningful usage, a non-intrusive rating prompt appears in the popup. 5-star opens Chrome Web Store reviews; lower ratings open a feedback form.
-- Local usage tracking — counts actions and time saved in browser storage, independent of Supabase analytics.
-
-### Fixed
-- Developer links in the theme detector popup now open the correct `themes.shopify.com` URL instead of a broken `chrome-extension://` path.
-- Review nudge uses `browser.tabs.create` instead of `window.open` to prevent popup lifecycle issues in extensions.
-
 ## 2026.03.23
 @ 2026-03-16
 Introducing Cartograph — a unified cart editor that lets you do everything that the Cart AJAX API offers and then some. Add items, switch variants, manage selling plans, apply discount codes, calculate shipping rates, and more — all without touching the API.
