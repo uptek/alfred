@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { trackAction, isReviewDismissed, dismissReview } from '@/utils/analytics';
+import { trackAction } from '@/utils/analytics';
 import InsightsCard from './InsightsCard';
 import type { InfoItemProps, StoreInfo } from './types';
 
@@ -100,8 +100,6 @@ async function copyThemePreviewUrl(storeInfo: StoreInfo, disablePreviewBar: bool
 export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
   const [copying, setCopying] = useState(false);
   const [disablePreviewBar, setDisablePreviewBar] = useState(false);
-  const [reviewDismissed, setReviewDismissed] = useState(true);
-
   useEffect(() => {
     trackAction('detect_theme', {
       is_shopify: storeInfo.isShopify,
@@ -109,11 +107,6 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
       shop_domain: storeInfo.shopDomain ?? '',
       theme_name: storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? '',
       theme_version: storeInfo.theme?.schema_version ?? ''
-    });
-
-    isReviewDismissed().then((dismissed) => {
-      setReviewDismissed(dismissed);
-      if (!dismissed) trackAction('review_nudge_shown');
     });
   }, [storeInfo]);
 
@@ -247,20 +240,7 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
         </div>
       </div>
 
-      {!reviewDismissed && (
-        <InsightsCard
-          onDismiss={async () => {
-            await dismissReview();
-            trackAction('review_nudge_dismissed');
-            setReviewDismissed(true);
-          }}
-          onReviewClick={async () => {
-            await dismissReview();
-            trackAction('review_nudge_clicked');
-            setReviewDismissed(true);
-          }}
-        />
-      )}
+      <InsightsCard />
     </div>
   );
 }

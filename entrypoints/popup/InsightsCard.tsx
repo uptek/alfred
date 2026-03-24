@@ -1,15 +1,11 @@
 import { useState } from 'preact/hooks';
+import { trackAction } from '@/utils/analytics';
 
 const CWS_REVIEW_URL = 'https://chromewebstore.google.com/detail/jbdcmokdibodbplhjcajgcbmnflcchbi/reviews';
 const FEEDBACK_URL = 'https://tally.so/r/nPgYx0';
 
-interface InsightsCardProps {
-  onDismiss: () => Promise<void>;
-  onReviewClick: () => Promise<void>;
-}
-
-function Star({ filled, hovered }: { filled: boolean; hovered: boolean }) {
-  const color = filled || hovered ? '#F59E0B' : '#D1D5DB';
+function Star({ hovered }: { hovered: boolean }) {
+  const color = hovered ? '#F59E0B' : '#D1D5DB';
   return (
     <svg width="40" height="40" viewBox="0 0 24 24" fill={color} className="transition-colors duration-150 pointer-events-none">
       <path d="M12 3.5c.3 0 .6.2.7.5l2.2 4.5 5 .7c.3 0 .5.2.6.5s0 .6-.2.8l-3.6 3.5.9 5c0 .3-.1.6-.3.7-.3.2-.6.2-.8 0L12 17l-4.5 2.3c-.3.1-.6.1-.8 0-.2-.2-.4-.4-.3-.7l.9-5L3.7 10c-.2-.2-.3-.5-.2-.8s.3-.4.6-.5l5-.7 2.2-4.5c.1-.3.4-.5.7-.5z" />
@@ -29,20 +25,20 @@ function StarRating({ onRate }: { onRate: (rating: number) => void }) {
           onMouseEnter={() => setHovered(star)}
           aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
           className="bg-transparent border-none cursor-pointer p-0 leading-none transition-transform hover:scale-115 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded">
-          <Star filled={false} hovered={star <= hovered} />
+          <Star hovered={star <= hovered} />
         </button>
       ))}
     </div>
   );
 }
 
-export default function InsightsCard({ onDismiss, onReviewClick }: InsightsCardProps) {
-  const handleRate = async (rating: number) => {
+export default function InsightsCard() {
+  const handleRate = (rating: number) => {
     if (rating === 5) {
-      await onReviewClick();
+      trackAction('review_nudge_clicked');
       browser.tabs.create({ url: CWS_REVIEW_URL });
     } else {
-      await onDismiss();
+      trackAction('review_nudge_dismissed');
       browser.tabs.create({ url: FEEDBACK_URL });
     }
   };
