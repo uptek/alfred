@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { trackAction, getUsageStats, isReviewDismissed, dismissReview, markNudgeShown } from '@/utils/analytics';
+import { trackAction, isReviewDismissed, dismissReview } from '@/utils/analytics';
 import InsightsCard from './InsightsCard';
 import type { InfoItemProps, StoreInfo } from './types';
 
@@ -100,7 +100,6 @@ async function copyThemePreviewUrl(storeInfo: StoreInfo, disablePreviewBar: bool
 export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
   const [copying, setCopying] = useState(false);
   const [disablePreviewBar, setDisablePreviewBar] = useState(false);
-  const [usageStats, setUsageStats] = useState<{ milestoneReached: boolean } | null>(null);
   const [reviewDismissed, setReviewDismissed] = useState(true);
 
   useEffect(() => {
@@ -112,13 +111,9 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
       theme_version: storeInfo.theme?.schema_version ?? ''
     });
 
-    Promise.all([getUsageStats(), isReviewDismissed()]).then(async ([stats, dismissed]) => {
-      setUsageStats(stats);
+    isReviewDismissed().then((dismissed) => {
       setReviewDismissed(dismissed);
-      if (stats.milestoneReached && !dismissed) {
-        const isFirst = await markNudgeShown();
-        if (isFirst) trackAction('review_nudge_shown');
-      }
+      if (!dismissed) trackAction('review_nudge_shown');
     });
   }, [storeInfo]);
 
@@ -252,7 +247,7 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
         </div>
       </div>
 
-      {usageStats?.milestoneReached && !reviewDismissed && (
+      {!reviewDismissed && (
         <InsightsCard
           onDismiss={async () => {
             await dismissReview();
