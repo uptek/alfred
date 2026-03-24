@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.03.24
+@ 2026-03-24
+- "Enjoying Alfred?" star rating prompt at the bottom of the theme detector popup. 5 stars opens Chrome Web Store reviews; anything less opens a feedback form.
+- Developer links in the popup now open the correct themes.shopify.com URL instead of a broken chrome-extension:// path.
+
 ## 2026.03.23
 @ 2026-03-16
 Introducing Cartograph — a unified cart editor that lets you do everything that the Cart AJAX API offers and then some. Add items, switch variants, manage selling plans, apply discount codes, calculate shipping rates, and more — all without touching the API.
