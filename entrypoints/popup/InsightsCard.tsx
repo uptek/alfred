@@ -4,9 +4,8 @@ const CWS_REVIEW_URL = 'https://chromewebstore.google.com/detail/jbdcmokdibodbpl
 const FEEDBACK_URL = 'https://tally.so/r/nPgYx0';
 
 interface InsightsCardProps {
-  reviewDismissed: boolean;
-  onDismiss: () => void;
-  onReviewClick: () => void;
+  onDismiss: () => Promise<void>;
+  onReviewClick: () => Promise<void>;
 }
 
 function Star({ filled, hovered }: { filled: boolean; hovered: boolean }) {
@@ -37,14 +36,14 @@ function StarRating({ onRate }: { onRate: (rating: number) => void }) {
   );
 }
 
-export default function InsightsCard({ reviewDismissed, onDismiss, onReviewClick }: InsightsCardProps) {
-  const handleRate = (rating: number) => {
+export default function InsightsCard({ onDismiss, onReviewClick }: InsightsCardProps) {
+  const handleRate = async (rating: number) => {
     if (rating === 5) {
-      onReviewClick();
-      window.open(CWS_REVIEW_URL);
+      await onReviewClick();
+      browser.tabs.create({ url: CWS_REVIEW_URL });
     } else {
-      onDismiss();
-      window.open(FEEDBACK_URL);
+      await onDismiss();
+      browser.tabs.create({ url: FEEDBACK_URL });
     }
   };
 

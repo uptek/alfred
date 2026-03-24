@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { trackAction, getUsageStats, isReviewDismissed, dismissReview } from '@/utils/analytics';
+import { trackAction, getUsageStats, isReviewDismissed, dismissReview, markNudgeShown } from '@/utils/analytics';
 import InsightsCard from './InsightsCard';
 import type { InfoItemProps, StoreInfo } from './types';
 
@@ -112,11 +112,12 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
       theme_version: storeInfo.theme?.schema_version ?? ''
     });
 
-    Promise.all([getUsageStats(), isReviewDismissed()]).then(([stats, dismissed]) => {
+    Promise.all([getUsageStats(), isReviewDismissed()]).then(async ([stats, dismissed]) => {
       setUsageStats(stats);
       setReviewDismissed(dismissed);
       if (stats.milestoneReached && !dismissed) {
-        trackAction('review_nudge_shown');
+        const isFirst = await markNudgeShown();
+        if (isFirst) trackAction('review_nudge_shown');
       }
     });
   }, [storeInfo]);
@@ -176,7 +177,12 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
                   by{' '}
                   {storeInfo.themeStoreEntry.developer.url ? (
                     <a
-                      href={withUtm(storeInfo.themeStoreEntry.developer.url, 'developer')}
+                      href={withUtm(
+                        storeInfo.themeStoreEntry.developer.url.startsWith('/')
+                          ? `https://themes.shopify.com${storeInfo.themeStoreEntry.developer.url}`
+                          : storeInfo.themeStoreEntry.developer.url,
+                        'developer'
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-slate-500 underline decoration-slate-300 hover:decoration-slate-500">
@@ -246,9 +252,8 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
         </div>
       </div>
 
-      {usageStats?.milestoneReached && (
+      {usageStats?.milestoneReached && !reviewDismissed && (
         <InsightsCard
-          reviewDismissed={reviewDismissed}
           onDismiss={async () => {
             await dismissReview();
             trackAction('review_nudge_dismissed');

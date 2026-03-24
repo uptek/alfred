@@ -111,9 +111,10 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
 /** Number of tracked actions before the Insights Card becomes visible. */
 const MILESTONE_THRESHOLD = 3;
 
-/** Actions that are tracked to Supabase but excluded from local usage stats
- *  to prevent the Insights Card from inflating its own counters. */
-const EXCLUDED_FROM_STATS = new Set<AnalyticsAction>(['review_nudge_shown', 'review_nudge_clicked', 'review_nudge_dismissed']);
+/** Actions that are tracked to Supabase but excluded from local usage stats.
+ *  - review_nudge_* events: prevent the Insights Card from inflating its own counters
+ *  - detect_theme: fires on every popup open, would trivially reach the milestone */
+const EXCLUDED_FROM_STATS = new Set<AnalyticsAction>(['review_nudge_shown', 'review_nudge_clicked', 'review_nudge_dismissed', 'detect_theme']);
 
 /** Maps every analytics action to a human-readable category for the
  *  "most used" stat in the Insights Card. Exhaustive — TypeScript will
@@ -175,15 +176,17 @@ export interface UsageStats {
   activeDays: number;
 }
 
-const DEFAULT_USAGE_STATS: UsageStats = {
-  totalActions: 0,
-  totalTimeSaved: 0,
-  actionCounts: {},
-  installedAt: '',
-  milestoneReached: false,
-  lastActiveDate: '',
-  activeDays: 0,
-};
+function defaultUsageStats(): UsageStats {
+  return {
+    totalActions: 0,
+    totalTimeSaved: 0,
+    actionCounts: {},
+    installedAt: '',
+    milestoneReached: false,
+    lastActiveDate: '',
+    activeDays: 0,
+  };
+}
 
 /**
  * Resolve the estimated time saved (in seconds) for a given action.
@@ -207,7 +210,7 @@ export function getTimeSaved(action: AnalyticsAction, metadata?: Record<string, 
 async function incrementAction(action: AnalyticsAction, metadata?: Record<string, unknown>): Promise<void> {
   if (EXCLUDED_FROM_STATS.has(action)) return;
 
-  const stats = (await getItem<UsageStats>('usage_stats')) ?? { ...DEFAULT_USAGE_STATS };
+  const stats = (await getItem<UsageStats>('usage_stats')) ?? defaultUsageStats();
 
   if (!stats.installedAt) {
     stats.installedAt = new Date().toISOString();
@@ -235,7 +238,7 @@ async function incrementAction(action: AnalyticsAction, metadata?: Record<string
  * @returns The stored UsageStats, or defaults if no data exists yet
  */
 export async function getUsageStats(): Promise<UsageStats> {
-  return (await getItem<UsageStats>('usage_stats')) ?? { ...DEFAULT_USAGE_STATS };
+  return (await getItem<UsageStats>('usage_stats')) ?? defaultUsageStats();
 }
 
 /**
@@ -253,6 +256,17 @@ export async function dismissReview(): Promise<void> {
  */
 export async function isReviewDismissed(): Promise<boolean> {
   return (await getItem<boolean>('review_dismissed')) ?? false;
+}
+
+/**
+ * Mark the review nudge as shown so the analytics event only fires once.
+ * @returns true if this is the first time (event should be tracked)
+ */
+export async function markNudgeShown(): Promise<boolean> {
+  const alreadyShown = (await getItem<boolean>('review_nudge_shown_once')) ?? false;
+  if (alreadyShown) return false;
+  await setItem('review_nudge_shown_once', true);
+  return true;
 }
 
 /**
