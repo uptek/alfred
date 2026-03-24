@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { trackAction } from '@/utils/analytics';
+import InsightsCard from './InsightsCard';
 import type { InfoItemProps, StoreInfo } from './types';
 
 function withUtm(url: string, content: string): string {
@@ -99,7 +100,6 @@ async function copyThemePreviewUrl(storeInfo: StoreInfo, disablePreviewBar: bool
 export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
   const [copying, setCopying] = useState(false);
   const [disablePreviewBar, setDisablePreviewBar] = useState(false);
-
   useEffect(() => {
     trackAction('detect_theme', {
       is_shopify: storeInfo.isShopify,
@@ -165,7 +165,12 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
                   by{' '}
                   {storeInfo.themeStoreEntry.developer.url ? (
                     <a
-                      href={withUtm(storeInfo.themeStoreEntry.developer.url, 'developer')}
+                      href={withUtm(
+                        storeInfo.themeStoreEntry.developer.url.startsWith('/')
+                          ? `https://themes.shopify.com${storeInfo.themeStoreEntry.developer.url}`
+                          : storeInfo.themeStoreEntry.developer.url,
+                        'developer'
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-slate-500 underline decoration-slate-300 hover:decoration-slate-500">
@@ -199,7 +204,7 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
       {storeInfo.themeStoreEntry && (
         <InfoItem label="Latest version available:" value={storeInfo.themeStoreEntry.version || 'N/A'} />
       )}
-      <div className="py-3.5 border-t border-slate-100">
+      <div className="py-3.5">
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-semibold text-slate-500">Preview URL:</label>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -234,6 +239,8 @@ export default function Theme({ storeInfo }: { storeInfo: StoreInfo }) {
           </button>
         </div>
       </div>
+
+      <InsightsCard />
     </div>
   );
 }

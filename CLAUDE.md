@@ -2,8 +2,7 @@
 
 ## Important Commands
 
-**NEVER run `bun run dev` or `bun run build` directly. Always ask the user to
-run these commands for you.**
+**NEVER run `bun run dev` directly. Always ask the user to run these commands for you.**
 
 ## WXT Framework
 
@@ -26,6 +25,16 @@ This project uses WXT - a modern framework for building browser extensions.
 
 When bumping the version or updating the changelog, use the `/version-bump`
 skill. It handles CalVer format, file updates, and changelog entries.
+
+## Analytics Events
+
+When adding or removing values from the `AnalyticsAction` type in
+`utils/analytics.ts`, also update the `VALID_ACTIONS` array in
+`supabase/functions/track/index.ts` to match. Then deploy:
+
+```bash
+supabase functions deploy track --project-ref obrjirdnqoiailhbsnmu
+```
 
 ## Pruning Theme Data
 

@@ -1,7 +1,20 @@
 [
   {
+    "version": "2026.03.24",
+    "date": "2026-03-24",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Added a review CTA in the Theme Detector popup. If Alfred's been saving you time, leave a quick rating — it helps other Shopify developers find it.",
+          "Fixed developer links in the theme popup opening to the wrong URL."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.03.23",
-    "date": "2026-03-16",
+    "date": "2026-03-23",
     "changes": [
       {
         "type": "paragraph",

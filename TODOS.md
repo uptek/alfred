@@ -351,4 +351,18 @@ Issues identified by 4-pass adversarial review during ship. None are blocking bu
 - **USD-only currency formatting** — prices hardcoded as `$` + `toFixed(2)`, ignores `cart.currency`
 - **Quantity input capped at 99** — silent clamp on existing items with qty > 99
 
+## Insights
+
+### Insights Tab (upgrade from Insights Card)
+**Priority:** P3
+
+Promote the Insights Card to a full third popup tab with richer analytics: category breakdown, usage streaks, top stores worked on, trends over time.
+
+**Depends on:** Insights Card shipping + evidence of user engagement via review_nudge_shown/clicked/dismissed analytics.
+
+**Context:**
+- Design doc Approach C describes the full vision
+- The InsightsCard component and UsageStats data model are the foundation
+- Would require adding the tab to App.tsx's tab array
+
 ## Completed
