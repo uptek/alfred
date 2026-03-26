@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.03.27
+@ 2026-03-27
+Open in Customizer now preserves the ?view= parameter from the current URL, so alternate template views carry over into the theme editor.
+
+
 ## 2026.03.24
 @ 2026-03-24
 - Added a review CTA in the Theme Detector popup. If Alfred's been saving you time, leave a quick rating — it helps other Shopify developers find it.
