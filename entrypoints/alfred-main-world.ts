@@ -198,7 +198,11 @@ export default defineUnlistedScript(() => {
 
         const themeId = win.Shopify?.theme?.id;
         const shopName = win.Alfred.getShopName();
-        const previewPath = encodeURIComponent(window.location.pathname);
+        const currentUrl = new URL(window.location.href);
+        const viewParam = currentUrl.searchParams.get('view');
+        const previewPath = encodeURIComponent(
+          viewParam ? `${window.location.pathname}?view=${viewParam}` : window.location.pathname
+        );
         const customizerUrl = `https://admin.shopify.com/store/${shopName}/themes/${themeId}/editor?previewPath=${previewPath}`;
 
         (win.Alfred.Toast as { success: (msg: string) => void }).success('Opening customizer...');
