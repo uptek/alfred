@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.04.05.1
+@ 2026-04-05
+The Shopify Dev Dashboard now runs in light mode automatically, matching the Shopify Partners design language.
+
+
 ## 2026.04.05
 @ 2026-04-05
 - Drag-to-resize sidebars and preview in the Theme Customizer, rebuilt for Shopify's latest editor.

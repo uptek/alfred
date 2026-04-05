@@ -1,5 +1,15 @@
 [
   {
+    "version": "2026.04.05.1",
+    "date": "2026-04-05",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "The Shopify Dev Dashboard now runs in light mode automatically, matching the Shopify Partners design language."
+      }
+    ]
+  },
+  {
     "version": "2026.04.05",
     "date": "2026-04-05",
     "changes": [
