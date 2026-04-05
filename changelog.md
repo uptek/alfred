@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.04.05
+@ 2026-04-05
+- Drag-to-resize sidebars and preview in the Theme Customizer, rebuilt for Shopify's latest editor.
+- Live dimensions badge in the top bar shows the preview size in real time as you resize.
+
 ## 2026.03.27
 @ 2026-03-27
 Open in Customizer now preserves the ?view= parameter from the current URL, so alternate template views carry over into the theme editor.
