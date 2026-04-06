@@ -265,16 +265,17 @@
         <s-table-header-row>
           <s-table-header>
             {#if presets.length > 0}
-              <s-checkbox
+              <input
+                type="checkbox"
                 checked={presets.length > 0 && checkedPresets.size === presets.length}
-                onchange={(e: Event) => {
-                  if ((e.currentTarget as HTMLInputElement).checked) {
+                onchange={(e) => {
+                  if ((e.target as HTMLInputElement).checked) {
                     checkedPresets = new Set(presets.map((p) => p.id));
                   } else {
                     checkedPresets = new Set();
                   }
                 }}
-              ></s-checkbox>
+              />
             {/if}
           </s-table-header>
           <s-table-header listSlot="primary">Name</s-table-header>
@@ -297,18 +298,19 @@
             {#each presets as preset (preset.id)}
               <s-table-row>
                 <s-table-cell>
-                  <s-checkbox
+                  <input
+                    type="checkbox"
                     checked={checkedPresets.has(preset.id)}
-                    onchange={(e: Event) => {
+                    onchange={(e) => {
                       const newChecked = new Set(checkedPresets);
-                      if ((e.currentTarget as HTMLInputElement).checked) {
+                      if ((e.target as HTMLInputElement).checked) {
                         newChecked.add(preset.id);
                       } else {
                         newChecked.delete(preset.id);
                       }
                       checkedPresets = newChecked;
                     }}
-                  ></s-checkbox>
+                  />
                 </s-table-cell>
                 <s-table-cell>{preset.name}</s-table-cell>
                 <s-table-cell>
