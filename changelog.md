@@ -2,7 +2,7 @@
 
 ## 2026.04.05.1
 @ 2026-04-05
-The Shopify Dev Dashboard now runs in light mode automatically, matching the Shopify Partners design language.
+The Shopify Dev Dashboard now runs in light mode automatically, with a theme toggle in the header to switch between Light, Dark, and System. Your preference is remembered across sessions.
 
 
 ## 2026.04.05

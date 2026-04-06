@@ -5,7 +5,11 @@
     "changes": [
       {
         "type": "paragraph",
-        "content": "The Shopify Dev Dashboard now runs in light mode automatically, matching the Shopify Partners design language."
+        "content": "The Shopify Dev Dashboard now runs in light mode automatically, with a theme toggle in the header to switch between Light, Dark, and System. Your preference is remembered across sessions."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-dev-dashboard-light-mode.mp4"
       }
     ]
   },
