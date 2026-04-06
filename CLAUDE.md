@@ -19,6 +19,15 @@ This project uses WXT - a modern framework for building browser extensions.
 - WXT provides auto-imports for common utilities (defineContentScript, browser,
   etc.)
 - TypeScript is fully supported with proper types
+- **UI framework: Svelte 5** with Runes API ($state, $props, $effect, $derived)
+- All UI components use `.svelte` files — no JSX/TSX
+- Uses `@wxt-dev/module-svelte` for WXT integration
+- Content scripts use `mount()`/`unmount()` from Svelte with `createIntegratedUi`
+  or `createShadowRootUi` from WXT
+- Options page settings use a module-level Svelte store
+  (`entrypoints/options/stores/settings.svelte.ts`)
+- Options page uses Shopify Polaris web components (custom elements, not Svelte
+  components) with polyfill helpers in `utils/polaris.polyfill.ts`
 - Use Tailwind classes from Shopify's design system when styling elements
 
 ## Version Bumping & Changelog

@@ -6,8 +6,6 @@
     "perf": "warn"
   },
   "rules": {
-    // Preact doesn't need React import
-    "react/react-in-jsx-scope": "off",
     // Browser extension callbacks often shadow outer vars (e.g. event handlers, observers)
     "no-shadow": "off",
     // Content scripts define helpers inside setup functions intentionally

@@ -5,6 +5,8 @@
 The Shopify Dev Dashboard now runs in light mode automatically, with a theme toggle in the header to switch between Light, Dark, and System. Your preference is remembered across sessions.
 
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-dev-dashboard-light-mode.mp4"></video>
+
 ## 2026.04.05
 @ 2026-04-05
 - Drag-to-resize sidebars and preview in the Theme Customizer, rebuilt for Shopify's latest editor.

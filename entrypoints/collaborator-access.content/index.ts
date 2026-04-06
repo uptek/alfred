@@ -1,8 +1,8 @@
 import { createIntegratedUi } from '#imports';
-import { render } from 'preact';
+import { mount, unmount } from 'svelte';
 import { getItem } from '~/utils/storage';
 import { waitForElement } from '@/utils/helpers';
-import App from './App.tsx';
+import App from './App.svelte';
 
 export default defineContentScript({
   matches: ['*://partners.shopify.com/*/stores/new*'],
@@ -25,6 +25,8 @@ export default defineContentScript({
       keepInDom: true
     });
 
+    let app: Record<string, unknown> | undefined;
+
     const ui = createIntegratedUi(ctx, {
       position: 'inline',
       anchor: 'body',
@@ -40,14 +42,17 @@ export default defineContentScript({
 
         target.insertAdjacentElement('afterend', container);
 
-        render(<App />, container);
+        app = mount(App, { target: container });
         return { container };
       },
       onRemove: (elements) => {
         void (async () => {
+          if (app) {
+            unmount(app);
+            app = undefined;
+          }
           const resolvedElements = await elements;
           if (resolvedElements?.container) {
-            render(null, resolvedElements.container);
             resolvedElements.container.remove();
           }
         })();

@@ -4,9 +4,7 @@
   "compilerOptions": {
     "composite": true,
     "allowImportingTsExtensions": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact",
-    "types": ["preact", "@shopify/app-bridge-ui-types"],
+    "types": ["@shopify/app-bridge-ui-types"],
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

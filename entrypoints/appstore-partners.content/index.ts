@@ -1,8 +1,8 @@
 import { createIntegratedUi } from '#imports';
-import { render } from 'preact';
+import { mount, unmount } from 'svelte';
 import { getItem } from '~/utils/storage';
 import { waitForElement } from '@/utils/helpers';
-import App from './App.tsx';
+import App from './App.svelte';
 
 export default defineContentScript({
   matches: ['*://apps.shopify.com/partners/*'],
@@ -14,6 +14,9 @@ export default defineContentScript({
     if (!isEnhancedPartnerPagesEnabled) {
       return; // Exit early if enhanced partner pages are disabled
     }
+
+    let app: Record<string, unknown> | undefined;
+
     const ui = createIntegratedUi(ctx, {
       position: 'inline',
       anchor: 'body',
@@ -31,14 +34,17 @@ export default defineContentScript({
           target.parentNode?.appendChild(container);
         }
 
-        render(<App />, container);
+        app = mount(App, { target: container });
         return { container };
       },
       onRemove: (elements) => {
         void (async () => {
+          if (app) {
+            unmount(app);
+            app = undefined;
+          }
           const resolved = await elements;
           if (resolved?.container) {
-            render(null, resolved.container);
             resolved.container.remove();
           }
         })();

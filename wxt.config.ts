@@ -1,15 +1,13 @@
 import { defineConfig } from 'wxt';
-import preact from '@preact/preset-vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
-  modules: ['@wxt-dev/auto-icons'],
+  modules: ['@wxt-dev/auto-icons', '@wxt-dev/module-svelte'],
   manifest: {
     name: 'Alfred - Shopify Theme Detector',
     description: 'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
-    version: '2026.04.06',
+    version: '2026.04.06.1',
     action: {
       default_title: 'Alfred',
     },
@@ -39,7 +37,7 @@ export default defineConfig({
     ],
   },
   vite: () => ({
-    plugins: [preact(), svelte(), tailwindcss()],
+    plugins: [tailwindcss()],
   }),
   webExt: {
     chromiumArgs: [
@@ -51,7 +49,7 @@ export default defineConfig({
       'https://junaid-workspace.myshopify.com/cart',
       // 'https://partners.shopify.com/1750954/stores/new?store_type=managed_store',
       // 'https://admin.shopify.com/store/junaid-workspace/themes',
-      // 'https://partners.shopify.com/1750954/stores/new?store_domain=zeeshan-h-bhatti.myshopify.com&store_type=managed_store'
+      'https://partners.shopify.com/4060360/stores/new?store_type=managed_store',
     ],
   },
 });

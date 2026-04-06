@@ -1,9 +1,9 @@
-import { render } from 'preact';
-import App from './App';
+import { mount } from 'svelte';
+import App from './App.svelte';
 
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.getElementById('app');
   if (root) {
-    render(<App />, root);
+    mount(App, { target: root });
   }
 });

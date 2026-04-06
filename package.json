@@ -1,6 +1,6 @@
 {
   "name": "alfred",
-  "version": "2026.04.06",
+  "version": "2026.04.06.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -22,22 +22,21 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.2.0",
-    "preact": "^10.28.4",
-    "tailwindcss": "^4.2.0"
+    "@tailwindcss/vite": "^4.2.2",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.10.3",
     "@shopify/app-bridge-ui-types": "^0.3.3",
-    "@sveltejs/vite-plugin-svelte": "^6.2.4",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@wxt-dev/auto-icons": "^1.1.1",
+    "@wxt-dev/module-svelte": "^2.0.5",
     "chokidar-cli": "^3.0.0",
-    "oxfmt": "^0.34.0",
-    "oxlint": "^1.49.0",
-    "svelte": "^5.53.6",
-    "typescript": "^5.9.3",
-    "wrangler": "^4.68.1",
-    "wxt": "^0.20.18"
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
+    "svelte": "^5.55.1",
+    "typescript": "^6.0.2",
+    "wrangler": "^4.80.0",
+    "wxt": "^0.20.20"
   },
   "packageManager": "bun@1.2.14"
 }
