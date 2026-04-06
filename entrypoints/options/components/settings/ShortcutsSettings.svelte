@@ -1,6 +1,5 @@
 <script lang="ts">
   import { getSettingsStore } from '../../stores/settings.svelte';
-  import { setCheckboxValue, onCheckboxChange } from '~/utils/polaris.polyfill';
 
   const store = getSettingsStore();
 
@@ -37,27 +36,9 @@
     }
   ];
 
-  const allShortcutItems = shortcutCategories.flatMap((c) => c.items);
-
-  $effect(() => {
-    if (store.isLoading) return;
-    const shortcuts = store.settings.shortcuts ?? {};
-    allShortcutItems.forEach(({ key }) => {
-      setCheckboxValue(`shortcut-${key}`, shortcuts[key as keyof typeof shortcuts] !== false);
-    });
-  });
-
-  $effect(() => {
-    if (store.isLoading) return;
-    const cleanupFunctions: (() => void)[] = [];
-    allShortcutItems.forEach(({ key }) => {
-      const cleanup = onCheckboxChange(`shortcut-${key}`, async (checked) => {
-        await store.updateSettings({ shortcuts: { ...store.settings.shortcuts, [key]: checked } });
-      });
-      if (cleanup) cleanupFunctions.push(cleanup);
-    });
-    return () => cleanupFunctions.forEach((fn) => fn());
-  });
+  function handleChange(key: string, e: Event) {
+    store.updateSettings({ shortcuts: { ...store.settings.shortcuts, [key]: (e.currentTarget as HTMLInputElement).checked } });
+  }
 </script>
 
 <s-section heading="Shortcuts (right-click menu)">
@@ -70,7 +51,13 @@
         <s-text><b>{category.label}</b></s-text>
         <s-stack gap="small">
           {#each category.items as { key, label, details }}
-            <s-checkbox name="shortcut-{key}" {label} {details}></s-checkbox>
+            <s-checkbox
+              name="shortcut-{key}"
+              {label}
+              {details}
+              checked={store.settings.shortcuts?.[key as keyof typeof store.settings.shortcuts] !== false}
+              onchange={(e: Event) => handleChange(key, e)}
+            ></s-checkbox>
           {/each}
         </s-stack>
       </s-stack>
