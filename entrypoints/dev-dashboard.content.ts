@@ -9,7 +9,7 @@ export default defineContentScript({
 
   async main() {
     const saved = await getItem<ThemeMode>(STORAGE_KEY);
-    const mode = saved ?? 'light';
+    const mode = saved ?? 'system';
 
     applyTheme(mode);
 
@@ -19,7 +19,7 @@ export default defineContentScript({
       if (injecting || document.getElementById('alfred-theme-toggle')) return;
       injecting = true;
       try {
-        const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'light';
+        const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'system';
         applyTheme(current);
         injectToggle(current);
       } finally {
@@ -45,7 +45,7 @@ export default defineContentScript({
 
     // Listen for system color scheme changes once (not per-injection)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
-      const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'light';
+      const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'system';
       if (current === 'system') {
         applyTheme('system');
       }
