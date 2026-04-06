@@ -14,11 +14,17 @@ export default defineContentScript({
     applyTheme(mode);
 
     // Inject toggle and re-inject when SPA navigation rebuilds the header
+    let injecting = false;
     const tryInject = async () => {
-      if (document.getElementById('alfred-theme-toggle')) return;
-      const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'light';
-      applyTheme(current);
-      injectToggle(current);
+      if (injecting || document.getElementById('alfred-theme-toggle')) return;
+      injecting = true;
+      try {
+        const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'light';
+        applyTheme(current);
+        injectToggle(current);
+      } finally {
+        injecting = false;
+      }
     };
 
     if (document.readyState === 'loading') {
