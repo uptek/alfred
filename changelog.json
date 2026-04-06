@@ -1,5 +1,23 @@
 [
   {
+    "version": "2026.04.06.1",
+    "date": "2026-04-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Alfred now runs on a single UI framework (Svelte 5), replacing the previous Preact + Svelte split. Faster load times, smaller extension size, and a smoother experience across all features."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Migrated popup, options page, and all content scripts to Svelte 5.",
+          "Upgraded all dependencies to their latest versions.",
+          "Reduced framework overhead by shipping one runtime instead of two."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.04.06",
     "date": "2026-04-06",
     "changes": [

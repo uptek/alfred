@@ -1,11 +1,19 @@
 # Changelog
 
+## 2026.04.06.1
+@ 2026-04-06
+Alfred now runs on a single UI framework (Svelte 5), replacing the previous Preact + Svelte split. Faster load times, smaller extension size, and a smoother experience across all features.
+
+- Migrated popup, options page, and all content scripts to Svelte 5.
+- Upgraded all dependencies to their latest versions.
+- Reduced framework overhead by shipping one runtime instead of two.
+
 ## 2026.04.06
 @ 2026-04-06
 The Shopify Dev Dashboard now runs in light mode automatically, with a theme toggle in the header to switch between Light, Dark, and System. Your preference is remembered across sessions.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-dev-dashboard-light-mode.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-dev-dashboard-light-mode.mp4"></video>
 
 ## 2026.04.05
 @ 2026-04-05
