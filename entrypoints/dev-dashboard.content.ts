@@ -36,6 +36,14 @@ export default defineContentScript({
       debounceTimer = setTimeout(tryInject, 200);
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Listen for system color scheme changes once (not per-injection)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
+      const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'light';
+      if (current === 'system') {
+        applyTheme('system');
+      }
+    });
   },
 });
 
@@ -209,13 +217,6 @@ function injectToggle(currentMode: ThemeMode) {
     });
 
     container.appendChild(wrap);
-  });
-
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (active === 'system') {
-      applyTheme('system');
-      requestAnimationFrame(updateActive);
-    }
   });
 
   headerLastDiv.prepend(container);
