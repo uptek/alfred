@@ -13,7 +13,13 @@ const blockedEvents = ['contextmenu', 'copy', 'cut', 'paste', 'selectstart', 'dr
  * Early Shopify detection using HTML elements (available before JS globals).
  * This is more reliable than checking window.Shopify which loads later.
  */
-const isShopifyEarly = (): boolean => {
+const isShopifyStorefront = (): boolean => {
+  const isAdminUrl =
+    window.location.hostname === 'admin.shopify.com' ||
+    window.location.pathname.startsWith('/admin/');
+
+  if (isAdminUrl) return false;
+
   return (
     !!document.querySelector('link[href*="cdn.shopify.com"]') ||
     !!document.querySelector('meta[name="shopify-checkout-api-token"]')
@@ -26,7 +32,7 @@ const isShopifyEarly = (): boolean => {
  */
 export const initRestoreRightClick = (): void => {
   // Only run on Shopify sites to avoid conflicts with apps like Google Docs
-  if (!isShopifyEarly()) {
+  if (!isShopifyStorefront()) {
     return;
   }
 

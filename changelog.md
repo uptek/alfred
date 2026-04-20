@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.04.18
+@ 2026-04-18
+Fixed an issue where copy, cut, and paste stopped working in Shopify admin pages like the custom pixel code editor. The restore-right-click feature was incorrectly activating on admin pages.
+
+
 ## 2026.04.06.1
 @ 2026-04-06
 Alfred now runs on a single UI framework (Svelte 5), replacing the previous Preact + Svelte split. Faster load times, smaller extension size, and a smoother experience across all features.
