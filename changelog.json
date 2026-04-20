@@ -1,0 +1,706 @@
+[
+  {
+    "version": "2026.04.18",
+    "date": "2026-04-18",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Fixed an issue where copy, cut, and paste stopped working in Shopify admin pages like the custom pixel code editor. The restore-right-click feature was incorrectly activating on admin pages."
+      }
+    ]
+  },
+  {
+    "version": "2026.04.06.1",
+    "date": "2026-04-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Alfred now runs on a single UI framework (Svelte 5), replacing the previous Preact + Svelte split. Faster load times, smaller extension size, and a smoother experience across all features."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Migrated popup, options page, and all content scripts to Svelte 5.",
+          "Upgraded all dependencies to their latest versions.",
+          "Reduced framework overhead by shipping one runtime instead of two."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2026.04.06",
+    "date": "2026-04-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "The Shopify Dev Dashboard now runs in light mode automatically, with a theme toggle in the header to switch between Light, Dark, and System. Your preference is remembered across sessions."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-dev-dashboard-light-mode.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2026.04.05",
+    "date": "2026-04-05",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Drag-to-resize sidebars and preview in the Theme Customizer, rebuilt for Shopify's latest editor.",
+          "Live dimensions badge in the top bar shows the preview size in real time as you resize."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2026.03.27",
+    "date": "2026-03-27",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Open in Customizer now preserves the ?view= parameter from the current URL, so alternate template views carry over into the theme editor."
+      }
+    ]
+  },
+  {
+    "version": "2026.03.24",
+    "date": "2026-03-24",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Added a review CTA in the Theme Detector popup. If Alfred's been saving you time, leave a quick rating — it helps other Shopify developers find it.",
+          "Fixed developer links in the theme popup opening to the wrong URL."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2026.03.23",
+    "date": "2026-03-23",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Introducing Cartograph — a unified cart editor that lets you do everything that the Cart AJAX API offers and then some. Add items, switch variants, manage selling plans, apply discount codes, calculate shipping rates, and more — all without touching the API."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Open via right-click > Alfred > Cartograph, or add ?alfred=cart to any store URL.",
+          "JSON tab for viewing and copying the full cart payload.",
+          "Light and dark theme with system preference detection."
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-cartograph.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2026.03.15.1",
+    "date": "2026-03-15",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Introducing preset hotlinks — generate a shareable URL for any preset that auto-applies the preset's permissions. Use it as a bookmark, a shared link, or a platform integration."
+      },
+      {
+        "type": "paragraph",
+        "content": "Mantle integration — preset hotlinks work as Mantle custom actions. Now you can request collaborator access right from your Mantle dashboard with the right permissions auto-applied for you."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-preset-hotlinks.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2026.03.15",
+    "date": "2026-03-15",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Shopify Admin > Themes: Simplified the theme list utilities — replaced the info fields and action buttons with compact copy buttons for Theme ID and Preview URL."
+      }
+    ]
+  },
+  {
+    "version": "2026.02.26",
+    "date": "2026-02-26",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Theme data is now fetched from Alfred's CDN instead of being bundled with the extension, so theme information stays up to date automatically."
+      }
+    ]
+  },
+  {
+    "version": "2026.02.25",
+    "date": "2026-02-25",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Theme Detector now shows richer theme details — developer, price, latest version, and direct links to the Shopify Theme Store."
+      }
+    ]
+  },
+  {
+    "version": "2026.02.23",
+    "date": "2026-02-23",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Shopify Admin > Themes: Added Preview and Edit Code buttons to each theme.",
+          "Shopify Admin > Themes: Added Theme ID and Preview URL fields with one-click copy."
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/admin-themes-utils.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2026.02.20",
+    "date": "2026-02-20",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Exit Theme Preview Shortcut: Added a new right-click shortcut to exit a Shopify theme preview and switch back to the live/published theme.",
+          "Reorganized right-click menu shortcuts into categorized groups with visual separators for easier discovery."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2026.02.13",
+    "date": "2026-02-13",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Storefront Password Redirect: Shopify redirects you to the home page after entering a store password, even if you were trying to visit a specific page. Alfred now remembers your intended destination and redirects you there after a successful password entry."
+      }
+    ]
+  },
+  {
+    "version": "2026.02.03",
+    "date": "2026-02-03",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Fixed an issue where React hydration errors occurred on Next.js sites."
+      }
+    ]
+  },
+  {
+    "version": "2026.01.29",
+    "date": "2026-01-29",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "The right-click restore was conflicting with web apps that have their own custom context menus (like Google Docs). The restore feature is now limited to Shopify storefronts only."
+      }
+    ]
+  },
+  {
+    "version": "2026.01.28",
+    "date": "2026-01-28",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Open Image in Admin Shortcut: Added a new right-click shortcut for images. Right-click any image on a Shopify storefront to quickly search for it in the store's Admin Files.",
+          "New: Restore Right-Click. Alfred now automatically re-enables right-click context menus and text selection on websites that block them. This can be toggled off in Settings > General."
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/open-image-in-admin.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2026.01.08",
+    "date": "2026-01-08",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Added a warning dialog before closing the theme code editor page. This helps prevent accidental tab closures when using Cmd+W/Ctrl+W (a common VS Code habit)."
+      }
+    ]
+  },
+  {
+    "version": "2026.01.06",
+    "date": "2026-01-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Added more theme details to the Theme Detector."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Added Theme ID display with click-to-copy functionality.",
+          "Added Theme name (internal) when it differs from the store theme name, also click-to-copy."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2025.10.06",
+    "date": "2025-10-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Introducing Storefront Password Auto-fill! Save and automatically fill passwords for password-protected Shopify storefronts. Passwords are stored locally in your browser and can be managed from the extension popup or settings page."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/storefront-password-autofill.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2025.10.05",
+    "date": "2025-10-05",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Improved Collaborator Access Presets UI/UX"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Removed the dropdown presets selector. It was redundant, use the Apply button in the table instead.",
+          "Apply button in the table is more prominent now.",
+          "Added icons to the buttons for better visual feedback.",
+          "Long permission labels are now truncated for better table readability.",
+          "Removed the message display from the table."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2025.09.30",
+    "date": "2025-09-30",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "You can now copy the theme preview URL from the Theme Detector popup, with an option to disable the preview bar."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/theme-preview-url-gui.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2025.09.15",
+    "date": "2025-09-15",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Fix: Improved theme detection for stores with strict security protocols."]
+      }
+    ]
+  },
+  {
+    "version": "2025.09.14",
+    "date": "2025-09-14",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Introducing the Shopify Theme Detector! Instantly find out what Shopify theme a brand is using."
+      },
+      {
+        "type": "paragraph",
+        "content": "Navigate to a Shopify store and click the Alfred icon to see the theme information."
+      },
+      {
+        "type": "list",
+        "content": [
+          "View store URL, theme name, and version.",
+          "Works automatically on any Shopify store, no external API required."
+        ]
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "list",
+        "content": ["Fix: Background service worker becoming inactive interrupting shortcuts."]
+      }
+    ]
+  },
+  {
+    "version": "2025.09.06",
+    "date": "2025-09-06",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Added a public Feedback & Requests board, allowing users to submit feature requests and provide feedback. Be part of the journey!"
+      }
+    ]
+  },
+  {
+    "version": "2025.09.03",
+    "date": "2025-09-03",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Toast notifications: Fixed toast notifications positioning when the Shopify preview bar is present",
+          "Admin sidebar: Fixed the sidebar when a sub navigation item is active",
+          "Admin sidebar: Added active item dot indicator for better visual feedback",
+          "Admin sidebar: Added macOS-like magnifying animation to on hover"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2025.09.02",
+    "date": "2025-09-02",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Added collapsible sidebar toggle to Shopify Admin. Hide the navigation sidebar to maximize your workspace, giving you more room to focus on managing your store."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-admin-sidebar.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2025.08.24",
+    "date": "2025-08-24",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Added toast notifications for better user feedback. Success and error messages now display as visual toast notifications, providing improved UX."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-notifications.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2025.08.21",
+    "date": "2025-08-21",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Major settings update! You now have granular control over Alfred's features through the new options page."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Shortcuts: Choose which shortcuts appear in the right-click context menu",
+          "Collaborator Access Presets: Enable/disable the collaborator access presets feature",
+          "Enhanced Partner Pages: Toggle the enriched table view for app store partner pages",
+          "App Store Search Indexing: Enable/disable position numbers in app store search results",
+          "Customizer Resizers: Toggle individual resize handles for panels in the theme customizer"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2025.08.12",
+    "date": "2025-08-12",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["[BTS] Options page migrated to Preact for improved performance and maintainability"]
+      }
+    ]
+  },
+  {
+    "version": "2025.08.10",
+    "date": "2025-08-10",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Fix changelog page on extension update"]
+      }
+    ]
+  },
+  {
+    "version": "2025.08.09.1",
+    "date": "2025-08-09",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "This release introduces a new setting to manage the theme inspector in the Shopify theme editor. You can configure Alfred to:"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Disable the theme inspector completely",
+          "Remember and restore its previous state automatically",
+          "Keep the default behavior (Alfred will not interfere with the theme inspector)"
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/theme-inspector.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2025.08.09",
+    "date": "2025-08-09",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "This release introduces a new options page, which will serve as the central hub for all extension settings and preferences. Future releases will populate this page with more configuration options."
+      },
+      {
+        "type": "list",
+        "content": [
+          "New Options Page: A foundational page for future settings and preferences.",
+          "New Changelog Page: Stay up-to-date with a detailed history of changes and new features."
+        ]
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "list",
+        "content": ["[BTS] Integrated a new build process to automatically generate and update the changelog."]
+      }
+    ]
+  },
+  {
+    "version": "2025.07.28",
+    "date": "2025-07-28",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Add resizable panels in the theme editor for the primary sidebar, secondary sidebar, and main preview area. This allows for a more flexible and customizable workspace."
+      },
+      {
+        "type": "list",
+        "content": ["Resizable primary sidebar", "Resizable secondary sidebar", "Resizable main preview area"]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/resize-theme-editor.mp4"
+      }
+    ]
+  },
+  {
+    "version": "2025.07.22",
+    "date": "2025-07-22",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add indexer for Shopify app search results"]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-appstore-indexing.mp4"
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "list",
+        "content": ["[BTS] Switch to CalVer for versioning from SemVer 1.2.5"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.4",
+    "date": "2025-07-05",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Open Section shortcut: Add support for main sections by appending page type to the name"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.3",
+    "date": "2025-07-02",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Use `.shopify-section` to identify section wrapper for Open Section shortcut"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.2",
+    "date": "2025-07-01",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add apply button to presets table actions column"]
+      }
+    ]
+  },
+  {
+    "version": "1.2.1",
+    "date": "2025-06-27",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add shortcut to open sections in code editor"]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-open-section-in-code-editor.mp4"
+      }
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "date": "2025-06-23",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add import/export for permissions presets", "Add bulk delete for permissions presets"]
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "list",
+        "content": ["[BTS] Fix analytics disabling in development"]
+      }
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "2025-06-21",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add custom message support in permission presets"]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-permissions-presets-custom-message.mp4"
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "list",
+        "content": ["[BTS] Add analytics tracking system for user actions and time savings"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.8",
+    "date": "2025-06-19",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Rename extension to Alfred", "Add collaborator permission presets"]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/collaborator-access-presets.mp4"
+      }
+    ]
+  },
+  {
+    "version": "1.0.7",
+    "date": "2025-06-15",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["New Shortcut: Clear Cart"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.6",
+    "date": "2025-06-12",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["New Shortcut: Copy Theme Preview URL"]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-copy-theme-preview-url.mp4"
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "list",
+        "content": ["[BTS] Fix: Run main.content at document_start to avoid race condition"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.5",
+    "date": "2025-06-09",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Add context menu to copy cart JSON",
+          "Add fallback for copying to clipboard",
+          "Improve Shopify detection by checking for `window.__st`"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.4",
+    "date": "2025-06-01",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["Add context menu to copy product JSON"]
+      }
+    ]
+  },
+  {
+    "version": "1.0.3",
+    "date": "2025-05-25",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "[BTS] Register context menu items on service worker startup",
+          "[BTS] Refactor storefront data extraction in context menu",
+          "[BTS] Upgrade packages"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.2",
+    "date": "2025-05-17",
+    "changes": [
+      {
+        "type": "list",
+        "content": [
+          "Add context menu to open current page in admin",
+          "Add context menu to open current page in customizer"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.1",
+    "date": "2025-05-09",
+    "changes": [
+      {
+        "type": "list",
+        "content": ["[BTS] Add @wxt-dev/auto-icons", "[BTS] Add Chrome extension icon"]
+      }
+    ]
+  }
+]

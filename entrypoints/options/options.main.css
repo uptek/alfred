@@ -1,0 +1,143 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f6f6f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #202223;
+  line-height: 1.5;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Enhanced header styling */
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.version-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #bbdefb;
+}
+
+.header-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Center only the loading spinner */
+#app.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e1e3e5;
+  border-top: 3px solid #008060;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #6d7175;
+  font-weight: 400;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hide loading state once content is loaded */
+#app:not(.loading) .loading-spinner {
+  display: none;
+}
+
+/* Show Polaris page when loading is complete */
+#app:is(.loading) #content {
+  display: none !important;
+}
+
+.relative {
+  position: relative;
+}
+
+#nav ul {
+  margin: 0;
+  padding: 0 0 4px;
+  list-style: none;
+
+  li {
+    margin-bottom: 4px;
+    margin-inline: 12px;
+
+    a {
+      position: relative;
+      display: flex;
+      margin: 0;
+      padding: 4px;
+      color: inherit;
+      text-decoration: none;
+      border-radius: 8px;
+      cursor: pointer;
+
+      &:hover {
+        background-color: rgba(241, 241, 241, 1);
+      }
+
+      &.active {
+        background-color: rgba(243, 243, 243, 1);
+      }
+
+      span {
+        flex: 1 1;
+        margin-left: 8px;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.section-level-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: rgb(255, 255, 255);
+  border-radius: 0.25rem;
+  box-shadow:
+    0 0.3125rem 0.3125rem -0.15625rem rgba(0, 0, 0, 0.03),
+    0 0.1875rem 0.1875rem -0.09375rem rgba(0, 0, 0, 0.02),
+    0 0.125rem 0.125rem -0.0625rem rgba(0, 0, 0, 0.02),
+    0 0.0625rem 0.0625rem -0.03125rem rgba(0, 0, 0, 0.03),
+    0 0.03125rem 0.03125rem 0 rgba(0, 0, 0, 0.04),
+    0 0 0 0.0625rem rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}

@@ -1,0 +1,42 @@
+{
+  "name": "alfred",
+  "version": "2026.04.18",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run changelog:gen && (bun run watch:changelog & wxt)",
+    "dev:firefox": "wxt -b firefox",
+    "build": "rm -rf .output && bun run changelog:gen && wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "rm -rf .output && wxt zip && open .output",
+    "zip:firefox": "wxt zip -b firefox",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "changelog:gen": "bun scripts/generate-changelog.ts",
+    "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
+    "submit": "bash scripts/submit.sh",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.3",
+    "tailwindcss": "^4.2.3"
+  },
+  "devDependencies": {
+    "@shopify/app-bridge-ui-types": "^0.3.3",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@wxt-dev/auto-icons": "^1.1.1",
+    "@wxt-dev/module-svelte": "^2.0.5",
+    "chokidar-cli": "^3.0.0",
+    "oxfmt": "^0.46.0",
+    "oxlint": "^1.61.0",
+    "svelte": "^5.55.4",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.84.0",
+    "wxt": "^0.20.25"
+  },
+  "packageManager": "bun@1.2.14"
+}

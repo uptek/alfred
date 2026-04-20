@@ -1,0 +1,17 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "exclude": ["supabase/*", "public/*"],
+  "compilerOptions": {
+    "composite": true,
+    "allowImportingTsExtensions": true,
+    "types": ["@shopify/app-bridge-ui-types"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true
+  }
+}
