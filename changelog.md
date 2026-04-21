@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.04.21
+@ 2026-04-21
+Alfred is now open source. This is the first public release.
+
+
 ## 2026.04.18
 @ 2026-04-18
 Fixed an issue where copy, cut, and paste stopped working in Shopify admin pages like the custom pixel code editor. The restore-right-click feature was incorrectly activating on admin pages.

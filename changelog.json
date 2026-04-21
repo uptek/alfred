@@ -1,5 +1,15 @@
 [
   {
+    "version": "2026.04.21",
+    "date": "2026-04-21",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Alfred is now open source. This is the first public release."
+      }
+    ]
+  },
+  {
     "version": "2026.04.18",
     "date": "2026-04-18",
     "changes": [
