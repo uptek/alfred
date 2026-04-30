@@ -4,10 +4,15 @@
     deletePreset, exportPresets, importPresets, normalizePresetHandle
   } from './utils';
   import { Toast } from '@/utils/toast';
-  import type { Permission, PermissionPreset } from './types';
+  import type { PageAdapter, PermissionPreset } from './types';
 
   const AUTO_APPLY_PRESET_PARAM = 'alfred_preset';
   const HOTLINK_MODAL_ID = 'alfred-hotlink-modal';
+
+  interface Props {
+    adapter: PageAdapter;
+  }
+  let { adapter }: Props = $props();
 
   let presets = $state.raw<PermissionPreset[]>([]);
   let selectedPreset = $state.raw<PermissionPreset | null>(null);
@@ -65,27 +70,18 @@
       return;
     }
 
-    const checkedCheckboxes = document.querySelectorAll(
-      '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]:checked'
-    );
-    checkedCheckboxes.forEach((checkbox) => { (checkbox as HTMLInputElement).click(); });
+    adapter.uncheckAll();
 
     setTimeout(() => {
       (preset.permissions ?? []).forEach((permission, index) => {
         setTimeout(() => {
-          const checkbox = document.getElementById(permission.id) as HTMLInputElement;
-          if (checkbox && !checkbox.checked) checkbox.click();
+          adapter.checkPermission(permission.id);
         }, index * 50);
       });
     }, 100);
 
     if (preset.customMessage !== '') {
-      const messageTextarea = document.querySelector('#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea');
-      if (messageTextarea) {
-        (messageTextarea as HTMLTextAreaElement).value = preset.customMessage ?? '';
-        messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-        messageTextarea.dispatchEvent(new Event('change', { bubbles: true }));
-      }
+      adapter.setMessage(preset.customMessage ?? '');
     }
 
     window.setTimeout(() => {
@@ -134,7 +130,7 @@
   }
 
   function handleOpenHotlinkModal(preset: PermissionPreset) {
-    hotlinkUrl = buildHotlinkUrl(preset.handle);
+    hotlinkUrl = buildHotlinkUrl(preset.handle, adapter.type);
     hotlinkHandle = preset.handle;
   }
 
@@ -174,10 +170,8 @@
   }
 
   async function handleSavePreset() {
-    const checkedCheckboxes = document.querySelectorAll(
-      '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]:checked'
-    );
-    if (checkedCheckboxes.length === 0) {
+    const permissions = adapter.getCheckedPermissions();
+    if (permissions.length === 0) {
       alert('Please select at least one permission to save as a preset.');
       return;
     }
@@ -185,16 +179,7 @@
     const presetName = prompt('Enter a name for this preset:');
     if (!presetName?.trim()) return;
 
-    const permissions: Permission[] = [];
-    checkedCheckboxes.forEach((checkbox) => {
-      const label = checkbox.closest('label')?.querySelector('p')?.textContent ?? '';
-      permissions.push({ id: checkbox.id, label: label.trim() });
-    });
-
-    const messageTextarea = document.querySelector<HTMLTextAreaElement>(
-      '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea'
-    );
-    const customMessage = messageTextarea?.value ?? '';
+    const customMessage = adapter.getMessage();
 
     const newPreset: PermissionPreset = {
       id: generatePresetId(), name: presetName.trim(), handle: presetName.trim(),
