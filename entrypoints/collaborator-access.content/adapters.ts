@@ -2,8 +2,7 @@ import type { PageAdapter, Permission } from './types';
 
 /** Creates a PageAdapter for the Shopify Partner Dashboard (partners.shopify.com). */
 export function createPartnerAdapter(): PageAdapter {
-  const PERM_SELECTOR =
-    '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]';
+  const PERM_SELECTOR = '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]';
   const MSG_SELECTOR = '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea';
 
   return {
@@ -12,22 +11,18 @@ export function createPartnerAdapter(): PageAdapter {
     /** @returns All currently checked permissions with their Polaris checkbox ID and label text. */
     getCheckedPermissions(): Permission[] {
       const permissions: Permission[] = [];
-      document
-        .querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`)
-        .forEach((checkbox) => {
-          const label = checkbox.closest('label')?.querySelector('p')?.textContent ?? '';
-          permissions.push({ id: checkbox.id, label: label.trim() });
-        });
+      document.querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`).forEach((checkbox) => {
+        const label = checkbox.closest('label')?.querySelector('p')?.textContent ?? '';
+        permissions.push({ id: checkbox.id, label: label.trim() });
+      });
       return permissions;
     },
 
     /** Unchecks all currently checked permission checkboxes. Checks `.checked` before clicking to avoid re-toggling cascaded children. */
     uncheckAll() {
-      document
-        .querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`)
-        .forEach((checkbox) => {
-          if (checkbox.checked) checkbox.click();
-        });
+      document.querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`).forEach((checkbox) => {
+        if (checkbox.checked) checkbox.click();
+      });
     },
 
     /**
@@ -73,23 +68,18 @@ export function createDevDashboardAdapter(): PageAdapter {
     /** @returns All currently checked permissions with their form `value` attribute and label text. */
     getCheckedPermissions(): Permission[] {
       const permissions: Permission[] = [];
-      document
-        .querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`)
-        .forEach((checkbox) => {
-          const label =
-            checkbox.closest('label')?.querySelector('span.text-body-sm')?.textContent ?? '';
-          permissions.push({ id: checkbox.value, label: label.trim() });
-        });
+      document.querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`).forEach((checkbox) => {
+        const label = checkbox.closest('label')?.querySelector('span.text-body-sm')?.textContent ?? '';
+        permissions.push({ id: checkbox.value, label: label.trim() });
+      });
       return permissions;
     },
 
     /** Unchecks all currently checked permission checkboxes. Checks `.checked` before clicking to avoid re-toggling cascaded children. */
     uncheckAll() {
-      document
-        .querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`)
-        .forEach((checkbox) => {
-          if (checkbox.checked) checkbox.click();
-        });
+      document.querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`).forEach((checkbox) => {
+        if (checkbox.checked) checkbox.click();
+      });
     },
 
     /**
@@ -97,9 +87,7 @@ export function createDevDashboardAdapter(): PageAdapter {
      * @param id - The checkbox `value` attribute (e.g. `orders_orders`, `home_dashboard`).
      */
     checkPermission(id: string) {
-      const checkbox = document.querySelector<HTMLInputElement>(
-        `${PERM_SELECTOR}[value="${CSS.escape(id)}"]`
-      );
+      const checkbox = document.querySelector<HTMLInputElement>(`${PERM_SELECTOR}[value="${CSS.escape(id)}"]`);
       if (checkbox && !checkbox.checked) checkbox.click();
     },
 
