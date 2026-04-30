@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026.04.30
+@ 2026-04-30
+Collaborator access presets now work on the new Shopify Dev Dashboard (dev.shopify.com) in addition to the Partner Dashboard.
+
+- Save, apply, import, and export permission presets on the Dev Dashboard's collaborator access page.
+- Native dark-themed UI that matches the Dev Dashboard's design language.
+- Request collaborator access directly from Mantle or any custom dashboard with Preset Hotlinks
+![undefined](https://bucket.alfred.uptek.com/alfred-dev-dashboard-collaborator-access-presets.png)
+
 ## 2026.04.21
 @ 2026-04-21
 Alfred is now open source. This is the first public release.

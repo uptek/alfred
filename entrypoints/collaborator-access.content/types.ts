@@ -16,3 +16,15 @@ export interface PermissionPreset {
 export interface PresetStorageData {
   presets: PermissionPreset[];
 }
+
+export type DashboardType = 'partner' | 'dev';
+
+export interface PageAdapter {
+  type: DashboardType;
+  getCheckedPermissions(): Permission[];
+  uncheckAll(): void;
+  checkPermission(id: string): void;
+  getMessage(): string;
+  setMessage(text: string): void;
+  expandCheckedSections(): void;
+}

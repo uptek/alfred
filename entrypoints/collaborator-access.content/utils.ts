@@ -1,5 +1,5 @@
 import { getItem, setItem } from '@/utils/storage';
-import type { PermissionPreset } from './types';
+import type { DashboardType, PermissionPreset } from './types';
 
 const STORAGE_KEY = 'alfred:permission-presets';
 const HOTLINK_PRESET_PARAM = 'alfred_preset';
@@ -19,10 +19,16 @@ export function generatePresetId(): string {
  * @param handle - The preset handle to include in the hotlink
  * @returns A collaborator request URL with the preset param appended
  */
-export function buildHotlinkUrl(handle: string): string {
+export function buildHotlinkUrl(handle: string, dashboardType: DashboardType = 'partner'): string {
   const url = new URL(window.location.href);
-  const partnerId = url.pathname.split('/').find(Boolean);
 
+  if (dashboardType === 'dev') {
+    const segments = url.pathname.split('/').filter(Boolean);
+    const partnerId = segments[1];
+    return `${url.host}/dashboard/${partnerId}/stores/collaborations/new?${HOTLINK_PRESET_PARAM}=${handle}&store_url={{ customer.shopifyDomain }}`;
+  }
+
+  const partnerId = url.pathname.split('/').find(Boolean);
   return `${url.host}/${partnerId}/stores/new?store_domain={{ customer.shopifyDomain }}&store_type=managed_store&${HOTLINK_PRESET_PARAM}=${handle}`;
 }
 
