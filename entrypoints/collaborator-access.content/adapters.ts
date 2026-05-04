@@ -72,6 +72,23 @@ export function setupPermissionSearch(): PermissionSearchController | null {
   const allLabels = permissionsCard.querySelectorAll<HTMLLabelElement>(`label:has(${PERM_SELECTOR})`);
   const totalCount = allLabels.length;
 
+  const transitionStyle = document.createElement('style');
+  transitionStyle.textContent = `
+    .alfred-perm-filter { transition: opacity 150ms ease, max-height 150ms ease; overflow: hidden; }
+    .alfred-perm-filter-hidden { opacity: 0; max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; margin: 0 !important; pointer-events: none; }
+    .alfred-section-filter { transition: opacity 150ms ease, max-height 200ms ease, padding 150ms ease, margin 150ms ease, border-width 150ms ease; overflow: hidden; }
+    .alfred-section-filter-hidden { opacity: 0; max-height: 0 !important; padding: 0 !important; margin: 0 !important; border-width: 0 !important; overflow: hidden; pointer-events: none; }
+  `;
+  document.head.appendChild(transitionStyle);
+
+  allLabels.forEach((label) => label.classList.add('alfred-perm-filter'));
+
+  const sectionContainers = permissionsCard.querySelectorAll<HTMLElement>('[data-permissions-tree-target="header"]');
+  sectionContainers.forEach((header) => {
+    const container = header.closest('.bg-background-surface-default') as HTMLElement | null;
+    if (container) container.classList.add('alfred-section-filter');
+  });
+
   const wrapper = document.createElement('div');
   wrapper.className = 'w-full max-w-[768px] mb-3';
   wrapper.style.cssText = 'position:relative;';
@@ -140,11 +157,13 @@ export function setupPermissionSearch(): PermissionSearchController | null {
       '[data-permissions-tree-target="header"]'
     );
 
-    const sectionMatches = new Map<string, boolean>();
+    const words = q.split(/\s+/).filter(Boolean);
+
+    const sectionTexts = new Map<string, string>();
     sectionHeaders.forEach((header) => {
       const sectionId = header.getAttribute('data-section-id') ?? '';
       const headerText = header.querySelector('span.text-heading-xs')?.textContent?.toLowerCase() ?? '';
-      sectionMatches.set(sectionId, headerText.includes(q));
+      sectionTexts.set(sectionId, headerText);
     });
 
     let visibleCount = 0;
@@ -157,43 +176,51 @@ export function setupPermissionSearch(): PermissionSearchController | null {
 
       const sectionId = checkbox.getAttribute('data-section-id') ?? '';
       const labelText = label.querySelector('span.text-body-sm')?.textContent?.toLowerCase() ?? '';
-      const sectionIsMatch = sectionMatches.get(sectionId) ?? false;
-      const labelIsMatch = labelText.includes(q);
+      const sectionText = sectionTexts.get(sectionId) ?? '';
+      const combined = sectionText + ' ' + labelText;
+      const allWordsMatch = words.every((word) => combined.includes(word));
 
-      if (sectionIsMatch || labelIsMatch) {
-        label.style.display = '';
+      if (allWordsMatch) {
+        label.classList.remove('alfred-perm-filter-hidden');
         visibleCount++;
         sectionVisibleCounts.set(sectionId, (sectionVisibleCounts.get(sectionId) ?? 0) + 1);
       } else {
-        label.style.display = 'none';
+        label.classList.add('alfred-perm-filter-hidden');
       }
     });
 
-    // Hide subheadings (strong.text-heading-xs inside panels) in sections with no matches
+    // Hide subheadings whose following permission labels are all hidden.
+    // Walk forward from each subheading div until the next subheading or end of container.
     permissionsCard!
-      .querySelectorAll<HTMLElement>('[data-permissions-tree-target="panel"] div > strong.text-heading-xs')
-      .forEach((heading) => {
-        const panel = heading.closest('[data-permissions-tree-target="panel"]');
-        const sectionId = panel?.getAttribute('data-section-id') ?? '';
-        const sectionIsMatch = sectionMatches.get(sectionId) ?? false;
-        const sectionHasVisiblePerms = (sectionVisibleCounts.get(sectionId) ?? 0) > 0;
-        const parentDiv = heading.closest('div.py-2');
-        if (parentDiv) {
-          (parentDiv as HTMLElement).style.display = sectionIsMatch || sectionHasVisiblePerms ? '' : 'none';
+      .querySelectorAll<HTMLElement>('[data-permissions-tree-target="panel"] div.py-2:has(> strong.text-heading-xs)')
+      .forEach((headingDiv) => {
+        let hasVisibleSibling = false;
+        let sibling = headingDiv.nextElementSibling as HTMLElement | null;
+        while (sibling) {
+          if (sibling.matches('div.py-2:has(> strong.text-heading-xs)')) break;
+          if (sibling.tagName === 'LABEL' && !sibling.classList.contains('alfred-perm-filter-hidden')) {
+            hasVisibleSibling = true;
+            break;
+          }
+          sibling = sibling.nextElementSibling as HTMLElement | null;
+        }
+        if (hasVisibleSibling) {
+          headingDiv.classList.remove('alfred-perm-filter-hidden');
+        } else {
+          headingDiv.classList.add('alfred-perm-filter-hidden');
         }
       });
 
     sectionHeaders.forEach((header) => {
       const sectionId = header.getAttribute('data-section-id') ?? '';
-      const sectionIsMatch = sectionMatches.get(sectionId) ?? false;
       const sectionHasVisiblePerms = (sectionVisibleCounts.get(sectionId) ?? 0) > 0;
       const sectionContainer = header.closest('.bg-background-surface-default') as HTMLElement | null;
 
-      if (sectionIsMatch || sectionHasVisiblePerms) {
-        if (sectionContainer) sectionContainer.style.display = '';
+      if (sectionHasVisiblePerms) {
+        if (sectionContainer) sectionContainer.classList.remove('alfred-section-filter-hidden');
         expandSection(sectionId);
       } else {
-        if (sectionContainer) sectionContainer.style.display = 'none';
+        if (sectionContainer) sectionContainer.classList.add('alfred-section-filter-hidden');
       }
     });
 
@@ -208,7 +235,7 @@ export function setupPermissionSearch(): PermissionSearchController | null {
     countLabel.style.display = 'none';
 
     allLabels.forEach((label) => {
-      label.style.display = '';
+      label.classList.remove('alfred-perm-filter-hidden');
     });
 
     // Restore subheadings
@@ -216,13 +243,13 @@ export function setupPermissionSearch(): PermissionSearchController | null {
       .querySelectorAll<HTMLElement>('[data-permissions-tree-target="panel"] div > strong.text-heading-xs')
       .forEach((heading) => {
         const parentDiv = heading.closest('div.py-2');
-        if (parentDiv) (parentDiv as HTMLElement).style.display = '';
+        if (parentDiv) (parentDiv as HTMLElement).classList.remove('alfred-perm-filter-hidden');
       });
 
     // Restore hidden sections
     permissionsCard!.querySelectorAll<HTMLElement>('[data-permissions-tree-target="header"]').forEach((header) => {
       const sectionContainer = header.closest('.bg-background-surface-default') as HTMLElement | null;
-      if (sectionContainer) sectionContainer.style.display = '';
+      if (sectionContainer) sectionContainer.classList.remove('alfred-section-filter-hidden');
     });
 
     collapseAutoExpanded();
@@ -250,6 +277,11 @@ export function setupPermissionSearch(): PermissionSearchController | null {
       clearTimeout(debounceTimer);
       clearFilter();
       wrapper.remove();
+      transitionStyle.remove();
+      allLabels.forEach((label) => label.classList.remove('alfred-perm-filter'));
+      permissionsCard!.querySelectorAll<HTMLElement>('.alfred-section-filter').forEach((el) => {
+        el.classList.remove('alfred-section-filter');
+      });
     }
   };
 }
