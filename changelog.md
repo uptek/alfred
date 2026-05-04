@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.05.05
+@ 2026-05-05
+Search and filter permissions on the Dev Dashboard's collaborator access page. Find the exact permission you need without expanding every section.
+
+- Real-time permission search with multi-word matching (e.g. "order delete" finds Delete under Orders).
+- Expand all / Collapse all buttons for the permission tree.
+- Fixed a bug where permission preset features wouldn't load after navigating within the Dev Dashboard without a full page reload.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-permissions-search.mp4"></video>
+
 ## 2026.04.30
 @ 2026-04-30
 Collaborator access presets now work on the new Shopify Dev Dashboard (dev.shopify.com) in addition to the Partner Dashboard.

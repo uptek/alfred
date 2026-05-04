@@ -1,5 +1,27 @@
 [
   {
+    "version": "2026.05.05",
+    "date": "2026-05-05",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Search and filter permissions on the Dev Dashboard's collaborator access page. Find the exact permission you need without expanding every section."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Real-time permission search with multi-word matching (e.g. \"order delete\" finds Delete under Orders).",
+          "Expand all / Collapse all buttons for the permission tree.",
+          "Fixed a bug where permission preset features wouldn't load after navigating within the Dev Dashboard without a full page reload."
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-permissions-search.mp4"
+      }
+    ]
+  },
+  {
     "version": "2026.04.30",
     "date": "2026-04-30",
     "changes": [

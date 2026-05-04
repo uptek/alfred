@@ -44,6 +44,9 @@ export type AnalyticsAction =
   | 'cartograph_update_attributes'
   | 'cartograph_remove_discount'
   | 'cartograph_inspect_json'
+  | 'permission_search'
+  | 'expand_all_permissions'
+  | 'collapse_all_permissions'
   | 'review_nudge_shown'
   | 'review_nudge_clicked'
   | 'review_nudge_dismissed';
@@ -96,6 +99,9 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   cartograph_update_attributes: 60,
   cartograph_remove_discount: 15,
   cartograph_inspect_json: 45,
+  permission_search: 20,
+  expand_all_permissions: 10,
+  collapse_all_permissions: 10,
   review_nudge_shown: 0,
   review_nudge_clicked: 0,
   review_nudge_dismissed: 0
@@ -156,6 +162,9 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   resize_theme_customizer: 'Customizer',
   save_preset: 'Presets',
   apply_preset: 'Presets',
+  permission_search: 'Presets',
+  expand_all_permissions: 'Presets',
+  collapse_all_permissions: 'Presets',
   appstore_partner_table_view: 'App Store',
   appstore_partner_table_sort: 'App Store',
   appstore_partner_table_export: 'App Store',
