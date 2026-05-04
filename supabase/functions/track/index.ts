@@ -44,6 +44,9 @@ const VALID_ACTIONS = [
   'cartograph_update_attributes',
   'cartograph_remove_discount',
   'cartograph_inspect_json',
+  'permission_search',
+  'expand_all_permissions',
+  'collapse_all_permissions',
   'review_nudge_shown',
   'review_nudge_clicked',
   'review_nudge_dismissed'

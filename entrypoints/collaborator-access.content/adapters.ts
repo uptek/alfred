@@ -115,6 +115,56 @@ export function setupPermissionSearch(): PermissionSearchController | null {
   wrapper.appendChild(countLabel);
   permissionsCard.insertAdjacentElement('beforebegin', wrapper);
 
+  const selectAllBtn = permissionsCard
+    .closest('[data-controller="permissions-tree"]')
+    ?.querySelector<HTMLButtonElement>('[data-permissions-tree-target="selectAllButton"]');
+  if (selectAllBtn) {
+    const linkBtnStyle = 'border:none;background:none;padding:0;';
+
+    const expandAllBtn = document.createElement('button');
+    expandAllBtn.type = 'button';
+    expandAllBtn.textContent = 'Expand all';
+    expandAllBtn.className = 'text-link text-body-sm cursor-pointer';
+    expandAllBtn.style.cssText = linkBtnStyle;
+
+    const collapseAllBtn = document.createElement('button');
+    collapseAllBtn.type = 'button';
+    collapseAllBtn.textContent = 'Collapse all';
+    collapseAllBtn.className = 'text-link text-body-sm cursor-pointer';
+    collapseAllBtn.style.cssText = linkBtnStyle;
+
+    function clickSectionsByState(openState: string) {
+      permissionsCard!.querySelectorAll<HTMLElement>('[data-permissions-tree-target="panel"]').forEach((panel) => {
+        if (panel.getAttribute('data-open') === openState) {
+          const sectionId = panel.getAttribute('data-section-id') ?? '';
+          permissionsCard!
+            .querySelector<HTMLButtonElement>(
+              `[data-permissions-tree-target="header"][data-section-id="${CSS.escape(sectionId)}"]`
+            )
+            ?.click();
+        }
+      });
+    }
+
+    expandAllBtn.addEventListener('click', () => {
+      clickSectionsByState('false');
+      browser.runtime.sendMessage({ type: 'track_action', action: 'expand_all_permissions' });
+    });
+    collapseAllBtn.addEventListener('click', () => {
+      clickSectionsByState('true');
+      browser.runtime.sendMessage({ type: 'track_action', action: 'collapse_all_permissions' });
+    });
+
+    const btnGroup = document.createElement('span');
+    btnGroup.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+    selectAllBtn.parentNode!.insertBefore(btnGroup, selectAllBtn);
+    btnGroup.appendChild(selectAllBtn);
+    btnGroup.appendChild(document.createTextNode(' · '));
+    btnGroup.appendChild(expandAllBtn);
+    btnGroup.appendChild(document.createTextNode(' · '));
+    btnGroup.appendChild(collapseAllBtn);
+  }
+
   function collapseAutoExpanded() {
     autoExpandedSections.forEach((sectionId) => {
       const panel = permissionsCard!.querySelector<HTMLElement>(
@@ -227,6 +277,12 @@ export function setupPermissionSearch(): PermissionSearchController | null {
     clearBtn.style.display = 'block';
     countLabel.style.display = 'block';
     countLabel.textContent = `Showing ${visibleCount} of ${totalCount} permissions`;
+
+    browser.runtime.sendMessage({
+      type: 'track_action',
+      action: 'permission_search',
+      metadata: { query: q, results_count: visibleCount, total_count: totalCount }
+    });
   }
 
   function clearFilter() {
