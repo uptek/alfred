@@ -3,8 +3,9 @@
     buildHotlinkUrl, generatePresetId, getPresets, savePreset,
     deletePreset, exportPresets, importPresets, normalizePresetHandle
   } from './utils';
+  import { setupPermissionSearch } from './adapters';
   import { Toast } from '@/utils/toast';
-  import type { PageAdapter, PermissionPreset } from './types';
+  import type { PageAdapter, PermissionPreset, PermissionSearchController } from './types';
 
   const AUTO_APPLY_PRESET_PARAM = 'alfred_preset';
 
@@ -20,10 +21,17 @@
   let hotlinkHandle = $state('');
   let autoApplyAttempted = $state(false);
   let showHotlinkModal = $state(false);
+  let searchController: PermissionSearchController | null = null;
 
   // Load saved presets from extension storage on mount.
   $effect(() => {
     getPresets().then((p) => { presets = p; });
+  });
+
+  // Inject the permission search filter into the Dev Dashboard's permissions card.
+  $effect(() => {
+    searchController = setupPermissionSearch();
+    return () => { searchController?.destroy(); searchController = null; };
   });
 
   // Auto-apply a preset when the URL contains ?alfred_preset=<handle|name>.
@@ -78,6 +86,7 @@
       return;
     }
 
+    searchController?.clear();
     adapter.uncheckAll();
 
     const permissions = preset.permissions ?? [];

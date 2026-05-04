@@ -28,3 +28,8 @@ export interface PageAdapter {
   setMessage(text: string): void;
   expandCheckedSections(): void;
 }
+
+export interface PermissionSearchController {
+  clear(): void;
+  destroy(): void;
+}
