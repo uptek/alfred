@@ -134,8 +134,8 @@
           Theme Store
         </a>
       {/if}
-      {#if storeInfo.themeStoreEntry}
-        <a class="btn btn--primary" href={withUtm(themeStoreUrl ?? '', 'demo')} target="_blank" rel="noopener noreferrer">
+      {#if themeStoreUrl}
+        <a class="btn btn--primary" href={withUtm(themeStoreUrl, 'demo')} target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           Demo
         </a>
@@ -215,7 +215,7 @@
       </div>
       <div class="preview__footer">
         <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="toggle" onclick={() => (disablePreviewBar = !disablePreviewBar)} role="switch" aria-checked={disablePreviewBar} tabindex="0" onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); disablePreviewBar = !disablePreviewBar; } }}>
+        <div class="toggle" onclick={() => (disablePreviewBar = !disablePreviewBar)} role="switch" aria-checked={disablePreviewBar} aria-label="Hide preview bar" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); disablePreviewBar = !disablePreviewBar; } }}>
           <span class="toggle__text">Hide preview bar</span>
           <div class="toggle__track" class:on={disablePreviewBar}>
             <div class="toggle__knob"></div>
@@ -450,7 +450,7 @@
   .preview { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .preview__url { display: flex; align-items: center; gap: 8px; padding: 10px 14px; }
   .preview__icon { width: 14px; height: 14px; flex-shrink: 0; }
-  .preview__input { flex: 1; border: none; background: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; color: var(--text-secondary); outline: none; min-width: 0; }
+  .preview__input { flex: 1; border: none; background: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; color: var(--text-secondary); outline: none; min-width: 0; cursor: default; }
   .preview__copy { padding: 4px 10px; font-size: 11px; flex-shrink: 0; }
   .preview__footer { display: flex; align-items: center; justify-content: flex-end; padding: 8px 14px; border-top: 1px solid var(--border-subtle); background: var(--bg-raised); }
 

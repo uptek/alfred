@@ -33,7 +33,7 @@
   //   { id: 'sitemaps', label: 'Sitemaps', icon: 'sitemaps' },
   // ];
 
-  const settingsTab: Tab = { id: 'settings', label: 'Settings', icon: 'settings', section: 'bottom', enabled: true };
+  const settingsTab: Tab = { id: 'settings', label: 'Settings', icon: 'settings' };
 
   let activeTab = $state<TabId>('theme');
   let storeInfo = $state<StoreInfo | null>(null);
@@ -153,7 +153,7 @@
         -->
 
         <!-- Bottom -->
-        <div class="sidebar__bottom">
+        <div class="sidebar__bottom" role="tablist" aria-label="Utility tabs">
           {@render sidebarTab(settingsTab)}
           <a href="https://github.com/uptek/alfred/issues" target="_blank" class="sidebar__suggest">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
