@@ -5,6 +5,13 @@
   let { storeInfo }: { storeInfo: StoreInfo } = $props();
 </script>
 
-<div class="flex flex-col">
+<div class="settings-wrapper">
   <StorefrontPassword {storeInfo} />
 </div>
+
+<style>
+  .settings-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+</style>

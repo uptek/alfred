@@ -13,7 +13,7 @@
 </script>
 
 <svg
-  class="w-5 h-5 p-0.5 shrink-0 self-center cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors {copied ? 'text-green-600' : ''} {className}"
+  class="copy-icon {copied ? 'copied' : ''} {className}"
   fill="none"
   stroke="currentColor"
   viewBox="0 0 24 24"
@@ -28,3 +28,26 @@
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
   {/if}
 </svg>
+
+<style>
+  .copy-icon {
+    width: 20px;
+    height: 20px;
+    padding: 2px;
+    flex-shrink: 0;
+    align-self: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 4px;
+    transition: color 0.15s, background-color 0.15s;
+  }
+
+  .copy-icon:hover {
+    color: var(--text);
+    background: var(--bg-inset);
+  }
+
+  .copy-icon.copied {
+    color: var(--success-strong);
+  }
+</style>

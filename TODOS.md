@@ -415,4 +415,68 @@ Promote the Insights Card to a full third popup tab with richer analytics: categ
 - The InsightsCard component and UsageStats data model are the foundation
 - Would require adding the tab to App.tsx's tab array
 
+## Popup
+
+### Theme Tab — Feature Tags
+
+**Priority:** P3
+
+Display the theme's supported features from the Shopify Theme Store as grouped tag clouds in the Theme tab. Categories: Cart & Checkout, Marketing & Conversion, Merchandising, Product Discovery. Helps devs quickly see what the theme supports without visiting the Theme Store.
+
+**Scope:**
+
+- Grouped tag layout below the quick links section
+- Data source: scrape or cache from `themes.shopify.com/themes/{handle}` features section
+- Categories map to Shopify's own grouping (cart_and_checkout, marketing_and_conversion, merchandising, product_discovery)
+- Compact pill/tag rendering — no descriptions, just feature names
+
+**Context:**
+
+- Design mockup exists in `designs/popup-theme-v2.html` (removed to keep initial scope tight)
+- Data is publicly available on every theme's Theme Store page
+- Could cache per-theme in extension storage to avoid repeated fetches
+- Features list rarely changes — cache invalidation on theme version change is sufficient
+
+### Theme Tab — Version History
+
+**Priority:** P3
+
+Show the theme's version changelog from the Shopify Theme Store. Compact timeline with version number, release date, and one-line summary. Highlight the currently installed version so devs can see exactly what they're missing.
+
+**Scope:**
+
+- Compact list below other theme tab sections
+- Each row: version number (monospace), date, truncated summary
+- Currently installed version marked with a green indicator
+- Data source: `themes.shopify.com/themes/{handle}/presets/{preset}/modal_version_details` or scrape from the theme page
+- Link to full changelog on Theme Store
+
+**Context:**
+
+- Design mockup exists in `designs/popup-theme-v2.html` (removed to keep initial scope tight)
+- Version data is publicly available on every theme's Theme Store page
+- Useful alongside the existing "update available" badge in the stats row
+- Could show last 5-6 versions by default with "Show all" expand
+
+### Theme Tab — Performance Widget
+
+**Priority:** P3
+
+Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTFB as compact metric cards with color-coded status (good/needs-work/poor) based on Google's thresholds. Gives theme developers instant signal on whether the current theme is performant without leaving the popup.
+
+**Scope:**
+
+- 2x2 grid of metric cards below the theme details section
+- Measure via PerformanceObserver and Performance API from the content script
+- Color coding: green (good), yellow (needs improvement), red (poor) per Web Vitals thresholds
+- Show benchmark text (e.g. "Good < 2.5s") for context
+- Optional: store historical readings per-store for trend sparklines
+
+**Context:**
+
+- Design mockup exists in `designs/popup-theme-v2.html` (removed from current version to keep scope tight)
+- Overlaps with Store Health Check but this is a lightweight, always-visible summary vs. a full audit
+- PerformanceObserver is available in content scripts — no main-world injection needed for CWV
+- INP replaces FID as of March 2024 — use INP as the responsiveness metric
+
 ## Completed
