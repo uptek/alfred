@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.05.11
+@ 2026-05-11
+Alfred is getting a big upgrade. We're building toward a full-featured dashboard that gives developers and merchants deeper insights into their Shopify store — SEO analysis, app detection, performance metrics, and more. This release is the first step in that direction.
+
+- Redesigned popup with a new sidebar navigation layout, replacing the old pill tabs.
+- Refreshed Theme tab with a new look — theme details, version status, and preview URL are easier to scan at a glance.
+
 ## 2026.05.05
 @ 2026-05-05
 Search and filter permissions on the Dev Dashboard's collaborator access page. Find the exact permission you need without expanding every section.
@@ -8,7 +15,7 @@ Search and filter permissions on the Dev Dashboard's collaborator access page. F
 - Expand all / Collapse all buttons for the permission tree.
 - Fixed a bug where permission preset features wouldn't load after navigating within the Dev Dashboard without a full page reload.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-permissions-search.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-permissions-search.mp4"></video>
 
 ## 2026.04.30
 @ 2026-04-30
