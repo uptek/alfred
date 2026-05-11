@@ -1,0 +1,4301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Alfred Popup — B v2</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          'Inter',
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: #e8e8e8;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .popup {
+        width: 850px;
+        height: 550px;
+        background: #fff;
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.03),
+          0 8px 40px rgba(0, 0, 0, 0.08);
+      }
+
+      .layout {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+      }
+
+      /* ── Sidebar ── */
+      .sidebar {
+        width: 192px;
+        background: #fafafa;
+        border-right: 1px solid #f0f0f0;
+        display: flex;
+        flex-direction: column;
+        padding: 4px 0;
+        flex-shrink: 0;
+      }
+
+      .brand {
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        border-bottom: 1px solid #f0f0f0;
+        flex-shrink: 0;
+      }
+
+      .brand svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .brand span {
+        font-size: 14px;
+        font-weight: 700;
+        color: #111;
+        letter-spacing: -0.01em;
+      }
+
+      .section-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #8a8a8a;
+        padding: 10px 14px 3px;
+      }
+
+      .tab {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        margin: 1px 6px;
+        border-radius: 7px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: #777;
+        cursor: pointer;
+        border: none;
+        background: none;
+        width: calc(100% - 12px);
+        text-align: left;
+        transition: all 0.12s ease;
+      }
+
+      .tab:hover {
+        background: #f0f0f0;
+        color: #444;
+      }
+
+      .tab.active {
+        background: #fff;
+        color: #111;
+        font-weight: 500;
+        text-shadow:
+          0 0 0.5px #111,
+          0 0 0.5px #111;
+        box-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.05),
+          0 0 0 1px rgba(0, 0, 0, 0.03);
+      }
+
+      .tab.disabled {
+        color: #d0d0d0;
+        cursor: default;
+      }
+
+      .tab.disabled:hover {
+        background: none;
+        color: #d0d0d0;
+      }
+
+      .tab svg {
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+        opacity: 0.5;
+        stroke-width: 1.8;
+      }
+
+      .tab.active svg {
+        opacity: 0.9;
+      }
+
+      .tab .badge {
+        margin-left: auto;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 0px 5px;
+        border-radius: 8px;
+        min-width: 16px;
+        text-align: center;
+        line-height: 16px;
+      }
+
+      .badge-red {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+
+      .badge-green {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+
+      .divider {
+        height: 1px;
+        background: #ebebeb;
+        margin: 5px 14px;
+      }
+
+      .sidebar-bottom {
+        margin-top: auto;
+        border-top: 1px solid #f0f0f0;
+        padding-top: 2px;
+      }
+
+      /* ── Content ── */
+      .content {
+        flex: 1;
+        overflow-y: auto;
+        background: #fff;
+      }
+
+      .content::-webkit-scrollbar {
+        width: 3px;
+      }
+
+      .content::-webkit-scrollbar-thumb {
+        background: #e0e0e0;
+        border-radius: 3px;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .tab-content.active > .content-pad > * {
+        animation: fadeUpV2 0.3s ease both;
+      }
+
+      .tab-content.active > .content-pad > *:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .tab-content.active > .content-pad > *:nth-child(2) {
+        animation-delay: 0.04s;
+      }
+      .tab-content.active > .content-pad > *:nth-child(3) {
+        animation-delay: 0.08s;
+      }
+      .tab-content.active > .content-pad > *:nth-child(4) {
+        animation-delay: 0.12s;
+      }
+      .tab-content.active > .content-pad > *:nth-child(5) {
+        animation-delay: 0.16s;
+      }
+      .tab-content.active > .content-pad > *:nth-child(6) {
+        animation-delay: 0.2s;
+      }
+      .tab-content.active > .content-pad > *:nth-child(7) {
+        animation-delay: 0.24s;
+      }
+      .tab-content.active > .content-pad > *:nth-child(8) {
+        animation-delay: 0.28s;
+      }
+      .tab-content.active > .content-pad > *:nth-child(n + 9) {
+        animation-delay: 0.3s;
+      }
+
+      /* ── Content styles ── */
+      .content-pad {
+        padding: 24px 28px 28px;
+      }
+
+      .theme-header {
+        text-align: center;
+        padding: 28px 20px 24px;
+        border-bottom: 1px solid #f5f5f5;
+      }
+
+      .theme-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+        letter-spacing: -0.03em;
+      }
+
+      .theme-header .domain {
+        font-size: 12.5px;
+        font-family: 'SF Mono', ui-monospace, monospace;
+        color: #7c3aed;
+        margin-top: 6px;
+      }
+
+      .theme-header .meta {
+        font-size: 12.5px;
+        color: #aaaaaa;
+        margin-top: 4px;
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f8f8f8;
+        gap: 16px;
+      }
+
+      .row:last-child {
+        border-bottom: none;
+      }
+
+      .row-label {
+        font-size: 13.5px;
+        font-weight: 500;
+        color: #999;
+        flex-shrink: 0;
+      }
+
+      .row-value {
+        font-size: 13.5px;
+        color: #222;
+        font-weight: 500;
+        text-align: right;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        justify-content: flex-end;
+        overflow: hidden;
+      }
+
+      .row-value a {
+        color: #7c3aed;
+        text-decoration: none;
+        font-size: 12.5px;
+        font-family: ui-monospace, monospace;
+      }
+
+      .row-value a:hover {
+        text-decoration: underline;
+      }
+
+      .copy-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #929292;
+        font-size: 13px;
+        padding: 2px;
+        border-radius: 3px;
+        transition: color 0.12s;
+      }
+
+      .copy-btn:hover {
+        color: #888;
+      }
+
+      .section-heading {
+        font-size: 11.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #bbbbbb;
+        padding: 22px 0 10px;
+      }
+
+      .section-heading:first-child {
+        padding-top: 0;
+      }
+
+      /* pills */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+      }
+
+      .pill-red {
+        background: #fef2f2;
+        color: #ef4444;
+      }
+
+      .pill-green {
+        background: #f0fdf4;
+        color: #22c55e;
+      }
+
+      .pill-yellow {
+        background: #fffbeb;
+        color: #eab308;
+      }
+
+      .pill-gray {
+        background: #f5f5f5;
+        color: #888;
+      }
+
+      .pill-purple {
+        background: #faf5ff;
+        color: #9333ea;
+      }
+
+      .missing {
+        color: #ef4444;
+        font-weight: 500;
+      }
+
+      .muted {
+        color: #929292;
+      }
+
+      /* input */
+      .input-group {
+        padding: 12px 0 0;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .input-field {
+        flex: 1;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-family: ui-monospace, monospace;
+        border: 1px solid #ebebeb;
+        border-radius: 8px;
+        background: #fff;
+        color: #555;
+        outline: none;
+      }
+
+      .input-field:focus {
+        border-color: #ddd;
+      }
+
+      .btn {
+        padding: 8px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+        background: #111;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        background: #333;
+      }
+
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #8a8a8a;
+        cursor: pointer;
+      }
+
+      .checkbox-row input {
+        accent-color: #111;
+        width: 13px;
+        height: 13px;
+      }
+
+      /* stars */
+      .stars-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 0 0;
+        margin-top: 16px;
+        border-top: 1px solid #f5f5f5;
+      }
+
+      .stars-row p {
+        font-size: 13px;
+        font-weight: 500;
+        color: #999;
+      }
+
+      .stars {
+        display: flex;
+        gap: 1px;
+      }
+
+      .stars svg {
+        width: 20px;
+        height: 20px;
+        fill: #e0e0e0;
+        cursor: pointer;
+        transition: fill 0.12s;
+      }
+
+      .stars svg:hover,
+      .stars svg.h {
+        fill: #fbbf24;
+      }
+
+      .star-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        line-height: 0;
+        border-radius: 3px;
+      }
+
+      .star-btn:focus-visible {
+        outline: 2px solid #7c3aed;
+        outline-offset: 2px;
+      }
+
+      /* headings */
+      .h-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 0;
+      }
+
+      .h-level {
+        font-size: 11px;
+        font-weight: 700;
+        color: #7c3aed;
+        background: #f5f3ff;
+        padding: 2px 8px;
+        border-radius: 6px;
+        min-width: 30px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .h-text {
+        font-size: 14px;
+        color: #222;
+        font-weight: 500;
+      }
+
+      .h-text.muted {
+        font-style: italic;
+        font-weight: 400;
+      }
+
+      .h-counts {
+        display: flex;
+        gap: 6px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #f8f8f8;
+        margin-bottom: 10px;
+      }
+
+      /* table */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th {
+        text-align: left;
+        font-size: 10.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #8a8a8a;
+        padding: 7px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      td {
+        padding: 10px 0;
+        color: #555;
+        border-bottom: 1px solid #fafafa;
+      }
+
+      td a {
+        color: #7c3aed;
+        text-decoration: none;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+      }
+
+      /* filters */
+      .filters {
+        display: flex;
+        gap: 6px;
+        padding-bottom: 16px;
+      }
+
+      .fpill {
+        font-size: 12.5px;
+        font-weight: 500;
+        padding: 5px 12px;
+        border-radius: 20px;
+        border: 1px solid #ebebeb;
+        background: #fff;
+        color: #888;
+        cursor: pointer;
+      }
+
+      .fpill.active {
+        background: #111;
+        color: #fff;
+        border-color: #111;
+      }
+
+      /* images */
+      .img-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .img-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 1px solid #f5f5f5;
+        border-radius: 10px;
+      }
+
+      .img-thumb {
+        width: 48px;
+        height: 48px;
+        background: #f0f0f0;
+        border-radius: 6px;
+        flex-shrink: 0;
+      }
+
+      .img-alt-label {
+        font-size: 11.5px;
+        color: #8a8a8a;
+      }
+
+      .img-alt {
+        font-size: 13px;
+        color: #444;
+        font-weight: 500;
+      }
+
+      /* schema */
+      .sch-header {
+        font-size: 14px;
+        font-weight: 600;
+        color: #444;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 0;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+      }
+
+      .sch-header svg {
+        width: 12px;
+        height: 12px;
+        color: #929292;
+        transition: transform 0.15s;
+      }
+
+      .sch-header.open svg {
+        transform: rotate(90deg);
+      }
+
+      .sch-body {
+        padding-left: 20px;
+        display: none;
+      }
+
+      .sch-body.open {
+        display: block;
+      }
+
+      .sch-kv {
+        display: flex;
+        gap: 14px;
+        padding: 4px 0;
+        font-size: 13px;
+      }
+
+      .sch-k {
+        color: #8a8a8a;
+        min-width: 74px;
+      }
+
+      .sch-v {
+        color: #444;
+      }
+
+      .sch-v a {
+        color: #7c3aed;
+        text-decoration: none;
+      }
+
+      /* social icons */
+      .social-row {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        padding-top: 4px;
+      }
+
+      .social-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #666;
+        text-decoration: none;
+      }
+
+      .social-link:hover {
+        border-color: #ddd;
+        color: #333;
+      }
+
+      .social-link svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* stats */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: #f5f5f5;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .stat {
+        background: #fff;
+        padding: 18px;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #8a8a8a;
+        font-weight: 500;
+      }
+
+      .stat-val {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+        letter-spacing: -0.02em;
+        margin-top: 2px;
+      }
+
+      /* footer */
+      .footer {
+        padding: 8px 20px;
+        border-top: 1px solid #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11.5px;
+        color: #929292;
+        flex-shrink: 0;
+      }
+
+      .footer strong {
+        color: #888;
+        font-weight: 600;
+      }
+
+      .footer a {
+        color: #7c3aed;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      .footer-l {
+        display: flex;
+        gap: 8px;
+      }
+
+      .footer-r {
+        display: flex;
+        gap: 10px;
+      }
+
+      /* action bar */
+      .action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #f5f5f5;
+        margin-bottom: 12px;
+      }
+
+      .action-btns {
+        display: flex;
+        gap: 6px;
+      }
+
+      .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #777;
+        background: #fff;
+        border: 1px solid #ebebeb;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.12s;
+      }
+
+      .action-btn:hover {
+        border-color: #ddd;
+        color: #444;
+      }
+
+      .action-btn svg {
+        width: 13px;
+        height: 13px;
+        stroke-width: 1.8;
+      }
+
+      /* app cards */
+      .app-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f5f5f5;
+      }
+
+      .app-card:last-child {
+        border-bottom: none;
+      }
+
+      .app-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 7px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .app-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .app-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .app-desc {
+        font-size: 11.5px;
+        color: #999;
+        margin-top: 1px;
+      }
+
+      /* empty state */
+      .empty-state {
+        text-align: center;
+        padding: 32px 20px;
+        color: #bababa;
+        font-size: 13px;
+      }
+
+      .empty-state svg {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 8px;
+        opacity: 0.3;
+      }
+
+      .empty-state p {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #ccc;
+      }
+
+      /* sidebar scroll */
+      .sidebar {
+        overflow-y: auto;
+      }
+
+      .sidebar::-webkit-scrollbar {
+        width: 2px;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb {
+        background: #e0e0e0;
+        border-radius: 2px;
+      }
+
+      /* ── Theme Tab v2 ── */
+      .theme-hero-v2 {
+        padding: 32px 32px 0;
+        position: relative;
+      }
+
+      .theme-hero-v2::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 140px;
+        background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%);
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .theme-identity-v2 {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        padding-bottom: 24px;
+      }
+
+      .theme-meta-v2 {
+        flex: 1;
+        min-width: 0;
+        padding-bottom: 2px;
+      }
+
+      .theme-name-v2 {
+        font-family: 'Instrument Serif', serif;
+        font-size: 28px;
+        font-weight: 400;
+        color: #111;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+      }
+
+      .theme-byline-v2 {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 5px;
+        font-size: 12.5px;
+        color: #929292;
+      }
+
+      .theme-byline-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #929292;
+        opacity: 0.5;
+      }
+
+      .theme-actions-v2 {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+        padding-bottom: 4px;
+      }
+
+      .btn-v2-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #555;
+        background: #fff;
+        border: 1px solid #f0f0f0;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.12s;
+      }
+
+      .btn-v2-ghost:hover {
+        border-color: #ddd;
+        color: #111;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      .btn-v2-ghost svg {
+        width: 13px;
+        height: 13px;
+        stroke-width: 1.7;
+      }
+
+      .btn-v2-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        background: #111;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.12s;
+      }
+
+      .btn-v2-primary:hover {
+        background: #333;
+      }
+
+      .btn-v2-primary svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 2;
+      }
+
+      .theme-stats-v2 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: #f0f0f0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 0 32px;
+        box-shadow:
+          0 0 0 1px #f0f0f0,
+          0 2px 8px rgba(0, 0, 0, 0.03);
+      }
+
+      .stat-cell-v2 {
+        background: #fff;
+        padding: 16px 18px;
+      }
+
+      .stat-label-v2 {
+        font-size: 11px;
+        font-weight: 500;
+        color: #929292;
+        letter-spacing: 0.02em;
+      }
+
+      .stat-value-v2 {
+        font-size: 17px;
+        font-weight: 600;
+        color: #111;
+        margin-top: 3px;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .theme-sections-v2 {
+        padding: 24px 32px 32px;
+      }
+
+      .detail-section-v2 {
+        margin-bottom: 24px;
+      }
+
+      .detail-section-v2:last-child {
+        margin-bottom: 0;
+      }
+
+      .section-title-v2 {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #929292;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .section-title-v2::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #f8f8f8;
+      }
+
+      .preview-block-v2 {
+        border: 1px solid #f0f0f0;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .preview-url-row-v2 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+      }
+
+      .preview-url-input-v2 {
+        flex: 1;
+        font-family: 'SF Mono', ui-monospace, monospace;
+        font-size: 11.5px;
+        color: #555;
+        background: none;
+        border: none;
+        outline: none;
+        padding: 0;
+        min-width: 0;
+      }
+
+      .preview-footer-v2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-top: 1px solid #f8f8f8;
+        background: #fafafa;
+      }
+
+      .toggle-track-v2 {
+        width: 28px;
+        height: 16px;
+        border-radius: 8px;
+        background: #f0f0f0;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+
+      .toggle-track-v2.on {
+        background: #7c3aed;
+      }
+
+      .toggle-knob-v2 {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      }
+
+      .toggle-track-v2.on .toggle-knob-v2 {
+        transform: translateX(12px);
+      }
+
+      .quick-links-v2 {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .quick-link-v2 {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 11px;
+        font-size: 11.5px;
+        font-weight: 500;
+        color: #555;
+        background: #fff;
+        border: 1px solid #f0f0f0;
+        border-radius: 6px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.12s;
+      }
+
+      .quick-link-v2:hover {
+        border-color: #ddd;
+        color: #111;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      .quick-link-v2 svg {
+        width: 12px;
+        height: 12px;
+        opacity: 0.55;
+      }
+
+      .copy-trigger-v2 {
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #929292;
+        transition: all 0.12s;
+      }
+
+      .copy-trigger-v2:hover {
+        background: #f5f5f5;
+        color: #555;
+      }
+
+      .copy-trigger-v2 svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      @keyframes fadeUpV2 {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .theme-hero-v2 {
+        animation: fadeUpV2 0.4s ease both;
+      }
+      .theme-stats-v2 {
+        animation: fadeUpV2 0.4s ease 0.1s both;
+      }
+      .theme-sections-v2 {
+        animation: fadeUpV2 0.4s ease 0.15s both;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="popup">
+      <div class="brand" style="justify-content: space-between">
+        <div style="display: flex; align-items: center; gap: 7px">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#111"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            style="width: 20px; height: 20px">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+          <span style="font-size: 14px; font-weight: 700; color: #111; letter-spacing: -0.01em">Alfred</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span style="font-size: 12px; color: #999">Enjoying Alfred?</span>
+          <div class="stars" role="group" aria-label="Rate Alfred" onmouseleave="cs()" style="display: flex; gap: 1px">
+            <button
+              aria-label="Rate 1 star"
+              class="star-btn"
+              onmouseenter="hs(1)"
+              onfocus="hs(1)"
+              onblur="cs()"
+              onclick="hs(1)">
+              <svg viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px">
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+            <button
+              aria-label="Rate 2 stars"
+              class="star-btn"
+              onmouseenter="hs(2)"
+              onfocus="hs(2)"
+              onblur="cs()"
+              onclick="hs(2)">
+              <svg viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px">
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+            <button
+              aria-label="Rate 3 stars"
+              class="star-btn"
+              onmouseenter="hs(3)"
+              onfocus="hs(3)"
+              onblur="cs()"
+              onclick="hs(3)">
+              <svg viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px">
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+            <button
+              aria-label="Rate 4 stars"
+              class="star-btn"
+              onmouseenter="hs(4)"
+              onfocus="hs(4)"
+              onblur="cs()"
+              onclick="hs(4)">
+              <svg viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px">
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+            <button
+              aria-label="Rate 5 stars"
+              class="star-btn"
+              onmouseenter="hs(5)"
+              onfocus="hs(5)"
+              onblur="cs()"
+              onclick="hs(5)">
+              <svg viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px">
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="layout">
+        <nav class="sidebar" aria-label="Alfred navigation">
+          <div
+            class="section-label"
+            id="shopify-label"
+            style="display: flex; align-items: center; gap: 0; padding-top: 8px; padding-bottom: 6px">
+            <svg width="70" height="20" viewBox="0 0 100 28.6" aria-hidden="true" style="opacity: 0.55">
+              <path
+                d="M11.3,1c0.2,0,0.3,0.1,0.5,0.2C10.6,1.7,9.4,3,8.8,5.8L6.6,6.4C7.3,4.4,8.7,1,11.3,1z M12.4,2c0.2,0.6,0.4,1.3,0.4,2.4c0,0.1,0,0.1,0,0.2L9.9,5.4C10.5,3.3,11.5,2.4,12.4,2z M15,3.8l-1.3,0.4c0-0.1,0-0.2,0-0.3c0-0.9-0.1-1.6-0.3-2.2C14.1,1.9,14.7,2.8,15,3.8z M21.5,5.4c0-0.1-0.1-0.2-0.2-0.2C21.1,5.2,19,5,19,5s-1.5-1.5-1.7-1.6c-0.2-0.2-0.5-0.1-0.6-0.1c0,0-0.3,0.1-0.8,0.3c-0.5-1.4-1.4-2.7-2.9-2.7c0,0-0.1,0-0.1,0c-0.4-0.6-1-0.8-1.5-0.8C7.8,0,6.1,4.5,5.5,6.8C4.7,7,3.9,7.3,3,7.6c-0.8,0.2-0.8,0.3-0.9,1C2,9.1,0,24.9,0,24.9l15.9,3l8.6-1.9C24.5,26,21.5,5.6,21.5,5.4z"
+                fill="#95BF47" />
+              <path
+                d="M21.2,5.2C21.1,5.2,19,5,19,5s-1.5-1.5-1.7-1.6c-0.1-0.1-0.1-0.1-0.2-0.1l-1.2,24.6l8.6-1.9c0,0-3-20.4-3-20.6C21.5,5.3,21.3,5.2,21.2,5.2"
+                fill="#5A863E" />
+              <path
+                d="M13,10l-1.1,3.2c0,0-0.9-0.5-2.1-0.5c-1.7,0-1.8,1-1.8,1.3c0,1.4,3.8,2,3.8,5.4c0,2.7-1.7,4.4-4,4.4c-2.7,0-4.1-1.7-4.1-1.7l0.7-2.4c0,0,1.4,1.2,2.6,1.2c0.8,0,1.1-0.6,1.1-1.1c0-1.9-3.1-2-3.1-5.1c0-2.6,1.9-5.1,5.6-5.1C12.3,9.5,13,10,13,10"
+                fill="#FFF" />
+              <path
+                d="M34.6,15.9c-0.9-0.5-1.3-0.9-1.3-1.4c0-0.7,0.6-1.1,1.6-1.1c1.1,0,2.1,0.5,2.1,0.5l0.8-2.4c0,0-0.7-0.6-2.8-0.6c-3,0-5,1.7-5,4.1c0,1.4,1,2.4,2.2,3.1c1,0.6,1.4,1,1.4,1.6c0,0.6-0.5,1.2-1.5,1.2c-1.4,0-2.8-0.7-2.8-0.7l-0.8,2.4c0,0,1.2,0.8,3.3,0.8c3,0,5.2-1.5,5.2-4.2C37,17.7,35.9,16.6,34.6,15.9 M46.7,10.8c-1.5,0-2.7,0.7-3.6,1.8l0,0l1.3-6.8H41l-3.3,17.3h3.4l1.1-5.9c0.4-2.2,1.6-3.6,2.7-3.6c0.8,0,1.1,0.5,1.1,1.3c0,0.5,0,1-0.1,1.5l-1.3,6.8h3.4l1.3-7c0.1-0.7,0.2-1.6,0.2-2.2C49.5,12,48.5,10.8,46.7,10.8 M55.4,20.7c-1.2,0-1.6-1-1.6-2.2c0-1.9,1-5.1,2.8-5.1c1.2,0,1.6,1,1.6,2C58.2,17.6,57.2,20.7,55.4,20.7z M57.1,10.8c-4.1,0-6.8,3.7-6.8,7.8c0,2.6,1.6,4.7,4.7,4.7c4,0,6.7-3.6,6.7-7.8C61.7,13.1,60.3,10.8,57.1,10.8z M67.1,20.8c-0.9,0-1.4-0.5-1.4-0.5l0.6-3.2c0.4-2.1,1.5-3.5,2.7-3.5c1,0,1.4,1,1.4,1.9C70.3,17.7,69,20.8,67.1,20.8z M70.4,10.8c-2.3,0-3.6,2-3.6,2h0l0.2-1.8h-3c-0.1,1.2-0.4,3.1-0.7,4.5l-2.4,12.4h3.4l0.9-5h0.1c0,0,0.7,0.4,2,0.4c4,0,6.6-4.1,6.6-8.2C73.9,12.9,72.9,10.8,70.4,10.8z M78.7,6c-1.1,0-1.9,0.9-1.9,2c0,1,0.6,1.7,1.6,1.7h0c1.1,0,2-0.7,2-2C80.4,6.7,79.7,6,78.7,6 M74,23.1h3.4l2.3-12h-3.4L74,23.1z M88.3,11.1h-2.4l0.1-0.6c0.2-1.2,0.9-2.2,2-2.2c0.6,0,1.1,0.2,1.1,0.2l0.7-2.7c0,0-0.6-0.3-1.8-0.3c-1.2,0-2.4,0.3-3.3,1.1c-1.2,1-1.7,2.4-2,3.8l-0.1,0.6H81l-0.5,2.6h1.6l-1.8,9.5h3.4l1.8-9.5h2.3L88.3,11.1z M96.4,11.1c0,0-2.1,5.3-3.1,8.2h0c-0.1-0.9-0.8-8.2-0.8-8.2h-3.6l2,11c0,0.2,0,0.4-0.1,0.6c-0.4,0.8-1.1,1.5-1.8,2c-0.6,0.5-1.4,0.8-1.9,1l0.9,2.9c0.7-0.1,2.1-0.7,3.3-1.8c1.5-1.4,3-3.7,4.4-6.7l4.1-8.9L96.4,11.1z"
+                fill="#1A1919" />
+            </svg>
+          </div>
+          <div role="tablist" aria-labelledby="shopify-label">
+            <button
+              class="tab active"
+              role="tab"
+              aria-selected="true"
+              aria-controls="tab-theme"
+              data-tab="theme"
+              onclick="sw('theme')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" /></svg
+              >Theme
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-techstack"
+              data-tab="techstack"
+              onclick="sw('techstack')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8M12 17v4" /></svg
+              >Apps
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-products"
+              data-tab="products"
+              onclick="sw('products')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                <path d="M3 6h18M16 10a4 4 0 01-8 0" /></svg
+              >Products
+            </button>
+          </div>
+
+          <div class="divider" role="separator"></div>
+
+          <div class="section-label" id="seo-label">SEO</div>
+          <div role="tablist" aria-labelledby="seo-label">
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-overview"
+              data-tab="overview"
+              onclick="sw('overview')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" /></svg
+              >Overview<span class="badge badge-red" aria-label="2 issues">2</span>
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-headings"
+              data-tab="headings"
+              onclick="sw('headings')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M4 6h16M4 12h8m-8 6h16" /></svg
+              >Headings
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-links"
+              data-tab="links"
+              onclick="sw('links')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg
+              >Links
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-hreflangs"
+              data-tab="hreflangs"
+              onclick="sw('hreflangs')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10" />
+                <path
+                  d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg
+              >Hreflangs
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-images"
+              data-tab="images"
+              onclick="sw('images')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="M21 15l-5-5L5 21" /></svg
+              >Images<span class="badge badge-red" aria-label="9 missing alt texts">9</span>
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-schema"
+              data-tab="schema"
+              onclick="sw('schema')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <path d="M14 2v6h6" /></svg
+              >Schema
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-social"
+              data-tab="social"
+              onclick="sw('social')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" /></svg
+              >Social
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-robots"
+              data-tab="robots"
+              onclick="sw('robots')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <rect x="3" y="11" width="18" height="10" rx="2" />
+                <circle cx="8.5" cy="16" r="1.5" />
+                <circle cx="15.5" cy="16" r="1.5" />
+                <path d="M12 2v4M8 5l4 4 4-4" /></svg
+              >Robots.txt
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-sitemaps"
+              data-tab="sitemaps"
+              onclick="sw('sitemaps')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+                <circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="7" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="7" cy="18" r="1.5" fill="currentColor" stroke="none" /></svg
+              >Sitemaps
+            </button>
+          </div>
+
+          <div class="sidebar-bottom">
+            <button
+              class="tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-settings"
+              data-tab="settings"
+              onclick="sw('settings')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg
+              >Settings
+            </button>
+            <a
+              href="https://github.com/uptek/alfred/issues"
+              target="_blank"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                padding: 6px 10px;
+                margin: 1px 6px;
+                border-radius: 7px;
+                font-size: 12px;
+                font-weight: 500;
+                color: #999;
+                text-decoration: none;
+                transition: all 0.12s;
+              ">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                style="width: 14px; height: 14px; opacity: 0.4; stroke-width: 1.7">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+              </svg>
+              Suggest a feature
+            </a>
+          </div>
+        </nav>
+
+        <div class="content" role="main">
+          <!-- THEME -->
+          <div class="tab-content active" id="tab-theme" role="tabpanel" aria-label="Theme">
+            <div class="theme-hero-v2">
+              <div class="theme-identity-v2">
+                <div class="theme-meta-v2">
+                  <h1 class="theme-name-v2">Dawn</h1>
+                  <div class="theme-byline-v2">
+                    <span
+                      >by
+                      <a
+                        href="https://themes.shopify.com/designers/shopify"
+                        target="_blank"
+                        style="
+                          color: #555;
+                          text-decoration: underline;
+                          text-decoration-color: #929292;
+                          text-underline-offset: 2px;
+                          transition: text-decoration-color 0.12s;
+                        "
+                        onmouseover="this.style.textDecorationColor = '#555'"
+                        onmouseout="this.style.textDecorationColor = '#929292'"
+                        >Shopify</a
+                      ></span
+                    >
+                    <span class="theme-byline-dot"></span>
+                    <span>Free</span>
+                    <span class="theme-byline-dot"></span>
+                    <span>v15.0.0</span>
+                  </div>
+                </div>
+                <div class="theme-actions-v2">
+                  <a class="btn-v2-ghost" href="https://themes.shopify.com/themes/dawn" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                      <path d="M3 6h18" />
+                    </svg>
+                    Theme Store
+                  </a>
+                  <a class="btn-v2-primary" href="#" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Demo
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="theme-stats-v2">
+              <div class="stat-cell-v2">
+                <div class="stat-label-v2">Theme ID</div>
+                <div class="stat-value-v2">
+                  <code
+                    style="
+                      font-family: 'SF Mono', ui-monospace, monospace;
+                      font-size: 13px;
+                      font-weight: 500;
+                      background: none;
+                      padding: 0;
+                      letter-spacing: 0;
+                    "
+                    >12345678</code
+                  >
+                  <button
+                    class="copy-trigger-v2"
+                    onclick="
+                      this.innerHTML = '&#10003;';
+                      setTimeout(
+                        () =>
+                          (this.innerHTML =
+                            '<svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.7&quot; stroke-linecap=&quot;round&quot;><rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1&quot;/></svg>'),
+                        1200
+                      );
+                    ">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="stat-cell-v2">
+                <div class="stat-label-v2">Version</div>
+                <div class="stat-value-v2">
+                  15.0.0
+                  <span
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 4px;
+                      font-size: 10.5px;
+                      font-weight: 600;
+                      padding: 2px 7px;
+                      border-radius: 20px;
+                      background: #fffbeb;
+                      color: #ca8a04;
+                    ">
+                    <svg
+                      viewBox="0 0 12 12"
+                      width="10"
+                      height="10"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round">
+                      <path d="M6 2v4l2.5 1.5" />
+                      <circle cx="6" cy="6" r="5" />
+                    </svg>
+                    15.4.1
+                  </span>
+                </div>
+              </div>
+              <div class="stat-cell-v2">
+                <div class="stat-label-v2">Status</div>
+                <div class="stat-value-v2">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #22c55e"></span>
+                  Published
+                </div>
+              </div>
+              <div class="stat-cell-v2">
+                <div class="stat-label-v2">Role</div>
+                <div class="stat-value-v2">Main</div>
+              </div>
+            </div>
+
+            <div class="theme-sections-v2">
+              <!-- Internal Name -->
+              <div class="detail-section-v2" style="margin-bottom: 20px">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 16px;
+                    background: #f5f5f5;
+                    border-radius: 10px;
+                    border: 1px dashed #f0f0f0;
+                  ">
+                  <span
+                    style="
+                      font-size: 10.5px;
+                      font-weight: 600;
+                      text-transform: uppercase;
+                      letter-spacing: 0.06em;
+                      color: #929292;
+                      white-space: nowrap;
+                    "
+                    >Internal Name</span
+                  >
+                  <span
+                    style="
+                      font-family: 'SF Mono', ui-monospace, monospace;
+                      font-size: 13px;
+                      font-weight: 500;
+                      color: #111;
+                      letter-spacing: -0.01em;
+                    "
+                    >Dawn-15-0-0</span
+                  >
+                  <button
+                    class="copy-trigger-v2"
+                    style="margin-left: auto"
+                    onclick="
+                      navigator.clipboard.writeText('Dawn-15-0-0');
+                      this.innerHTML = '&#10003;';
+                      setTimeout(
+                        () =>
+                          (this.innerHTML =
+                            '<svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.7&quot; stroke-linecap=&quot;round&quot;><rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1&quot;/></svg>'),
+                        1200
+                      );
+                    ">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Preview URL -->
+              <div class="detail-section-v2">
+                <div class="section-title-v2">Preview URL</div>
+                <div class="preview-block-v2">
+                  <div class="preview-url-row-v2">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#929292"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      style="width: 14px; height: 14px; flex-shrink: 0">
+                      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                    </svg>
+                    <input
+                      class="preview-url-input-v2"
+                      value="https://theme-dawn-demo.myshopify.com/?preview_theme_id=12345678"
+                      readonly />
+                    <button
+                      class="btn-v2-ghost"
+                      style="padding: 4px 10px; font-size: 11px; flex-shrink: 0"
+                      onclick="
+                        navigator.clipboard.writeText(
+                          'https://theme-dawn-demo.myshopify.com/?preview_theme_id=12345678'
+                        );
+                        this.textContent = 'Copied';
+                        setTimeout(() => (this.textContent = 'Copy'), 1200);
+                      ">
+                      Copy
+                    </button>
+                  </div>
+                  <div class="preview-footer-v2">
+                    <div class="toggle-track-v2" onclick="this.classList.toggle('on')">
+                      <div class="toggle-knob-v2"></div>
+                    </div>
+                    <span style="font-size: 11.5px; color: #929292; font-weight: 450">Hide preview bar</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reviews -->
+              <div class="detail-section-v2">
+                <div class="section-title-v2">Reviews</div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px">
+                  <span style="font-size: 26px; font-weight: 700; color: #111; letter-spacing: -0.03em"
+                    >35% positive</span
+                  >
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px">
+                  <span style="font-size: 13px; color: #929292; font-weight: 450">272 reviews</span>
+                  <a href="#" style="font-size: 12px; color: #7c3aed; text-decoration: none; font-weight: 500"
+                    >View all &rarr;</a
+                  >
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px">
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #16a34a">
+                      <path
+                        fill-rule="evenodd"
+                        fill="currentColor"
+                        d="M12.539 14.57a9.25 9.25 0 0 1-4.074-.838l-.307-.141a3.751 3.751 0 0 0-1.158-.32v-5.222a1.5 1.5 0 0 0 .15-.099 6.489 6.489 0 0 0 2.475-3.95 1.41 1.41 0 0 1 1.378 1.557l-.133 1.26a1.75 1.75 0 0 0 1.74 1.933h1.595c.758 0 1.342.67 1.239 1.42l-.338 2.449a2.25 2.25 0 0 1-2.176 1.942l-.391.01Zm-7.039-6.32h-1v5h1v-5Zm2.34 6.845a10.75 10.75 0 0 0 4.735.975l.391-.01a3.75 3.75 0 0 0 3.626-3.236l.337-2.448a2.75 2.75 0 0 0-2.724-3.126h-1.594a.25.25 0 0 1-.249-.276l.133-1.26a2.91 2.91 0 0 0-2.894-3.214h-.364c-.5 0-.928.357-1.017.849l-.055.303a4.989 4.989 0 0 1-1.915 3.098h-2c-.69 0-1.25.56-1.25 1.25v5.5c0 .69.56 1.25 1.25 1.25h2.345c.324 0 .644.07.938.205l.307.14Z" />
+                    </svg>
+                    <div style="flex: 1; height: 7px; border-radius: 4px; background: #f5f5f5; overflow: hidden">
+                      <div style="width: 35%; height: 100%; border-radius: 4px; background: #111"></div>
+                    </div>
+                    <span style="font-size: 13px; font-weight: 500; color: #555; min-width: 32px; text-align: right"
+                      >96</span
+                    >
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #929292">
+                      <path
+                        fill="currentColor"
+                        d="M10 2c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Zm0 14.4c-3.5 0-6.4-2.9-6.4-6.4S6.5 3.6 10 3.6s6.4 2.9 6.4 6.4-2.9 6.4-6.4 6.4ZM7.6 9.2c.4 0 .8-.4.8-.8s-.4-.8-.8-.8-.8.4-.8.8.4.8.8.8Zm4.8-1.6c-.4 0-.8.4-.8.8s.4.8.8.8.8-.4.8-.8-.4-.8-.8-.8Zm0 4H7.6c-.4 0-.8.4-.8.8s.4.8.8.8h4.8c.4 0 .8-.4.8-.8s-.4-.8-.8-.8Z" />
+                    </svg>
+                    <div style="flex: 1; height: 7px; border-radius: 4px; background: #f5f5f5; overflow: hidden">
+                      <div style="width: 24%; height: 100%; border-radius: 4px; background: #111"></div>
+                    </div>
+                    <span style="font-size: 13px; font-weight: 500; color: #555; min-width: 32px; text-align: right"
+                      >66</span
+                    >
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #ef4444">
+                      <path
+                        fill-rule="evenodd"
+                        fill="currentColor"
+                        d="M12.16 4.904a10.75 10.75 0 0 0-4.735-.974l-.391.01a3.75 3.75 0 0 0-3.626 3.236l-.337 2.448a2.75 2.75 0 0 0 2.724 3.126h1.594a.25.25 0 0 1 .249.276l-.133 1.26a2.91 2.91 0 0 0 2.894 3.214h.364c.5 0 .928-.358 1.017-.85l.055-.302a4.989 4.989 0 0 1 1.915-3.098h2c.69 0 1.25-.56 1.25-1.25v-5.5c0-.69-.56-1.25-1.25-1.25h-2.345a2.25 2.25 0 0 1-.938-.205l-.307-.14Zm-4.699.525a9.25 9.25 0 0 1 4.074.839l.307.14a3.75 3.75 0 0 0 1.158.32v5.223c-.052.03-.102.062-.15.098a6.49 6.49 0 0 0-2.475 3.95 1.41 1.41 0 0 1-1.378-1.557l.133-1.26a1.75 1.75 0 0 0-1.74-1.932h-1.595a1.25 1.25 0 0 1-1.238-1.421l.337-2.448a2.25 2.25 0 0 1 2.176-1.942l.391-.01Zm7.039 6.32h1v-5h-1v5Z" />
+                    </svg>
+                    <div style="flex: 1; height: 7px; border-radius: 4px; background: #f5f5f5; overflow: hidden">
+                      <div style="width: 40%; height: 100%; border-radius: 4px; background: #111"></div>
+                    </div>
+                    <span style="font-size: 13px; font-weight: 500; color: #555; min-width: 32px; text-align: right"
+                      >110</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Links -->
+              <div class="detail-section-v2">
+                <div class="section-title-v2">Quick Links</div>
+                <div class="quick-links-v2">
+                  <a
+                    class="quick-link-v2"
+                    href="https://help.shopify.com/en/manual/online-store/themes/themes-by-shopify/dawn"
+                    target="_blank">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <path d="M14 2v6h6" />
+                      <path d="M16 13H8M16 17H8M10 9H8" />
+                    </svg>
+                    Docs
+                  </a>
+                  <a class="quick-link-v2" href="https://support.shopify.com/" target="_blank">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                      <circle cx="12" cy="17" r=".5" fill="currentColor" />
+                    </svg>
+                    Support
+                  </a>
+                  <a class="quick-link-v2" href="https://themes.shopify.com/designers/shopify" target="_blank">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round">
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    More by Shopify
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- OVERVIEW -->
+          <div class="tab-content" id="tab-overview" role="tabpanel" aria-label="Overview">
+            <div class="content-pad">
+              <div class="section-heading">Core Meta</div>
+              <div class="row">
+                <span class="row-label">Title</span
+                ><span class="row-value">theme-dawn-demo <span class="pill pill-red">23/60</span></span>
+              </div>
+              <div class="row">
+                <span class="row-label">Description</span
+                ><span class="row-value"
+                  ><span class="missing">Not specified</span> <span class="pill pill-red">0/160</span></span
+                >
+              </div>
+              <div class="row">
+                <span class="row-label">URL</span
+                ><span class="row-value"
+                  ><a href="#">theme-dawn-demo.myshopify.com/</a> <span class="pill pill-green">Indexable</span></span
+                >
+              </div>
+              <div class="row">
+                <span class="row-label">Canonical</span
+                ><span class="row-value"
+                  ><a href="#">theme-dawn-demo.myshopify.com/</a> <span class="pill pill-green">Self-ref</span></span
+                >
+              </div>
+
+              <div class="section-heading">Technical</div>
+              <div class="row">
+                <span class="row-label">Meta Robots</span><span class="row-value muted">Not specified</span>
+              </div>
+              <div class="row">
+                <span class="row-label">Favicon</span
+                ><span class="row-value"><a href="#">.../dawn-favicon.png</a></span>
+              </div>
+              <div class="row">
+                <span class="row-label">Keywords</span><span class="row-value muted">Not specified</span>
+              </div>
+              <div class="row">
+                <span class="row-label">Publisher</span><span class="row-value muted">Not specified</span>
+              </div>
+              <div class="row"><span class="row-label">Lang</span><span class="row-value">en</span></div>
+              <div class="row"><span class="row-label">Word Count</span><span class="row-value">1,029</span></div>
+
+              <div class="section-heading">Social Media</div>
+              <div class="social-row">
+                <a href="#" class="social-link"
+                  ><svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" /></svg
+                  >Facebook</a
+                >
+                <a href="#" class="social-link"
+                  ><svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5 0-.28-.03-.56-.08-.83A7.72 7.72 0 0023 3z" /></svg
+                  >Twitter</a
+                >
+                <a href="#" class="social-link"
+                  ><svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M16 4H8a4 4 0 00-4 4v8a4 4 0 004 4h8a4 4 0 004-4V8a4 4 0 00-4-4zm-4 11a3 3 0 110-6 3 3 0 010 6zm4.5-7.5a1 1 0 110-2 1 1 0 010 2z" /></svg
+                  >Instagram</a
+                >
+                <a href="#" class="social-link"
+                  ><svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43zM9.75 15.02V8.48l5.75 3.27-5.75 3.27z" /></svg
+                  >YouTube</a
+                >
+                <a href="#" class="social-link"
+                  ><svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.11V9.02a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.75a8.18 8.18 0 004.76 1.52V6.82a4.83 4.83 0 01-1-.13z" /></svg
+                  >TikTok</a
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- HEADINGS -->
+          <div class="tab-content" id="tab-headings" role="tabpanel" aria-label="Headings">
+            <div class="content-pad">
+              <div class="action-bar">
+                <div class="h-counts" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0">
+                  <span class="pill pill-gray">H1: 1</span><span class="pill pill-gray">H2: 10</span
+                  ><span class="pill pill-gray">H3: 22</span><span class="pill pill-gray">H4: 0</span>
+                </div>
+                <div class="action-btns">
+                  <button class="action-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg
+                    >Highlight
+                  </button>
+                  <button class="action-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg
+                    >Export
+                  </button>
+                </div>
+              </div>
+              <div class="h-item"><span class="h-level">H1</span><span class="h-text muted">(empty)</span></div>
+              <div class="h-item" style="padding-left: 20px">
+                <span class="h-level">H2</span><span class="h-text">Country/region</span>
+              </div>
+              <div class="h-item" style="padding-left: 20px">
+                <span class="h-level">H2</span><span class="h-text">Industrial design meets fashion</span>
+              </div>
+              <div class="h-item" style="padding-left: 44px">
+                <span class="h-level">H3</span><span class="h-text">Small Convertible Flex Bag</span>
+              </div>
+              <div class="h-item" style="padding-left: 44px">
+                <span class="h-level">H3</span><span class="h-text">Studio Bag</span>
+              </div>
+              <div class="h-item" style="padding-left: 44px">
+                <span class="h-level">H3</span><span class="h-text">Louise Slide Sandal</span>
+              </div>
+              <div class="h-item" style="padding-left: 44px">
+                <span class="h-level">H3</span><span class="h-text">Mini Naomi Bag</span>
+              </div>
+              <div class="h-item" style="padding-left: 20px">
+                <span class="h-level">H2</span><span class="h-text">Obsessive Attention. Intelligent Effort.</span>
+              </div>
+              <div class="h-item" style="padding-left: 20px">
+                <span class="h-level">H2</span><span class="h-text">Back in stock!</span>
+              </div>
+              <div class="h-item" style="padding-left: 44px">
+                <span class="h-level">H3</span><span class="h-text">Bags</span>
+              </div>
+              <div class="h-item" style="padding-left: 44px">
+                <span class="h-level">H3</span><span class="h-text">Mini Eddy</span>
+              </div>
+              <div class="h-item" style="padding-left: 20px">
+                <span class="h-level">H2</span><span class="h-text">Quick links</span>
+              </div>
+              <div class="h-item" style="padding-left: 20px">
+                <span class="h-level">H2</span><span class="h-text">Subscribe to our emails</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- LINKS -->
+          <div class="tab-content" id="tab-links" role="tabpanel" aria-label="Links">
+            <div class="content-pad">
+              <div
+                style="
+                  display: flex;
+                  gap: 16px;
+                  margin-bottom: 12px;
+                  padding-bottom: 12px;
+                  border-bottom: 1px solid #f5f5f5;
+                ">
+                <div>
+                  <span style="font-size: 11px; color: #999; font-weight: 500">Total</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">108</span>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: #999; font-weight: 500">Unique</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">36</span>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: #999; font-weight: 500">Internal</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">97</span>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: #999; font-weight: 500">External</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">11</span>
+                </div>
+              </div>
+              <div class="action-bar" style="flex-wrap: wrap; gap: 8px">
+                <div class="filters" style="padding-bottom: 0; flex-shrink: 0">
+                  <button class="fpill active">All</button><button class="fpill">Dofollow</button
+                  ><button class="fpill">Nofollow</button><button class="fpill">Internal</button
+                  ><button class="fpill">External</button>
+                </div>
+                <div class="action-btns" style="flex-shrink: 0">
+                  <button class="action-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg
+                    >Highlight
+                  </button>
+                  <button class="action-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg
+                    >Export
+                  </button>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Target URL</th>
+                    <th>Follow</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td><a href="#">.myshopify.com/#MainContent</a></td>
+                    <td><span class="pill pill-green" style="font-size: 10px">Yes</span></td>
+                    <td>Internal</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td><a href="#">.myshopify.com/collections/bags</a></td>
+                    <td><span class="pill pill-green" style="font-size: 10px">Yes</span></td>
+                    <td>Internal</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td><a href="#">facebook.com/shopify</a></td>
+                    <td><span class="pill pill-green" style="font-size: 10px">Yes</span></td>
+                    <td>External</td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td><a href="#">twitter.com/shopify</a></td>
+                    <td><span class="pill pill-green" style="font-size: 10px">Yes</span></td>
+                    <td>External</td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td><a href="#">shopify.com/?utm_campaign=poweredby</a></td>
+                    <td><span class="pill pill-red" style="font-size: 10px">No</span></td>
+                    <td>External</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style="margin-top: 8px; font-size: 11px; color: #ccc">Showing 5 of 108 links</div>
+            </div>
+          </div>
+
+          <!-- HREFLANGS -->
+          <div class="tab-content" id="tab-hreflangs" role="tabpanel" aria-label="Hreflangs">
+            <div class="content-pad">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>URL</th>
+                    <th>Hreflang</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td><a href="#">theme-dawn-demo.myshopify.com/</a></td>
+                    <td><span class="pill pill-purple">x-default</span></td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td><a href="#">theme-dawn-demo.myshopify.com/</a></td>
+                    <td><span class="pill pill-purple">en</span></td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td><a href="#">theme-dawn-demo.myshopify.com/en-fr</a></td>
+                    <td><span class="pill pill-purple">en-FR</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- IMAGES -->
+          <div class="tab-content" id="tab-images" role="tabpanel" aria-label="Images">
+            <div class="content-pad">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
+                <div style="font-size: 15px; font-weight: 600; color: #222">
+                  Images <span style="font-weight: 400; color: #999">25</span>
+                </div>
+                <div class="action-btns">
+                  <button class="action-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg
+                    >Highlight
+                  </button>
+                  <button class="action-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg
+                    >Export
+                  </button>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 6px; margin-bottom: 14px">
+                <select
+                  style="
+                    font-size: 12px;
+                    font-weight: 500;
+                    padding: 5px 24px 5px 10px;
+                    border-radius: 6px;
+                    border: 1px solid #ebebeb;
+                    background: #fff
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      no-repeat right 6px center;
+                    appearance: none;
+                    color: #555;
+                    cursor: pointer;
+                  ">
+                  <option>Alt: All</option>
+                  <option>Not empty (16)</option>
+                  <option>Empty (9)</option>
+                </select>
+                <select
+                  style="
+                    font-size: 12px;
+                    font-weight: 500;
+                    padding: 5px 24px 5px 10px;
+                    border-radius: 6px;
+                    border: 1px solid #ebebeb;
+                    background: #fff
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      no-repeat right 6px center;
+                    appearance: none;
+                    color: #555;
+                    cursor: pointer;
+                  ">
+                  <option>Format: All</option>
+                  <option>PNG</option>
+                  <option>JPG</option>
+                  <option>WebP</option>
+                  <option>SVG</option>
+                </select>
+                <select
+                  style="
+                    font-size: 12px;
+                    font-weight: 500;
+                    padding: 5px 24px 5px 10px;
+                    border-radius: 6px;
+                    border: 1px solid #ebebeb;
+                    background: #fff
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      no-repeat right 6px center;
+                    appearance: none;
+                    color: #555;
+                    cursor: pointer;
+                  ">
+                  <option>Loading: All</option>
+                  <option>Lazy</option>
+                  <option>Eager</option>
+                  <option>None</option>
+                </select>
+                <select
+                  style="
+                    font-size: 12px;
+                    font-weight: 500;
+                    padding: 5px 24px 5px 10px;
+                    border-radius: 6px;
+                    border: 1px solid #ebebeb;
+                    background: #fff
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      no-repeat right 6px center;
+                    appearance: none;
+                    color: #555;
+                    cursor: pointer;
+                  ">
+                  <option>Status: All</option>
+                  <option>OK</option>
+                  <option>Missing alt</option>
+                  <option>Broken</option>
+                </select>
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px">
+                <thead>
+                  <tr>
+                    <th
+                      style="
+                        text-align: left;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 0;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: auto;
+                      ">
+                      Image
+                    </th>
+                    <th
+                      style="
+                        text-align: right;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 4px;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: 55px;
+                      ">
+                      Size
+                    </th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 4px;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: 45px;
+                      ">
+                      Fmt
+                    </th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 4px;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: 70px;
+                      ">
+                      Dims
+                    </th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 4px;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: 50px;
+                      ">
+                      Load
+                    </th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 0;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: 45px;
+                      ">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding: 10px 8px 10px 0; border-bottom: 1px solid #f8f8f8; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #f5f5f5;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 9px;
+                            font-weight: 700;
+                            color: #555;
+                          ">
+                          DAWN
+                        </div>
+                        <div style="min-width: 0">
+                          <div style="font-size: 12px; color: #333; font-weight: 500">Dawn</div>
+                          <a
+                            href="#"
+                            style="
+                              font-size: 10.5px;
+                              color: #7c3aed;
+                              text-decoration: none;
+                              font-family: ui-monospace, monospace;
+                              word-break: break-all;
+                              display: block;
+                              margin-top: 1px;
+                            "
+                            >.../Dawn_logo.png?width=600</a
+                          >
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: right;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      7.5 KB
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      PNG
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      90x22
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span style="color: #d97706; font-weight: 500">eager</span>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span class="pill pill-green" style="font-size: 10px">OK</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 8px 10px 0; border-bottom: 1px solid #f8f8f8; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #e8e0d8;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div
+                            style="
+                              font-size: 12px;
+                              color: #333;
+                              font-weight: 500;
+                              overflow: hidden;
+                              text-overflow: ellipsis;
+                              white-space: nowrap;
+                              max-width: 200px;
+                            ">
+                            A woman crouches while holding bags
+                          </div>
+                          <a
+                            href="#"
+                            style="
+                              font-size: 10.5px;
+                              color: #7c3aed;
+                              text-decoration: none;
+                              font-family: ui-monospace, monospace;
+                              word-break: break-all;
+                              display: block;
+                              margin-top: 1px;
+                            "
+                            >.../141569803...458.jpg</a
+                          >
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: right;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      124 KB
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      JPG
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      486x607
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      lazy
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span class="pill pill-green" style="font-size: 10px">OK</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 8px 10px 0; border-bottom: 1px solid #f8f8f8; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #d4cfc8;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div
+                            style="
+                              font-size: 12px;
+                              color: #333;
+                              font-weight: 500;
+                              overflow: hidden;
+                              text-overflow: ellipsis;
+                              white-space: nowrap;
+                              max-width: 200px;
+                            ">
+                            A woman's feet in the air
+                          </div>
+                          <a
+                            href="#"
+                            style="
+                              font-size: 10.5px;
+                              color: #7c3aed;
+                              text-decoration: none;
+                              font-family: ui-monospace, monospace;
+                              word-break: break-all;
+                              display: block;
+                              margin-top: 1px;
+                            "
+                            >.../Shoes_and_bag.jpg</a
+                          >
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: right;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      98 KB
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      JPG
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      495x453
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      lazy
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span class="pill pill-green" style="font-size: 10px">OK</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 8px 10px 0; border-bottom: 1px solid #f8f8f8; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #e8ddd4;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div style="font-size: 12px; color: #e25555; font-weight: 500">Missing alt text</div>
+                          <a
+                            href="#"
+                            style="
+                              font-size: 10.5px;
+                              color: #7c3aed;
+                              text-decoration: none;
+                              font-family: ui-monospace, monospace;
+                              word-break: break-all;
+                              display: block;
+                              margin-top: 1px;
+                            "
+                            >.../flex-bag-n2.jpg</a
+                          >
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: right;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      45 KB
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      JPG
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      533x533
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      lazy
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span class="pill pill-red" style="font-size: 10px">Alt</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 8px 10px 0; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #d0d8e0;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div style="font-size: 12px; color: #e25555; font-weight: 500">Missing alt text</div>
+                          <a
+                            href="#"
+                            style="
+                              font-size: 10.5px;
+                              color: #7c3aed;
+                              text-decoration: none;
+                              font-family: ui-monospace, monospace;
+                              word-break: break-all;
+                              display: block;
+                              margin-top: 1px;
+                            "
+                            >.../studio-denim-4.jpg</a
+                          >
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        text-align: right;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      52 KB
+                    </td>
+                    <td style="padding: 10px 4px; text-align: center; color: #555; vertical-align: top">JPG</td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                        white-space: nowrap;
+                      ">
+                      533x533
+                    </td>
+                    <td style="padding: 10px 4px; text-align: center; color: #555; vertical-align: top">lazy</td>
+                    <td style="padding: 10px 0; text-align: center; vertical-align: top">
+                      <span class="pill pill-red" style="font-size: 10px">Alt</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style="margin-top: 8px; font-size: 11px; color: #999">Showing 5 of 25 images</div>
+            </div>
+          </div>
+
+          <!-- SCHEMA -->
+          <div class="tab-content" id="tab-schema" role="tabpanel" aria-label="Schema">
+            <div class="content-pad">
+              <button
+                class="sch-header open"
+                aria-expanded="true"
+                onclick="
+                  this.classList.toggle('open');
+                  this.setAttribute('aria-expanded', this.classList.contains('open'));
+                  this.nextElementSibling.classList.toggle('open');
+                ">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 18l6-6-6-6" /></svg
+                >1. Organization
+              </button>
+              <div class="sch-body open">
+                <div class="sch-kv">
+                  <span class="sch-k">@context</span><span class="sch-v"><a href="#">schema.org</a></span>
+                </div>
+                <div class="sch-kv"><span class="sch-k">@type</span><span class="sch-v">Organization</span></div>
+                <div class="sch-kv"><span class="sch-k">name</span><span class="sch-v">theme-dawn-demo</span></div>
+                <div class="sch-kv">
+                  <span class="sch-k">url</span><span class="sch-v"><a href="#">theme-dawn-demo.myshopify.com</a></span>
+                </div>
+              </div>
+              <button
+                class="sch-header"
+                aria-expanded="false"
+                onclick="
+                  this.classList.toggle('open');
+                  this.setAttribute('aria-expanded', this.classList.contains('open'));
+                  this.nextElementSibling.classList.toggle('open');
+                "
+                style="margin-top: 0; padding-top: 10px; border-top: 1px solid #f0f0f0">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 18l6-6-6-6" /></svg
+                >2. WebSite
+              </button>
+              <div class="sch-body">
+                <div class="sch-kv"><span class="sch-k">@type</span><span class="sch-v">WebSite</span></div>
+                <div class="sch-kv"><span class="sch-k">name</span><span class="sch-v">theme-dawn-demo</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SOCIAL -->
+          <div class="tab-content" id="tab-social" role="tabpanel" aria-label="Social">
+            <div class="content-pad">
+              <button
+                class="sch-header open"
+                aria-expanded="true"
+                style="margin-top: 0"
+                onclick="
+                  this.classList.toggle('open');
+                  this.setAttribute('aria-expanded', this.classList.contains('open'));
+                  this.nextElementSibling.classList.toggle('open');
+                ">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18l6-6-6-6" /></svg>
+                Open Graph
+                <span class="pill pill-green" style="font-size: 10px; margin-left: 4px">Complete</span>
+              </button>
+              <div class="sch-body open">
+                <table style="width: 100%; border-collapse: collapse">
+                  <tbody>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                          border-bottom: 1px solid #f8f8f8;
+                        ">
+                        og:title
+                      </td>
+                      <td style="font-size: 13px; color: #333; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                        theme-dawn-demo
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                          border-bottom: 1px solid #f8f8f8;
+                        ">
+                        og:type
+                      </td>
+                      <td style="font-size: 13px; color: #333; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                        website
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                          border-bottom: 1px solid #f8f8f8;
+                        ">
+                        og:image
+                      </td>
+                      <td style="padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                        <a
+                          href="#"
+                          style="
+                            color: #7c3aed;
+                            text-decoration: none;
+                            font-family: ui-monospace, monospace;
+                            font-size: 12px;
+                            word-break: break-all;
+                            display: block;
+                          "
+                          >http://theme-dawn-demo.myshopify.com/cdn/shop/files/Dawn_logo.png?height=628&pad_color=ffffff&v=1637111732&width=1200</a
+                        >
+                        <div style="margin-top: 10px">
+                          <div
+                            style="
+                              width: 140px;
+                              height: 73px;
+                              background: #fff;
+                              border: 1px solid #eee;
+                              border-radius: 6px;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              font-size: 20px;
+                              font-weight: 700;
+                              color: #333;
+                              letter-spacing: 0.1em;
+                            ">
+                            DAWN
+                          </div>
+                        </div>
+                        <div style="font-size: 11px; color: #999; margin-top: 6px">1200 x 628px &nbsp; 7.52 KB</div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                          border-bottom: 1px solid #f8f8f8;
+                        ">
+                        og:url
+                      </td>
+                      <td style="font-size: 13px; color: #333; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                        https://theme-dawn-demo.myshopify.com/
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                          border-bottom: 1px solid #f8f8f8;
+                        ">
+                        og:site_name
+                      </td>
+                      <td style="font-size: 13px; color: #333; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                        theme-dawn-demo
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                          border-bottom: 1px solid #f8f8f8;
+                        ">
+                        og:description
+                      </td>
+                      <td style="font-size: 13px; color: #333; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                        theme-dawn-demo
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                        ">
+                        og:image:secure_url
+                      </td>
+                      <td style="padding: 7px 0">
+                        <a
+                          href="#"
+                          style="
+                            color: #7c3aed;
+                            text-decoration: none;
+                            font-family: ui-monospace, monospace;
+                            font-size: 12px;
+                            word-break: break-all;
+                          "
+                          >.../Dawn_logo.png?height=628&pad_color=ffffff&width=1200</a
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <button
+                class="sch-header"
+                aria-expanded="false"
+                style="margin-top: 0; padding-top: 10px; border-top: 1px solid #f0f0f0"
+                onclick="
+                  this.classList.toggle('open');
+                  this.setAttribute('aria-expanded', this.classList.contains('open'));
+                  this.nextElementSibling.classList.toggle('open');
+                ">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18l6-6-6-6" /></svg>
+                X (Twitter) Card
+                <span class="pill pill-yellow" style="font-size: 10px; margin-left: 4px">Incomplete</span>
+              </button>
+              <div class="sch-body">
+                <table style="width: 100%; border-collapse: collapse">
+                  <tbody>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                          border-bottom: 1px solid #f8f8f8;
+                        ">
+                        twitter:card
+                      </td>
+                      <td style="font-size: 13px; color: #999; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                        Not specified
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                          border-bottom: 1px solid #f8f8f8;
+                        ">
+                        twitter:title
+                      </td>
+                      <td style="font-size: 13px; color: #999; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                        Not specified
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          color: #999;
+                          font-family: ui-monospace, monospace;
+                          font-size: 12px;
+                          padding: 7px 12px 7px 20px;
+                          text-align: right;
+                          vertical-align: top;
+                          white-space: nowrap;
+                          width: 130px;
+                        ">
+                        twitter:description
+                      </td>
+                      <td style="font-size: 13px; color: #999; padding: 7px 0">Not specified</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TECH STACK -->
+          <div class="tab-content" id="tab-techstack" role="tabpanel" aria-label="Apps">
+            <div class="content-pad">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px">
+                <div>
+                  <div style="font-size: 15px; font-weight: 600; color: #222">5 apps detected</div>
+                  <div style="font-size: 12px; color: #999; margin-top: 2px">on theme-dawn-demo.myshopify.com</div>
+                </div>
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg
+                  >Export
+                </button>
+              </div>
+
+              <div class="app-card">
+                <div class="app-icon" style="background: #5c6ac4">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="#FFF">
+                    <path
+                      d="M10 2a3 3 0 00-3 3v1H5a1 1 0 00-1 1v9a2 2 0 002 2h8a2 2 0 002-2V7a1 1 0 00-1-1h-2V5a3 3 0 00-3-3zm0 2a1 1 0 011 1v1H9V5a1 1 0 011-1z" />
+                  </svg>
+                </div>
+                <div class="app-info">
+                  <div class="app-name">Shopify Flow</div>
+                  <div class="app-desc">Automation & workflows</div>
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Shopify</span>
+              </div>
+              <div class="app-card">
+                <div class="app-icon" style="background: #12b886">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="#FFF">
+                    <path d="M10 2L3 6v4c0 4.4 3 8.5 7 10 4-1.5 7-5.6 7-10V6l-7-4z" />
+                  </svg>
+                </div>
+                <div class="app-info">
+                  <div class="app-name">Klaviyo</div>
+                  <div class="app-desc">Email & SMS marketing</div>
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Marketing</span>
+              </div>
+              <div class="app-card">
+                <div class="app-icon" style="background: #ff6b35">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="#FFF">
+                    <path d="M10 1l2.5 5.5L18 7.5l-4 4 1 5.5L10 14.5 5 17l1-5.5-4-4 5.5-1L10 1z" />
+                  </svg>
+                </div>
+                <div class="app-info">
+                  <div class="app-name">Judge.me</div>
+                  <div class="app-desc">Product reviews & UGC</div>
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Reviews</span>
+              </div>
+              <div class="app-card">
+                <div class="app-icon" style="background: #4a90d9">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="#FFF">
+                    <path
+                      d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 5a1 1 0 011-1h6a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm0 5a1 1 0 011-1h8a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
+                  </svg>
+                </div>
+                <div class="app-info">
+                  <div class="app-name">Rebuy</div>
+                  <div class="app-desc">Personalization & upsells</div>
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Sales</span>
+              </div>
+              <div class="app-card">
+                <div class="app-icon" style="background: #7c3aed">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="#FFF">
+                    <circle cx="10" cy="10" r="3" />
+                    <path
+                      d="M10 2v3M10 15v3M18 10h-3M5 10H2M15.66 4.34l-2.12 2.12M6.46 13.54l-2.12 2.12M15.66 15.66l-2.12-2.12M6.46 6.46L4.34 4.34" />
+                  </svg>
+                </div>
+                <div class="app-info">
+                  <div class="app-name">Hotjar</div>
+                  <div class="app-desc">Behavior analytics & heatmaps</div>
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Analytics</span>
+              </div>
+
+              <div class="section-heading" style="margin-top: 6px">Unrecognized Scripts (2)</div>
+              <div style="font-size: 12px; color: #999; margin-bottom: 10px">
+                Scripts loaded on this page that don't match known apps
+              </div>
+              <div class="row" style="gap: 8px">
+                <span
+                  style="
+                    font-family: ui-monospace, monospace;
+                    font-size: 11px;
+                    color: #777;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                  "
+                  >cdn.shopify.com/s/trekkie.storefront.min.js</span
+                >
+                <span class="pill pill-gray" style="font-size: 10px; flex-shrink: 0">Shopify Core</span>
+              </div>
+              <div class="row" style="gap: 8px">
+                <span
+                  style="
+                    font-family: ui-monospace, monospace;
+                    font-size: 11px;
+                    color: #777;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                  "
+                  >cdn.shopify.com/shopifycloud/web-pixels-manager.js</span
+                >
+                <span class="pill pill-gray" style="font-size: 10px; flex-shrink: 0">Shopify Core</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PRODUCTS -->
+          <div class="tab-content" id="tab-products" role="tabpanel" aria-label="Products">
+            <div class="content-pad">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
+                <div style="font-size: 15px; font-weight: 600; color: #222">
+                  Products <span style="font-weight: 400; color: #999">32</span>
+                </div>
+                <div class="action-btns">
+                  <button class="action-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg
+                    >Export
+                  </button>
+                </div>
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  gap: 16px;
+                  margin-bottom: 12px;
+                  padding-bottom: 12px;
+                  border-bottom: 1px solid #f5f5f5;
+                ">
+                <div>
+                  <span style="font-size: 11px; color: #999; font-weight: 500">Avg Price</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">$432</span>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: #999; font-weight: 500">Highest</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">$615</span>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: #999; font-weight: 500">Lowest</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">$119</span>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: #999; font-weight: 500">Published</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">Nov 2021</span>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 6px; margin-bottom: 14px">
+                <select
+                  style="
+                    font-size: 12px;
+                    font-weight: 500;
+                    padding: 5px 24px 5px 10px;
+                    border-radius: 6px;
+                    border: 1px solid #ebebeb;
+                    background: #fff
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      no-repeat right 6px center;
+                    appearance: none;
+                    color: #555;
+                    cursor: pointer;
+                  ">
+                  <option>Sort: Best selling</option>
+                  <option>Newest</option>
+                  <option>Price: High to Low</option>
+                  <option>Price: Low to High</option>
+                  <option>A-Z</option>
+                </select>
+                <select
+                  style="
+                    font-size: 12px;
+                    font-weight: 500;
+                    padding: 5px 24px 5px 10px;
+                    border-radius: 6px;
+                    border: 1px solid #ebebeb;
+                    background: #fff
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      no-repeat right 6px center;
+                    appearance: none;
+                    color: #555;
+                    cursor: pointer;
+                  ">
+                  <option>Status: All</option>
+                  <option>Available</option>
+                  <option>Out of stock</option>
+                </select>
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px">
+                <thead>
+                  <tr>
+                    <th
+                      style="
+                        text-align: left;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 0;
+                        border-bottom: 1px solid #f0f0f0;
+                      ">
+                      Product
+                    </th>
+                    <th
+                      style="
+                        text-align: right;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 4px;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: 60px;
+                      ">
+                      Price
+                    </th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 4px;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: 50px;
+                      ">
+                      Vars
+                    </th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        padding: 6px 0;
+                        border-bottom: 1px solid #f0f0f0;
+                        width: 55px;
+                      ">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    onclick="
+                      this.nextElementSibling.style.display =
+                        this.nextElementSibling.style.display === 'none' ? '' : 'none'
+                    "
+                    style="cursor: pointer"
+                    title="Click to collapse variants">
+                    <td style="padding: 10px 8px 10px 0; border-bottom: 1px solid #f8f8f8; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #e8ddd4;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div style="font-size: 12px; color: #333; font-weight: 500">Small Convertible Flex Bag</div>
+                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Cappuccino</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: right;
+                        color: #333;
+                        font-weight: 500;
+                        vertical-align: top;
+                      ">
+                      $375
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      3
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span class="pill pill-green" style="font-size: 10px">In stock</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="4" style="padding: 0; border-bottom: 1px solid #f8f8f8">
+                      <table
+                        style="
+                          width: 100%;
+                          border-collapse: collapse;
+                          font-size: 11px;
+                          margin-left: 28px;
+                          width: calc(100% - 28px);
+                        ">
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #e8ddd4;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Cappuccino / Small</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                              width: 60px;
+                            ">
+                            $375
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                              width: 50px;
+                            "></td>
+                          <td
+                            style="
+                              padding: 7px 0;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                              width: 55px;
+                            ">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #e8ddd4;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Cappuccino / Medium</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                            ">
+                            $395
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                            "></td>
+                          <td
+                            style="
+                              padding: 7px 0;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                            ">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #e8ddd4;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Cappuccino / Large</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                            ">
+                            $425
+                          </td>
+                          <td style="padding: 7px 4px; text-align: center; vertical-align: top"></td>
+                          <td style="padding: 7px 0; text-align: center; vertical-align: top">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <tr
+                    onclick="
+                      this.nextElementSibling.style.display =
+                        this.nextElementSibling.style.display === 'none' ? '' : 'none'
+                    "
+                    style="cursor: pointer"
+                    title="Click to collapse variants">
+                    <td style="padding: 10px 8px 10px 0; border-bottom: 1px solid #f8f8f8; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #d0d8e0;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div style="font-size: 12px; color: #333; font-weight: 500">Studio Bag</div>
+                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Denim</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: right;
+                        color: #333;
+                        font-weight: 500;
+                        vertical-align: top;
+                      ">
+                      $615
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      2
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span class="pill pill-green" style="font-size: 10px">In stock</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="4" style="padding: 0; border-bottom: 1px solid #f8f8f8">
+                      <table
+                        style="
+                          width: 100%;
+                          border-collapse: collapse;
+                          font-size: 11px;
+                          margin-left: 28px;
+                          width: calc(100% - 28px);
+                        ">
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #d0d8e0;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Denim / One size</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                              width: 60px;
+                            ">
+                            $615
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                              width: 50px;
+                            "></td>
+                          <td
+                            style="
+                              padding: 7px 0;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                              width: 55px;
+                            ">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #333;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Black / One size</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                            ">
+                            $615
+                          </td>
+                          <td style="padding: 7px 4px; text-align: center; vertical-align: top"></td>
+                          <td style="padding: 7px 0; text-align: center; vertical-align: top">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <tr
+                    onclick="
+                      this.nextElementSibling.style.display =
+                        this.nextElementSibling.style.display === 'none' ? '' : 'none'
+                    "
+                    style="cursor: pointer"
+                    title="Click to collapse variants">
+                    <td style="padding: 10px 8px 10px 0; border-bottom: 1px solid #f8f8f8; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #f0e8d8;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div style="font-size: 12px; color: #333; font-weight: 500">Louise Slide Sandal</div>
+                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Buttermilk</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: right;
+                        color: #333;
+                        font-weight: 500;
+                        vertical-align: top;
+                      ">
+                      $290
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      4
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span class="pill pill-green" style="font-size: 10px">In stock</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="4" style="padding: 0; border-bottom: 1px solid #f8f8f8">
+                      <table
+                        style="
+                          width: 100%;
+                          border-collapse: collapse;
+                          font-size: 11px;
+                          margin-left: 28px;
+                          width: calc(100% - 28px);
+                        ">
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #f0e8d8;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Buttermilk / 36</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                              width: 60px;
+                            ">
+                            $290
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                              width: 50px;
+                            "></td>
+                          <td
+                            style="
+                              padding: 7px 0;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                              width: 55px;
+                            ">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #f0e8d8;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Buttermilk / 37</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                            ">
+                            $290
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                            "></td>
+                          <td
+                            style="
+                              padding: 7px 0;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                            ">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #f0e8d8;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Buttermilk / 38</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                            ">
+                            $290
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                            "></td>
+                          <td
+                            style="
+                              padding: 7px 0;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                            ">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #f0e8d8;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Buttermilk / 39</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              text-align: right;
+                              color: #e25555;
+                              font-weight: 500;
+                              vertical-align: top;
+                            ">
+                            $290
+                          </td>
+                          <td style="padding: 7px 4px; text-align: center; vertical-align: top"></td>
+                          <td style="padding: 7px 0; text-align: center; vertical-align: top">
+                            <span class="pill pill-red" style="font-size: 9px">Sold out</span>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 10px 8px 10px 0; border-bottom: 1px solid #f8f8f8; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #c8d0c0;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div style="font-size: 12px; color: #333; font-weight: 500">Bo Ivy</div>
+                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Black</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: right;
+                        color: #333;
+                        font-weight: 500;
+                        vertical-align: top;
+                      ">
+                      $495
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 4px;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        color: #555;
+                        vertical-align: top;
+                      ">
+                      1
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 0;
+                        border-bottom: 1px solid #f8f8f8;
+                        text-align: center;
+                        vertical-align: top;
+                      ">
+                      <span class="pill pill-red" style="font-size: 10px">Sold out</span>
+                    </td>
+                  </tr>
+
+                  <tr
+                    onclick="
+                      this.nextElementSibling.style.display =
+                        this.nextElementSibling.style.display === 'none' ? '' : 'none'
+                    "
+                    style="cursor: pointer"
+                    title="Click to collapse variants">
+                    <td style="padding: 10px 8px 10px 0; vertical-align: top">
+                      <div style="display: flex; gap: 8px; align-items: flex-start">
+                        <div
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            background: #d8c8b0;
+                            border-radius: 4px;
+                            flex-shrink: 0;
+                          "></div>
+                        <div style="min-width: 0">
+                          <div style="font-size: 12px; color: #333; font-weight: 500">Brick</div>
+                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Apple</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      style="padding: 10px 4px; text-align: right; color: #333; font-weight: 500; vertical-align: top">
+                      $465
+                    </td>
+                    <td style="padding: 10px 4px; text-align: center; color: #555; vertical-align: top">2</td>
+                    <td style="padding: 10px 0; text-align: center; vertical-align: top">
+                      <span class="pill pill-green" style="font-size: 10px">In stock</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="4" style="padding: 0">
+                      <table
+                        style="
+                          width: 100%;
+                          border-collapse: collapse;
+                          font-size: 11px;
+                          margin-left: 28px;
+                          width: calc(100% - 28px);
+                        ">
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #c85040;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">Apple / One size</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                              width: 60px;
+                            ">
+                            $465
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                              width: 50px;
+                            "></td>
+                          <td
+                            style="
+                              padding: 7px 0;
+                              border-bottom: 1px solid #f5f5f5;
+                              text-align: center;
+                              vertical-align: top;
+                              width: 55px;
+                            ">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 7px 8px 7px 0; vertical-align: top">
+                            <div style="display: flex; gap: 6px; align-items: center">
+                              <div
+                                style="
+                                  width: 26px;
+                                  height: 26px;
+                                  background: #d4b840;
+                                  border-radius: 3px;
+                                  flex-shrink: 0;
+                                "></div>
+                              <div>
+                                <div style="font-size: 11.5px; color: #555; font-weight: 500">
+                                  Oil Yellow / One size
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style="
+                              padding: 7px 4px;
+                              text-align: right;
+                              color: #333;
+                              font-weight: 500;
+                              vertical-align: top;
+                            ">
+                            $465
+                          </td>
+                          <td style="padding: 7px 4px; text-align: center; vertical-align: top"></td>
+                          <td style="padding: 7px 0; text-align: center; vertical-align: top">
+                            <span class="pill pill-green" style="font-size: 9px">In stock</span>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style="margin-top: 8px; font-size: 11px; color: #999">Showing 5 of 32 products</div>
+            </div>
+          </div>
+
+          <!-- SETTINGS -->
+          <!-- ROBOTS.TXT -->
+          <div class="tab-content" id="tab-robots" role="tabpanel" aria-label="Robots.txt">
+            <div class="content-pad">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
+                <div>
+                  <div style="font-size: 15px; font-weight: 600; color: #222">robots.txt</div>
+                  <a
+                    href="#"
+                    style="font-size: 12px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    >theme-dawn-demo.myshopify.com/robots.txt</a
+                  >
+                </div>
+                <div class="action-btns">
+                  <button class="action-btn" onclick="window.open('#')">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg
+                    >Open
+                  </button>
+                  <button class="action-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      aria-hidden="true">
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg
+                    >Copy
+                  </button>
+                </div>
+              </div>
+              <pre
+                style="
+                  background: #fafafa;
+                  border: 1px solid #f0f0f0;
+                  border-radius: 8px;
+                  padding: 14px 16px;
+                  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+                  font-size: 12px;
+                  line-height: 1.7;
+                  color: #555;
+                  overflow-x: auto;
+                  white-space: pre-wrap;
+                  word-break: break-all;
+                  max-height: 340px;
+                  overflow-y: auto;
+                "><span style="color:#999"># we use Shopify's default robots.txt</span>
+<span style="color:#222;font-weight:600">User-agent: *</span>
+Disallow: /admin
+Disallow: /cart
+Disallow: /orders
+Disallow: /checkouts/
+Disallow: /checkout
+Disallow: /*/checkouts
+Disallow: /carts
+Disallow: /account
+Disallow: /collections/*sort_by*
+Disallow: /*/collections/*sort_by*
+Disallow: /collections/*+*
+Disallow: /*/collections/*+*
+Disallow: /collections/*%2B*
+Disallow: /*/collections/*%2B*
+Disallow: /collections/*%2b*
+Disallow: /*/collections/*%2b*
+Disallow: /*/countdown
+Disallow: /discount/*
+Disallow: /*/discount/*
+Disallow: /policies/
+Disallow: /*/policies/
+Disallow: /search
+Disallow: /*/search
+Disallow: /apple-app-site-association
+
+<span style="color:#222;font-weight:600">Sitemap:</span> <a href="#" style="color:#7C3AED;text-decoration:none">https://theme-dawn-demo.myshopify.com/sitemap.xml</a></pre>
+            </div>
+          </div>
+
+          <!-- SITEMAPS -->
+          <div class="tab-content" id="tab-sitemaps" role="tabpanel" aria-label="Sitemaps">
+            <div class="content-pad">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
+                <div>
+                  <div style="font-size: 15px; font-weight: 600; color: #222">Sitemaps</div>
+                  <div style="font-size: 12px; color: #999; margin-top: 2px">5 sitemaps found</div>
+                </div>
+                <button class="action-btn" onclick="window.open('#')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg
+                  >Open sitemap.xml
+                </button>
+              </div>
+
+              <div class="app-card">
+                <div class="app-icon" style="background: #12b886; font-size: 10px; font-weight: 600">AI</div>
+                <div class="app-info">
+                  <div class="app-name" style="font-size: 12px">sitemap_agentic_discovery.xml</div>
+                  <a
+                    href="#"
+                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    >.../sitemap_agentic_discovery.xml</a
+                  >
+                </div>
+                <span class="pill pill-green" style="font-size: 10px">Discovery</span>
+              </div>
+              <div class="app-card">
+                <div class="app-icon" style="background: #4a90d9; font-size: 10px; font-weight: 600">P</div>
+                <div class="app-info">
+                  <div class="app-name" style="font-size: 12px">sitemap_products_1.xml</div>
+                  <a
+                    href="#"
+                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    >.../sitemap_products_1.xml</a
+                  >
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Products</span>
+              </div>
+              <div class="app-card">
+                <div class="app-icon" style="background: #ff6b35; font-size: 10px; font-weight: 600">Pg</div>
+                <div class="app-info">
+                  <div class="app-name" style="font-size: 12px">sitemap_pages_1.xml</div>
+                  <a
+                    href="#"
+                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    >.../sitemap_pages_1.xml</a
+                  >
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Pages</span>
+              </div>
+              <div class="app-card">
+                <div class="app-icon" style="background: #5c6ac4; font-size: 10px; font-weight: 600">C</div>
+                <div class="app-info">
+                  <div class="app-name" style="font-size: 12px">sitemap_collections_1.xml</div>
+                  <a
+                    href="#"
+                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    >.../sitemap_collections_1.xml</a
+                  >
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Collections</span>
+              </div>
+              <div class="app-card">
+                <div class="app-icon" style="background: #e84393; font-size: 10px; font-weight: 600">B</div>
+                <div class="app-info">
+                  <div class="app-name" style="font-size: 12px">sitemap_blogs_1.xml</div>
+                  <a
+                    href="#"
+                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    >.../sitemap_blogs_1.xml</a
+                  >
+                </div>
+                <span class="pill pill-gray" style="font-size: 10px">Blogs</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS -->
+          <div class="tab-content" id="tab-settings" role="tabpanel" aria-label="Settings">
+            <div class="content-pad">
+              <label for="storefront-pw" class="section-heading" style="display: block">Storefront Password</label>
+              <div class="input-row">
+                <input
+                  id="storefront-pw"
+                  class="input-field"
+                  type="password"
+                  placeholder="Enter password"
+                  value="mysecretpw"
+                  style="font-family: system-ui" />
+                <button class="btn">Save</button>
+              </div>
+              <label class="checkbox-row"><input type="checkbox" checked /> Auto-fill password</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function sw(t) {
+        document.querySelectorAll('.tab').forEach((e) => {
+          e.classList.remove('active');
+          e.setAttribute('aria-selected', 'false');
+        });
+        const active = document.querySelector(`[data-tab="${t}"]`);
+        active.classList.add('active');
+        active.setAttribute('aria-selected', 'true');
+        document.querySelectorAll('.tab-content').forEach((e) => e.classList.remove('active'));
+        document.getElementById(`tab-${t}`).classList.add('active');
+      }
+      function hs(n) {
+        document.querySelectorAll('.stars svg').forEach((s, i) => s.classList.toggle('h', i < n));
+      }
+      function cs() {
+        document.querySelectorAll('.stars svg').forEach((s) => s.classList.remove('h'));
+      }
+    </script>
+  </body>
+</html>
