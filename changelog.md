@@ -6,7 +6,7 @@ Alfred is getting a big upgrade. We're building toward a full-featured dashboard
 
 - Redesigned popup with a new sidebar navigation layout, replacing the old pill tabs.
 - Refreshed Theme tab with a new look — theme details, version status, and preview URL are easier to scan at a glance.
-![undefined](https://bucket.alfred.uptek.com/alfred-popup-v2.jpeg)
+![undefined](https://bucket.alfred.uptek.com/alfred-popup-v2.png)
 
 ## 2026.05.05
 @ 2026-05-05
