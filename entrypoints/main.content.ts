@@ -1,4 +1,5 @@
 import { getItem } from '@/utils/storage';
+import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 
 export default defineContentScript({
@@ -28,25 +29,13 @@ export default defineContentScript({
 
     // Listen for tracking events from the main world
     window.addEventListener('alfred:track', (event: Event) => {
-      void (async () => {
-        try {
-          const { action, metadata } = (
-            event as CustomEvent<{
-              action: string;
-              metadata?: Record<string, unknown>;
-            }>
-          ).detail;
-
-          // Send to background script
-          await browser.runtime.sendMessage({
-            type: 'track_action',
-            action,
-            metadata
-          });
-        } catch (error) {
-          console.error('Failed to send tracking event:', error);
-        }
-      })();
+      const { action, metadata } = (
+        event as CustomEvent<{
+          action: string;
+          metadata?: Record<string, unknown>;
+        }>
+      ).detail;
+      sendTrackEvent(action as import('@/utils/analytics').AnalyticsAction, metadata);
     });
 
     // Listen for postMessage responses from main world

@@ -208,6 +208,7 @@
           onclick={async () => {
             copying = true;
             const success = await copyThemePreviewUrl(storeInfo, disablePreviewBar);
+            if (success) trackAction('copy_theme_preview_url', { shop_domain: storeInfo.shopDomain ?? '', source: 'popup' });
             setTimeout(() => (copying = false), success ? 1200 : 0);
           }}
           disabled={copying || !storeInfo.theme?.id}

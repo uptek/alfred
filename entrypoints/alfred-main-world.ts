@@ -386,7 +386,8 @@ export default defineUnlistedScript(() => {
                   page_url: window.location.href,
                   page_type: win.__st?.p ?? 'other',
                   shop_domain: window.location.hostname,
-                  disable_preview_bar: disablePreviewBar
+                  disable_preview_bar: disablePreviewBar,
+                  source: 'context_menu'
                 }
               }
             })

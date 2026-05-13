@@ -29,8 +29,6 @@ const VALID_ACTIONS = [
   'exit_theme_preview',
   'theme_list_copy_id',
   'theme_list_copy_preview_url',
-  'theme_list_preview',
-  'theme_list_edit_code',
   'cartograph_open',
   'cartograph_add_item',
   'cartograph_update_quantity',
@@ -47,9 +45,10 @@ const VALID_ACTIONS = [
   'permission_search',
   'expand_all_permissions',
   'collapse_all_permissions',
-  'review_nudge_shown',
-  'review_nudge_clicked',
-  'review_nudge_dismissed'
+  'popup_open',
+  'review_nudge_show',
+  'review_nudge_click',
+  'review_nudge_dismiss'
 ];
 
 serve(async (req) => {

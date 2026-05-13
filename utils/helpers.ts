@@ -98,25 +98,29 @@ export const waitForElement = (
   });
 };
 
+let cachedUserId: string | null = null;
+
 /**
- * Generate or retrieve a persistent anonymous user ID
- * @returns Promise that resolves to the user ID
+ * Generate or retrieve a persistent anonymous user ID.
+ * Caches in memory so a storage failure never fragments one user into many.
  */
 export async function getUserId(): Promise<string> {
+  if (cachedUserId) return cachedUserId;
+
   try {
     const userId = await storage.getItem<string>('local:user_id');
     if (userId) {
+      cachedUserId = userId;
       return userId;
     }
 
-    // Generate new UUID
     const newUserId = crypto.randomUUID();
     await storage.setItem('local:user_id', newUserId);
+    cachedUserId = newUserId;
     return newUserId;
-  } catch (error) {
-    console.error('Failed to get user ID:', error);
-    // Fallback to session-based ID
-    return crypto.randomUUID();
+  } catch {
+    cachedUserId = cachedUserId ?? crypto.randomUUID();
+    return cachedUserId;
   }
 }
 

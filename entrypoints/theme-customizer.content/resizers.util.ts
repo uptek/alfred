@@ -1,4 +1,5 @@
 import { getItem } from '~/utils/storage';
+import { sendTrackEvent } from '~/utils/analytics';
 
 interface Dimensions {
   primary: number;
@@ -91,14 +92,7 @@ const onMouseDown = (e: MouseEvent, resizer: Resizer) => {
     }
   };
 
-  browser.runtime.sendMessage({
-    type: 'track_action',
-    action: 'resize_theme_customizer',
-    metadata: {
-      type: resizer.type || 'unknown',
-      page_type: 'theme_customizer'
-    }
-  });
+  sendTrackEvent('resize_theme_customizer', { type: resizer.type || 'unknown', page_type: 'theme_customizer' });
 
   document.body.style.cursor = window.getComputedStyle(e.target as Element).cursor;
   document.body.style.userSelect = 'none';

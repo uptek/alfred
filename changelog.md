@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.05.13
+@ 2026-05-13
+Improvements to analytics tracking so we can better understand how Alfred is being used and catch issues earlier.
+
+- Added activation tracking to measure how many users open the popup after installing.
+- Review prompt impressions are now tracked so we know how many users see the rating prompt.
+- Preview URL copy from the popup is now tracked alongside the context menu.
+- Fixed a rare issue where analytics could fragment a single user into multiple identities.
+- Tracking events from content scripts now automatically retry if the background service is temporarily unavailable.
+
 ## 2026.05.11
 @ 2026-05-11
 Alfred is getting a big upgrade. We're building toward a full-featured dashboard that gives developers and merchants deeper insights into their Shopify store — SEO analysis, app detection, performance metrics, and more. This release is the first step in that direction.

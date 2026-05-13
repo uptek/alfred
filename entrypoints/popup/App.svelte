@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getTheme } from './utils';
+  import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
@@ -42,6 +43,7 @@
   $effect(() => {
     const fetchStoreInfo = async () => {
       const storeData = await getTheme();
+      trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
       storeInfo = storeData;
       loading = false;
     };

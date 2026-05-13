@@ -29,8 +29,6 @@ export type AnalyticsAction =
   | 'exit_theme_preview'
   | 'theme_list_copy_id'
   | 'theme_list_copy_preview_url'
-  | 'theme_list_preview'
-  | 'theme_list_edit_code'
   | 'cartograph_open'
   | 'cartograph_add_item'
   | 'cartograph_update_quantity'
@@ -47,9 +45,10 @@ export type AnalyticsAction =
   | 'permission_search'
   | 'expand_all_permissions'
   | 'collapse_all_permissions'
-  | 'review_nudge_shown'
-  | 'review_nudge_clicked'
-  | 'review_nudge_dismissed';
+  | 'popup_open'
+  | 'review_nudge_show'
+  | 'review_nudge_click'
+  | 'review_nudge_dismiss';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -84,8 +83,6 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   exit_theme_preview: 20,
   theme_list_copy_id: 10,
   theme_list_copy_preview_url: 10,
-  theme_list_preview: 5,
-  theme_list_edit_code: 5,
   cartograph_open: 0,
   cartograph_add_item: 60,
   cartograph_update_quantity: 15,
@@ -102,9 +99,10 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   permission_search: 20,
   expand_all_permissions: 10,
   collapse_all_permissions: 10,
-  review_nudge_shown: 0,
-  review_nudge_clicked: 0,
-  review_nudge_dismissed: 0
+  popup_open: 0,
+  review_nudge_show: 0,
+  review_nudge_click: 0,
+  review_nudge_dismiss: 0
 };
 
 // --- Usage Stats (local tracking) ---
@@ -121,9 +119,10 @@ const MILESTONE_THRESHOLD = 3;
  *  - review_nudge_* events: prevent the Insights Card from inflating its own counters
  *  - detect_theme: fires on every popup open, would trivially reach the milestone */
 const EXCLUDED_FROM_STATS = new Set<AnalyticsAction>([
-  'review_nudge_shown',
-  'review_nudge_clicked',
-  'review_nudge_dismissed',
+  'popup_open',
+  'review_nudge_show',
+  'review_nudge_click',
+  'review_nudge_dismiss',
   'detect_theme'
 ]);
 
@@ -144,8 +143,6 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   detect_theme: 'Theme Detection',
   exit_theme_preview: 'Theme Detection',
   disable_theme_inspector: 'Theme Detection',
-  theme_list_preview: 'Theme Detection',
-  theme_list_edit_code: 'Theme Detection',
   cartograph_open: 'Cartograph',
   cartograph_add_item: 'Cartograph',
   cartograph_update_quantity: 'Cartograph',
@@ -170,9 +167,10 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   appstore_partner_table_export: 'App Store',
   clear_cart: 'Storefront',
   autofill_storefront_password: 'Storefront',
-  review_nudge_shown: 'Insights',
-  review_nudge_clicked: 'Insights',
-  review_nudge_dismissed: 'Insights'
+  popup_open: 'Activation',
+  review_nudge_show: 'Insights',
+  review_nudge_click: 'Insights',
+  review_nudge_dismiss: 'Insights'
 };
 
 /** Local usage stats persisted in `local:usage_stats`.
@@ -277,9 +275,9 @@ export async function isReviewDismissed(): Promise<boolean> {
  * @returns true if this is the first time (event should be tracked)
  */
 export async function markNudgeShown(): Promise<boolean> {
-  const alreadyShown = (await getItem<boolean>('review_nudge_shown_once')) ?? false;
+  const alreadyShown = (await getItem<boolean>('review_nudge_show_once')) ?? false;
   if (alreadyShown) return false;
-  await setItem('review_nudge_shown_once', true);
+  await setItem('review_nudge_show_once', true);
   return true;
 }
 
@@ -368,11 +366,18 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify(eventData)
-    }).catch(() => {
-      // Silently ignore errors - analytics should never break the user experience
-    });
-  } catch (error) {
-    // Silently ignore all errors
-    console.debug('Analytics error:', error);
+    }).catch(() => {});
+  } catch {
+    // Analytics should never break the user experience
   }
+}
+
+/**
+ * Send a track_action message from a content script to the background script.
+ * Falls back to calling trackAction() directly if the background is unavailable.
+ */
+export function sendTrackEvent(action: AnalyticsAction, metadata?: Record<string, unknown>): void {
+  browser.runtime.sendMessage({ type: 'track_action', action, metadata }).catch(() => {
+    trackAction(action, metadata);
+  });
 }
