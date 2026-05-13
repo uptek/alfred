@@ -1,95 +1,93 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alfred for Shopify - Popup</title>
+    <meta name="manifest.type" content="browser_action" />
+    <style>
+      :root {
+        /* Backgrounds */
+        --bg: #fff;
+        --bg-raised: #fafafa;
+        --bg-inset: #f5f5f5;
+        --bg-hover: #f0f0f0;
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Alfred for Shopify - Popup</title>
-  <meta name="manifest.type" content="browser_action" />
-  <style>
-    :root {
-      /* Backgrounds */
-      --bg: #fff;
-      --bg-raised: #fafafa;
-      --bg-inset: #f5f5f5;
-      --bg-hover: #f0f0f0;
+        /* Borders */
+        --border: #f0f0f0;
+        --border-subtle: #f5f5f5;
+        --border-muted: #f8f8f8;
+        --border-hover: #ddd;
+        --border-strong: #ebebeb;
 
-      /* Borders */
-      --border: #f0f0f0;
-      --border-subtle: #f5f5f5;
-      --border-muted: #f8f8f8;
-      --border-hover: #ddd;
-      --border-strong: #ebebeb;
+        /* Text */
+        --text: #111;
+        --text-secondary: #555;
+        --text-muted: #929292;
+        --text-faint: #bbb;
+        --text-disabled: #d0d0d0;
+        --text-placeholder: #ccc;
 
-      /* Text */
-      --text: #111;
-      --text-secondary: #555;
-      --text-muted: #929292;
-      --text-faint: #bbb;
-      --text-disabled: #d0d0d0;
-      --text-placeholder: #ccc;
+        /* Interactive */
+        --text-link: #777;
+        --text-link-hover: #444;
+        --text-link-muted: #999;
+        --text-link-muted-hover: #666;
+        --text-label: #8a8a8a;
 
-      /* Interactive */
-      --text-link: #777;
-      --text-link-hover: #444;
-      --text-link-muted: #999;
-      --text-link-muted-hover: #666;
-      --text-label: #8a8a8a;
+        /* Accent */
+        --accent: #95bf47;
 
-      /* Accent */
-      --accent: #95bf47;
+        /* Buttons */
+        --btn-bg: #111;
+        --btn-bg-hover: #333;
+        --btn-text: #fff;
 
-      /* Buttons */
-      --btn-bg: #111;
-      --btn-bg-hover: #333;
-      --btn-text: #fff;
+        /* Semantic: success */
+        --success: #22c55e;
+        --success-strong: #16a34a;
+        --success-bg: #dcfce7;
 
-      /* Semantic: success */
-      --success: #22c55e;
-      --success-strong: #16a34a;
-      --success-bg: #dcfce7;
+        /* Semantic: warning */
+        --warning: #ca8a04;
+        --warning-bg: #fffbeb;
 
-      /* Semantic: warning */
-      --warning: #ca8a04;
-      --warning-bg: #fffbeb;
+        /* Semantic: error */
+        --error: #ef4444;
+        --error-strong: #dc2626;
+        --error-bg: #fee2e2;
 
-      /* Semantic: error */
-      --error: #ef4444;
-      --error-strong: #dc2626;
-      --error-bg: #fee2e2;
+        /* Stars */
+        --star-active: #fbbf24;
+        --star-inactive: #e0e0e0;
 
-      /* Stars */
-      --star-active: #fbbf24;
-      --star-inactive: #e0e0e0;
+        /* Scrollbar */
+        --scrollbar: #e0e0e0;
 
-      /* Scrollbar */
-      --scrollbar: #e0e0e0;
+        /* Shadows */
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.03);
+        --shadow-tab: 0 1px 3px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03);
+        --shadow-knob: 0 1px 2px rgba(0, 0, 0, 0.1);
 
-      /* Shadows */
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-      --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.03);
-      --shadow-tab: 0 1px 3px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03);
-      --shadow-knob: 0 1px 2px rgba(0, 0, 0, 0.1);
+        /* Gradient */
+        --hero-gradient: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%);
+      }
 
-      /* Gradient */
-      --hero-gradient: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%);
-    }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    </style>
+  </head>
 
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-  </style>
-</head>
-
-<body>
-  <div id="app"></div>
-  <script type="module" src="./index.ts"></script>
-</body>
-
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./index.ts"></script>
+  </body>
 </html>
