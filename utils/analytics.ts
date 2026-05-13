@@ -29,8 +29,6 @@ export type AnalyticsAction =
   | 'exit_theme_preview'
   | 'theme_list_copy_id'
   | 'theme_list_copy_preview_url'
-  | 'theme_list_preview'
-  | 'theme_list_edit_code'
   | 'cartograph_open'
   | 'cartograph_add_item'
   | 'cartograph_update_quantity'
@@ -85,8 +83,6 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   exit_theme_preview: 20,
   theme_list_copy_id: 10,
   theme_list_copy_preview_url: 10,
-  theme_list_preview: 5,
-  theme_list_edit_code: 5,
   cartograph_open: 0,
   cartograph_add_item: 60,
   cartograph_update_quantity: 15,
@@ -147,8 +143,6 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   detect_theme: 'Theme Detection',
   exit_theme_preview: 'Theme Detection',
   disable_theme_inspector: 'Theme Detection',
-  theme_list_preview: 'Theme Detection',
-  theme_list_edit_code: 'Theme Detection',
   cartograph_open: 'Cartograph',
   cartograph_add_item: 'Cartograph',
   cartograph_update_quantity: 'Cartograph',

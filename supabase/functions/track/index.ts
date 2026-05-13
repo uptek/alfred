@@ -29,8 +29,6 @@ const VALID_ACTIONS = [
   'exit_theme_preview',
   'theme_list_copy_id',
   'theme_list_copy_preview_url',
-  'theme_list_preview',
-  'theme_list_edit_code',
   'cartograph_open',
   'cartograph_add_item',
   'cartograph_update_quantity',
