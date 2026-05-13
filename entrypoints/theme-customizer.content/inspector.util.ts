@@ -1,5 +1,6 @@
 import { getItem, setItem } from '~/utils/storage';
 import { waitForElement } from '~/utils/helpers';
+import { sendTrackEvent } from '~/utils/analytics';
 
 const INSPECTOR_BUTTON_SELECTOR = 'div[class*="SidekickToggle"] + div button';
 const INSPECTOR_STATE_KEY = 'theme-inspector-state';
@@ -23,12 +24,7 @@ export async function setupInspector(): Promise<void> {
     if (isPressed) {
       (inspectorButton as HTMLButtonElement).click();
 
-      // Track disable theme inspector action
-      browser.runtime.sendMessage({
-        type: 'track_action',
-        action: 'disable_theme_inspector',
-        metadata: {}
-      });
+      sendTrackEvent('disable_theme_inspector');
     }
   } else if (inspectorSetting === 'restore') {
     const lastState = await getItem<boolean>(INSPECTOR_STATE_KEY);
@@ -36,13 +32,8 @@ export async function setupInspector(): Promise<void> {
     if (lastState !== null && lastState !== isPressed) {
       (inspectorButton as HTMLButtonElement).click();
 
-      // Track disable theme inspector action
       if (!lastState) {
-        browser.runtime.sendMessage({
-          type: 'track_action',
-          action: 'disable_theme_inspector',
-          metadata: {}
-        });
+        sendTrackEvent('disable_theme_inspector');
       }
     }
   }

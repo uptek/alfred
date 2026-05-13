@@ -1,4 +1,5 @@
 import { getPassword, markPasswordUsed, markPasswordFailed } from '@/utils/storefrontPasswords';
+import { sendTrackEvent } from '@/utils/analytics';
 
 export default defineContentScript({
   matches: ['*://*/password'],
@@ -47,15 +48,7 @@ export default defineContentScript({
     // Mark password as used
     await markPasswordUsed(domain);
 
-    // Track successful autofill
-    browser.runtime.sendMessage({
-      type: 'track_action',
-      action: 'autofill_storefront_password',
-      metadata: {
-        domain,
-        password_length: password.length
-      }
-    });
+    sendTrackEvent('autofill_storefront_password', { domain, password_length: password.length });
 
     // Auto-submit the form
     try {

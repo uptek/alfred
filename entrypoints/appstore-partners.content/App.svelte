@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fetchAppData, downloadCSV, getResourceIcon } from './utils';
-  import type { App, SortableHeaderProps } from './types';
+  import { sendTrackEvent } from '@/utils/analytics';
+  import type { App } from './types';
 
   import builtForShopifyIcon from '@/assets/icon-built-for-shopify.svg';
   import exportIcon from '@/assets/icon-export.svg';
@@ -78,11 +79,7 @@
         apps = initialApps;
         isLoading = false;
 
-        browser.runtime.sendMessage({
-          type: 'track_action',
-          action: 'appstore_partner_table_view',
-          metadata: { app_count: initialApps.length, page_url: window.location.href, page_type: 'appstore_partners' }
-        });
+        sendTrackEvent('appstore_partner_table_view', { app_count: initialApps.length, page_url: window.location.href, page_type: 'appstore_partners' });
 
         const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -107,11 +104,7 @@
   function handleSort(column: keyof App, direction: 'asc' | 'desc') {
     sortState = { column, direction };
 
-    browser.runtime.sendMessage({
-      type: 'track_action',
-      action: 'appstore_partner_table_sort',
-      metadata: { app_count: apps.length, sort_by: column, sort_direction: direction, page_url: window.location.href, page_type: 'appstore_partners' }
-    });
+    sendTrackEvent('appstore_partner_table_sort', { app_count: apps.length, sort_by: column, sort_direction: direction, page_url: window.location.href, page_type: 'appstore_partners' });
 
     apps = [...apps].sort((a, b) => {
       let aValue: string | number;

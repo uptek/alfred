@@ -1,19 +1,7 @@
 import { getItem } from '~/utils/storage';
+import { sendTrackEvent } from '~/utils/analytics';
 
 const INJECTED_ATTR = 'data-alfred-theme-list';
-
-/**
- * Sends a tracking event to the background script for analytics.
- * @param action - The action name to track.
- * @param metadata - Optional key-value pairs to include with the event.
- */
-const trackThemeListAction = (action: string, metadata: Record<string, unknown> = {}) => {
-  browser.runtime.sendMessage({
-    type: 'track_action',
-    action,
-    metadata
-  });
-};
 
 interface ThemeData {
   themeId: string;
@@ -67,7 +55,7 @@ const handleCopyClick = (e: Event) => {
   btn.setAttribute('icon', 'check');
   setTimeout(() => btn.setAttribute('icon', 'clipboard'), 1200);
   if (action) {
-    trackThemeListAction(action);
+    sendTrackEvent(action as import('~/utils/analytics').AnalyticsAction);
   }
 };
 

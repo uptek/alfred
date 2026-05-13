@@ -1,4 +1,5 @@
 import type { PageAdapter, Permission, PermissionSearchController } from './types';
+import { sendTrackEvent } from '@/utils/analytics';
 
 /** Creates a PageAdapter for the Shopify Partner Dashboard (partners.shopify.com). */
 export function createPartnerAdapter(): PageAdapter {
@@ -148,11 +149,11 @@ export function setupPermissionSearch(): PermissionSearchController | null {
 
     expandAllBtn.addEventListener('click', () => {
       clickSectionsByState('false');
-      browser.runtime.sendMessage({ type: 'track_action', action: 'expand_all_permissions' });
+      sendTrackEvent('expand_all_permissions');
     });
     collapseAllBtn.addEventListener('click', () => {
       clickSectionsByState('true');
-      browser.runtime.sendMessage({ type: 'track_action', action: 'collapse_all_permissions' });
+      sendTrackEvent('collapse_all_permissions');
     });
 
     const btnGroup = document.createElement('span');
@@ -278,11 +279,7 @@ export function setupPermissionSearch(): PermissionSearchController | null {
     countLabel.style.display = 'block';
     countLabel.textContent = `Showing ${visibleCount} of ${totalCount} permissions`;
 
-    browser.runtime.sendMessage({
-      type: 'track_action',
-      action: 'permission_search',
-      metadata: { query: q, results_count: visibleCount, total_count: totalCount }
-    });
+    sendTrackEvent('permission_search', { query: q, results_count: visibleCount, total_count: totalCount });
   }
 
   function clearFilter() {

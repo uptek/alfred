@@ -372,11 +372,18 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify(eventData)
-    }).catch(() => {
-      // Silently ignore errors - analytics should never break the user experience
-    });
-  } catch (error) {
-    // Silently ignore all errors
-    console.debug('Analytics error:', error);
+    }).catch(() => {});
+  } catch {
+    // Analytics should never break the user experience
   }
+}
+
+/**
+ * Send a track_action message from a content script to the background script.
+ * Falls back to calling trackAction() directly if the background is unavailable.
+ */
+export function sendTrackEvent(action: AnalyticsAction, metadata?: Record<string, unknown>): void {
+  browser.runtime.sendMessage({ type: 'track_action', action, metadata }).catch(() => {
+    trackAction(action, metadata);
+  });
 }

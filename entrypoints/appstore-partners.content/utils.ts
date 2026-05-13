@@ -1,3 +1,4 @@
+import { sendTrackEvent } from '@/utils/analytics';
 import defaultIcon from '@/assets/icon-default.svg';
 import privacyIcon from '@/assets/icon-privacy.svg';
 import tutorialIcon from '@/assets/icon-tutorial.svg';
@@ -320,16 +321,7 @@ export const downloadCSV = (apps: App[]) => {
   // Clean up
   document.body.removeChild(link);
 
-  // Track CSV export via background script
-  browser.runtime.sendMessage({
-    type: 'track_action',
-    action: 'appstore_partner_table_export',
-    metadata: {
-      app_count: apps.length,
-      page_url: window.location.href,
-      page_type: 'appstore_partners'
-    }
-  });
+  sendTrackEvent('appstore_partner_table_export', { app_count: apps.length, page_url: window.location.href, page_type: 'appstore_partners' });
 };
 
 export const getResourceIcon = (resource: Resource) => {

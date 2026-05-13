@@ -1,4 +1,5 @@
 import { getItem, setItem } from '~/utils/storage';
+import { sendTrackEvent } from '~/utils/analytics';
 
 type SidebarState = 'collapsed' | 'expanded';
 
@@ -148,14 +149,7 @@ const injectToggleElement = (): void => {
       // Save the state to storage
       await setItem('admin-sidebar-state', SIDEBAR_STATE);
 
-      // Track toggle admin sidebar event
-      browser.runtime.sendMessage({
-        type: 'track_action',
-        action: 'toggle_admin_sidebar',
-        metadata: {
-          state: SIDEBAR_STATE
-        }
-      });
+      sendTrackEvent('toggle_admin_sidebar', { state: SIDEBAR_STATE });
     })();
   });
 

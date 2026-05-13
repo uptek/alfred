@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { sendTrackEvent } from '@/utils/analytics';
   import {
     buildHotlinkUrl, generatePresetId, getPresets, savePreset,
     deletePreset, exportPresets, importPresets, normalizePresetHandle
@@ -92,10 +93,7 @@
     presets = presets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p));
     if (presetToApply) selectedPreset = updatedPreset;
 
-    browser.runtime.sendMessage({
-      type: 'track_action', action: 'apply_preset',
-      metadata: { permissions_count: (preset.permissions ?? []).length, has_custom_message: !!preset.customMessage, source }
-    });
+    sendTrackEvent('apply_preset', { permissions_count: (preset.permissions ?? []).length, has_custom_message: !!preset.customMessage, source });
 
     Toast.success(`Applied preset "${updatedPreset.name}"`);
   }
@@ -189,10 +187,7 @@
     try {
       const savedPreset = await savePreset(newPreset);
       presets = [...presets, savedPreset];
-      browser.runtime.sendMessage({
-        type: 'track_action', action: 'save_preset',
-        metadata: { permissions_count: permissions.length, has_custom_message: !!customMessage }
-      });
+      sendTrackEvent('save_preset', { permissions_count: permissions.length, has_custom_message: !!customMessage });
       Toast.success(`Saved preset "${savedPreset.name}"`);
     } catch (error) {
       console.error('Failed to save preset:', error);
