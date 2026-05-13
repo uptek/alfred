@@ -321,7 +321,11 @@ export const downloadCSV = (apps: App[]) => {
   // Clean up
   document.body.removeChild(link);
 
-  sendTrackEvent('appstore_partner_table_export', { app_count: apps.length, page_url: window.location.href, page_type: 'appstore_partners' });
+  sendTrackEvent('appstore_partner_table_export', {
+    app_count: apps.length,
+    page_url: window.location.href,
+    page_type: 'appstore_partners'
+  });
 };
 
 export const getResourceIcon = (resource: Resource) => {
