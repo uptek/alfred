@@ -126,6 +126,12 @@
         {#if (developer || price) && currentVersion}<span class="hero__byline-dot"></span>{/if}
         {#if currentVersion}<span>v{currentVersion}</span>{/if}
       </div>
+      {#if storeInfo.shopDomain}
+        <div class="hero__store-url">
+          <span class="hero__store-domain">{storeInfo.shopDomain}</span>
+          <CopyIcon text={storeInfo.shopDomain} class="copy-trigger" />
+        </div>
+      {/if}
     </div>
     <div class="hero__actions">
       {#if themeStoreUrl}
@@ -409,6 +415,8 @@
   .hero__byline-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-muted); opacity: 0.5; }
   .hero__developer-link { color: var(--text-secondary); text-decoration: underline; text-decoration-color: var(--text-muted); text-underline-offset: 2px; transition: text-decoration-color 0.12s; }
   .hero__developer-link:hover { text-decoration-color: var(--text-secondary); }
+  .hero__store-url { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+  .hero__store-domain { font-family: 'SF Mono', ui-monospace, monospace; font-size: 11.5px; color: var(--text-muted); }
   .hero__actions { display: flex; gap: 6px; flex-shrink: 0; padding-bottom: 4px; }
 
   /* Btn block */
