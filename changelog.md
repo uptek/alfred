@@ -2,6 +2,8 @@
 
 ## 2026.05.13
 @ 2026-05-13
+The store's .myshopify.com domain is now displayed in the popup, so you can quickly identify and copy it.
+
 Improvements to analytics tracking so we can better understand how Alfred is being used and catch issues earlier.
 
 - Added activation tracking to measure how many users open the popup after installing.
