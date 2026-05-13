@@ -48,9 +48,9 @@ export type AnalyticsAction =
   | 'expand_all_permissions'
   | 'collapse_all_permissions'
   | 'popup_open'
-  | 'review_nudge_shown'
-  | 'review_nudge_clicked'
-  | 'review_nudge_dismissed';
+  | 'review_nudge_show'
+  | 'review_nudge_click'
+  | 'review_nudge_dismiss';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -104,9 +104,9 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   expand_all_permissions: 10,
   collapse_all_permissions: 10,
   popup_open: 0,
-  review_nudge_shown: 0,
-  review_nudge_clicked: 0,
-  review_nudge_dismissed: 0
+  review_nudge_show: 0,
+  review_nudge_click: 0,
+  review_nudge_dismiss: 0
 };
 
 // --- Usage Stats (local tracking) ---
@@ -124,9 +124,9 @@ const MILESTONE_THRESHOLD = 3;
  *  - detect_theme: fires on every popup open, would trivially reach the milestone */
 const EXCLUDED_FROM_STATS = new Set<AnalyticsAction>([
   'popup_open',
-  'review_nudge_shown',
-  'review_nudge_clicked',
-  'review_nudge_dismissed',
+  'review_nudge_show',
+  'review_nudge_click',
+  'review_nudge_dismiss',
   'detect_theme'
 ]);
 
@@ -174,9 +174,9 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   clear_cart: 'Storefront',
   autofill_storefront_password: 'Storefront',
   popup_open: 'Activation',
-  review_nudge_shown: 'Insights',
-  review_nudge_clicked: 'Insights',
-  review_nudge_dismissed: 'Insights'
+  review_nudge_show: 'Insights',
+  review_nudge_click: 'Insights',
+  review_nudge_dismiss: 'Insights'
 };
 
 /** Local usage stats persisted in `local:usage_stats`.
@@ -281,9 +281,9 @@ export async function isReviewDismissed(): Promise<boolean> {
  * @returns true if this is the first time (event should be tracked)
  */
 export async function markNudgeShown(): Promise<boolean> {
-  const alreadyShown = (await getItem<boolean>('review_nudge_shown_once')) ?? false;
+  const alreadyShown = (await getItem<boolean>('review_nudge_show_once')) ?? false;
   if (alreadyShown) return false;
-  await setItem('review_nudge_shown_once', true);
+  await setItem('review_nudge_show_once', true);
   return true;
 }
 

@@ -48,9 +48,9 @@ const VALID_ACTIONS = [
   'expand_all_permissions',
   'collapse_all_permissions',
   'popup_open',
-  'review_nudge_shown',
-  'review_nudge_clicked',
-  'review_nudge_dismissed'
+  'review_nudge_show',
+  'review_nudge_click',
+  'review_nudge_dismiss'
 ];
 
 serve(async (req) => {

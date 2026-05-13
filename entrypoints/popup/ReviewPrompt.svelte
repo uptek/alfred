@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { trackAction } from '@/utils/analytics';
+  import { trackAction, markNudgeShown } from '@/utils/analytics';
 
   const CWS_REVIEW_URL = 'https://chromewebstore.google.com/detail/jbdcmokdibodbplhjcajgcbmnflcchbi/reviews';
   const FEEDBACK_URL = 'https://tally.so/r/nPgYx0';
@@ -8,12 +8,18 @@
 
   let hovered = $state(0);
 
+  $effect(() => {
+    markNudgeShown().then((firstTime) => {
+      if (firstTime) trackAction('review_nudge_show');
+    });
+  });
+
   function handleRate(rating: number) {
     if (rating === 5) {
-      trackAction('review_nudge_clicked');
+      trackAction('review_nudge_click');
       browser.tabs.create({ url: CWS_REVIEW_URL });
     } else {
-      trackAction('review_nudge_dismissed');
+      trackAction('review_nudge_dismiss');
       browser.tabs.create({ url: FEEDBACK_URL });
     }
   }
