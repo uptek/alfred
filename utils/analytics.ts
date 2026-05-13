@@ -47,6 +47,7 @@ export type AnalyticsAction =
   | 'permission_search'
   | 'expand_all_permissions'
   | 'collapse_all_permissions'
+  | 'popup_open'
   | 'review_nudge_shown'
   | 'review_nudge_clicked'
   | 'review_nudge_dismissed';
@@ -102,6 +103,7 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   permission_search: 20,
   expand_all_permissions: 10,
   collapse_all_permissions: 10,
+  popup_open: 0,
   review_nudge_shown: 0,
   review_nudge_clicked: 0,
   review_nudge_dismissed: 0
@@ -121,6 +123,7 @@ const MILESTONE_THRESHOLD = 3;
  *  - review_nudge_* events: prevent the Insights Card from inflating its own counters
  *  - detect_theme: fires on every popup open, would trivially reach the milestone */
 const EXCLUDED_FROM_STATS = new Set<AnalyticsAction>([
+  'popup_open',
   'review_nudge_shown',
   'review_nudge_clicked',
   'review_nudge_dismissed',
@@ -170,6 +173,7 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   appstore_partner_table_export: 'App Store',
   clear_cart: 'Storefront',
   autofill_storefront_password: 'Storefront',
+  popup_open: 'Activation',
   review_nudge_shown: 'Insights',
   review_nudge_clicked: 'Insights',
   review_nudge_dismissed: 'Insights'

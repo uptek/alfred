@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getTheme } from './utils';
+  import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
@@ -40,6 +41,7 @@
   let loading = $state(true);
 
   $effect(() => {
+    trackAction('popup_open');
     const fetchStoreInfo = async () => {
       const storeData = await getTheme();
       storeInfo = storeData;

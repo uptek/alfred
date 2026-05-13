@@ -47,6 +47,7 @@ const VALID_ACTIONS = [
   'permission_search',
   'expand_all_permissions',
   'collapse_all_permissions',
+  'popup_open',
   'review_nudge_shown',
   'review_nudge_clicked',
   'review_nudge_dismissed'
