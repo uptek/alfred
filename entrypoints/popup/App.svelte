@@ -41,9 +41,9 @@
   let loading = $state(true);
 
   $effect(() => {
-    trackAction('popup_open');
     const fetchStoreInfo = async () => {
       const storeData = await getTheme();
+      trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
       storeInfo = storeData;
       loading = false;
     };
