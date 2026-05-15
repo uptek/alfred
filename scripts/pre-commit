@@ -1,0 +1,5 @@
+#!/bin/sh
+
+bun run lint || exit 1
+bun run format:check || exit 1
+bun run typecheck || exit 1

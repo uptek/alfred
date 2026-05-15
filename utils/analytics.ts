@@ -333,6 +333,10 @@ export function formatTimeSaved(seconds: number): string {
  */
 export async function trackAction(action: AnalyticsAction, metadata?: Record<string, unknown>): Promise<void> {
   try {
+    // Respect user's privacy opt-out
+    const settings = await getItem<AlfredSettings>('settings');
+    if (settings?.general?.analytics === false) return;
+
     // Local stats first — runs in dev too, before early return
     incrementAction(action, metadata).catch(() => {});
 

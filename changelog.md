@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.05.16
+@ 2026-05-16
+You can now opt out of anonymous usage analytics from Settings. When disabled, no data is sent externally — Alfred works fully offline.
+
+
 ## 2026.05.13
 @ 2026-05-13
 The store's .myshopify.com domain is now displayed in the popup, so you can quickly identify and copy it.

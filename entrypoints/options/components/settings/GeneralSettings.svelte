@@ -4,6 +4,7 @@
   const store = getSettingsStore();
 
   const settingsItems = [
+    { key: 'analytics', label: 'Share anonymous usage analytics', details: 'When enabled, anonymous feature usage data (e.g. which actions are used) is sent to help improve Alfred. No identifiable data is ever collected.' },
     { key: 'restoreRightClick', label: 'Restore right-click', details: 'Re-enables right-click context menu and text selection on Shopify sites that block them' }
   ];
 </script>

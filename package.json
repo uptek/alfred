@@ -1,6 +1,6 @@
 {
   "name": "alfred",
-  "version": "2026.05.13",
+  "version": "2026.05.16",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,6 +19,7 @@
     "changelog:gen": "bun scripts/generate-changelog.ts",
     "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
     "submit": "bash scripts/submit.sh",
+    "prepare": "cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

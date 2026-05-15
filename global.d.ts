@@ -34,6 +34,7 @@ declare namespace ContextMenu {
 
 declare interface AlfredSettings {
   general?: {
+    analytics?: boolean;
     restoreRightClick?: boolean;
   };
   themeCustomizer?: {
