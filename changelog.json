@@ -1,5 +1,15 @@
 [
   {
+    "version": "2026.05.16",
+    "date": "2026-05-16",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "You can now opt out of anonymous usage analytics from Settings. When disabled, no data is sent externally — Alfred works fully offline."
+      }
+    ]
+  },
+  {
     "version": "2026.05.13",
     "date": "2026-05-13",
     "changes": [
