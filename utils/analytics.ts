@@ -358,6 +358,10 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       return;
     }
 
+    // Respect user's privacy opt-out
+    const settings = await getItem<AlfredSettings>('settings');
+    if (settings?.general?.analytics === false) return;
+
     // Send to Supabase (fire and forget)
     fetch(TRACK_ENDPOINT, {
       method: 'POST',
