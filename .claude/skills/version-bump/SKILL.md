@@ -59,6 +59,12 @@ mixing the content block types below in any order.
 
 #### Content block types
 
+**Heading** — section title to group related changes:
+
+```json
+{ "type": "heading", "content": "Permission Preset Improvements" }
+```
+
 **Paragraph** — a single descriptive sentence or short paragraph:
 
 ```json
@@ -85,9 +91,11 @@ mixing the content block types below in any order.
 
 #### Typical patterns
 
-- Single feature: one `paragraph`
-- Multiple small changes: one `list`
-- Feature with demo: `paragraph` + `video` or `paragraph` + `image`
+- Single feature: `heading` + `paragraph`
+- Multiple related changes: `heading` + `list`
+- Feature with demo: `heading` + `paragraph` + `video` or `image`
+- Multiple topics in one release: repeat `heading` + content for each topic
+- Use headings liberally — they make the changelog scannable
 - Mix as needed — the UI renders them in order
 
 ## Important

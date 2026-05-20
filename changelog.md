@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.05.20
+@ 2026-05-20
+
+### Permission Preset Improvements
+- Permission presets now appear correctly when navigating to a collaboration request via the Dev Dashboard sidebar.
+- The hotlink modal now shows a direct auto-apply URL you can bookmark or share, in addition to the Mantle integration URL.
+- Applying a preset scrolls to the bottom of the page so the Save preset and Request access buttons are visible.
+
 ## 2026.05.16
 @ 2026-05-16
 You can now opt out of anonymous usage analytics from Settings. When disabled, no data is sent externally — Alfred works fully offline.

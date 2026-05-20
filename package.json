@@ -1,6 +1,6 @@
 {
   "name": "alfred",
-  "version": "2026.05.16",
+  "version": "2026.05.20",
   "private": true,
   "type": "module",
   "scripts": {
