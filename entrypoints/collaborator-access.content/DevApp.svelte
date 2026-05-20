@@ -19,6 +19,7 @@
   let selectedPreset = $state.raw<PermissionPreset | null>(null);
   let checkedPresets = $state.raw<Set<string>>(new Set());
   let hotlinkUrl = $state('');
+  let hotlinkBareUrl = $state('');
   let hotlinkHandle = $state('');
   let autoApplyAttempted = $state(false);
   let showHotlinkModal = $state(false);
@@ -108,7 +109,7 @@
 
     window.setTimeout(() => {
       window.scrollTo({ top: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight), behavior: 'smooth' });
-    }, 100 + permissions.length * 50 + 100);
+    }, 100 + permissions.length * 50 + 400);
 
     const updatedPreset = await savePreset({ ...preset, lastUsed: Date.now() });
     presets = presets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p));
@@ -162,6 +163,9 @@
    */
   function handleOpenHotlinkModal(preset: PermissionPreset) {
     hotlinkUrl = buildHotlinkUrl(preset.handle, adapter.type);
+    const bare = new URL(window.location.href);
+    bare.searchParams.set('alfred_preset', preset.handle);
+    hotlinkBareUrl = bare.toString();
     hotlinkHandle = preset.handle;
     showHotlinkModal = true;
   }
@@ -252,6 +256,18 @@
     <p class="text-body-sm text-text-subdued mb-4">
       <em>Note: Renaming the preset changes the handle and breaks existing hotlinks.</em>
     </p>
+    <div class="flex gap-2 items-center mb-4">
+      <input
+        type="text"
+        class="w-full h-8 rounded bg-background-surface-default px-3 text-body-sm"
+        style="border:1px solid #59767A;flex:1;"
+        value={hotlinkBareUrl}
+        readonly
+      >
+      <button class="button button-variant-primary button-size-medium" style="height:32px;" onclick={() => navigator.clipboard.writeText(hotlinkBareUrl).then(() => Toast.success('URL copied')).catch(() => Toast.error('Failed to copy URL'))} aria-label="Copy URL">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path fill-rule="evenodd" d="M6.515 4.75a2 2 0 0 1 1.985-1.75h3a2 2 0 0 1 1.985 1.75h.265a2.25 2.25 0 0 1 2.25 2.25v7.75a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-7.75a2.25 2.25 0 0 1 2.25-2.25h.265Zm1.985-.25h3a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5Zm-1.987 1.73.002.02h-.265a.75.75 0 0 0-.75.75v7.75c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75v-7.75a.75.75 0 0 0-.75-.75h-.265a2 2 0 0 1-1.985 1.75h-3a2 2 0 0 1-1.987-1.77Z"></path></svg>
+      </button>
+    </div>
     <div style="border-top:1px solid var(--color-border-default,#333);margin-bottom:16px;"></div>
     <p class="text-body-sm mb-3">
       <strong>Mantle</strong> — Use as a Mantle custom action by pasting the following URL into the custom action's URL field.
@@ -264,7 +280,7 @@
         value={hotlinkUrl}
         readonly
       >
-      <button class="button button-variant-primary button-size-medium" style="height:32px;" onclick={handleCopyHotlinkUrl} aria-label="Copy URL">
+      <button class="button button-variant-primary button-size-medium" style="height:32px;" onclick={handleCopyHotlinkUrl} aria-label="Copy Mantle URL">
         <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path fill-rule="evenodd" d="M6.515 4.75a2 2 0 0 1 1.985-1.75h3a2 2 0 0 1 1.985 1.75h.265a2.25 2.25 0 0 1 2.25 2.25v7.75a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-7.75a2.25 2.25 0 0 1 2.25-2.25h.265Zm1.985-.25h3a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5Zm-1.987 1.73.002.02h-.265a.75.75 0 0 0-.75.75v7.75c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75v-7.75a.75.75 0 0 0-.75-.75h-.265a2 2 0 0 1-1.985 1.75h-3a2 2 0 0 1-1.987-1.77Z"></path></svg>
       </button>
     </div>

@@ -10,7 +10,7 @@ import type { ContentScriptContext } from '#imports';
 const ALFRED_SENTINEL_ID = 'alfred-collaborator-access';
 
 export default defineContentScript({
-  matches: ['*://partners.shopify.com/*/stores/new*', '*://dev.shopify.com/dashboard/*/stores/collaborations/*'],
+  matches: ['*://partners.shopify.com/*/stores/new*', '*://dev.shopify.com/dashboard/*'],
   async main(ctx) {
     const isPartnerDashboard = window.location.hostname === 'partners.shopify.com';
     const isDevDashboard = window.location.hostname === 'dev.shopify.com';
