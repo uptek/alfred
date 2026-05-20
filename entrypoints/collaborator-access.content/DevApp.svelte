@@ -107,12 +107,7 @@
     }
 
     window.setTimeout(() => {
-      const bottomBar = document.getElementById('alfred-collab-bottom-bar');
-      if (bottomBar) {
-        bottomBar.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      } else {
-        window.scrollTo({ top: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight), behavior: 'smooth' });
-      }
+      window.scrollTo({ top: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight), behavior: 'smooth' });
     }, 100 + permissions.length * 50 + 400);
 
     const updatedPreset = await savePreset({ ...preset, lastUsed: Date.now() });
