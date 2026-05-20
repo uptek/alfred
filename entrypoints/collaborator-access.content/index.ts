@@ -131,6 +131,7 @@ async function tryInjectDevDashboard(ctx: ContentScriptContext) {
   const formCard = messageCard?.closest('.card');
   if (formCard && submitBtn) {
     const bottomBar = document.createElement('div');
+    bottomBar.id = 'alfred-collab-bottom-bar';
     bottomBar.className = 'flex justify-end gap-2 mt-4 max-w-[768px]';
 
     const bottomSaveBtn = document.createElement('button');
