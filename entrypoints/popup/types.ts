@@ -1,3 +1,17 @@
+export interface RawHeading {
+  level: number;
+  text: string;
+  isHidden: boolean;
+}
+
+export type HeadingIssueType = 'missing-h1' | 'multiple-h1' | 'skipped-level' | 'empty' | 'h1-not-first';
+
+export interface HeadingIssue {
+  type: HeadingIssueType;
+  details?: string;
+  index?: number;
+}
+
 export type InfoItemType = 'url' | 'text';
 
 export interface InfoItemProps {
