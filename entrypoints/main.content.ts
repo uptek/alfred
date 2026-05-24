@@ -59,6 +59,10 @@ export default defineContentScript({
      * and send the response back to the registered script
      */
     browser.runtime.onMessage.addListener((request: { action: string }, _sender, sendResponse) => {
+      /**
+       * Relays theme detection request to the main world script via postMessage and returns Shopify theme data.
+       * @returns {{ isShopify: boolean, theme: object | null, shop: string | null }}
+       */
       if (request.action === 'get_theme') {
         // Create a unique request ID
         const requestId = Date.now() + '_' + Math.random();
@@ -114,6 +118,45 @@ export default defineContentScript({
 
         // Return true to indicate async response
         return true;
+      }
+
+      /**
+       * Extracts all H1-H6 headings from the page in DOM order.
+       * @returns {{ level: number, text: string, isHidden: boolean }[]}
+       */
+      if (request.action === 'get_headings') {
+        const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).map((el) => ({
+          level: parseInt(el.tagName.charAt(1)),
+          text: (el.textContent ?? '').trim(),
+          isHidden: !(el as HTMLElement).checkVisibility()
+        }));
+        sendResponse(headings);
+        return false;
+      }
+
+      /**
+       * Scrolls to a heading by its zero-based DOM index and applies a brief green outline highlight.
+       * @param {number} request.index - Zero-based index of the heading among all H1-H6 elements.
+       */
+      if (request.action === 'scroll_to_heading') {
+        const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        const target = allHeadings[(request as { action: string; index: number }).index];
+        if (target instanceof HTMLElement) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target.style.outline = '2px solid #95bf47';
+          target.style.outlineOffset = '2px';
+          target.style.transition = 'outline-color 0.6s';
+          setTimeout(() => {
+            target.style.outlineColor = 'transparent';
+            setTimeout(() => {
+              target.style.outline = '';
+              target.style.outlineOffset = '';
+              target.style.transition = '';
+            }, 600);
+          }, 1200);
+        }
+        sendResponse(true);
+        return false;
       }
 
       // Return false for unhandled messages
