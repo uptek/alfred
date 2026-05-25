@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.05.23
+@ 2026-05-23
+
+### SEO Headings Analyzer
+New Headings tab in the popup analyzes the heading structure (H1-H6) of any page for SEO and accessibility issues.
+
+- See all headings in an indented tree view that shows the document outline at a glance.
+- Issues are flagged automatically: missing H1, multiple H1s, skipped heading levels, empty headings, and H1 not appearing first.
+- Hidden headings (display:none, visibility:hidden) are detected and dimmed with an eye icon. Filter them on or off.
+- Click any heading to scroll to it on the page with a brief highlight.
+- Copy the full heading structure to clipboard for audits and reports.
+- Works on any website, not just Shopify stores. The popup now shows all tabs on every site with Shopify features gated contextually.
+
 ## 2026.05.20
 @ 2026-05-20
 
