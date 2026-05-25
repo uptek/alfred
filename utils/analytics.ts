@@ -48,7 +48,11 @@ export type AnalyticsAction =
   | 'popup_open'
   | 'review_nudge_show'
   | 'review_nudge_click'
-  | 'review_nudge_dismiss';
+  | 'review_nudge_dismiss'
+  | 'headings_view'
+  | 'headings_scroll_to'
+  | 'headings_copy'
+  | 'headings_toggle_hidden';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -77,7 +81,7 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   disable_theme_inspector: 3,
   resize_theme_customizer: 3,
   toggle_admin_sidebar: 0,
-  detect_theme: 15,
+  detect_theme: 30,
   autofill_storefront_password: 10,
   open_image_in_admin: 15,
   exit_theme_preview: 20,
@@ -102,7 +106,11 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   popup_open: 0,
   review_nudge_show: 0,
   review_nudge_click: 0,
-  review_nudge_dismiss: 0
+  review_nudge_dismiss: 0,
+  headings_view: 60,
+  headings_scroll_to: 5,
+  headings_copy: 30,
+  headings_toggle_hidden: 5
 };
 
 // --- Usage Stats (local tracking) ---
@@ -122,9 +130,12 @@ const EXCLUDED_FROM_STATS = new Set<AnalyticsAction>([
   'popup_open',
   'review_nudge_show',
   'review_nudge_click',
-  'review_nudge_dismiss',
-  'detect_theme'
+  'review_nudge_dismiss'
 ]);
+
+const COOLDOWN_MS: Partial<Record<AnalyticsAction, number>> = {
+  detect_theme: 5 * 60 * 1000
+};
 
 /** Maps every analytics action to a human-readable category for the
  *  "most used" stat in the Insights Card. Exhaustive — TypeScript will
@@ -170,7 +181,11 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   popup_open: 'Activation',
   review_nudge_show: 'Insights',
   review_nudge_click: 'Insights',
-  review_nudge_dismiss: 'Insights'
+  review_nudge_dismiss: 'Insights',
+  headings_view: 'SEO',
+  headings_scroll_to: 'SEO',
+  headings_copy: 'SEO',
+  headings_toggle_hidden: 'SEO'
 };
 
 /** Local usage stats persisted in `local:usage_stats`.
@@ -336,6 +351,15 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
     // Respect user's privacy opt-out
     const settings = await getItem<AlfredSettings>('settings');
     if (settings?.general?.analytics === false) return;
+
+    // Cooldown check — skip both local stats and Supabase if fired too recently
+    const cooldown = COOLDOWN_MS[action];
+    if (cooldown) {
+      const key = `cooldown_${action}`;
+      const lastFired = (await getItem<number>(key)) ?? 0;
+      if (Date.now() - lastFired < cooldown) return;
+      await setItem(key, Date.now());
+    }
 
     // Local stats first — runs in dev too, before early return
     incrementAction(action, metadata).catch(() => {});
