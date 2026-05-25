@@ -143,17 +143,17 @@ export default defineContentScript({
         const target = allHeadings[(request as { action: string; index: number }).index];
         if (target instanceof HTMLElement) {
           target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          target.style.outline = '2px solid #95bf47';
-          target.style.outlineOffset = '2px';
-          target.style.transition = 'outline-color 0.6s';
+          target.style.outline = '2px dashed #95bf47';
+          target.style.outlineOffset = '3px';
+          target.style.transition = 'outline-color 0.8s';
           setTimeout(() => {
             target.style.outlineColor = 'transparent';
             setTimeout(() => {
               target.style.outline = '';
               target.style.outlineOffset = '';
               target.style.transition = '';
-            }, 600);
-          }, 1200);
+            }, 800);
+          }, 5000);
         }
         sendResponse(true);
         return false;

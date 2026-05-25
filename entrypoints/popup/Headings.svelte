@@ -63,7 +63,8 @@
   }
 
   async function handleCopy() {
-    const text = headings
+    const source = showHidden ? headings : headings.filter(h => !h.isHidden);
+    const text = source
       .map(h => `${'  '.repeat(h.level - 1)}H${h.level}: ${h.text || '(empty)'}${h.isHidden ? ' [hidden]' : ''}`)
       .join('\n');
     try {
