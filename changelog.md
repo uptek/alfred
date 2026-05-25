@@ -1,7 +1,7 @@
 # Changelog
 
-## 2026.05.23
-@ 2026-05-23
+## 2026.05.26
+@ 2026-05-26
 
 ### SEO Headings Analyzer
 New Headings tab in the popup analyzes the heading structure (H1-H6) of any page for SEO and accessibility issues.
