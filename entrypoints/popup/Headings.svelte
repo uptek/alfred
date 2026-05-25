@@ -1,8 +1,19 @@
 <script lang="ts">
   import type { RawHeading, HeadingIssue } from './types';
   import { scrollToHeading } from './utils';
+  import { trackAction } from '@/utils/analytics';
+  import { untrack } from 'svelte';
 
   let { headings, issues }: { headings: RawHeading[]; issues: HeadingIssue[] } = $props();
+
+  let tracked = false;
+  $effect(() => {
+    if (tracked || headings.length === 0) return;
+    tracked = true;
+    untrack(() => {
+      trackAction('headings_view', { heading_count: headings.length, issue_count: issues.length, hidden_count: headings.filter(h => h.isHidden).length });
+    });
+  });
 
   let showHidden = $state(true);
 
@@ -48,6 +59,7 @@
 
   function handleClick(index: number) {
     scrollToHeading(index);
+    trackAction('headings_scroll_to', { heading_level: headings[index]?.level });
   }
 
   async function handleCopy() {
@@ -57,6 +69,7 @@
     try {
       await navigator.clipboard.writeText(text);
       copyState = 'copied';
+      trackAction('headings_copy', { heading_count: headings.length, issue_count: issues.length });
       setTimeout(() => (copyState = 'idle'), 1500);
     } catch {
       // silent fail
@@ -83,7 +96,7 @@
       </div>
       <div class="statusbar__actions">
         {#if hiddenCount > 0}
-          <button class="filter" class:filter--active={!showHidden} onclick={() => (showHidden = !showHidden)}>
+          <button class="filter" class:filter--active={!showHidden} onclick={() => { showHidden = !showHidden; trackAction('headings_toggle_hidden', { show_hidden: showHidden }); }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="filter__icon"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             {hiddenCount} hidden
           </button>
