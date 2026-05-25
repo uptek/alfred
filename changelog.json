@@ -3,7 +3,10 @@
     "version": "2026.05.23",
     "date": "2026-05-23",
     "changes": [
-      { "type": "heading", "content": "SEO Headings Analyzer" },
+      {
+        "type": "heading",
+        "content": "SEO Headings Analyzer"
+      },
       {
         "type": "paragraph",
         "content": "New Headings tab in the popup analyzes the heading structure (H1-H6) of any page for SEO and accessibility issues."
@@ -18,6 +21,10 @@
           "Copy the full heading structure to clipboard for audits and reports.",
           "Works on any website, not just Shopify stores. The popup now shows all tabs on every site with Shopify features gated contextually."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-headings.mp4"
       }
     ]
   },
@@ -25,7 +32,10 @@
     "version": "2026.05.20",
     "date": "2026-05-20",
     "changes": [
-      { "type": "heading", "content": "Permission Preset Improvements" },
+      {
+        "type": "heading",
+        "content": "Permission Preset Improvements"
+      },
       {
         "type": "list",
         "content": [

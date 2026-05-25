@@ -13,6 +13,8 @@ New Headings tab in the popup analyzes the heading structure (H1-H6) of any page
 - Copy the full heading structure to clipboard for audits and reports.
 - Works on any website, not just Shopify stores. The popup now shows all tabs on every site with Shopify features gated contextually.
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-headings.mp4"></video>
+
 ## 2026.05.20
 @ 2026-05-20
 
