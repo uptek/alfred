@@ -1,5 +1,32 @@
 [
   {
+    "version": "2026.05.29",
+    "date": "2026-05-29",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "SEO Links Analyzer"
+      },
+      {
+        "type": "paragraph",
+        "content": "New Links tab in the popup gives you a full picture of every link on any page — internal, external, dofollow, nofollow — with tools to search, filter, highlight, and export."
+      },
+      {
+        "type": "list",
+        "content": [
+          "See all links in a table with URL, anchor text, dofollow status, and internal/external type.",
+          "Filter by type with a dropdown (All, Dofollow, Nofollow, Internal, External) — each showing its count.",
+          "Search links by URL or anchor text with the built-in search bar.",
+          "Highlight all links on the page with color-coded dashed outlines (green=internal, purple=external, red=nofollow).",
+          "Click any row to scroll to that link on the page with a brief highlight.",
+          "Image links are detected and labeled as [image]. Links with no anchor text are flagged.",
+          "Duplicate links show a ×N badge so you can spot repeated nav/footer links.",
+          "Export all links as CSV (all fields), JSON (all fields), or plain text (URLs only)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.05.26",
     "date": "2026-05-26",
     "changes": [

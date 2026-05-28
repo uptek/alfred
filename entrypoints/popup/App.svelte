@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { getTheme, getHeadings, analyzeHeadings } from './utils';
+  import { getTheme, getHeadings, getLinks, analyzeHeadings } from './utils';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
+  import Links from './Links.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
-  import type { StoreInfo, RawHeading } from './types';
+  import type { StoreInfo, RawHeading, RawLink } from './types';
 
-  type TabId = 'theme' | 'headings' | 'settings';
-  // Future tabs: 'apps' | 'products' | 'overview' | 'links' | 'hreflangs' | 'images' | 'schema' | 'social' | 'robots' | 'sitemaps'
+  type TabId = 'theme' | 'headings' | 'links' | 'settings';
+  // Future tabs: 'apps' | 'products' | 'overview' | 'hreflangs' | 'images' | 'schema' | 'social' | 'robots' | 'sitemaps'
 
   interface Tab {
     id: TabId;
@@ -28,6 +29,7 @@
   let activeTab = $state<TabId>('theme');
   let storeInfo = $state<StoreInfo | null>(null);
   let rawHeadings = $state<RawHeading[]>([]);
+  let rawLinks = $state<RawLink[]>([]);
   let loading = $state(true);
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
@@ -40,7 +42,7 @@
       ...(headingIssues.length > 0 ? { badge: { count: headingIssues.length, color: 'red' as const } } : {})
     },
     // { id: 'overview', label: 'Overview', icon: 'overview' },
-    // { id: 'links', label: 'Links', icon: 'links' },
+    { id: 'links' as TabId, label: 'Links', icon: 'links' },
     // { id: 'hreflangs', label: 'Hreflangs', icon: 'hreflangs' },
     // { id: 'images', label: 'Images', icon: 'images' },
     // { id: 'schema', label: 'Schema', icon: 'schema' },
@@ -51,10 +53,11 @@
 
   $effect(() => {
     const fetchData = async () => {
-      const [storeData, headingsData] = await Promise.all([getTheme(), getHeadings()]);
+      const [storeData, headingsData, linksData] = await Promise.all([getTheme(), getHeadings(), getLinks()]);
       trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
       storeInfo = storeData;
       rawHeadings = headingsData;
+      rawLinks = linksData;
       if (!storeData?.isShopify) {
         activeTab = 'headings';
       }
@@ -71,6 +74,8 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
   {:else if icon === 'headings'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 6h16M4 12h8m-8 6h16"/></svg>
+  {:else if icon === 'links'}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
   <!-- Future tab icons (uncomment as tabs are enabled)
   {:else if icon === 'apps'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -78,8 +83,6 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg>
   {:else if icon === 'overview'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-  {:else if icon === 'links'}
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
   {:else if icon === 'hreflangs'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
   {:else if icon === 'images'}
@@ -180,6 +183,8 @@
           {/if}
         {:else if activeTab === 'headings'}
           <Headings headings={rawHeadings} issues={headingIssues} />
+        {:else if activeTab === 'links'}
+          <Links links={rawLinks} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'settings'}
           <div class="content__pad">
             <Settings storeInfo={storeInfo ?? { isShopify: false, shopDomain: null, domain: null, page_url: null, theme: null }} />
