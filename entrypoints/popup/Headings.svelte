@@ -103,8 +103,12 @@
           </button>
         {/if}
         <button class="copy-btn" onclick={handleCopy} title="Copy headings to clipboard">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="copy-btn__icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-          {copyState === 'copied' ? 'Copied' : 'Copy'}
+          {#if copyState === 'copied'}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="copy-btn__icon"><polyline points="20 6 9 17 4 12"/></svg>
+          {:else}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="copy-btn__icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          {/if}
+          Copy
         </button>
       </div>
     </div>
@@ -219,26 +223,26 @@
 
   /* Counts */
   .counts { display: flex; gap: 2px; }
-  .counts__item { display: flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 4px; background: var(--bg-inset); }
+  .counts__item { display: flex; align-items: center; gap: 3px; padding: 0 8px; height: 28px; border-radius: 6px; background: var(--bg-inset); }
   .counts__item--zero { opacity: 0.4; }
   .counts__label { font-family: 'SF Mono', ui-monospace, monospace; font-size: 10px; font-weight: 600; color: var(--text-muted); }
   .counts__value { font-size: 11px; font-weight: 600; color: var(--text); }
   .counts__item--zero .counts__value { color: var(--text-muted); }
 
   /* Filter */
-  .filter { display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+  .filter { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
   .filter:hover { border-color: var(--border-hover); color: var(--text-secondary); }
-  .filter--active { background: var(--text); color: var(--bg); border-color: var(--text); }
-  .filter--active:hover { background: var(--text-secondary); border-color: var(--text-secondary); color: var(--bg); }
-  .filter__icon { width: 12px; height: 12px; stroke-width: 2; }
+  .filter--active { background: var(--btn-bg); color: var(--btn-text); border-color: var(--btn-bg); }
+  .filter--active:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); color: var(--btn-text); }
+  .filter__icon { width: 13px; height: 13px; stroke-width: 1.8; }
 
   /* Actions */
   .statusbar__actions { display: flex; align-items: center; gap: 6px; }
 
   /* Copy button */
-  .copy-btn { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 75px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .copy-btn:hover { border-color: var(--border-hover); background: var(--bg-hover); }
-  .copy-btn__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; color: var(--text-muted); }
+  .copy-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+  .copy-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+  .copy-btn__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; }
 
   /* Animation */
   .headings { animation: fadeUp 0.4s ease both; }

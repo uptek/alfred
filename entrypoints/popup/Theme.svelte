@@ -218,7 +218,14 @@
             setTimeout(() => (copying = false), success ? 1200 : 0);
           }}
           disabled={copying || !storeInfo.theme?.id}
-        >{copying ? 'Copied' : 'Copy'}</button>
+        >
+          {#if copying}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="preview__copy-icon"><polyline points="20 6 9 17 4 12"/></svg>
+          {:else}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="preview__copy-icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          {/if}
+          Copy
+        </button>
       </div>
       <div class="preview__footer">
         <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -430,8 +437,10 @@
   .btn--primary :global(svg) { width: 12px; height: 12px; stroke-width: 2; }
 
   /* Stats block */
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: 10px; overflow: hidden; margin: 0 32px; box-shadow: 0 0 0 1px var(--border), var(--shadow-md); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: 10px; margin: 0 32px; box-shadow: 0 0 0 1px var(--border), var(--shadow-md); }
   .stats__cell { background: var(--bg); padding: 16px 18px; }
+  .stats__cell:first-child { border-radius: 10px 0 0 10px; }
+  .stats__cell:last-child { border-radius: 0 10px 10px 0; }
   .stats__label { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.02em; }
   .stats__value { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 3px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 6px; }
   .stats__code { font-family: 'SF Mono', ui-monospace, monospace; font-size: 13px; font-weight: 500; background: none; padding: 0; letter-spacing: 0; }
@@ -460,7 +469,8 @@
   .preview__url { display: flex; align-items: center; gap: 8px; padding: 10px 14px; }
   .preview__icon { width: 14px; height: 14px; flex-shrink: 0; }
   .preview__input { flex: 1; border: none; background: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; color: var(--text-secondary); outline: none; min-width: 0; cursor: default; }
-  .preview__copy { padding: 4px 10px; font-size: 11px; flex-shrink: 0; }
+  .preview__copy { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; font-size: 11px; font-weight: 600; flex-shrink: 0; border-radius: 6px; }
+  .preview__copy-icon { width: 13px; height: 13px; stroke-width: 1.8; flex-shrink: 0; }
   .preview__footer { display: flex; align-items: center; justify-content: flex-end; padding: 8px 14px; border-top: 1px solid var(--border-subtle); background: var(--bg-raised); }
 
   /* Toggle block */
