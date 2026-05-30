@@ -1,7 +1,7 @@
 [
   {
-    "version": "2026.05.29",
-    "date": "2026-05-29",
+    "version": "2026.05.31",
+    "date": "2026-05-31",
     "changes": [
       {
         "type": "heading",
@@ -21,8 +21,12 @@
           "Click any row to scroll to that link on the page with a brief highlight.",
           "Image links are detected and labeled as [image]. Links with no anchor text are flagged.",
           "Duplicate links show a ×N badge so you can spot repeated nav/footer links.",
-          "Export all links as CSV (all fields), JSON (all fields), or plain text (URLs only)."
+          "Export all links as CSV (all fields), JSON (all fields), or plain text (URLs only), or copy the URLs straight to your clipboard."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-links.mp4"
       }
     ]
   },
