@@ -1,4 +1,4 @@
-import type { StoreInfo, Theme, RawHeading, HeadingIssue } from './types';
+import type { StoreInfo, Theme, RawHeading, RawLink, HeadingIssue } from './types';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
 
 /**
@@ -77,6 +77,53 @@ export const scrollToHeading = async (index: number): Promise<void> => {
     }
   } catch {
     // silently fail if content script is unreachable
+  }
+};
+
+/**
+ * Toggles colored dashed outlines on all links in the active tab (green=internal, purple=external, red=nofollow).
+ * @param {boolean} enabled - Whether to apply or remove highlights.
+ */
+export const highlightLinks = async (enabled: boolean): Promise<void> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      await browser.tabs.sendMessage(tab.id, { action: 'highlight_links', enabled });
+    }
+  } catch {
+    // silently fail
+  }
+};
+
+/**
+ * Scrolls the active tab to a link by its zero-based DOM index and briefly highlights it.
+ * @param {number} index - Zero-based index of the link among all `a[href]` elements.
+ */
+export const scrollToLink = async (index: number): Promise<void> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      await browser.tabs.sendMessage(tab.id, { action: 'scroll_to_link', index });
+    }
+  } catch {
+    // silently fail
+  }
+};
+
+/**
+ * Extracts all anchor links from the active tab via content script.
+ * @returns {Promise<RawLink[]>} Array of links in DOM order, or empty array on failure.
+ */
+export const getLinks = async (): Promise<RawLink[]> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      const response = await browser.tabs.sendMessage(tab.id, { action: 'get_links' });
+      return Array.isArray(response) ? response : [];
+    }
+    return [];
+  } catch {
+    return [];
   }
 };
 

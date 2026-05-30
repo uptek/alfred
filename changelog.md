@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026.05.31
+@ 2026-05-31
+
+### SEO Links Analyzer
+New Links tab in the popup gives you a full picture of every link on any page — internal, external, dofollow, nofollow — with tools to search, filter, highlight, and export.
+
+- See all links in a table with URL, anchor text, dofollow status, and internal/external type.
+- Filter by type with a dropdown (All, Dofollow, Nofollow, Internal, External) — each showing its count.
+- Search links by URL or anchor text with the built-in search bar.
+- Highlight all links on the page with color-coded dashed outlines (green=internal, purple=external, red=nofollow).
+- Click any row to scroll to that link on the page with a brief highlight.
+- Image links are detected and labeled as [image]. Links with no anchor text are flagged.
+- Duplicate links show a ×N badge so you can spot repeated nav/footer links.
+- Export all links as CSV (all fields), JSON (all fields), or plain text (URLs only), or copy the URLs straight to your clipboard.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-links.mp4"></video>
+
 ## 2026.05.26
 @ 2026-05-26
 
@@ -13,7 +30,7 @@ New Headings tab in the popup analyzes the heading structure (H1-H6) of any page
 - Copy the full heading structure to clipboard for audits and reports.
 - Works on any website, not just Shopify stores. The popup now shows all tabs on every site with Shopify features gated contextually.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-headings.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-headings.mp4"></video>
 
 ## 2026.05.20
 @ 2026-05-20

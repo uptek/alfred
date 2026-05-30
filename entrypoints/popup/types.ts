@@ -4,6 +4,17 @@ export interface RawHeading {
   isHidden: boolean;
 }
 
+export interface RawLink {
+  index: number;
+  href: string;
+  text: string;
+  rel: string;
+  isExternal: boolean;
+  isNofollow: boolean;
+  isImage: boolean;
+  isHidden: boolean;
+}
+
 export type HeadingIssueType = 'missing-h1' | 'multiple-h1' | 'skipped-level' | 'empty' | 'h1-not-first';
 
 export interface HeadingIssue {
