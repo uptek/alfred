@@ -23,6 +23,8 @@
   let searchOpen = $state(false);
   let dropdownOpen = $state(false);
   let exportOpen = $state(false);
+  let copied = $state(false);
+  let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
   let highlightOn = $state(false);
   let searchInput = $state<HTMLInputElement | null>(null);
 
@@ -90,6 +92,7 @@
 
   onDestroy(() => {
     if (highlightOn) highlightLinks(false);
+    if (copyResetTimer) clearTimeout(copyResetTimer);
   });
 
   function handleRowClick(e: MouseEvent, index: number) {
@@ -140,6 +143,19 @@
     downloadFile(text, `alfred-links-${siteSlug}.txt`, 'text/plain');
     trackAction('links_export', { format: 'text', link_count: links.length });
     exportOpen = false;
+  }
+
+  async function copyUrls() {
+    const text = links.map(l => l.href).join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+      if (copyResetTimer) clearTimeout(copyResetTimer);
+      copyResetTimer = setTimeout(() => { copied = false; }, 1500);
+      trackAction('links_copy', { format: 'urls', link_count: links.length });
+    } catch {
+      // ignore clipboard errors
+    }
   }
 
   function setFilter(f: Filter) {
@@ -212,6 +228,11 @@
                 </button>
                 <button class="export__item" onclick={exportText}>
                   <span class="export__item-label">Text</span>
+                  <span class="export__item-desc">URLs only</span>
+                </button>
+                <div class="export__divider"></div>
+                <button class="export__item" onclick={copyUrls}>
+                  <span class="export__item-label">{copied ? 'Copied!' : 'Copy'}</span>
                   <span class="export__item-desc">URLs only</span>
                 </button>
               </div>
@@ -320,6 +341,7 @@
   .export__item:hover { background: var(--bg-hover); }
   .export__item-label { font-weight: 600; color: var(--text); }
   .export__item-desc { font-size: 11px; color: var(--text-muted); }
+  .export__divider { height: 1px; margin: 4px 6px; background: var(--border); }
 
   /* Toolbar buttons */
   .toolbar-btn { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
