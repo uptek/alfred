@@ -64,9 +64,13 @@
               </s-box>
             {:else if change.type === 'video'}
               <s-box>
+                <!-- Newest entry's video autoplays (muted+loop) to show off the latest feature -->
                 <video
                   controls
                   playsinline
+                  autoplay={entryIndex === 0}
+                  loop={entryIndex === 0}
+                  muted={entryIndex === 0}
                   src={change.content}
                   style="width: 100%; height: auto; border-radius: 8px;"
                 ></video>
