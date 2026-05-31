@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026.06.01
+@ 2026-06-01
+
+### Scripts & Styles Analyzer
+Introducing the new Assets tab — it shows every script and stylesheet a page loads, with size, load time, and performance signals, so you can see exactly what's weighing a page down.
+
+- See every script and stylesheet in one table: source, size, load time, type, and how it loads (async, defer, blocking, or inline).
+- Filter by Type (scripts or styles), Source (external, inline, or browser extension), and Loading strategy — all combine together.
+- Spot performance problems at a glance: render-blocking assets, duplicate loads, cached resources, and failed requests.
+- Sort any column, search by URL or type, and click a row to open an external file in a new tab or expand inline code.
+- Browser-extension assets injected into the page are detected and kept separate from the site's own assets.
+- Export everything as CSV or JSON, or copy the source URLs to your clipboard.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-assets.mp4"></video>
+
 ## 2026.05.31
 @ 2026-05-31
 
@@ -7,7 +22,7 @@
 New Links tab in the popup gives you a full picture of every link on any page — internal, external, dofollow, nofollow — with tools to search, filter, highlight, and export.
 
 - See all links in a table with URL, anchor text, dofollow status, and internal/external type.
-- Filter by type with a dropdown (All, Dofollow, Nofollow, Internal, External) — each showing its count.
+- Filter by Type (Internal/External), Follow (Dofollow/Nofollow), and Anchor (Text/Image/None) with separate dropdowns that stack together, and sort any column in the table.
 - Search links by URL or anchor text with the built-in search bar.
 - Highlight all links on the page with color-coded dashed outlines (green=internal, purple=external, red=nofollow).
 - Click any row to scroll to that link on the page with a brief highlight.
@@ -15,7 +30,7 @@ New Links tab in the popup gives you a full picture of every link on any page �
 - Duplicate links show a ×N badge so you can spot repeated nav/footer links.
 - Export all links as CSV (all fields), JSON (all fields), or plain text (URLs only), or copy the URLs straight to your clipboard.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-links.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-links.mp4"></video>
 
 ## 2026.05.26
 @ 2026-05-26

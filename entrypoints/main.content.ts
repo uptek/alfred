@@ -165,6 +165,149 @@ export default defineContentScript({
       }
 
       /**
+       * Extracts all scripts and stylesheets from the page in DOM order.
+       * Covers <script> (external + inline), <link rel="stylesheet">, and inline <style>.
+       * Inline content is capped to bound the messaging payload.
+       * @returns {{ index: number, kind: 'script'|'style', src: string|null, isExternal: boolean, isInline: boolean, type: string, load: string, media: string, size: number, content: string|null }[]}
+       */
+      if (request.action === 'get_assets') {
+        const pageHost = location.hostname;
+        const MAX_INLINE = 20000; // cap inline content per asset (~20KB)
+
+        const isExternalUrl = (url: string): boolean => {
+          try {
+            return new URL(url, location.href).hostname !== pageHost;
+          } catch {
+            return true;
+          }
+        };
+        // Browser-extension injected assets (e.g. content scripts) use these schemes.
+        const isBrowserExtensionUrl = (url: string): boolean =>
+          /^(?:chrome-extension|moz-extension|safari-web-extension|safari-extension):\/\//i.test(url);
+        const byteSize = (text: string): number => {
+          try {
+            return new Blob([text]).size;
+          } catch {
+            return text.length;
+          }
+        };
+
+        // Pull already-recorded timing from the Resource Timing API — no new network
+        // request. Cross-origin assets without a Timing-Allow-Origin header report 0
+        // (opaque), so third-party trackers often have no size/status/duration.
+        const sizeOf = (e: PerformanceResourceTiming) => e.encodedBodySize || e.decodedBodySize || 0;
+        const timingByUrl = new Map<string, PerformanceResourceTiming>();
+        try {
+          for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
+            const prev = timingByUrl.get(entry.name);
+            if (!prev || sizeOf(entry) > sizeOf(prev)) timingByUrl.set(entry.name, entry);
+          }
+        } catch {
+          // Resource Timing unavailable; timing-derived fields stay at defaults
+        }
+
+        const cachedOf = (t?: PerformanceResourceTiming): boolean =>
+          !!t && t.transferSize === 0 && t.decodedBodySize > 0;
+        const durationOf = (t?: PerformanceResourceTiming): number => (t ? Math.round(t.duration) : 0);
+        const statusOf = (t?: PerformanceResourceTiming): number =>
+          t ? ((t as PerformanceResourceTiming & { responseStatus?: number }).responseStatus ?? 0) : 0;
+        const sizeFromTiming = (t?: PerformanceResourceTiming): number => (t ? sizeOf(t) : 0);
+
+        const placementOf = (el: Element): 'head' | 'body' | 'footer' => {
+          if (document.head?.contains(el)) return 'head';
+          if (el.closest('footer')) return 'footer';
+          return 'body';
+        };
+
+        const nodes = document.querySelectorAll('script, link[rel~="stylesheet" i], style');
+        const assets = Array.from(nodes).map((el, i) => {
+          const tag = el.tagName.toUpperCase();
+
+          if (tag === 'SCRIPT') {
+            const s = el as HTMLScriptElement;
+            const src = s.src || null;
+            const inline = !src;
+            const content = inline ? (s.textContent ?? '') : '';
+            const t = src ? timingByUrl.get(src) : undefined;
+            const load = inline ? 'inline' : s.async ? 'async' : s.defer ? 'defer' : 'blocking';
+            const placement = placementOf(s);
+            return {
+              index: i,
+              kind: 'script' as const,
+              src,
+              // Extension-injected assets are tracked separately, not as third-party "External"
+              isExternal: src ? !isBrowserExtensionUrl(src) && isExternalUrl(src) : false,
+              isBrowserExtension: src ? isBrowserExtensionUrl(src) : false,
+              isInline: inline,
+              type: s.type ? s.type : 'classic',
+              load,
+              media: '',
+              size: inline ? byteSize(content) : sizeFromTiming(t),
+              content: inline ? content.slice(0, MAX_INLINE) : null,
+              placement,
+              cached: cachedOf(t),
+              duration: durationOf(t),
+              status: statusOf(t),
+              // Sync external script in <head> blocks the parser before first paint
+              renderBlocking: placement === 'head' && !inline && load === 'blocking'
+            };
+          }
+
+          if (tag === 'LINK') {
+            const l = el as HTMLLinkElement;
+            const href = l.href || null;
+            const t = href ? timingByUrl.get(href) : undefined;
+            const media = l.media ?? '';
+            const placement = placementOf(l);
+            return {
+              index: i,
+              kind: 'style' as const,
+              src: href,
+              isExternal: href ? !isBrowserExtensionUrl(href) && isExternalUrl(href) : false,
+              isBrowserExtension: href ? isBrowserExtensionUrl(href) : false,
+              isInline: false,
+              type: 'stylesheet',
+              load: 'blocking',
+              media,
+              size: sizeFromTiming(t),
+              content: null,
+              placement,
+              cached: cachedOf(t),
+              duration: durationOf(t),
+              status: statusOf(t),
+              // Stylesheets in <head> block render unless they target print only
+              renderBlocking: placement === 'head' && media !== 'print'
+            };
+          }
+
+          // STYLE (inline)
+          const st = el as HTMLStyleElement;
+          const content = st.textContent ?? '';
+          return {
+            index: i,
+            kind: 'style' as const,
+            src: null,
+            isExternal: false,
+            isBrowserExtension: false,
+            isInline: true,
+            type: 'inline',
+            load: 'inline',
+            media: st.media ?? '',
+            size: byteSize(content),
+            content: content.slice(0, MAX_INLINE),
+            placement: placementOf(st),
+            cached: false,
+            duration: 0,
+            status: 0,
+            renderBlocking: false // inline styles have no network cost; not flagged
+          };
+        });
+
+        sendResponse(assets);
+        return false;
+      }
+
+      /**
        * Toggles colored dashed outlines on all page links (green=internal, purple=external, red=nofollow).
        * @param {boolean} request.enabled - Whether to apply or remove highlights.
        */

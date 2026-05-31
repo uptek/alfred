@@ -1,37 +1,40 @@
 <script lang="ts">
-  import type { RawLink } from './types';
-  import { highlightLinks, scrollToLink } from './utils';
+  import type { RawAsset } from './types';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
 
-  let { links, domain }: { links: RawLink[]; domain: string | null } = $props();
+  let { assets, domain }: { assets: RawAsset[]; domain: string | null } = $props();
 
   const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
 
   let tracked = false;
   $effect(() => {
-    if (tracked || links.length === 0) return;
+    if (tracked || assets.length === 0) return;
     tracked = true;
     untrack(() => {
-      trackAction('links_view', { link_count: links.length, external_count: links.filter(l => l.isExternal).length, nofollow_count: links.filter(l => l.isNofollow).length });
+      trackAction('assets_view', {
+        total: assets.length,
+        script_count: assets.filter(a => a.kind === 'script').length,
+        style_count: assets.filter(a => a.kind === 'style').length,
+        external_count: assets.filter(a => a.isExternal).length
+      });
     });
   });
 
-  let typeFilter = $state('all');
-  let followFilter = $state('all');
-  let anchorFilter = $state('all');
-  let search = $state('');
-  let searchOpen = $state(false);
-  let openMenu = $state<'type' | 'follow' | 'anchor' | 'export' | null>(null);
-
-  type SortKey = 'index' | 'url' | 'follow' | 'type';
+  type SortKey = 'index' | 'src' | 'size' | 'time' | 'type' | 'load';
   let sortKey = $state<SortKey>('index');
   let sortDir = $state<'asc' | 'desc'>('asc');
 
+  let search = $state('');
+  let searchOpen = $state(false);
+  let openMenu = $state<'type' | 'source' | 'load' | 'export' | null>(null);
+  let typeFilter = $state('all');
+  let sourceFilter = $state('all');
+  let loadFilter = $state('all');
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
-  let highlightOn = $state(false);
   let searchInput = $state<HTMLInputElement | null>(null);
+  let expanded = $state<Set<number>>(new Set());
 
   function toggleSearch() {
     searchOpen = !searchOpen;
@@ -49,28 +52,45 @@
   }
 
   const stats = $derived.by(() => {
-    let internal = 0, external = 0, dofollow = 0, nofollow = 0, image = 0, text = 0, none = 0;
-    const counts: Record<string, number> = {};
-    for (const l of links) {
-      if (l.isExternal) external++; else internal++;
-      if (l.isNofollow) nofollow++; else dofollow++;
-      if (l.isImage) image++; else if (l.text !== '') text++; else none++;
-      counts[l.href] = (counts[l.href] ?? 0) + 1;
+    let scripts = 0, styles = 0, external = 0, inline = 0, browserExtension = 0;
+    const hrefCounts: Record<string, number> = {};
+    const loadCounts: Record<string, number> = { async: 0, defer: 0, blocking: 0, inline: 0 };
+    for (const a of assets) {
+      if (a.kind === 'script') scripts++; else styles++;
+      if (a.isExternal) external++;
+      if (a.isInline) inline++;
+      if (a.isBrowserExtension) browserExtension++;
+      loadCounts[a.load] = (loadCounts[a.load] ?? 0) + 1;
+      if (a.src) hrefCounts[a.src] = (hrefCounts[a.src] ?? 0) + 1;
     }
-    return { total: links.length, internal, external, dofollow, nofollow, image, text, none, hrefCounts: counts };
+    return { total: assets.length, scripts, styles, external, inline, browserExtension, loadCounts, hrefCounts };
   });
+
+  function matchesSource(a: RawAsset): boolean {
+    switch (sourceFilter) {
+      case 'external': return a.isExternal;
+      case 'inline': return a.isInline;
+      case 'browser-extension': return a.isBrowserExtension;
+      default: return true;
+    }
+  }
+
+  // Each facet is one single-select dimension; they combine with AND.
+  function matchesFilter(a: RawAsset): boolean {
+    if (typeFilter !== 'all' && a.kind !== typeFilter) return false;
+    if (sourceFilter !== 'all' && !matchesSource(a)) return false;
+    if (loadFilter !== 'all' && a.load !== loadFilter) return false;
+    return true;
+  }
 
   const filtered = $derived.by(() => {
     const q = search.toLowerCase();
-    return links.filter(link => {
-      if (typeFilter === 'internal' && link.isExternal) return false;
-      if (typeFilter === 'external' && !link.isExternal) return false;
-      if (followFilter === 'dofollow' && link.isNofollow) return false;
-      if (followFilter === 'nofollow' && !link.isNofollow) return false;
-      if (anchorFilter === 'text' && (link.isImage || link.text === '')) return false;
-      if (anchorFilter === 'image' && !link.isImage) return false;
-      if (anchorFilter === 'none' && (link.isImage || link.text !== '')) return false;
-      if (q && !link.href.toLowerCase().includes(q) && !link.text.toLowerCase().includes(q)) return false;
+    return assets.filter(a => {
+      if (!matchesFilter(a)) return false;
+      if (q) {
+        const hay = `${a.src ?? ''} ${a.type}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       return true;
     });
   });
@@ -80,9 +100,11 @@
     return [...filtered].sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
-        case 'url': cmp = a.href.localeCompare(b.href); break;
-        case 'follow': cmp = (a.isNofollow ? 1 : 0) - (b.isNofollow ? 1 : 0); break;
-        case 'type': cmp = (a.isExternal ? 1 : 0) - (b.isExternal ? 1 : 0); break;
+        case 'src': cmp = (a.src ?? 'inline').localeCompare(b.src ?? 'inline'); break;
+        case 'size': cmp = a.size - b.size; break;
+        case 'time': cmp = a.duration - b.duration; break;
+        case 'type': cmp = a.kind.localeCompare(b.kind); break;
+        case 'load': cmp = a.load.localeCompare(b.load); break;
         default: cmp = a.index - b.index;
       }
       if (cmp !== 0) return cmp * dir;
@@ -95,42 +117,62 @@
       sortDir = sortDir === 'asc' ? 'desc' : 'asc';
     } else {
       sortKey = key;
-      sortDir = 'asc';
+      // numbers default to largest/slowest first; text defaults A→Z
+      sortDir = key === 'size' || key === 'time' ? 'desc' : 'asc';
     }
-    trackAction('links_sort', { key, dir: sortDir });
+    trackAction('assets_sort', { key, dir: sortDir });
   }
 
-  function displayUrl(link: RawLink): string {
+  function displaySource(a: RawAsset): string {
+    if (!a.src) return 'inline';
     try {
-      const url = new URL(link.href);
-      if (!link.isExternal) {
-        const path = url.pathname + url.search + url.hash;
-        return path || '/';
-      }
+      const url = new URL(a.src);
       const host = url.hostname.replace(/^www\./, '');
-      const rest = url.pathname + url.search + url.hash;
-      if (rest === '/') return host;
+      const rest = url.pathname + url.search;
+      if (rest === '/' || rest === '') return host;
       return host + rest;
     } catch {
-      return link.href;
+      return a.src;
     }
   }
 
-  function toggleHighlight() {
-    highlightOn = !highlightOn;
-    highlightLinks(highlightOn);
-    trackAction('links_highlight', { enabled: highlightOn });
+  function formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+
+  // Load = neutral fact about how the asset is declared. 'sync' (was 'blocking')
+  // is deliberately distinct from the 'render-blocking' flag, which is the verdict.
+  // Async/defer don't apply to stylesheets, so styles show '—'.
+  function loadLabel(a: RawAsset): string {
+    if (a.isInline) return 'inline';
+    if (a.kind === 'style') return '—';
+    return a.load === 'blocking' ? 'sync' : a.load;
+  }
+
+  function loadTitle(a: RawAsset): string {
+    if (a.isInline) return 'Inline — no separate request';
+    if (a.kind === 'style') return "Stylesheets are render-blocking by default; async/defer don't apply";
+    if (a.load === 'async') return "Async — loads in parallel, doesn't block parsing";
+    if (a.load === 'defer') return 'Defer — runs after the document is parsed';
+    return 'Synchronous — blocks the parser while it loads';
   }
 
   onDestroy(() => {
-    if (highlightOn) highlightLinks(false);
     if (copyResetTimer) clearTimeout(copyResetTimer);
   });
 
-  function handleRowClick(e: MouseEvent, index: number) {
+  function handleRowClick(e: MouseEvent, a: RawAsset) {
     if ((e.target as HTMLElement).closest('a')) return;
-    scrollToLink(index);
-    trackAction('links_scroll_to', {});
+    if (a.isInline && a.content) {
+      const next = new Set(expanded);
+      if (next.has(a.index)) next.delete(a.index);
+      else { next.add(a.index); trackAction('assets_expand_inline', { kind: a.kind }); }
+      expanded = next;
+    } else if (a.src) {
+      window.open(a.src, '_blank', 'noopener,noreferrer');
+      trackAction('assets_view_source', { kind: a.kind, external: true });
+    }
   }
 
   function downloadFile(content: string, filename: string, mime: string) {
@@ -144,47 +186,53 @@
   }
 
   function exportCsv() {
-    const header = 'URL,Anchor Text,Dofollow,Type,Rel,Is Image';
-    const rows = links.map(l => {
-      const anchor = l.isImage ? '[image]' : l.text;
-      return [l.href, anchor, !l.isNofollow, l.isExternal ? 'External' : 'Internal', l.rel, l.isImage]
+    const header = 'Kind,Source,Type,Load,Placement,Size (bytes),Time (ms),Status,Cached,Render-Blocking,Duplicate,Browser Extension';
+    const rows = assets.map(a => {
+      const dup = a.src ? (stats.hrefCounts[a.src] ?? 1) : 1;
+      return [a.kind, a.src ?? 'inline', a.type, a.load, a.placement, a.size || '', a.duration || '', a.status || '', a.cached, a.renderBlocking, dup, a.isBrowserExtension]
         .map(v => `"${String(v).replace(/"/g, '""')}"`)
         .join(',');
     });
-    downloadFile([header, ...rows].join('\n'), `alfred-links-${siteSlug}.csv`, 'text/csv');
-    trackAction('links_export', { format: 'csv', link_count: links.length });
+    downloadFile([header, ...rows].join('\n'), `alfred-assets-${siteSlug}.csv`, 'text/csv');
+    trackAction('assets_export', { format: 'csv', count: assets.length });
     openMenu = null;
   }
 
   function exportJson() {
-    const data = links.map(l => ({
-      url: l.href,
-      anchorText: l.isImage ? '[image]' : l.text,
-      dofollow: !l.isNofollow,
-      type: l.isExternal ? 'external' : 'internal',
-      rel: l.rel,
-      isImage: l.isImage,
+    const data = assets.map(a => ({
+      kind: a.kind,
+      source: a.src ?? 'inline',
+      type: a.type,
+      load: a.load,
+      placement: a.placement,
+      size: a.size || null,
+      duration: a.duration || null,
+      status: a.status || null,
+      cached: a.cached,
+      renderBlocking: a.renderBlocking,
+      duplicate: a.src ? (stats.hrefCounts[a.src] ?? 1) : 1,
+      browserExtension: a.isBrowserExtension
     }));
-    downloadFile(JSON.stringify(data, null, 2), `alfred-links-${siteSlug}.json`, 'application/json');
-    trackAction('links_export', { format: 'json', link_count: links.length });
+    downloadFile(JSON.stringify(data, null, 2), `alfred-assets-${siteSlug}.json`, 'application/json');
+    trackAction('assets_export', { format: 'json', count: assets.length });
     openMenu = null;
   }
 
   function exportText() {
-    const text = links.map(l => l.href).join('\n');
-    downloadFile(text, `alfred-links-${siteSlug}.txt`, 'text/plain');
-    trackAction('links_export', { format: 'text', link_count: links.length });
+    const text = assets.filter(a => a.src).map(a => a.src).join('\n');
+    downloadFile(text, `alfred-assets-${siteSlug}.txt`, 'text/plain');
+    trackAction('assets_export', { format: 'text', count: assets.length });
     openMenu = null;
   }
 
   async function copyUrls() {
-    const text = links.map(l => l.href).join('\n');
+    const text = assets.filter(a => a.src).map(a => a.src).join('\n');
     try {
       await navigator.clipboard.writeText(text);
       copied = true;
       if (copyResetTimer) clearTimeout(copyResetTimer);
       copyResetTimer = setTimeout(() => { copied = false; }, 1500);
-      trackAction('links_copy', { format: 'urls', link_count: links.length });
+      trackAction('assets_copy', { format: 'urls', count: assets.filter(a => a.src).length });
     } catch {
       // ignore clipboard errors
     }
@@ -192,48 +240,52 @@
 
   const typeOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
-    { value: 'internal', label: 'Internal', count: stats.internal },
+    { value: 'script', label: 'Scripts', count: stats.scripts },
+    { value: 'style', label: 'Styles', count: stats.styles },
+  ]);
+  const sourceOptions = $derived([
+    { value: 'all', label: 'All', count: stats.total },
     { value: 'external', label: 'External', count: stats.external },
+    { value: 'inline', label: 'Inline', count: stats.inline },
+    { value: 'browser-extension', label: 'Browser Extension', count: stats.browserExtension },
   ]);
-  const followOptions = $derived([
+  const loadOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
-    { value: 'dofollow', label: 'Dofollow', count: stats.dofollow },
-    { value: 'nofollow', label: 'Nofollow', count: stats.nofollow },
-  ]);
-  const anchorOptions = $derived([
-    { value: 'all', label: 'All', count: stats.total },
-    { value: 'text', label: 'Text', count: stats.text },
-    { value: 'image', label: 'Image', count: stats.image },
-    { value: 'none', label: 'None', count: stats.none },
+    { value: 'async', label: 'Async', count: stats.loadCounts.async ?? 0 },
+    { value: 'defer', label: 'Defer', count: stats.loadCounts.defer ?? 0 },
+    { value: 'blocking', label: 'Blocking', count: stats.loadCounts.blocking ?? 0 },
+    { value: 'inline', label: 'Inline', count: stats.loadCounts.inline ?? 0 },
   ]);
 
-  const anyFilterActive = $derived(typeFilter !== 'all' || followFilter !== 'all' || anchorFilter !== 'all' || search.length > 0);
+  const anyFilterActive = $derived(
+    typeFilter !== 'all' || sourceFilter !== 'all' || loadFilter !== 'all' || search.length > 0
+  );
 
-  function setType(v: string) { typeFilter = v; openMenu = null; trackAction('links_filter', { facet: 'type', value: v }); }
-  function setFollow(v: string) { followFilter = v; openMenu = null; trackAction('links_filter', { facet: 'follow', value: v }); }
-  function setAnchor(v: string) { anchorFilter = v; openMenu = null; trackAction('links_filter', { facet: 'anchor', value: v }); }
+  function setType(v: string) { typeFilter = v; openMenu = null; trackAction('assets_filter', { facet: 'type', value: v }); }
+  function setSource(v: string) { sourceFilter = v; openMenu = null; trackAction('assets_filter', { facet: 'source', value: v }); }
+  function setLoad(v: string) { loadFilter = v; openMenu = null; trackAction('assets_filter', { facet: 'load', value: v }); }
 
   function resetFilters() {
     typeFilter = 'all';
-    followFilter = 'all';
-    anchorFilter = 'all';
+    sourceFilter = 'all';
+    loadFilter = 'all';
     search = '';
     searchOpen = false;
     openMenu = null;
-    trackAction('links_filter', { reset: true });
+    trackAction('assets_filter', { reset: true });
   }
 </script>
 
 <svelte:window onclick={handleWindowClick} onkeydown={(e) => { if (e.key === 'Escape') closeDropdowns(); }} />
 
-{#if links.length === 0}
+{#if assets.length === 0}
   <div class="empty-state">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="empty-state__icon"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-    <p>No links found on this page</p>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="empty-state__icon"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    <p>No scripts or styles found on this page</p>
   </div>
 {:else}
-  <div class="links-tab">
-    {#snippet facet(name: string, key: 'type' | 'follow' | 'anchor', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
+  <div class="assets-tab">
+    {#snippet facet(name: string, key: 'type' | 'source' | 'load', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
       <div class="dropdown menu">
         <button class="dropdown__trigger" class:dropdown__trigger--active={selected !== 'all'} onclick={() => { openMenu = openMenu === key ? null : key; }}>
           {selected === 'all' ? name : (options.find(o => o.value === selected)?.label ?? name)}
@@ -253,23 +305,14 @@
       </div>
     {/snippet}
 
-    {#snippet sortIcon(key: SortKey)}
-      {#if sortKey === key}
-        <svg class="sort-arrow sort-arrow--active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          {#if sortDir === 'asc'}<path d="M18 15l-6-6-6 6"/>{:else}<path d="M6 9l6 6 6-6"/>{/if}
-        </svg>
-      {:else}
-        <svg class="sort-arrow sort-arrow--idle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4-4 4 4"/><path d="M8 14l4 4 4-4"/></svg>
-      {/if}
-    {/snippet}
-
     <!-- Toolbar -->
     <div class="toolbar">
       <div class="toolbar__row">
         <div class="toolbar__filters">
           {@render facet('Type', 'type', typeOptions, typeFilter, setType)}
-          {@render facet('Follow', 'follow', followOptions, followFilter, setFollow)}
-          {@render facet('Anchor', 'anchor', anchorOptions, anchorFilter, setAnchor)}
+          {@render facet('Source', 'source', sourceOptions, sourceFilter, setSource)}
+          {@render facet('Loading', 'load', loadOptions, loadFilter, setLoad)}
+
           {#if anyFilterActive}
             <button class="reset-btn" onclick={resetFilters} title="Reset all filters">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -277,15 +320,11 @@
           {/if}
         </div>
         <div class="toolbar__actions">
-          <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} title="Highlight links on page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Highlight
-          </button>
-          <button class="toolbar-btn" class:toolbar-btn--active={searchOpen} onclick={toggleSearch} title="Search links">
+          <button class="toolbar-btn" class:toolbar-btn--active={searchOpen} onclick={toggleSearch} title="Search assets">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           </button>
           <div class="export menu">
-            <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} title="Download links">
+            <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} title="Download assets">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__chevron"><path d="M6 9l6 6 6-6"/></svg>
@@ -317,7 +356,7 @@
       {#if searchOpen}
         <div class="search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="search__icon"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input class="search__input" type="text" placeholder="Filter URLs or anchor text..." bind:value={search} bind:this={searchInput} />
+          <input class="search__input" type="text" placeholder="Filter by URL or type..." bind:value={search} bind:this={searchInput} />
           {#if search}
             <button class="search__clear" onclick={() => { search = ''; searchInput?.focus(); }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -327,58 +366,91 @@
       {/if}
     </div>
 
+    {#snippet sortIcon(key: SortKey)}
+      {#if sortKey === key}
+        <svg class="sort-arrow sort-arrow--active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          {#if sortDir === 'asc'}<path d="M18 15l-6-6-6 6"/>{:else}<path d="M6 9l6 6 6-6"/>{/if}
+        </svg>
+      {:else}
+        <svg class="sort-arrow sort-arrow--idle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4-4 4 4"/><path d="M8 14l4 4 4-4"/></svg>
+      {/if}
+    {/snippet}
+
     <!-- Table -->
     <div class="table-wrap">
       <table class="table">
         <thead>
           <tr>
             <th class="th th--num"><button class="th-btn" class:th-btn--active={sortKey === 'index'} onclick={() => toggleSort('index')} title="Sort by document order">#{@render sortIcon('index')}</button></th>
-            <th class="th th--url"><button class="th-btn" class:th-btn--active={sortKey === 'url'} onclick={() => toggleSort('url')} title="Sort by URL">Target URL{@render sortIcon('url')}</button> <span class="th__count">({filtered.length}/{stats.total})</span></th>
-            <th class="th th--follow"><button class="th-btn" class:th-btn--active={sortKey === 'follow'} onclick={() => toggleSort('follow')} title="Sort by dofollow">Dofollow{@render sortIcon('follow')}</button></th>
-            <th class="th th--type"><button class="th-btn" class:th-btn--active={sortKey === 'type'} onclick={() => toggleSort('type')} title="Sort by type">Type{@render sortIcon('type')}</button></th>
+            <th class="th th--src"><button class="th-btn" class:th-btn--active={sortKey === 'src'} onclick={() => toggleSort('src')} title="Sort by source">Source{@render sortIcon('src')}</button> <span class="th__count">({filtered.length}/{stats.total})</span></th>
+            <th class="th th--size"><button class="th-btn" class:th-btn--active={sortKey === 'size'} onclick={() => toggleSort('size')} title="Sort by size">Size{@render sortIcon('size')}</button></th>
+            <th class="th th--time"><button class="th-btn" class:th-btn--active={sortKey === 'time'} onclick={() => toggleSort('time')} title="Sort by load time">Time{@render sortIcon('time')}</button></th>
+            <th class="th th--kind"><button class="th-btn" class:th-btn--active={sortKey === 'type'} onclick={() => toggleSort('type')} title="Sort by type">Type{@render sortIcon('type')}</button></th>
+            <th class="th th--load"><button class="th-btn" class:th-btn--active={sortKey === 'load'} onclick={() => toggleSort('load')} title="Sort by load strategy">Load{@render sortIcon('load')}</button></th>
           </tr>
         </thead>
         <tbody>
-          {#each sorted as link, i (link.index)}
-            <tr class="row" onclick={(e) => handleRowClick(e, link.index)} title="Click to scroll to this link">
+          {#each sorted as asset, i (asset.index)}
+            <tr class="row" class:row--clickable={(asset.isInline && asset.content) || asset.src} onclick={(e) => handleRowClick(e, asset)} title={asset.isInline ? (asset.content ? 'Click to view source' : '') : 'Click to open source'}>
               <td class="td td--num">{i + 1}</td>
-              <td class="td td--url">
-                <div class="url-row">
-                  <a href={link.href} target="_blank" rel="noopener noreferrer" class="url" title={link.href}>{displayUrl(link)}</a>
-                  {#if stats.hrefCounts[link.href]! > 1}
-                    <span class="dup-badge">&times;{stats.hrefCounts[link.href]}</span>
+              <td class="td td--src">
+                <div class="src-row">
+                  {#if asset.src}
+                    <a href={asset.src} target="_blank" rel="noopener noreferrer" class="src" title={asset.src}>{displaySource(asset)}</a>
+                  {:else}
+                    <span class="src src--inline">inline</span>
+                  {/if}
+                  {#if asset.status >= 400}
+                    <span class="pill pill--red" title="Failed request — HTTP {asset.status}">{asset.status}</span>
+                  {/if}
+                  {#if asset.renderBlocking}
+                    <span class="pill pill--amber" title="Blocks first render">render-blocking</span>
+                  {/if}
+                  {#if asset.src && (stats.hrefCounts[asset.src] ?? 0) > 1}
+                    <span class="dup-badge" title="Loaded {stats.hrefCounts[asset.src]} times">&times;{stats.hrefCounts[asset.src]}</span>
+                  {/if}
+                  {#if asset.isInline && asset.content}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="expand-chevron" class:expand-chevron--open={expanded.has(asset.index)}><path d="M6 9l6 6 6-6"/></svg>
                   {/if}
                 </div>
-                {#if link.isImage}
-                  <span class="anchor-text anchor-text--image">[image]</span>
-                {:else if link.text}
-                  <span class="anchor-text">{link.text}</span>
+              </td>
+              <td class="td td--size">
+                {#if asset.size > 0}
+                  <span title={asset.isInline ? 'Inline size' : 'Transfer size'}>{formatSize(asset.size)}</span>
                 {:else}
-                  <span class="anchor-text anchor-text--empty">(no anchor text)</span>
+                  <span class="muted">&mdash;</span>
                 {/if}
               </td>
-              <td class="td td--follow">
-                {#if link.isNofollow}
-                  <span class="pill pill--red">No</span>
+              <td class="td td--time">
+                {#if asset.cached}
+                  <span class="time-cached" title="Served from cache — no network time">cached</span>
+                {:else if asset.duration > 0}
+                  {asset.duration} ms
                 {:else}
-                  <span class="pill pill--green">Yes</span>
+                  <span class="muted">&mdash;</span>
                 {/if}
               </td>
-              <td class="td td--type">{link.isExternal ? 'External' : 'Internal'}</td>
+              <td class="td td--kind">{asset.kind === 'script' ? 'Script' : 'Style'}</td>
+              <td class="td td--load"><span class="load-tag" class:load-tag--na={asset.kind === 'style' && !asset.isInline} title={loadTitle(asset)}>{loadLabel(asset)}</span></td>
             </tr>
+            {#if asset.isInline && asset.content && expanded.has(asset.index)}
+              <tr class="code-row">
+                <td></td>
+                <td colspan="5"><pre class="code">{asset.content}</pre></td>
+              </tr>
+            {/if}
           {/each}
         </tbody>
       </table>
       {#if filtered.length === 0}
-        <div class="no-results">No links match this filter</div>
+        <div class="no-results">No assets match this filter</div>
       {/if}
     </div>
-
   </div>
 {/if}
 
 <style>
-  .links-tab { display: flex; flex-direction: column; height: 100%; animation: fadeUp 0.4s ease both; }
+  .assets-tab { display: flex; flex-direction: column; height: 100%; animation: fadeUp 0.4s ease both; }
 
   /* Empty state */
   .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: var(--text-muted); }
@@ -394,7 +466,6 @@
   .dropdown { position: relative; }
   .dropdown__trigger { display: flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
   .dropdown__trigger:hover { border-color: var(--border-hover); color: var(--text-secondary); }
-  .dropdown__trigger--active { border-color: var(--accent); }
   .dropdown__count { color: var(--text-muted); font-weight: 500; }
   .dropdown__chevron { width: 12px; height: 12px; stroke-width: 2; color: var(--text-muted); }
   .dropdown__menu { position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); z-index: 10; min-width: 160px; padding: 4px; }
@@ -402,6 +473,7 @@
   .dropdown__item:hover { background: var(--bg-hover); }
   .dropdown__item--active { color: var(--text); font-weight: 600; }
   .dropdown__item-count { font-size: 11.5px; font-weight: 500; color: var(--text-muted); }
+  .dropdown__trigger--active { border-color: var(--accent); }
 
   /* Toolbar actions */
   .toolbar__actions { display: flex; align-items: center; gap: 6px; }
@@ -451,8 +523,10 @@
 
   .th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); padding: 8px 8px 8px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 1; }
   .th--num { width: 30px; padding-right: 0; }
-  .th--follow { width: 76px; }
-  .th--type { width: 76px; }
+  .th--size { width: 64px; }
+  .th--time { width: 58px; }
+  .th--kind { width: 60px; }
+  .th--load { width: 64px; }
   .th__count { font-weight: 500; color: var(--text-muted); letter-spacing: 0; text-transform: none; }
 
   .th-btn { display: inline-flex; align-items: center; gap: 2px; padding: 0; border: none; background: none; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; transition: color 0.12s; }
@@ -462,26 +536,40 @@
   .sort-arrow--idle { opacity: 0.4; transition: opacity 0.12s; }
   .th-btn:hover .sort-arrow--idle { opacity: 0.75; }
 
-  .row { cursor: pointer; transition: background 0.1s; }
-  .row:hover { background: var(--bg-hover); }
+  .row { transition: background 0.1s; }
+  .row--clickable { cursor: pointer; }
+  .row--clickable:hover { background: var(--bg-hover); }
 
   .td { padding: 9px 8px 9px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border-muted); vertical-align: middle; }
   .td--num { color: var(--text-muted); font-size: 12px; padding-right: 0; }
-  .td--url { overflow: hidden; }
+  .td--src { overflow: hidden; }
 
-  .url-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .url { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .url:hover { text-decoration: underline; }
+  .src-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .src { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .src:hover { text-decoration: underline; }
+  .src--inline { color: var(--text-muted); font-style: italic; }
+  .expand-chevron { width: 12px; height: 12px; flex-shrink: 0; stroke-width: 2; color: var(--text-muted); transition: transform 0.15s; }
+  .expand-chevron--open { transform: rotate(180deg); }
+
+  .td--size, .td--time { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .time-cached { font-size: 11px; font-weight: 600; color: var(--success-strong); }
+  .muted { color: var(--text-muted); }
+
+  /* Load = neutral fact (async/defer/sync/inline). Color is reserved for problem flags only. */
+  .load-tag { font-size: 12px; color: var(--text-secondary); }
+  .load-tag--na { color: var(--text-muted); }
+
+  /* Pills & badges (matches Links tab) */
+  .pill { display: inline-flex; align-items: center; flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+  .pill--red { background: var(--error-bg); color: var(--error-strong); }
+  .pill--amber { background: var(--warning-bg); color: var(--warning); }
   .dup-badge { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; background: var(--warning-bg); color: var(--warning); }
 
-  .anchor-text { display: block; font-size: 11.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
-  .anchor-text--empty { color: var(--error); font-style: italic; }
-  .anchor-text--image { color: var(--text-muted); font-style: italic; }
-
-  /* Pills */
-  .pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
-  .pill--green { background: var(--success-bg); color: var(--success-strong); }
-  .pill--red { background: var(--error-bg); color: var(--error-strong); }
+  /* Inline code expand */
+  .code-row td { padding: 0 8px 9px 0; border-bottom: 1px solid var(--border-muted); }
+  .code { margin: 0; padding: 10px 12px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; font-family: 'SF Mono', ui-monospace, monospace; font-size: 11px; line-height: 1.5; color: var(--text-secondary); white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow: auto; }
+  .code::-webkit-scrollbar { width: 4px; height: 4px; }
+  .code::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 
   .no-results { text-align: center; padding: 24px; font-size: 13px; color: var(--text-muted); }
 

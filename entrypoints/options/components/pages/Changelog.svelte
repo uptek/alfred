@@ -57,17 +57,22 @@
             {:else if change.type === 'image'}
               <s-box>
                 <img
-                  src={change.content}
+                  src={change.content as string}
                   alt={change.alt ?? 'Changelog image'}
                   style="width: 100%; height: auto; border-radius: 8px;"
                 />
               </s-box>
             {:else if change.type === 'video'}
               <s-box>
+                <!-- Newest entry's video autoplays to show off the latest feature.
+                     muted is required for autoplay in browsers. These are silent
+                     product demos with no speech, so no captions track is needed. -->
+                <!-- svelte-ignore a11y_media_has_caption -->
                 <video
                   controls
                   playsinline
-                  src={change.content}
+                  autoplay={entryIndex === 0}
+                  src={change.content as string}
                   style="width: 100%; height: auto; border-radius: 8px;"
                 ></video>
               </s-box>

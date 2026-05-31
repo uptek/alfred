@@ -52,7 +52,21 @@ export type AnalyticsAction =
   | 'headings_view'
   | 'headings_scroll_to'
   | 'headings_copy'
-  | 'headings_toggle_hidden';
+  | 'headings_toggle_hidden'
+  | 'links_view'
+  | 'links_filter'
+  | 'links_highlight'
+  | 'links_scroll_to'
+  | 'links_export'
+  | 'links_copy'
+  | 'links_sort'
+  | 'assets_view'
+  | 'assets_filter'
+  | 'assets_export'
+  | 'assets_copy'
+  | 'assets_view_source'
+  | 'assets_expand_inline'
+  | 'assets_sort';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -110,7 +124,21 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   headings_view: 60,
   headings_scroll_to: 5,
   headings_copy: 30,
-  headings_toggle_hidden: 5
+  headings_toggle_hidden: 5,
+  links_view: 60,
+  links_filter: 25,
+  links_highlight: 10,
+  links_scroll_to: 5,
+  links_export: 60,
+  links_copy: 60,
+  links_sort: 25,
+  assets_view: 60,
+  assets_filter: 25,
+  assets_export: 60,
+  assets_copy: 60,
+  assets_view_source: 5,
+  assets_expand_inline: 5,
+  assets_sort: 60
 };
 
 // --- Usage Stats (local tracking) ---
@@ -185,7 +213,21 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   headings_view: 'SEO',
   headings_scroll_to: 'SEO',
   headings_copy: 'SEO',
-  headings_toggle_hidden: 'SEO'
+  headings_toggle_hidden: 'SEO',
+  links_view: 'SEO',
+  links_filter: 'SEO',
+  links_highlight: 'SEO',
+  links_scroll_to: 'SEO',
+  links_export: 'SEO',
+  links_copy: 'SEO',
+  links_sort: 'SEO',
+  assets_view: 'SEO',
+  assets_filter: 'SEO',
+  assets_export: 'SEO',
+  assets_copy: 'SEO',
+  assets_view_source: 'SEO',
+  assets_expand_inline: 'SEO',
+  assets_sort: 'SEO'
 };
 
 /** Local usage stats persisted in `local:usage_stats`.

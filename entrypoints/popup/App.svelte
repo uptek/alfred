@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { getTheme, getHeadings, getLinks, analyzeHeadings } from './utils';
+  import { getTheme, getHeadings, getLinks, getAssets, analyzeHeadings } from './utils';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
   import Links from './Links.svelte';
+  import Assets from './Assets.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
-  import type { StoreInfo, RawHeading, RawLink } from './types';
+  import type { StoreInfo, RawHeading, RawLink, RawAsset } from './types';
 
-  type TabId = 'theme' | 'headings' | 'links' | 'settings';
+  type TabId = 'theme' | 'headings' | 'links' | 'assets' | 'settings';
   // Future tabs: 'apps' | 'products' | 'overview' | 'hreflangs' | 'images' | 'schema' | 'social' | 'robots' | 'sitemaps'
 
   interface Tab {
@@ -30,6 +31,7 @@
   let storeInfo = $state<StoreInfo | null>(null);
   let rawHeadings = $state<RawHeading[]>([]);
   let rawLinks = $state<RawLink[]>([]);
+  let rawAssets = $state<RawAsset[]>([]);
   let loading = $state(true);
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
@@ -43,6 +45,7 @@
     },
     // { id: 'overview', label: 'Overview', icon: 'overview' },
     { id: 'links' as TabId, label: 'Links', icon: 'links' },
+    { id: 'assets' as TabId, label: 'Assets', icon: 'assets' },
     // { id: 'hreflangs', label: 'Hreflangs', icon: 'hreflangs' },
     // { id: 'images', label: 'Images', icon: 'images' },
     // { id: 'schema', label: 'Schema', icon: 'schema' },
@@ -53,11 +56,12 @@
 
   $effect(() => {
     const fetchData = async () => {
-      const [storeData, headingsData, linksData] = await Promise.all([getTheme(), getHeadings(), getLinks()]);
+      const [storeData, headingsData, linksData, assetsData] = await Promise.all([getTheme(), getHeadings(), getLinks(), getAssets()]);
       trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
       storeInfo = storeData;
       rawHeadings = headingsData;
       rawLinks = linksData;
+      rawAssets = assetsData;
       if (!storeData?.isShopify) {
         activeTab = 'headings';
       }
@@ -76,6 +80,8 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 6h16M4 12h8m-8 6h16"/></svg>
   {:else if icon === 'links'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+  {:else if icon === 'assets'}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
   <!-- Future tab icons (uncomment as tabs are enabled)
   {:else if icon === 'apps'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -185,6 +191,8 @@
           <Headings headings={rawHeadings} issues={headingIssues} />
         {:else if activeTab === 'links'}
           <Links links={rawLinks} domain={storeInfo?.domain ?? null} />
+        {:else if activeTab === 'assets'}
+          <Assets assets={rawAssets} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'settings'}
           <div class="content__pad">
             <Settings storeInfo={storeInfo ?? { isShopify: false, shopDomain: null, domain: null, page_url: null, theme: null }} />
