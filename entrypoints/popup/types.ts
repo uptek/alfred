@@ -15,6 +15,29 @@ export interface RawLink {
   isHidden: boolean;
 }
 
+export type AssetKind = 'script' | 'style';
+export type AssetLoad = 'async' | 'defer' | 'blocking' | 'inline';
+export type AssetPlacement = 'head' | 'body' | 'footer';
+
+export interface RawAsset {
+  index: number; // index among all script/link/style nodes in DOM order (stable key)
+  kind: AssetKind;
+  src: string | null; // resolved URL for external; null for inline
+  isExternal: boolean; // src/href points to a different host
+  isBrowserExtension: boolean; // injected by a browser extension (chrome-extension:// etc.)
+  isInline: boolean; // no src/href
+  type: string; // script: module/classic/json/importmap; style: 'stylesheet' | 'inline'
+  load: AssetLoad; // async/defer/blocking for scripts; 'inline' for inline; 'blocking' for stylesheets
+  media: string; // stylesheet media attribute (empty otherwise)
+  size: number; // transfer/byte size; 0 if unknown (opaque cross-origin)
+  content: string | null; // inline content, capped; null for external
+  placement: AssetPlacement; // where in the document the node lives
+  cached: boolean; // served from cache (Resource Timing transferSize === 0)
+  duration: number; // load duration in ms (0 if unknown)
+  status: number; // HTTP status code (0 if unknown / opaque)
+  renderBlocking: boolean; // blocks first render (head, synchronous)
+}
+
 export type HeadingIssueType = 'missing-h1' | 'multiple-h1' | 'skipped-level' | 'empty' | 'h1-not-first';
 
 export interface HeadingIssue {

@@ -1,4 +1,4 @@
-import type { StoreInfo, Theme, RawHeading, RawLink, HeadingIssue } from './types';
+import type { StoreInfo, Theme, RawHeading, RawLink, RawAsset, HeadingIssue } from './types';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
 
 /**
@@ -119,6 +119,23 @@ export const getLinks = async (): Promise<RawLink[]> => {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
       const response = await browser.tabs.sendMessage(tab.id, { action: 'get_links' });
+      return Array.isArray(response) ? response : [];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Extracts all scripts and stylesheets from the active tab via content script.
+ * @returns {Promise<RawAsset[]>} Array of assets in DOM order, or empty array on failure.
+ */
+export const getAssets = async (): Promise<RawAsset[]> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      const response = await browser.tabs.sendMessage(tab.id, { action: 'get_assets' });
       return Array.isArray(response) ? response : [];
     }
     return [];
