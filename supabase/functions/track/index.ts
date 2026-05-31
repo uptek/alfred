@@ -48,7 +48,25 @@ const VALID_ACTIONS = [
   'popup_open',
   'review_nudge_show',
   'review_nudge_click',
-  'review_nudge_dismiss'
+  'review_nudge_dismiss',
+  'headings_view',
+  'headings_scroll_to',
+  'headings_copy',
+  'headings_toggle_hidden',
+  'links_view',
+  'links_filter',
+  'links_highlight',
+  'links_scroll_to',
+  'links_export',
+  'links_copy',
+  'links_sort',
+  'assets_view',
+  'assets_filter',
+  'assets_export',
+  'assets_copy',
+  'assets_view_source',
+  'assets_expand_inline',
+  'assets_sort'
 ];
 
 serve(async (req) => {
