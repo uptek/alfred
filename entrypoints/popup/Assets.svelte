@@ -141,6 +141,23 @@
     return `${(bytes / 1024).toFixed(1)} KB`;
   }
 
+  // Load = neutral fact about how the asset is declared. 'sync' (was 'blocking')
+  // is deliberately distinct from the 'render-blocking' flag, which is the verdict.
+  // Async/defer don't apply to stylesheets, so styles show '—'.
+  function loadLabel(a: RawAsset): string {
+    if (a.isInline) return 'inline';
+    if (a.kind === 'style') return '—';
+    return a.load === 'blocking' ? 'sync' : a.load;
+  }
+
+  function loadTitle(a: RawAsset): string {
+    if (a.isInline) return 'Inline — no separate request';
+    if (a.kind === 'style') return "Stylesheets are render-blocking by default; async/defer don't apply";
+    if (a.load === 'async') return "Async — loads in parallel, doesn't block parsing";
+    if (a.load === 'defer') return 'Defer — runs after the document is parsed';
+    return 'Synchronous — blocks the parser while it loads';
+  }
+
   onDestroy(() => {
     if (copyResetTimer) clearTimeout(copyResetTimer);
   });
@@ -383,6 +400,15 @@
                   {:else}
                     <span class="src src--inline">inline</span>
                   {/if}
+                  {#if asset.status >= 400}
+                    <span class="pill pill--red" title="Failed request — HTTP {asset.status}">{asset.status}</span>
+                  {/if}
+                  {#if asset.renderBlocking}
+                    <span class="pill pill--amber" title="Blocks first render">render-blocking</span>
+                  {/if}
+                  {#if asset.src && (stats.hrefCounts[asset.src] ?? 0) > 1}
+                    <span class="dup-badge" title="Loaded {stats.hrefCounts[asset.src]} times">&times;{stats.hrefCounts[asset.src]}</span>
+                  {/if}
                   {#if asset.isInline && asset.content}
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="expand-chevron" class:expand-chevron--open={expanded.has(asset.index)}><path d="M6 9l6 6 6-6"/></svg>
                   {/if}
@@ -405,7 +431,7 @@
                 {/if}
               </td>
               <td class="td td--kind">{asset.kind === 'script' ? 'Script' : 'Style'}</td>
-              <td class="td td--load">{asset.load}</td>
+              <td class="td td--load"><span class="load-tag" class:load-tag--na={asset.kind === 'style' && !asset.isInline} title={loadTitle(asset)}>{loadLabel(asset)}</span></td>
             </tr>
             {#if asset.isInline && asset.content && expanded.has(asset.index)}
               <tr class="code-row">
@@ -528,6 +554,16 @@
   .td--size, .td--time { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
   .time-cached { font-size: 11px; font-weight: 600; color: var(--success-strong); }
   .muted { color: var(--text-muted); }
+
+  /* Load = neutral fact (async/defer/sync/inline). Color is reserved for problem flags only. */
+  .load-tag { font-size: 12px; color: var(--text-secondary); }
+  .load-tag--na { color: var(--text-muted); }
+
+  /* Pills & badges (matches Links tab) */
+  .pill { display: inline-flex; align-items: center; flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+  .pill--red { background: var(--error-bg); color: var(--error-strong); }
+  .pill--amber { background: var(--warning-bg); color: var(--warning); }
+  .dup-badge { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; background: var(--warning-bg); color: var(--warning); }
 
   /* Inline code expand */
   .code-row td { padding: 0 8px 9px 0; border-bottom: 1px solid var(--border-muted); }
