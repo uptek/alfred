@@ -1,5 +1,34 @@
 [
   {
+    "version": "2026.06.01",
+    "date": "2026-06-01",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Scripts & Styles Analyzer"
+      },
+      {
+        "type": "paragraph",
+        "content": "Introducing the new Assets tab — it shows every script and stylesheet a page loads, with size, load time, and performance signals, so you can see exactly what's weighing a page down."
+      },
+      {
+        "type": "list",
+        "content": [
+          "See every script and stylesheet in one table: source, size, load time, type, and how it loads (async, defer, blocking, or inline).",
+          "Filter by Type (scripts or styles), Source (external, inline, or browser extension), and Loading strategy — all combine together.",
+          "Spot performance problems at a glance: render-blocking assets, duplicate loads, cached resources, and failed requests.",
+          "Sort any column, search by URL or type, and click a row to open an external file in a new tab or expand inline code.",
+          "Browser-extension assets injected into the page are detected and kept separate from the site's own assets.",
+          "Export everything as CSV or JSON, or copy the source URLs to your clipboard."
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-assets.mp4"
+      }
+    ]
+  },
+  {
     "version": "2026.05.31",
     "date": "2026-05-31",
     "changes": [
@@ -27,25 +56,6 @@
       {
         "type": "video",
         "content": "https://bucket.alfred.uptek.com/alfred-links.mp4"
-      },
-      {
-        "type": "heading",
-        "content": "Scripts & Styles Analyzer"
-      },
-      {
-        "type": "paragraph",
-        "content": "New Assets tab in the popup shows every script and stylesheet a page loads, with size, load time, and performance signals — so you can see exactly what's weighing a page down."
-      },
-      {
-        "type": "list",
-        "content": [
-          "See every script and stylesheet in one table: source, size, load time, type, and how it loads (async, defer, blocking, or inline).",
-          "Filter by Type (scripts or styles), Source (external, inline, or browser extension), and Loading strategy — all combine together.",
-          "Spot performance problems at a glance: render-blocking assets, duplicate loads, cached resources, and failed requests.",
-          "Sort any column, search by URL or type, and click a row to open an external file in a new tab or expand inline code.",
-          "Browser-extension assets injected into the page are detected and kept separate from the site's own assets.",
-          "Export everything as CSV or JSON, or copy the source URLs to your clipboard."
-        ]
       }
     ]
   },
