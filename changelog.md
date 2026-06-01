@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.06.01.1
+@ 2026-06-01
+
+### Popup redesign for legibility and calm
+The popup got a visual refresh focused on readability and a soothing feel, with no change to how anything works.
+
+- A single calm indigo accent across links, filters, toggles, and active states.
+- Higher text contrast throughout for easier reading, meeting WCAG AA.
+- Softer off-white surfaces and gentler, cooler shadows that reduce glare.
+- Clearer, consistent heading-level pills (H1 through H6) in the Headings tab.
+- Crisper active tab and theme title, plus reduced-motion and keyboard-focus support.
+
 ## 2026.06.01
 @ 2026-06-01
 
@@ -13,7 +25,7 @@ Introducing the new Assets tab — it shows every script and stylesheet a page l
 - Browser-extension assets injected into the page are detected and kept separate from the site's own assets.
 - Export everything as CSV or JSON, or copy the source URLs to your clipboard.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-assets.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-assets.mp4"></video>
 
 ## 2026.05.31
 @ 2026-05-31

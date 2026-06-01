@@ -1,5 +1,29 @@
 [
   {
+    "version": "2026.06.01.1",
+    "date": "2026-06-01",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Popup redesign for legibility and calm"
+      },
+      {
+        "type": "paragraph",
+        "content": "The popup got a visual refresh focused on readability and a soothing feel, with no change to how anything works."
+      },
+      {
+        "type": "list",
+        "content": [
+          "A single calm indigo accent across links, filters, toggles, and active states.",
+          "Higher text contrast throughout for easier reading, meeting WCAG AA.",
+          "Softer off-white surfaces and gentler, cooler shadows that reduce glare.",
+          "Clearer, consistent heading-level pills (H1 through H6) in the Headings tab.",
+          "Crisper active tab and theme title, plus reduced-motion and keyboard-focus support."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.06.01",
     "date": "2026-06-01",
     "changes": [
