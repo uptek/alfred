@@ -7,71 +7,79 @@
     <meta name="manifest.type" content="browser_action" />
     <style>
       :root {
-        /* Backgrounds */
-        --bg: #fff;
-        --bg-raised: #fafafa;
-        --bg-inset: #f5f5f5;
-        --bg-hover: #f0f0f0;
+        /* Backgrounds: sidebar recedes < canvas < cards lift; insets recede */
+        --bg: #fff; /* cards, active tab, inputs, dropdowns (the lift surface) */
+        --bg-canvas: #fbfcfd; /* popup + content base: soft off-white, eases glare */
+        --bg-raised: #f4f6f8; /* sidebar / footers / code (recede) */
+        --bg-inset: #eef1f5; /* wells: chips, tracks, h5/h6 badges */
+        --bg-hover: #e9edf3;
 
         /* Borders */
-        --border: #f0f0f0;
-        --border-subtle: #f5f5f5;
-        --border-muted: #f8f8f8;
-        --border-hover: #ddd;
-        --border-strong: #ebebeb;
+        --border: #e9eaef;
+        --border-subtle: #eef0f3;
+        --border-muted: #f2f3f6;
+        --border-hover: #ccd0d8;
+        --border-strong: #dadde3;
 
-        /* Text */
-        --text: #111;
-        --text-secondary: #555;
-        --text-muted: #929292;
-        --text-faint: #bbb;
-        --text-disabled: #d0d0d0;
-        --text-placeholder: #ccc;
+        /* Text: distinct, ordered tiers, all AA on white (faint = decorative tier) */
+        --text: #1d1d22;
+        --text-secondary: #4d515b;
+        --text-muted: #656b78;
+        --text-faint: #828892;
+        --text-disabled: #b3b8c0;
+        --text-placeholder: #8b909b;
 
-        /* Interactive */
-        --text-link: #777;
-        --text-link-hover: #444;
-        --text-link-muted: #999;
-        --text-link-muted-hover: #666;
-        --text-label: #8a8a8a;
+        /* Interactive (sidebar tabs = muted gray) */
+        --text-link: #656b78;
+        --text-link-hover: #3a3e47;
+        --text-link-muted: #656b78;
+        --text-link-muted-hover: #4d515b;
+        --text-label: #656b78;
 
-        /* Accent */
-        --accent: #95bf47;
+        /* Accent: calm desaturated indigo = the interactive role
+           (green is reserved for the brand logo + success semantics) */
+        --accent: #4f57c4;
+        --accent-strong: #3f47b3;
+        --accent-tint: #eef0fb;
 
         /* Buttons */
-        --btn-bg: #111;
-        --btn-bg-hover: #333;
+        --btn-bg: #1d1d22;
+        --btn-bg-hover: #34343c;
         --btn-text: #fff;
 
-        /* Semantic: success */
-        --success: #22c55e;
-        --success-strong: #16a34a;
-        --success-bg: #dcfce7;
+        /* Semantic: success (muted green, AA on tint) */
+        --success: #1a9d51;
+        --success-strong: #15783f;
+        --success-bg: #e7f5ec;
 
-        /* Semantic: warning */
-        --warning: #ca8a04;
-        --warning-bg: #fffbeb;
+        /* Semantic: warning (amber, AA on tint) */
+        --warning: #9a5a08;
+        --warning-bg: #f9f0db;
 
-        /* Semantic: error */
-        --error: #ef4444;
-        --error-strong: #dc2626;
-        --error-bg: #fee2e2;
+        /* Semantic: error (muted red, AA on tint) */
+        --error: #c8362f;
+        --error-strong: #b42f28;
+        --error-bg: #fcebe9;
 
         /* Stars */
         --star-active: #fbbf24;
-        --star-inactive: #e0e0e0;
+        --star-inactive: #e2e4e9;
 
         /* Scrollbar */
-        --scrollbar: #e0e0e0;
+        --scrollbar: #d2d5dd;
 
-        /* Shadows */
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-        --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.03);
-        --shadow-tab: 0 1px 3px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03);
-        --shadow-knob: 0 1px 2px rgba(0, 0, 0, 0.1);
+        /* Focus ring (a11y) */
+        --ring: 0 0 0 3px rgba(79, 87, 196, 0.28);
 
-        /* Gradient */
-        --hero-gradient: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%);
+        /* Shadows: cool-tinted, soft (no pure black) */
+        --shadow-sm: 0 1px 2px rgba(28, 28, 46, 0.05);
+        --shadow-md: 0 2px 8px rgba(28, 28, 46, 0.04);
+        --shadow-tab: 0 1px 2px rgba(28, 28, 46, 0.06), 0 0 0 1px rgba(28, 28, 46, 0.04);
+        --shadow-knob: 0 1px 3px rgba(28, 28, 46, 0.16);
+        --shadow-pop: 0 6px 20px rgba(28, 28, 46, 0.1); /* dropdowns, tooltips */
+
+        /* Gradient: subtle cool, lighter than the old gray band */
+        --hero-gradient: linear-gradient(135deg, #f3f5f8 0%, #eef1f6 55%, #f5f7f9 100%);
       }
 
       html,
@@ -82,6 +90,24 @@
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Accessibility: visible keyboard focus on interactive elements */
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      /* Accessibility: honor reduced-motion (collapse entrance + loop animation) */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          animation-delay: 0ms !important;
+          transition-duration: 0.001ms !important;
+        }
       }
     </style>
   </head>

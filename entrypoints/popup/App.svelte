@@ -205,7 +205,7 @@
 
 <style>
   /* Popup block */
-  .popup { width: 790px; height: 550px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+  .popup { width: 790px; height: 550px; background: var(--bg-canvas); display: flex; flex-direction: column; overflow: hidden; }
   .popup--compact { width: 350px; height: 200px; }
 
   /* Brand block */
@@ -231,7 +231,7 @@
   /* Tab block */
   .tab { display: flex; align-items: center; gap: 7px; padding: 7px 10px; margin: 1px 6px; border-radius: 7px; font-size: 13.5px; font-weight: 500; color: var(--text-link); cursor: pointer; border: none; background: none; width: calc(100% - 12px); text-align: left; transition: all 0.12s ease; font-family: inherit; }
   .tab:hover { background: var(--bg-hover); color: var(--text-link-hover); }
-  .tab.active { background: var(--bg); color: var(--text); font-weight: 500; text-shadow: 0 0 0.5px var(--text), 0 0 0.5px var(--text); box-shadow: var(--shadow-tab); }
+  .tab.active { background: var(--bg); color: var(--text); font-weight: 600; box-shadow: var(--shadow-tab); }
   /* .tab.disabled { color: var(--text-disabled); cursor: default; }
   .tab.disabled:hover { background: none; color: var(--text-disabled); } */
   .tab :global(svg) { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.5; stroke-width: 1.8; }
@@ -241,7 +241,7 @@
   .tab__badge--green { background: var(--success-bg); color: var(--success-strong); }
 
   /* Content block */
-  .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg); scrollbar-gutter: stable; }
+  .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg-canvas); scrollbar-gutter: stable; }
   .content::-webkit-scrollbar { width: 3px; }
   .content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
   .content__pad { padding: 24px 28px 28px; }
@@ -249,8 +249,8 @@
   /* Coming-soon block (uncomment when disabled tabs are re-enabled)
   .coming-soon { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-link-muted); gap: 8px; }
   .coming-soon__icon :global(svg) { width: 32px; height: 32px; opacity: 0.2; stroke-width: 1.5; }
-  .coming-soon h3 { font-size: 15px; font-weight: 600; color: var(--text-faint); margin: 0; }
-  .coming-soon p { font-size: 13px; color: var(--text-placeholder); margin: 0; } */
+  .coming-soon h3 { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin: 0; }
+  .coming-soon p { font-size: 13px; color: var(--text-muted); margin: 0; } */
 
   /* Loading block */
   .loading { display: flex; align-items: center; justify-content: center; gap: 12px; height: 100%; color: var(--text-link-muted); font-size: 14px; }
@@ -260,6 +260,6 @@
   /* Not-Shopify block */
   .not-shopify { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; text-align: center; }
   .not-shopify__icon { width: 28px; height: 28px; color: var(--text-disabled); stroke-width: 1.7; }
-  .not-shopify h3 { font-size: 15px; font-weight: 600; color: var(--text-faint); margin: 0; }
-  .not-shopify p { font-size: 13px; color: var(--text-placeholder); margin: 0; }
+  .not-shopify h3 { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin: 0; }
+  .not-shopify p { font-size: 13px; color: var(--text-muted); margin: 0; }
 </style>

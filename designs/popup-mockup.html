@@ -2,9 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Alfred Popup — B v2</title>
+    <title>Alfred Popup - B v2</title>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+      :root {
+        /* calm indigo accent - replaces the AI-purple, desaturated for restfulness */
+        --accent: #4f57c4;
+        --accent-strong: #424ab4;
+        --accent-tint: #eef0fb;
+        /* neutrals */
+        --ink: #1d1d20;
+        --muted: #666c77;
+        --border: #ececef;
+        /* surfaces - soft off-white, never pure #fff, to ease glare */
+        --bg: #fbfbfc;
+        --sidebar: #f6f7f9;
+        /* radii */
+        --r-sm: 8px;
+        --r-md: 10px;
+        --r-pill: 999px;
+        /* accent focus ring (a11y) */
+        --ring: 0 0 0 3px rgba(79, 87, 196, 0.28);
+      }
 
       * {
         margin: 0;
@@ -13,11 +31,12 @@
       }
 
       body {
-        font-family:
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
         background: #e8e8e8;
         display: flex;
         justify-content: center;
@@ -28,14 +47,14 @@
       .popup {
         width: 850px;
         height: 550px;
-        background: #fff;
+        background: var(--bg);
         border-radius: 14px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         box-shadow:
-          0 0 0 1px rgba(0, 0, 0, 0.03),
-          0 8px 40px rgba(0, 0, 0, 0.08);
+          0 0 0 1px rgba(29, 29, 46, 0.04),
+          0 10px 40px rgba(29, 29, 46, 0.1);
       }
 
       .layout {
@@ -47,7 +66,7 @@
       /* ── Sidebar ── */
       .sidebar {
         width: 192px;
-        background: #fafafa;
+        background: var(--sidebar);
         border-right: 1px solid #f0f0f0;
         display: flex;
         flex-direction: column;
@@ -72,7 +91,7 @@
       .brand span {
         font-size: 14px;
         font-weight: 700;
-        color: #111;
+        color: #1d1d20;
         letter-spacing: -0.01em;
       }
 
@@ -81,7 +100,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #8a8a8a;
+        color: #666c77;
         padding: 10px 14px 3px;
       }
 
@@ -94,7 +113,7 @@
         border-radius: 7px;
         font-size: 13.5px;
         font-weight: 500;
-        color: #777;
+        color: #666c77;
         cursor: pointer;
         border: none;
         background: none;
@@ -110,14 +129,11 @@
 
       .tab.active {
         background: #fff;
-        color: #111;
-        font-weight: 500;
-        text-shadow:
-          0 0 0.5px #111,
-          0 0 0.5px #111;
+        color: #1d1d20;
+        font-weight: 600;
         box-shadow:
-          0 1px 3px rgba(0, 0, 0, 0.05),
-          0 0 0 1px rgba(0, 0, 0, 0.03);
+          0 1px 2px rgba(29, 29, 46, 0.06),
+          0 0 0 1px rgba(29, 29, 46, 0.04);
       }
 
       .tab.disabled {
@@ -154,13 +170,13 @@
       }
 
       .badge-red {
-        background: #fee2e2;
-        color: #dc2626;
+        background: #fdeceb;
+        color: #c5342e;
       }
 
       .badge-green {
-        background: #dcfce7;
-        color: #16a34a;
+        background: #e8f6ee;
+        color: #15783f;
       }
 
       .divider {
@@ -179,7 +195,7 @@
       .content {
         flex: 1;
         overflow-y: auto;
-        background: #fff;
+        background: var(--bg);
       }
 
       .content::-webkit-scrollbar {
@@ -245,20 +261,20 @@
       .theme-header h2 {
         font-size: 22px;
         font-weight: 700;
-        color: #111;
+        color: #1d1d20;
         letter-spacing: -0.03em;
       }
 
       .theme-header .domain {
         font-size: 12.5px;
         font-family: 'SF Mono', ui-monospace, monospace;
-        color: #7c3aed;
+        color: #4f57c4;
         margin-top: 6px;
       }
 
       .theme-header .meta {
         font-size: 12.5px;
-        color: #aaaaaa;
+        color: #666c77;
         margin-top: 4px;
       }
 
@@ -278,7 +294,7 @@
       .row-label {
         font-size: 13.5px;
         font-weight: 500;
-        color: #999;
+        color: #666c77;
         flex-shrink: 0;
       }
 
@@ -295,7 +311,7 @@
       }
 
       .row-value a {
-        color: #7c3aed;
+        color: #4f57c4;
         text-decoration: none;
         font-size: 12.5px;
         font-family: ui-monospace, monospace;
@@ -309,7 +325,7 @@
         background: none;
         border: none;
         cursor: pointer;
-        color: #929292;
+        color: #666c77;
         font-size: 13px;
         padding: 2px;
         border-radius: 3px;
@@ -317,7 +333,7 @@
       }
 
       .copy-btn:hover {
-        color: #888;
+        color: #666c77;
       }
 
       .section-heading {
@@ -325,7 +341,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #bbbbbb;
+        color: #666c77;
         padding: 22px 0 10px;
       }
 
@@ -345,37 +361,37 @@
       }
 
       .pill-red {
-        background: #fef2f2;
-        color: #ef4444;
+        background: #fdeceb;
+        color: #c5342e;
       }
 
       .pill-green {
-        background: #f0fdf4;
-        color: #22c55e;
+        background: #e8f6ee;
+        color: #15783f;
       }
 
       .pill-yellow {
-        background: #fffbeb;
-        color: #eab308;
+        background: #faf1dd;
+        color: #9c4a08;
       }
 
       .pill-gray {
-        background: #f5f5f5;
-        color: #888;
+        background: #eceef2;
+        color: #565d6b;
       }
 
       .pill-purple {
-        background: #faf5ff;
-        color: #9333ea;
+        background: #eef0fb;
+        color: #4f57c4;
       }
 
       .missing {
-        color: #ef4444;
+        color: #c5342e;
         font-weight: 500;
       }
 
       .muted {
-        color: #929292;
+        color: #666c77;
       }
 
       /* input */
@@ -401,7 +417,13 @@
       }
 
       .input-field:focus {
-        border-color: #ddd;
+        border-color: #4f57c4;
+        box-shadow: var(--ring);
+      }
+
+      .input-field::placeholder,
+      .preview-url-input-v2::placeholder {
+        color: #666c77;
       }
 
       .btn {
@@ -409,7 +431,7 @@
         font-size: 13px;
         font-weight: 600;
         color: #fff;
-        background: #111;
+        background: #1d1d20;
         border: none;
         border-radius: 8px;
         cursor: pointer;
@@ -419,18 +441,22 @@
         background: #333;
       }
 
+      .btn:active {
+        transform: translateY(1px);
+      }
+
       .checkbox-row {
         display: flex;
         align-items: center;
         gap: 6px;
         margin-top: 8px;
         font-size: 12px;
-        color: #8a8a8a;
+        color: #666c77;
         cursor: pointer;
       }
 
       .checkbox-row input {
-        accent-color: #111;
+        accent-color: #1d1d20;
         width: 13px;
         height: 13px;
       }
@@ -448,7 +474,7 @@
       .stars-row p {
         font-size: 13px;
         font-weight: 500;
-        color: #999;
+        color: #666c77;
       }
 
       .stars {
@@ -479,8 +505,22 @@
       }
 
       .star-btn:focus-visible {
-        outline: 2px solid #7c3aed;
+        outline: 2px solid #4f57c4;
         outline-offset: 2px;
+      }
+
+      .tab:focus-visible,
+      .btn:focus-visible,
+      .action-btn:focus-visible,
+      .fpill:focus-visible,
+      .btn-v2-ghost:focus-visible,
+      .btn-v2-primary:focus-visible,
+      .quick-link-v2:focus-visible,
+      .copy-trigger-v2:focus-visible,
+      .copy-btn:focus-visible,
+      .content a:focus-visible {
+        outline: none;
+        box-shadow: var(--ring);
       }
 
       /* headings */
@@ -494,8 +534,8 @@
       .h-level {
         font-size: 11px;
         font-weight: 700;
-        color: #7c3aed;
-        background: #f5f3ff;
+        color: #4f57c4;
+        background: #eef0fb;
         padding: 2px 8px;
         border-radius: 6px;
         min-width: 30px;
@@ -535,7 +575,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: #8a8a8a;
+        color: #666c77;
         padding: 7px 0;
         border-bottom: 1px solid #f0f0f0;
       }
@@ -547,7 +587,7 @@
       }
 
       td a {
-        color: #7c3aed;
+        color: #4f57c4;
         text-decoration: none;
         font-family: ui-monospace, monospace;
         font-size: 12px;
@@ -567,14 +607,14 @@
         border-radius: 20px;
         border: 1px solid #ebebeb;
         background: #fff;
-        color: #888;
+        color: #666c77;
         cursor: pointer;
       }
 
       .fpill.active {
-        background: #111;
+        background: #1d1d20;
         color: #fff;
-        border-color: #111;
+        border-color: #1d1d20;
       }
 
       /* images */
@@ -603,7 +643,7 @@
 
       .img-alt-label {
         font-size: 11.5px;
-        color: #8a8a8a;
+        color: #666c77;
       }
 
       .img-alt {
@@ -631,7 +671,7 @@
       .sch-header svg {
         width: 12px;
         height: 12px;
-        color: #929292;
+        color: #666c77;
         transition: transform 0.15s;
       }
 
@@ -656,7 +696,7 @@
       }
 
       .sch-k {
-        color: #8a8a8a;
+        color: #666c77;
         min-width: 74px;
       }
 
@@ -665,7 +705,7 @@
       }
 
       .sch-v a {
-        color: #7c3aed;
+        color: #4f57c4;
         text-decoration: none;
       }
 
@@ -717,14 +757,14 @@
 
       .stat-label {
         font-size: 12px;
-        color: #8a8a8a;
+        color: #666c77;
         font-weight: 500;
       }
 
       .stat-val {
         font-size: 22px;
         font-weight: 700;
-        color: #111;
+        color: #1d1d20;
         letter-spacing: -0.02em;
         margin-top: 2px;
       }
@@ -737,17 +777,17 @@
         align-items: center;
         justify-content: space-between;
         font-size: 11.5px;
-        color: #929292;
+        color: #666c77;
         flex-shrink: 0;
       }
 
       .footer strong {
-        color: #888;
+        color: #666c77;
         font-weight: 600;
       }
 
       .footer a {
-        color: #7c3aed;
+        color: #4f57c4;
         text-decoration: none;
         font-weight: 500;
       }
@@ -788,7 +828,7 @@
         padding: 5px 10px;
         font-size: 12px;
         font-weight: 500;
-        color: #777;
+        color: #666c77;
         background: #fff;
         border: 1px solid #ebebeb;
         border-radius: 6px;
@@ -846,7 +886,7 @@
 
       .app-desc {
         font-size: 11.5px;
-        color: #999;
+        color: #666c77;
         margin-top: 1px;
       }
 
@@ -854,7 +894,7 @@
       .empty-state {
         text-align: center;
         padding: 32px 20px;
-        color: #bababa;
+        color: #666c77;
         font-size: 13px;
       }
 
@@ -868,7 +908,7 @@
       .empty-state p {
         margin-top: 4px;
         font-size: 12px;
-        color: #ccc;
+        color: #666c77;
       }
 
       /* sidebar scroll */
@@ -898,8 +938,8 @@
         left: 0;
         right: 0;
         height: 140px;
-        background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #f0f0f0 100%);
-        border-bottom: 1px solid #f0f0f0;
+        background: linear-gradient(135deg, #f4f5f8 0%, #eef0f4 55%, #f6f7f9 100%);
+        border-bottom: 1px solid #ececef;
       }
 
       .theme-identity-v2 {
@@ -917,12 +957,12 @@
       }
 
       .theme-name-v2 {
-        font-family: 'Instrument Serif', serif;
-        font-size: 28px;
-        font-weight: 400;
-        color: #111;
+        font-family: inherit;
+        font-size: 24px;
+        font-weight: 600;
+        color: #1d1d20;
         letter-spacing: -0.02em;
-        line-height: 1.1;
+        line-height: 1.15;
       }
 
       .theme-byline-v2 {
@@ -931,14 +971,14 @@
         gap: 6px;
         margin-top: 5px;
         font-size: 12.5px;
-        color: #929292;
+        color: #666c77;
       }
 
       .theme-byline-dot {
         width: 3px;
         height: 3px;
         border-radius: 50%;
-        background: #929292;
+        background: #666c77;
         opacity: 0.5;
       }
 
@@ -967,7 +1007,7 @@
 
       .btn-v2-ghost:hover {
         border-color: #ddd;
-        color: #111;
+        color: #1d1d20;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
       }
 
@@ -985,7 +1025,7 @@
         font-size: 12px;
         font-weight: 600;
         color: #fff;
-        background: #111;
+        background: #1d1d20;
         border: none;
         border-radius: 6px;
         cursor: pointer;
@@ -1024,14 +1064,14 @@
       .stat-label-v2 {
         font-size: 11px;
         font-weight: 500;
-        color: #929292;
+        color: #666c77;
         letter-spacing: 0.02em;
       }
 
       .stat-value-v2 {
         font-size: 17px;
         font-weight: 600;
-        color: #111;
+        color: #1d1d20;
         margin-top: 3px;
         letter-spacing: -0.02em;
         display: flex;
@@ -1056,7 +1096,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #929292;
+        color: #666c77;
         margin-bottom: 12px;
         display: flex;
         align-items: center;
@@ -1116,7 +1156,7 @@
       }
 
       .toggle-track-v2.on {
-        background: #7c3aed;
+        background: #4f57c4;
       }
 
       .toggle-knob-v2 {
@@ -1159,7 +1199,7 @@
 
       .quick-link-v2:hover {
         border-color: #ddd;
-        color: #111;
+        color: #1d1d20;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
       }
 
@@ -1179,7 +1219,7 @@
         background: none;
         border: none;
         cursor: pointer;
-        color: #929292;
+        color: #666c77;
         transition: all 0.12s;
       }
 
@@ -1196,7 +1236,7 @@
       @keyframes fadeUpV2 {
         from {
           opacity: 0;
-          transform: translateY(8px);
+          transform: translateY(6px);
         }
         to {
           opacity: 1;
@@ -1213,6 +1253,17 @@
       .theme-sections-v2 {
         animation: fadeUpV2 0.4s ease 0.15s both;
       }
+
+      /* Respect reduced-motion: collapse all entrance/transition motion to instant */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-delay: 0ms !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
     </style>
   </head>
 
@@ -1223,7 +1274,7 @@
           <svg
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#111"
+            stroke="#1d1d20"
             stroke-width="2.2"
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -1233,10 +1284,10 @@
             <path d="M2 17l10 5 10-5" />
             <path d="M2 12l10 5 10-5" />
           </svg>
-          <span style="font-size: 14px; font-weight: 700; color: #111; letter-spacing: -0.01em">Alfred</span>
+          <span style="font-size: 14px; font-weight: 700; color: #1d1d20; letter-spacing: -0.01em">Alfred</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px">
-          <span style="font-size: 12px; color: #999">Enjoying Alfred?</span>
+          <span style="font-size: 12px; color: #666c77">Enjoying Alfred?</span>
           <div class="stars" role="group" aria-label="Rate Alfred" onmouseleave="cs()" style="display: flex; gap: 1px">
             <button
               aria-label="Rate 1 star"
@@ -1506,7 +1557,7 @@
                 border-radius: 7px;
                 font-size: 12px;
                 font-weight: 500;
-                color: #999;
+                color: #666c77;
                 text-decoration: none;
                 transition: all 0.12s;
               ">
@@ -1540,12 +1591,12 @@
                         style="
                           color: #555;
                           text-decoration: underline;
-                          text-decoration-color: #929292;
+                          text-decoration-color: #666c77;
                           text-underline-offset: 2px;
                           transition: text-decoration-color 0.12s;
                         "
                         onmouseover="this.style.textDecorationColor = '#555'"
-                        onmouseout="this.style.textDecorationColor = '#929292'"
+                        onmouseout="this.style.textDecorationColor = '#666c77'"
                         >Shopify</a
                       ></span
                     >
@@ -1625,8 +1676,8 @@
                       font-weight: 600;
                       padding: 2px 7px;
                       border-radius: 20px;
-                      background: #fffbeb;
-                      color: #ca8a04;
+                      background: #faf1dd;
+                      color: #9c4a08;
                     ">
                     <svg
                       viewBox="0 0 12 12"
@@ -1646,7 +1697,7 @@
               <div class="stat-cell-v2">
                 <div class="stat-label-v2">Status</div>
                 <div class="stat-value-v2">
-                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #22c55e"></span>
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #15783f"></span>
                   Published
                 </div>
               </div>
@@ -1675,7 +1726,7 @@
                       font-weight: 600;
                       text-transform: uppercase;
                       letter-spacing: 0.06em;
-                      color: #929292;
+                      color: #666c77;
                       white-space: nowrap;
                     "
                     >Internal Name</span
@@ -1685,7 +1736,7 @@
                       font-family: 'SF Mono', ui-monospace, monospace;
                       font-size: 13px;
                       font-weight: 500;
-                      color: #111;
+                      color: #1d1d20;
                       letter-spacing: -0.01em;
                     "
                     >Dawn-15-0-0</span
@@ -1724,7 +1775,7 @@
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#929292"
+                      stroke="#666c77"
                       stroke-width="1.7"
                       stroke-linecap="round"
                       style="width: 14px; height: 14px; flex-shrink: 0">
@@ -1752,7 +1803,7 @@
                     <div class="toggle-track-v2" onclick="this.classList.toggle('on')">
                       <div class="toggle-knob-v2"></div>
                     </div>
-                    <span style="font-size: 11.5px; color: #929292; font-weight: 450">Hide preview bar</span>
+                    <span style="font-size: 11.5px; color: #666c77; font-weight: 450">Hide preview bar</span>
                   </div>
                 </div>
               </div>
@@ -1761,53 +1812,53 @@
               <div class="detail-section-v2">
                 <div class="section-title-v2">Reviews</div>
                 <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px">
-                  <span style="font-size: 26px; font-weight: 700; color: #111; letter-spacing: -0.03em"
+                  <span style="font-size: 26px; font-weight: 700; color: #1d1d20; letter-spacing: -0.03em"
                     >35% positive</span
                   >
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px">
-                  <span style="font-size: 13px; color: #929292; font-weight: 450">272 reviews</span>
-                  <a href="#" style="font-size: 12px; color: #7c3aed; text-decoration: none; font-weight: 500"
+                  <span style="font-size: 13px; color: #666c77; font-weight: 450">272 reviews</span>
+                  <a href="#" style="font-size: 12px; color: #4f57c4; text-decoration: none; font-weight: 500"
                     >View all &rarr;</a
                   >
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 10px">
                   <div style="display: flex; align-items: center; gap: 10px">
-                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #16a34a">
+                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #15783f">
                       <path
                         fill-rule="evenodd"
                         fill="currentColor"
                         d="M12.539 14.57a9.25 9.25 0 0 1-4.074-.838l-.307-.141a3.751 3.751 0 0 0-1.158-.32v-5.222a1.5 1.5 0 0 0 .15-.099 6.489 6.489 0 0 0 2.475-3.95 1.41 1.41 0 0 1 1.378 1.557l-.133 1.26a1.75 1.75 0 0 0 1.74 1.933h1.595c.758 0 1.342.67 1.239 1.42l-.338 2.449a2.25 2.25 0 0 1-2.176 1.942l-.391.01Zm-7.039-6.32h-1v5h1v-5Zm2.34 6.845a10.75 10.75 0 0 0 4.735.975l.391-.01a3.75 3.75 0 0 0 3.626-3.236l.337-2.448a2.75 2.75 0 0 0-2.724-3.126h-1.594a.25.25 0 0 1-.249-.276l.133-1.26a2.91 2.91 0 0 0-2.894-3.214h-.364c-.5 0-.928.357-1.017.849l-.055.303a4.989 4.989 0 0 1-1.915 3.098h-2c-.69 0-1.25.56-1.25 1.25v5.5c0 .69.56 1.25 1.25 1.25h2.345c.324 0 .644.07.938.205l.307.14Z" />
                     </svg>
                     <div style="flex: 1; height: 7px; border-radius: 4px; background: #f5f5f5; overflow: hidden">
-                      <div style="width: 35%; height: 100%; border-radius: 4px; background: #111"></div>
+                      <div style="width: 35%; height: 100%; border-radius: 4px; background: #1d1d20"></div>
                     </div>
                     <span style="font-size: 13px; font-weight: 500; color: #555; min-width: 32px; text-align: right"
                       >96</span
                     >
                   </div>
                   <div style="display: flex; align-items: center; gap: 10px">
-                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #929292">
+                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #666c77">
                       <path
                         fill="currentColor"
                         d="M10 2c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Zm0 14.4c-3.5 0-6.4-2.9-6.4-6.4S6.5 3.6 10 3.6s6.4 2.9 6.4 6.4-2.9 6.4-6.4 6.4ZM7.6 9.2c.4 0 .8-.4.8-.8s-.4-.8-.8-.8-.8.4-.8.8.4.8.8.8Zm4.8-1.6c-.4 0-.8.4-.8.8s.4.8.8.8.8-.4.8-.8-.4-.8-.8-.8Zm0 4H7.6c-.4 0-.8.4-.8.8s.4.8.8.8h4.8c.4 0 .8-.4.8-.8s-.4-.8-.8-.8Z" />
                     </svg>
                     <div style="flex: 1; height: 7px; border-radius: 4px; background: #f5f5f5; overflow: hidden">
-                      <div style="width: 24%; height: 100%; border-radius: 4px; background: #111"></div>
+                      <div style="width: 24%; height: 100%; border-radius: 4px; background: #1d1d20"></div>
                     </div>
                     <span style="font-size: 13px; font-weight: 500; color: #555; min-width: 32px; text-align: right"
                       >66</span
                     >
                   </div>
                   <div style="display: flex; align-items: center; gap: 10px">
-                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #ef4444">
+                    <svg viewBox="0 0 20 20" width="18" height="18" style="flex-shrink: 0; color: #c5342e">
                       <path
                         fill-rule="evenodd"
                         fill="currentColor"
                         d="M12.16 4.904a10.75 10.75 0 0 0-4.735-.974l-.391.01a3.75 3.75 0 0 0-3.626 3.236l-.337 2.448a2.75 2.75 0 0 0 2.724 3.126h1.594a.25.25 0 0 1 .249.276l-.133 1.26a2.91 2.91 0 0 0 2.894 3.214h.364c.5 0 .928-.358 1.017-.85l.055-.302a4.989 4.989 0 0 1 1.915-3.098h2c.69 0 1.25-.56 1.25-1.25v-5.5c0-.69-.56-1.25-1.25-1.25h-2.345a2.25 2.25 0 0 1-.938-.205l-.307-.14Zm-4.699.525a9.25 9.25 0 0 1 4.074.839l.307.14a3.75 3.75 0 0 0 1.158.32v5.223c-.052.03-.102.062-.15.098a6.49 6.49 0 0 0-2.475 3.95 1.41 1.41 0 0 1-1.378-1.557l.133-1.26a1.75 1.75 0 0 0-1.74-1.932h-1.595a1.25 1.25 0 0 1-1.238-1.421l.337-2.448a2.25 2.25 0 0 1 2.176-1.942l.391-.01Zm7.039 6.32h1v-5h-1v5Z" />
                     </svg>
                     <div style="flex: 1; height: 7px; border-radius: 4px; background: #f5f5f5; overflow: hidden">
-                      <div style="width: 40%; height: 100%; border-radius: 4px; background: #111"></div>
+                      <div style="width: 40%; height: 100%; border-radius: 4px; background: #1d1d20"></div>
                     </div>
                     <span style="font-size: 13px; font-weight: 500; color: #555; min-width: 32px; text-align: right"
                       >110</span
@@ -2028,19 +2079,19 @@
                   border-bottom: 1px solid #f5f5f5;
                 ">
                 <div>
-                  <span style="font-size: 11px; color: #999; font-weight: 500">Total</span>
+                  <span style="font-size: 11px; color: #666c77; font-weight: 500">Total</span>
                   <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">108</span>
                 </div>
                 <div>
-                  <span style="font-size: 11px; color: #999; font-weight: 500">Unique</span>
+                  <span style="font-size: 11px; color: #666c77; font-weight: 500">Unique</span>
                   <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">36</span>
                 </div>
                 <div>
-                  <span style="font-size: 11px; color: #999; font-weight: 500">Internal</span>
+                  <span style="font-size: 11px; color: #666c77; font-weight: 500">Internal</span>
                   <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">97</span>
                 </div>
                 <div>
-                  <span style="font-size: 11px; color: #999; font-weight: 500">External</span>
+                  <span style="font-size: 11px; color: #666c77; font-weight: 500">External</span>
                   <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">11</span>
                 </div>
               </div>
@@ -2115,7 +2166,7 @@
                   </tr>
                 </tbody>
               </table>
-              <div style="margin-top: 8px; font-size: 11px; color: #ccc">Showing 5 of 108 links</div>
+              <div style="margin-top: 8px; font-size: 11px; color: #666c77">Showing 5 of 108 links</div>
             </div>
           </div>
 
@@ -2156,7 +2207,7 @@
             <div class="content-pad">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
                 <div style="font-size: 15px; font-weight: 600; color: #222">
-                  Images <span style="font-weight: 400; color: #999">25</span>
+                  Images <span style="font-weight: 400; color: #666c77">25</span>
                 </div>
                 <div class="action-btns">
                   <button class="action-btn">
@@ -2191,7 +2242,7 @@
                     border-radius: 6px;
                     border: 1px solid #ebebeb;
                     background: #fff
-                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666c77%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
                       no-repeat right 6px center;
                     appearance: none;
                     color: #555;
@@ -2209,7 +2260,7 @@
                     border-radius: 6px;
                     border: 1px solid #ebebeb;
                     background: #fff
-                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666c77%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
                       no-repeat right 6px center;
                     appearance: none;
                     color: #555;
@@ -2229,7 +2280,7 @@
                     border-radius: 6px;
                     border: 1px solid #ebebeb;
                     background: #fff
-                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666c77%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
                       no-repeat right 6px center;
                     appearance: none;
                     color: #555;
@@ -2248,7 +2299,7 @@
                     border-radius: 6px;
                     border: 1px solid #ebebeb;
                     background: #fff
-                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666c77%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
                       no-repeat right 6px center;
                     appearance: none;
                     color: #555;
@@ -2269,7 +2320,7 @@
                         text-align: left;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 0;
@@ -2283,7 +2334,7 @@
                         text-align: right;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 4px;
@@ -2297,7 +2348,7 @@
                         text-align: center;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 4px;
@@ -2311,7 +2362,7 @@
                         text-align: center;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 4px;
@@ -2325,7 +2376,7 @@
                         text-align: center;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 4px;
@@ -2339,7 +2390,7 @@
                         text-align: center;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 0;
@@ -2376,7 +2427,7 @@
                             href="#"
                             style="
                               font-size: 10.5px;
-                              color: #7c3aed;
+                              color: #4f57c4;
                               text-decoration: none;
                               font-family: ui-monospace, monospace;
                               word-break: break-all;
@@ -2427,7 +2478,7 @@
                         text-align: center;
                         vertical-align: top;
                       ">
-                      <span style="color: #d97706; font-weight: 500">eager</span>
+                      <span style="color: #9c4a08; font-weight: 500">eager</span>
                     </td>
                     <td
                       style="
@@ -2467,7 +2518,7 @@
                             href="#"
                             style="
                               font-size: 10.5px;
-                              color: #7c3aed;
+                              color: #4f57c4;
                               text-decoration: none;
                               font-family: ui-monospace, monospace;
                               word-break: break-all;
@@ -2559,7 +2610,7 @@
                             href="#"
                             style="
                               font-size: 10.5px;
-                              color: #7c3aed;
+                              color: #4f57c4;
                               text-decoration: none;
                               font-family: ui-monospace, monospace;
                               word-break: break-all;
@@ -2635,12 +2686,12 @@
                             flex-shrink: 0;
                           "></div>
                         <div style="min-width: 0">
-                          <div style="font-size: 12px; color: #e25555; font-weight: 500">Missing alt text</div>
+                          <div style="font-size: 12px; color: #c5342e; font-weight: 500">Missing alt text</div>
                           <a
                             href="#"
                             style="
                               font-size: 10.5px;
-                              color: #7c3aed;
+                              color: #4f57c4;
                               text-decoration: none;
                               font-family: ui-monospace, monospace;
                               word-break: break-all;
@@ -2716,12 +2767,12 @@
                             flex-shrink: 0;
                           "></div>
                         <div style="min-width: 0">
-                          <div style="font-size: 12px; color: #e25555; font-weight: 500">Missing alt text</div>
+                          <div style="font-size: 12px; color: #c5342e; font-weight: 500">Missing alt text</div>
                           <a
                             href="#"
                             style="
                               font-size: 10.5px;
-                              color: #7c3aed;
+                              color: #4f57c4;
                               text-decoration: none;
                               font-family: ui-monospace, monospace;
                               word-break: break-all;
@@ -2761,7 +2812,7 @@
                   </tr>
                 </tbody>
               </table>
-              <div style="margin-top: 8px; font-size: 11px; color: #999">Showing 5 of 25 images</div>
+              <div style="margin-top: 8px; font-size: 11px; color: #666c77">Showing 5 of 25 images</div>
             </div>
           </div>
 
@@ -2832,7 +2883,7 @@
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -2851,7 +2902,7 @@
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -2870,7 +2921,7 @@
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -2886,7 +2937,7 @@
                         <a
                           href="#"
                           style="
-                            color: #7c3aed;
+                            color: #4f57c4;
                             text-decoration: none;
                             font-family: ui-monospace, monospace;
                             font-size: 12px;
@@ -2914,13 +2965,13 @@
                             DAWN
                           </div>
                         </div>
-                        <div style="font-size: 11px; color: #999; margin-top: 6px">1200 x 628px &nbsp; 7.52 KB</div>
+                        <div style="font-size: 11px; color: #666c77; margin-top: 6px">1200 x 628px &nbsp; 7.52 KB</div>
                       </td>
                     </tr>
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -2939,7 +2990,7 @@
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -2958,7 +3009,7 @@
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -2977,7 +3028,7 @@
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -2992,7 +3043,7 @@
                         <a
                           href="#"
                           style="
-                            color: #7c3aed;
+                            color: #4f57c4;
                             text-decoration: none;
                             font-family: ui-monospace, monospace;
                             font-size: 12px;
@@ -3025,7 +3076,7 @@
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -3037,14 +3088,14 @@
                         ">
                         twitter:card
                       </td>
-                      <td style="font-size: 13px; color: #999; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                      <td style="font-size: 13px; color: #666c77; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
                         Not specified
                       </td>
                     </tr>
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -3056,14 +3107,14 @@
                         ">
                         twitter:title
                       </td>
-                      <td style="font-size: 13px; color: #999; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
+                      <td style="font-size: 13px; color: #666c77; padding: 7px 0; border-bottom: 1px solid #f8f8f8">
                         Not specified
                       </td>
                     </tr>
                     <tr>
                       <td
                         style="
-                          color: #999;
+                          color: #666c77;
                           font-family: ui-monospace, monospace;
                           font-size: 12px;
                           padding: 7px 12px 7px 20px;
@@ -3074,7 +3125,7 @@
                         ">
                         twitter:description
                       </td>
-                      <td style="font-size: 13px; color: #999; padding: 7px 0">Not specified</td>
+                      <td style="font-size: 13px; color: #666c77; padding: 7px 0">Not specified</td>
                     </tr>
                   </tbody>
                 </table>
@@ -3088,7 +3139,7 @@
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px">
                 <div>
                   <div style="font-size: 15px; font-weight: 600; color: #222">5 apps detected</div>
-                  <div style="font-size: 12px; color: #999; margin-top: 2px">on theme-dawn-demo.myshopify.com</div>
+                  <div style="font-size: 12px; color: #666c77; margin-top: 2px">on theme-dawn-demo.myshopify.com</div>
                 </div>
                 <button class="action-btn">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
@@ -3148,7 +3199,7 @@
                 <span class="pill pill-gray" style="font-size: 10px">Sales</span>
               </div>
               <div class="app-card">
-                <div class="app-icon" style="background: #7c3aed">
+                <div class="app-icon" style="background: #4f57c4">
                   <svg viewBox="0 0 20 20" width="16" height="16" fill="#FFF">
                     <circle cx="10" cy="10" r="3" />
                     <path
@@ -3163,7 +3214,7 @@
               </div>
 
               <div class="section-heading" style="margin-top: 6px">Unrecognized Scripts (2)</div>
-              <div style="font-size: 12px; color: #999; margin-bottom: 10px">
+              <div style="font-size: 12px; color: #666c77; margin-bottom: 10px">
                 Scripts loaded on this page that don't match known apps
               </div>
               <div class="row" style="gap: 8px">
@@ -3171,7 +3222,7 @@
                   style="
                     font-family: ui-monospace, monospace;
                     font-size: 11px;
-                    color: #777;
+                    color: #666c77;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
@@ -3185,7 +3236,7 @@
                   style="
                     font-family: ui-monospace, monospace;
                     font-size: 11px;
-                    color: #777;
+                    color: #666c77;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
@@ -3202,7 +3253,7 @@
             <div class="content-pad">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
                 <div style="font-size: 15px; font-weight: 600; color: #222">
-                  Products <span style="font-weight: 400; color: #999">32</span>
+                  Products <span style="font-weight: 400; color: #666c77">32</span>
                 </div>
                 <div class="action-btns">
                   <button class="action-btn">
@@ -3227,19 +3278,19 @@
                   border-bottom: 1px solid #f5f5f5;
                 ">
                 <div>
-                  <span style="font-size: 11px; color: #999; font-weight: 500">Avg Price</span>
+                  <span style="font-size: 11px; color: #666c77; font-weight: 500">Avg Price</span>
                   <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">$432</span>
                 </div>
                 <div>
-                  <span style="font-size: 11px; color: #999; font-weight: 500">Highest</span>
+                  <span style="font-size: 11px; color: #666c77; font-weight: 500">Highest</span>
                   <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">$615</span>
                 </div>
                 <div>
-                  <span style="font-size: 11px; color: #999; font-weight: 500">Lowest</span>
+                  <span style="font-size: 11px; color: #666c77; font-weight: 500">Lowest</span>
                   <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">$119</span>
                 </div>
                 <div>
-                  <span style="font-size: 11px; color: #999; font-weight: 500">Published</span>
+                  <span style="font-size: 11px; color: #666c77; font-weight: 500">Published</span>
                   <span style="font-size: 13px; font-weight: 700; color: #222; margin-left: 2px">Nov 2021</span>
                 </div>
               </div>
@@ -3253,7 +3304,7 @@
                     border-radius: 6px;
                     border: 1px solid #ebebeb;
                     background: #fff
-                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666c77%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
                       no-repeat right 6px center;
                     appearance: none;
                     color: #555;
@@ -3273,7 +3324,7 @@
                     border-radius: 6px;
                     border: 1px solid #ebebeb;
                     background: #fff
-                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23999%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
+                      url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666c77%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>')
                       no-repeat right 6px center;
                     appearance: none;
                     color: #555;
@@ -3293,7 +3344,7 @@
                         text-align: left;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 0;
@@ -3306,7 +3357,7 @@
                         text-align: right;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 4px;
@@ -3320,7 +3371,7 @@
                         text-align: center;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 4px;
@@ -3334,7 +3385,7 @@
                         text-align: center;
                         font-size: 10px;
                         font-weight: 600;
-                        color: #999;
+                        color: #666c77;
                         text-transform: uppercase;
                         letter-spacing: 0.04em;
                         padding: 6px 0;
@@ -3365,7 +3416,7 @@
                           "></div>
                         <div style="min-width: 0">
                           <div style="font-size: 12px; color: #333; font-weight: 500">Small Convertible Flex Bag</div>
-                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Cappuccino</div>
+                          <div style="font-size: 10.5px; color: #666c77; margin-top: 1px">Cappuccino</div>
                         </div>
                       </div>
                     </td>
@@ -3555,7 +3606,7 @@
                           "></div>
                         <div style="min-width: 0">
                           <div style="font-size: 12px; color: #333; font-weight: 500">Studio Bag</div>
-                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Denim</div>
+                          <div style="font-size: 10.5px; color: #666c77; margin-top: 1px">Denim</div>
                         </div>
                       </div>
                     </td>
@@ -3701,7 +3752,7 @@
                           "></div>
                         <div style="min-width: 0">
                           <div style="font-size: 12px; color: #333; font-weight: 500">Louise Slide Sandal</div>
-                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Buttermilk</div>
+                          <div style="font-size: 10.5px; color: #666c77; margin-top: 1px">Buttermilk</div>
                         </div>
                       </div>
                     </td>
@@ -3901,7 +3952,7 @@
                             style="
                               padding: 7px 4px;
                               text-align: right;
-                              color: #e25555;
+                              color: #c5342e;
                               font-weight: 500;
                               vertical-align: top;
                             ">
@@ -3929,7 +3980,7 @@
                           "></div>
                         <div style="min-width: 0">
                           <div style="font-size: 12px; color: #333; font-weight: 500">Bo Ivy</div>
-                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Black</div>
+                          <div style="font-size: 10.5px; color: #666c77; margin-top: 1px">Black</div>
                         </div>
                       </div>
                     </td>
@@ -3984,7 +4035,7 @@
                           "></div>
                         <div style="min-width: 0">
                           <div style="font-size: 12px; color: #333; font-weight: 500">Brick</div>
-                          <div style="font-size: 10.5px; color: #999; margin-top: 1px">Apple</div>
+                          <div style="font-size: 10.5px; color: #666c77; margin-top: 1px">Apple</div>
                         </div>
                       </div>
                     </td>
@@ -4092,7 +4143,7 @@
                   </tr>
                 </tbody>
               </table>
-              <div style="margin-top: 8px; font-size: 11px; color: #999">Showing 5 of 32 products</div>
+              <div style="margin-top: 8px; font-size: 11px; color: #666c77">Showing 5 of 32 products</div>
             </div>
           </div>
 
@@ -4105,7 +4156,7 @@
                   <div style="font-size: 15px; font-weight: 600; color: #222">robots.txt</div>
                   <a
                     href="#"
-                    style="font-size: 12px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    style="font-size: 12px; color: #4f57c4; text-decoration: none; font-family: ui-monospace, monospace"
                     >theme-dawn-demo.myshopify.com/robots.txt</a
                   >
                 </div>
@@ -4148,7 +4199,7 @@
                   word-break: break-all;
                   max-height: 340px;
                   overflow-y: auto;
-                "><span style="color:#999"># we use Shopify's default robots.txt</span>
+                "><span style="color:#666c77"># we use Shopify's default robots.txt</span>
 <span style="color:#222;font-weight:600">User-agent: *</span>
 Disallow: /admin
 Disallow: /cart
@@ -4175,7 +4226,7 @@ Disallow: /search
 Disallow: /*/search
 Disallow: /apple-app-site-association
 
-<span style="color:#222;font-weight:600">Sitemap:</span> <a href="#" style="color:#7C3AED;text-decoration:none">https://theme-dawn-demo.myshopify.com/sitemap.xml</a></pre>
+<span style="color:#222;font-weight:600">Sitemap:</span> <a href="#" style="color:#4f57c4;text-decoration:none">https://theme-dawn-demo.myshopify.com/sitemap.xml</a></pre>
             </div>
           </div>
 
@@ -4185,7 +4236,7 @@ Disallow: /apple-app-site-association
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
                 <div>
                   <div style="font-size: 15px; font-weight: 600; color: #222">Sitemaps</div>
-                  <div style="font-size: 12px; color: #999; margin-top: 2px">5 sitemaps found</div>
+                  <div style="font-size: 12px; color: #666c77; margin-top: 2px">5 sitemaps found</div>
                 </div>
                 <button class="action-btn" onclick="window.open('#')">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
@@ -4200,7 +4251,7 @@ Disallow: /apple-app-site-association
                   <div class="app-name" style="font-size: 12px">sitemap_agentic_discovery.xml</div>
                   <a
                     href="#"
-                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    style="font-size: 11px; color: #4f57c4; text-decoration: none; font-family: ui-monospace, monospace"
                     >.../sitemap_agentic_discovery.xml</a
                   >
                 </div>
@@ -4212,7 +4263,7 @@ Disallow: /apple-app-site-association
                   <div class="app-name" style="font-size: 12px">sitemap_products_1.xml</div>
                   <a
                     href="#"
-                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    style="font-size: 11px; color: #4f57c4; text-decoration: none; font-family: ui-monospace, monospace"
                     >.../sitemap_products_1.xml</a
                   >
                 </div>
@@ -4224,7 +4275,7 @@ Disallow: /apple-app-site-association
                   <div class="app-name" style="font-size: 12px">sitemap_pages_1.xml</div>
                   <a
                     href="#"
-                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    style="font-size: 11px; color: #4f57c4; text-decoration: none; font-family: ui-monospace, monospace"
                     >.../sitemap_pages_1.xml</a
                   >
                 </div>
@@ -4236,7 +4287,7 @@ Disallow: /apple-app-site-association
                   <div class="app-name" style="font-size: 12px">sitemap_collections_1.xml</div>
                   <a
                     href="#"
-                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    style="font-size: 11px; color: #4f57c4; text-decoration: none; font-family: ui-monospace, monospace"
                     >.../sitemap_collections_1.xml</a
                   >
                 </div>
@@ -4248,7 +4299,7 @@ Disallow: /apple-app-site-association
                   <div class="app-name" style="font-size: 12px">sitemap_blogs_1.xml</div>
                   <a
                     href="#"
-                    style="font-size: 11px; color: #7c3aed; text-decoration: none; font-family: ui-monospace, monospace"
+                    style="font-size: 11px; color: #4f57c4; text-decoration: none; font-family: ui-monospace, monospace"
                     >.../sitemap_blogs_1.xml</a
                   >
                 </div>

@@ -468,7 +468,7 @@
   .dropdown__trigger:hover { border-color: var(--border-hover); color: var(--text-secondary); }
   .dropdown__count { color: var(--text-muted); font-weight: 500; }
   .dropdown__chevron { width: 12px; height: 12px; stroke-width: 2; color: var(--text-muted); }
-  .dropdown__menu { position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); z-index: 10; min-width: 160px; padding: 4px; }
+  .dropdown__menu { position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-pop); z-index: 10; min-width: 160px; padding: 4px; }
   .dropdown__item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 10px; border: none; background: none; font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-radius: 5px; transition: background 0.1s; }
   .dropdown__item:hover { background: var(--bg-hover); }
   .dropdown__item--active { color: var(--text); font-weight: 600; }
@@ -484,7 +484,7 @@
   .export__trigger:hover { border-color: var(--border-hover); color: var(--text-secondary); }
   .export__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; }
   .export__chevron { width: 10px; height: 10px; stroke-width: 2; opacity: 0.6; }
-  .export__menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); z-index: 10; min-width: 150px; padding: 4px; }
+  .export__menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-pop); z-index: 10; min-width: 150px; padding: 4px; }
   .export__item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 10px; border: none; background: none; font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 5px; transition: background 0.1s; }
   .export__item:hover { background: var(--bg-hover); }
   .export__item-label { font-weight: 600; color: var(--text); }
@@ -521,7 +521,7 @@
 
   .table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
 
-  .th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); padding: 8px 8px 8px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 1; }
+  .th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); padding: 8px 8px 8px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-canvas); z-index: 1; }
   .th--num { width: 30px; padding-right: 0; }
   .th--size { width: 64px; }
   .th--time { width: 58px; }
