@@ -203,7 +203,7 @@
     <div class="section__title">Preview URL</div>
     <div class="preview">
       <div class="preview__url">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#929292" stroke-width="1.7" stroke-linecap="round" class="preview__icon"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" class="preview__icon"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
         <input
           class="preview__input"
           value={getThemePreviewUrl(storeInfo, disablePreviewBar)}
@@ -417,7 +417,7 @@
   .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 140px; background: var(--hero-gradient); border-bottom: 1px solid var(--border); }
   .hero__identity { position: relative; display: flex; align-items: flex-end; gap: 20px; padding-bottom: 24px; }
   .hero__meta { flex: 1; min-width: 0; padding-bottom: 2px; }
-  .hero__name { font-size: 28px; font-weight: 400; color: var(--text); letter-spacing: -0.02em; line-height: 1.1; margin: 0; }
+  .hero__name { font-size: 24px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; line-height: 1.15; margin: 0; }
   .hero__byline { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: 12.5px; color: var(--text-muted); }
   .hero__byline-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-muted); opacity: 0.5; }
   .hero__developer-link { color: var(--text-secondary); text-decoration: underline; text-decoration-color: var(--text-muted); text-underline-offset: 2px; transition: text-decoration-color 0.12s; }
@@ -467,7 +467,7 @@
   /* Preview block */
   .preview { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .preview__url { display: flex; align-items: center; gap: 8px; padding: 10px 14px; }
-  .preview__icon { width: 14px; height: 14px; flex-shrink: 0; }
+  .preview__icon { width: 14px; height: 14px; flex-shrink: 0; color: var(--text-muted); }
   .preview__input { flex: 1; border: none; background: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; color: var(--text-secondary); outline: none; min-width: 0; cursor: default; }
   .preview__copy { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; font-size: 11px; font-weight: 600; flex-shrink: 0; border-radius: 6px; }
   .preview__copy-icon { width: 13px; height: 13px; stroke-width: 1.8; flex-shrink: 0; }

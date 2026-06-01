@@ -200,13 +200,8 @@
   .tree__row--has-issue { background: color-mix(in srgb, var(--error-bg) 50%, transparent); }
   .tree__row--has-issue:hover { background: var(--error-bg); }
 
-  .tree__badge { font-family: 'SF Mono', ui-monospace, monospace; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; line-height: 16px; }
-  .tree__badge--h1 { background: var(--text); color: var(--bg); }
-  .tree__badge--h2 { background: var(--text-secondary); color: var(--bg); }
-  .tree__badge--h3 { background: var(--text-muted); color: var(--bg); }
-  .tree__badge--h4 { background: var(--border-strong); color: var(--text-secondary); }
-  .tree__badge--h5 { background: var(--bg-inset); color: var(--text-muted); border: 1px solid var(--border); }
-  .tree__badge--h6 { background: var(--bg-inset); color: var(--text-faint); border: 1px solid var(--border); }
+  /* Uniform indigo pill for all levels; depth is shown by indentation (per mockup) */
+  .tree__badge { font-family: inherit; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; flex-shrink: 0; line-height: 16px; background: var(--accent-tint); color: var(--accent); }
 
   .tree__text { font-size: 12.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .tree__text--empty { font-style: italic; color: var(--text-disabled); }
