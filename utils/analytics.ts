@@ -66,7 +66,14 @@ export type AnalyticsAction =
   | 'assets_copy'
   | 'assets_view_source'
   | 'assets_expand_inline'
-  | 'assets_sort';
+  | 'assets_sort'
+  | 'images_view'
+  | 'images_filter'
+  | 'images_highlight'
+  | 'images_scroll_to'
+  | 'images_export'
+  | 'images_copy'
+  | 'images_sort';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -138,7 +145,14 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   assets_copy: 60,
   assets_view_source: 5,
   assets_expand_inline: 5,
-  assets_sort: 60
+  assets_sort: 60,
+  images_view: 60,
+  images_filter: 25,
+  images_highlight: 10,
+  images_scroll_to: 5,
+  images_export: 60,
+  images_copy: 60,
+  images_sort: 25
 };
 
 // --- Usage Stats (local tracking) ---
@@ -227,7 +241,14 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   assets_copy: 'SEO',
   assets_view_source: 'SEO',
   assets_expand_inline: 'SEO',
-  assets_sort: 'SEO'
+  assets_sort: 'SEO',
+  images_view: 'SEO',
+  images_filter: 'SEO',
+  images_highlight: 'SEO',
+  images_scroll_to: 'SEO',
+  images_export: 'SEO',
+  images_copy: 'SEO',
+  images_sort: 'SEO'
 };
 
 /** Local usage stats persisted in `local:usage_stats`.
