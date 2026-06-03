@@ -520,6 +520,74 @@ export default defineContentScript({
         return false;
       }
 
+      /**
+       * Toggles colored dashed outlines on all collected images
+       * (green=ok, amber=missing alt, red=broken).
+       * @param {boolean} request.enabled - Whether to apply or remove highlights.
+       */
+      if (request.action === 'highlight_images') {
+        const { enabled } = request as { action: string; enabled: boolean };
+        const styleId = 'alfred-image-highlights';
+        const existing = document.getElementById(styleId);
+        if (!enabled) {
+          existing?.remove();
+          document.querySelectorAll('[data-alfred-image-highlight]').forEach((el) => {
+            (el as HTMLElement).removeAttribute('data-alfred-image-highlight');
+          });
+          sendResponse(true);
+          return false;
+        }
+        if (!existing) {
+          const style = document.createElement('style');
+          style.id = styleId;
+          style.textContent = `
+            [data-alfred-image-highlight="ok"] { outline: 2px dashed #22c55e !important; outline-offset: 3px !important; }
+            [data-alfred-image-highlight="alt"] { outline: 2px dashed #f59e0b !important; outline-offset: 3px !important; }
+            [data-alfred-image-highlight="broken"] { outline: 2px dashed #ef4444 !important; outline-offset: 3px !important; }
+          `;
+          document.head.appendChild(style);
+        }
+        for (const { el, source } of collectImageEls()) {
+          let state = 'ok';
+          if (source !== 'background') {
+            const img = el as HTMLImageElement;
+            if (img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src)) {
+              state = 'broken';
+            } else {
+              const altAttr = img.getAttribute('alt');
+              if (altAttr === null || altAttr.trim() === '') state = 'alt';
+            }
+          }
+          (el as HTMLElement).setAttribute('data-alfred-image-highlight', state);
+        }
+        sendResponse(true);
+        return false;
+      }
+
+      /**
+       * Scrolls to an image by its collectImageEls() index and applies a brief highlight.
+       * @param {number} request.index - Zero-based index in collectImageEls() order.
+       */
+      if (request.action === 'scroll_to_image') {
+        const target = collectImageEls()[(request as { action: string; index: number }).index]?.el;
+        if (target instanceof HTMLElement) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target.style.outline = '2px dashed #95bf47';
+          target.style.outlineOffset = '3px';
+          target.style.transition = 'outline-color 0.8s';
+          setTimeout(() => {
+            target.style.outlineColor = 'transparent';
+            setTimeout(() => {
+              target.style.outline = '';
+              target.style.outlineOffset = '';
+              target.style.transition = '';
+            }, 800);
+          }, 5000);
+        }
+        sendResponse(true);
+        return false;
+      }
+
       // Return false for unhandled messages
       return false;
     });
