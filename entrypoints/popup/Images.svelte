@@ -63,7 +63,10 @@
     let altPresent = 0, altMissing = 0, ok = 0, missingAlt = 0, broken = 0, lazy = 0, eager = 0, noLoad = 0;
     const formatCounts: Record<string, number> = {};
     for (const img of images) {
-      if (img.lacksAlt) altMissing++; else altPresent++;
+      // Background images have no alt concept; exclude them from both alt buckets.
+      if (img.source !== 'background') {
+        if (img.lacksAlt) altMissing++; else altPresent++;
+      }
       const st = statusOf(img);
       if (st === 'broken') broken++; else if (st === 'missing-alt') missingAlt++; else ok++;
       if (img.loading === 'lazy') lazy++; else if (img.loading === 'eager') eager++; else noLoad++;
@@ -76,8 +79,8 @@
   const filtered = $derived.by(() => {
     const q = search.toLowerCase();
     return images.filter(img => {
-      if (altFilter === 'notempty' && img.lacksAlt) return false;
-      if (altFilter === 'empty' && !img.lacksAlt) return false;
+      if (altFilter === 'notempty' && (img.lacksAlt || img.source === 'background')) return false;
+      if (altFilter === 'empty' && (!img.lacksAlt || img.source === 'background')) return false;
       if (formatFilter !== 'all' && (img.format || 'other') !== formatFilter) return false;
       if (loadingFilter !== 'all' && img.loading !== loadingFilter) return false;
       if (statusFilter !== 'all' && statusOf(img) !== statusFilter) return false;
