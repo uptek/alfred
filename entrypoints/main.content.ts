@@ -2,6 +2,29 @@ import { getItem } from '@/utils/storage';
 import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 
+type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background' };
+
+/**
+ * Collects all page images in a deterministic order shared by get_images,
+ * highlight_images, and scroll_to_image so indices stay consistent across calls.
+ * Order: every <img> in DOM order, then every element with a CSS background-image
+ * in DOM order. Inline <svg> icons are intentionally excluded.
+ */
+function collectImageEls(): CollectedImage[] {
+  const out: CollectedImage[] = [];
+  for (const el of document.querySelectorAll('img')) {
+    out.push({ el, source: el.closest('picture') ? 'picture' : 'img' });
+  }
+  for (const el of document.querySelectorAll<HTMLElement>('body *')) {
+    if (el.tagName === 'IMG') continue;
+    const bg = getComputedStyle(el).backgroundImage;
+    if (bg && bg !== 'none' && /url\(/i.test(bg)) {
+      out.push({ el, source: 'background' });
+    }
+  }
+  return out;
+}
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_start',
@@ -304,6 +327,104 @@ export default defineContentScript({
         });
 
         sendResponse(assets);
+        return false;
+      }
+
+      /**
+       * Extracts all <img>, <picture>, and CSS background images in collectImageEls() order.
+       * Sizes come from the Resource Timing API only (no new network requests); unknowns are 0.
+       */
+      if (request.action === 'get_images') {
+        const pageHost = location.hostname;
+        const isExternalUrl = (url: string): boolean => {
+          try {
+            return new URL(url, location.href).hostname !== pageHost;
+          } catch {
+            return true;
+          }
+        };
+        const sizeOf = (e: PerformanceResourceTiming) => e.encodedBodySize || e.decodedBodySize || 0;
+        const timingByUrl = new Map<string, PerformanceResourceTiming>();
+        try {
+          for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
+            const prev = timingByUrl.get(entry.name);
+            if (!prev || sizeOf(entry) > sizeOf(prev)) timingByUrl.set(entry.name, entry);
+          }
+        } catch {
+          // Resource Timing unavailable; size/cached stay at defaults
+        }
+        const cachedOf = (t?: PerformanceResourceTiming): boolean =>
+          !!t && t.transferSize === 0 && t.decodedBodySize > 0;
+
+        const resolveUrl = (url: string): string => {
+          try {
+            return new URL(url, location.href).href;
+          } catch {
+            return url;
+          }
+        };
+        const bgUrl = (el: Element): string => {
+          const bg = getComputedStyle(el).backgroundImage;
+          const m = /url\((['"]?)(.*?)\1\)/i.exec(bg);
+          return m && m[2] ? resolveUrl(m[2]) : '';
+        };
+        const formatOf = (url: string): string => {
+          try {
+            const path = new URL(url, location.href).pathname;
+            const ext = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
+            if (ext === 'jpeg') return 'jpg';
+            return /^(png|jpg|webp|avif|gif|svg)$/.test(ext) ? ext : '';
+          } catch {
+            return '';
+          }
+        };
+
+        const images = collectImageEls().map(({ el, source }, i) => {
+          if (source === 'background') {
+            const src = bgUrl(el);
+            const t = src ? timingByUrl.get(src) : undefined;
+            return {
+              index: i,
+              source,
+              src,
+              alt: null,
+              lacksAlt: false,
+              isResponsive: false,
+              naturalWidth: 0,
+              naturalHeight: 0,
+              format: formatOf(src),
+              loading: 'none',
+              size: t ? sizeOf(t) : 0,
+              cached: cachedOf(t),
+              isExternal: src ? isExternalUrl(src) : false,
+              isHidden: !(el as HTMLElement).checkVisibility(),
+              broken: false
+            };
+          }
+          const img = el as HTMLImageElement;
+          const src = img.currentSrc || img.src || '';
+          const t = src ? timingByUrl.get(src) : undefined;
+          const altAttr = img.getAttribute('alt');
+          const loadingAttr = img.getAttribute('loading');
+          return {
+            index: i,
+            source,
+            src,
+            alt: altAttr,
+            lacksAlt: altAttr === null || altAttr.trim() === '',
+            isResponsive: source === 'picture' || img.srcset !== '' || img.sizes !== '',
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            format: formatOf(src),
+            loading: loadingAttr === 'lazy' ? 'lazy' : loadingAttr === 'eager' ? 'eager' : 'none',
+            size: t ? sizeOf(t) : 0,
+            cached: cachedOf(t),
+            isExternal: src ? isExternalUrl(src) : false,
+            isHidden: !img.checkVisibility(),
+            broken: img.complete && img.naturalWidth === 0 && src !== ''
+          };
+        });
+        sendResponse(images);
         return false;
       }
 
