@@ -117,7 +117,8 @@
     if (!src) return '(no source)';
     try {
       const u = new URL(src);
-      const seg = u.pathname.split('/').filter(Boolean).pop() ?? u.pathname;
+      const segments = u.pathname.split('/').filter(Boolean);
+      const seg = segments[segments.length - 1] ?? u.pathname;
       return '…/' + seg + u.search;
     } catch {
       return src;
