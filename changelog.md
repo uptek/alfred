@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026.06.04
+@ 2026-06-04
+
+### SEO Images Analyzer
+New Images tab in the popup audits every image on any page — for SEO, accessibility, and performance — in one sortable, filterable table.
+
+- See every image in a table with a thumbnail, alt text, file size, format, dimensions, and loading strategy.
+- Covers regular images, responsive picture/srcset images, and CSS background images (tagged separately).
+- Missing alt text is flagged in red, and broken images are detected and labeled.
+- Filter by Alt, Format, Loading, and Status, search by alt text or URL, and sort any column.
+- Highlight all images on the page with color-coded outlines (green=ok, amber=missing alt, red=broken).
+- Click any row to scroll to that image on the page with a brief highlight.
+- Export everything as CSV or JSON, or copy all image URLs to your clipboard.
+- Works on any website, not just Shopify stores.
+
 ## 2026.06.01.1
 @ 2026-06-01
 
