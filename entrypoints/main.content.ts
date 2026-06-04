@@ -2,7 +2,7 @@ import { getItem } from '@/utils/storage';
 import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 
-type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background' };
+type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
 /**
  * Collects all page images in a deterministic order shared by get_images,
@@ -19,7 +19,8 @@ function collectImageEls(): CollectedImage[] {
     if (el.tagName === 'IMG') continue;
     const bg = getComputedStyle(el).backgroundImage;
     if (bg && bg !== 'none' && /url\(/i.test(bg)) {
-      out.push({ el, source: 'background' });
+      // Carry the resolved background-image string so get_images doesn't re-run getComputedStyle.
+      out.push({ el, source: 'background', bg });
     }
   }
   return out;
@@ -394,8 +395,7 @@ export default defineContentScript({
             return url;
           }
         };
-        const bgUrl = (el: Element): string => {
-          const bg = getComputedStyle(el).backgroundImage;
+        const bgUrl = (bg: string): string => {
           const m = /url\((['"]?)(.*?)\1\)/i.exec(bg);
           return m && m[2] ? resolveUrl(m[2]) : '';
         };
@@ -410,9 +410,9 @@ export default defineContentScript({
           }
         };
 
-        const images = collectImageEls().map(({ el, source }, i) => {
+        const images = collectImageEls().map(({ el, source, bg }, i) => {
           if (source === 'background') {
-            const src = bgUrl(el);
+            const src = bgUrl(bg ?? '');
             const t = src ? timingByUrl.get(src) : undefined;
             return {
               index: i,
@@ -567,6 +567,14 @@ export default defineContentScript({
           return false;
         }
         ensureImageHighlightStyle();
+        // Mark the stylesheet so scroll_to_image's cleanup knows the global
+        // highlight owns the attributes and must not strip them.
+        const highlightStyle = document.getElementById(IMAGE_HIGHLIGHT_STYLE_ID);
+        if (highlightStyle) highlightStyle.dataset.global = 'true';
+        // Clear stale attributes (the DOM may have changed since the last toggle).
+        document.querySelectorAll('[data-alfred-image-highlight]').forEach((el) => {
+          (el as HTMLElement).removeAttribute('data-alfred-image-highlight');
+        });
         for (const { el, source } of collectImageEls()) {
           (el as HTMLElement).setAttribute('data-alfred-image-highlight', imageHighlightState(el, source));
         }
@@ -590,7 +598,11 @@ export default defineContentScript({
           el.setAttribute('data-alfred-image-highlight', imageHighlightState(el, source));
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           if (!hadHighlight) {
-            setTimeout(() => el.removeAttribute('data-alfred-image-highlight'), 5000);
+            setTimeout(() => {
+              // Skip removal if the global Highlight toggle was switched on meanwhile.
+              const globalOn = !!document.getElementById(IMAGE_HIGHLIGHT_STYLE_ID)?.dataset.global;
+              if (!globalOn) el.removeAttribute('data-alfred-image-highlight');
+            }, 5000);
           }
         }
         sendResponse(true);
