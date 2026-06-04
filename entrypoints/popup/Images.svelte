@@ -537,7 +537,7 @@
 
   .img-cell { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
   .thumb-link { display: block; flex-shrink: 0; line-height: 0; border-radius: 4px; }
-  .thumb-link:hover .thumb { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .thumb-link:hover .thumb { box-shadow: inset 0 0 0 2px var(--accent); }
   .thumb { width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0; object-fit: cover; background: var(--bg-hover); }
   .thumb--empty { background: var(--bg-hover); }
   .img-meta { min-width: 0; }
