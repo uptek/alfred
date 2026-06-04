@@ -378,14 +378,17 @@
                     <div class="thumb thumb--empty"></div>
                   {/if}
                   <div class="img-meta">
-                    {#if img.lacksAlt && img.source !== 'background'}
-                      <span class="alt-text alt-text--missing">Missing alt text</span>
-                    {:else if img.alt}
-                      <span class="alt-text">{img.alt}</span>
-                    {:else if img.source === 'background'}
-                      <span class="alt-text alt-text--muted">background image</span>
+                    {#if img.source === 'background'}
+                      <span class="alt-text alt-text--muted">Background image</span>
                     {:else}
-                      <span class="alt-text alt-text--muted">decorative</span>
+                      <span class="alt-text" title={img.lacksAlt ? 'Missing alt text' : img.alt}>
+                        <span class="alt-label">Alt:</span>
+                        {#if img.lacksAlt}
+                          <span class="alt-missing">Missing</span>
+                        {:else}
+                          {img.alt}
+                        {/if}
+                      </span>
                     {/if}
                     <div class="url-row">
                       {#if img.source === 'background'}<span class="src-tag">bg</span>{/if}
@@ -537,8 +540,9 @@
   .img-meta { min-width: 0; }
 
   .alt-text { display: block; font-size: 12px; color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 210px; }
-  .alt-text--missing { color: var(--error); }
   .alt-text--muted { color: var(--text-muted); font-style: italic; font-weight: 400; }
+  .alt-label { color: var(--text-muted); font-weight: 600; margin-right: 1px; }
+  .alt-missing { color: var(--error); font-weight: 600; }
 
   .url-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
   .src-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--bg-hover); color: var(--text-muted); }
