@@ -442,12 +442,16 @@
   .search__clear:hover { color: var(--text-secondary); background: var(--bg-hover); }
   .search__clear svg { width: 12px; height: 12px; stroke-width: 2; }
 
-  /* Table */
-  .table-wrap { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 20px; }
+  /* Table — full-bleed rows: no wrapper side padding, gutter lives on the edge cells */
+  .table-wrap { flex: 1; overflow-y: auto; overflow-x: hidden; }
   .table-wrap::-webkit-scrollbar { width: 3px; }
   .table-wrap::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 
   .table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+
+  /* Edge-cell gutters keep content inset while row/hover background spans full width */
+  .th:first-child, .td:first-child { padding-left: 20px; }
+  .th:last-child, .td:last-child { padding-right: 20px; }
 
   .th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); padding: 8px 8px 8px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-canvas); z-index: 1; }
   .th--num { width: 30px; padding-right: 0; }
