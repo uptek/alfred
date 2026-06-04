@@ -25,6 +25,37 @@ function collectImageEls(): CollectedImage[] {
   return out;
 }
 
+const IMAGE_HIGHLIGHT_STYLE_ID = 'alfred-image-highlights';
+
+/**
+ * Injects the shared image-highlight stylesheet once. Uses border (not outline)
+ * so it can't be clipped by overflow:hidden ancestors, and box-sizing:border-box
+ * so the border draws inside the element's box without growing it. Shared by the
+ * Highlight toggle and the click-to-scroll highlight so they look identical.
+ */
+function ensureImageHighlightStyle(): void {
+  if (document.getElementById(IMAGE_HIGHLIGHT_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = IMAGE_HIGHLIGHT_STYLE_ID;
+  style.textContent = `
+    [data-alfred-image-highlight] { box-sizing: border-box !important; }
+    [data-alfred-image-highlight="ok"] { border: 2px dashed #22c55e !important; }
+    [data-alfred-image-highlight="alt"] { border: 2px dashed #f59e0b !important; }
+    [data-alfred-image-highlight="broken"] { border: 2px dashed #ef4444 !important; }
+  `;
+  document.head.appendChild(style);
+}
+
+/** Classifies an image element for highlighting: broken, missing-alt ('alt'), or 'ok'. */
+function imageHighlightState(el: Element, source: CollectedImage['source']): string {
+  if (source === 'background') return 'ok';
+  const img = el as HTMLImageElement;
+  if (img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src)) return 'broken';
+  const altAttr = img.getAttribute('alt');
+  if (altAttr === null || altAttr.trim() === '') return 'alt';
+  return 'ok';
+}
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_start',
@@ -527,62 +558,40 @@ export default defineContentScript({
        */
       if (request.action === 'highlight_images') {
         const { enabled } = request as { action: string; enabled: boolean };
-        const styleId = 'alfred-image-highlights';
-        const existing = document.getElementById(styleId);
         if (!enabled) {
-          existing?.remove();
+          document.getElementById(IMAGE_HIGHLIGHT_STYLE_ID)?.remove();
           document.querySelectorAll('[data-alfred-image-highlight]').forEach((el) => {
             (el as HTMLElement).removeAttribute('data-alfred-image-highlight');
           });
           sendResponse(true);
           return false;
         }
-        if (!existing) {
-          const style = document.createElement('style');
-          style.id = styleId;
-          style.textContent = `
-            [data-alfred-image-highlight="ok"] { outline: 2px dashed #22c55e !important; outline-offset: 3px !important; }
-            [data-alfred-image-highlight="alt"] { outline: 2px dashed #f59e0b !important; outline-offset: 3px !important; }
-            [data-alfred-image-highlight="broken"] { outline: 2px dashed #ef4444 !important; outline-offset: 3px !important; }
-          `;
-          document.head.appendChild(style);
-        }
+        ensureImageHighlightStyle();
         for (const { el, source } of collectImageEls()) {
-          let state = 'ok';
-          if (source !== 'background') {
-            const img = el as HTMLImageElement;
-            if (img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src)) {
-              state = 'broken';
-            } else {
-              const altAttr = img.getAttribute('alt');
-              if (altAttr === null || altAttr.trim() === '') state = 'alt';
-            }
-          }
-          (el as HTMLElement).setAttribute('data-alfred-image-highlight', state);
+          (el as HTMLElement).setAttribute('data-alfred-image-highlight', imageHighlightState(el, source));
         }
         sendResponse(true);
         return false;
       }
 
       /**
-       * Scrolls to an image by its collectImageEls() index and applies a brief highlight.
+       * Scrolls to an image by its collectImageEls() index and applies the same
+       * status-colored highlight border as the Highlight toggle, briefly. If the
+       * global highlight is already on (the element already carries the attribute),
+       * the border is left in place; otherwise it is removed after a short delay.
        * @param {number} request.index - Zero-based index in collectImageEls() order.
        */
       if (request.action === 'scroll_to_image') {
-        const target = collectImageEls()[(request as { action: string; index: number }).index]?.el;
-        if (target instanceof HTMLElement) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          target.style.outline = '2px dashed #95bf47';
-          target.style.outlineOffset = '3px';
-          target.style.transition = 'outline-color 0.8s';
-          setTimeout(() => {
-            target.style.outlineColor = 'transparent';
-            setTimeout(() => {
-              target.style.outline = '';
-              target.style.outlineOffset = '';
-              target.style.transition = '';
-            }, 800);
-          }, 5000);
+        const item = collectImageEls()[(request as { action: string; index: number }).index];
+        if (item) {
+          const { el, source } = item;
+          ensureImageHighlightStyle();
+          const hadHighlight = el.hasAttribute('data-alfred-image-highlight');
+          el.setAttribute('data-alfred-image-highlight', imageHighlightState(el, source));
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (!hadHighlight) {
+            setTimeout(() => el.removeAttribute('data-alfred-image-highlight'), 5000);
+          }
         }
         sendResponse(true);
         return false;
