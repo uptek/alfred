@@ -35,7 +35,7 @@
   let searchOpen = $state(false);
   let openMenu = $state<'alt' | 'format' | 'loading' | 'status' | 'export' | null>(null);
 
-  type SortKey = 'index' | 'size' | 'dims' | 'status';
+  type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
   let sortKey = $state<SortKey>('index');
   let sortDir = $state<'asc' | 'desc'>('asc');
 
@@ -97,7 +97,9 @@
       let cmp = 0;
       switch (sortKey) {
         case 'size': cmp = a.size - b.size; break;
+        case 'format': cmp = (a.format || '').localeCompare(b.format || ''); break;
         case 'dims': cmp = (a.naturalWidth * a.naturalHeight) - (b.naturalWidth * b.naturalHeight); break;
+        case 'load': cmp = a.loading.localeCompare(b.loading); break;
         case 'status': cmp = statusRank[statusOf(a)] - statusRank[statusOf(b)]; break;
         default: cmp = a.index - b.index;
       }
@@ -359,9 +361,9 @@
           <tr>
             <th class="th th--img">Image <span class="th__count">({filtered.length}/{stats.total})</span></th>
             <th class="th th--size"><button class="th-btn" class:th-btn--active={sortKey === 'size'} onclick={() => toggleSort('size')} title="Sort by size">Size{@render sortIcon('size')}</button></th>
-            <th class="th th--fmt">Fmt</th>
+            <th class="th th--fmt"><button class="th-btn" class:th-btn--active={sortKey === 'format'} onclick={() => toggleSort('format')} title="Sort by format">Fmt{@render sortIcon('format')}</button></th>
             <th class="th th--dims"><button class="th-btn" class:th-btn--active={sortKey === 'dims'} onclick={() => toggleSort('dims')} title="Sort by dimensions">Dims{@render sortIcon('dims')}</button></th>
-            <th class="th th--load">Load</th>
+            <th class="th th--load"><button class="th-btn" class:th-btn--active={sortKey === 'load'} onclick={() => toggleSort('load')} title="Sort by loading">Load{@render sortIcon('load')}</button></th>
             <th class="th th--status"><button class="th-btn" class:th-btn--active={sortKey === 'status'} onclick={() => toggleSort('status')} title="Sort by status">Status{@render sortIcon('status')}</button></th>
           </tr>
         </thead>
