@@ -372,7 +372,7 @@
               <td class="td td--img">
                 <div class="img-cell">
                   {#if img.src}
-                    <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab">
+                    <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab" onclick={() => trackAction('images_open', { source: img.source })}>
                       <img class="thumb" src={img.src} alt="" loading="lazy" />
                     </a>
                   {:else}
