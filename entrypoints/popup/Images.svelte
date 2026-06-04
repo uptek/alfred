@@ -118,13 +118,12 @@
     trackAction('images_sort', { key, dir: sortDir });
   }
 
-  function displayUrl(src: string): string {
+  function fileName(src: string): string {
     if (!src) return '(no source)';
     try {
       const u = new URL(src);
       const segments = u.pathname.split('/').filter(Boolean);
-      const seg = segments[segments.length - 1] ?? u.pathname;
-      return '…/' + seg + u.search;
+      return (segments[segments.length - 1] ?? u.pathname) + u.search;
     } catch {
       return src;
     }
@@ -373,7 +372,9 @@
               <td class="td td--img">
                 <div class="img-cell">
                   {#if img.src}
-                    <img class="thumb" src={img.src} alt="" loading="lazy" />
+                    <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab">
+                      <img class="thumb" src={img.src} alt="" loading="lazy" />
+                    </a>
                   {:else}
                     <div class="thumb thumb--empty"></div>
                   {/if}
@@ -393,9 +394,9 @@
                     <div class="url-row">
                       {#if img.source === 'background'}<span class="src-tag">bg</span>{/if}
                       {#if img.src}
-                        <a href={img.src} target="_blank" rel="noopener noreferrer" class="url" title={img.src}>{displayUrl(img.src)}</a>
+                        <span class="filename" title={img.src}>{fileName(img.src)}</span>
                       {:else}
-                        <span class="url url--empty">(no source)</span>
+                        <span class="filename filename--empty">(no source)</span>
                       {/if}
                     </div>
                   </div>
@@ -535,6 +536,8 @@
   .td--img { overflow: hidden; }
 
   .img-cell { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+  .thumb-link { display: block; flex-shrink: 0; line-height: 0; border-radius: 4px; }
+  .thumb-link:hover .thumb { outline: 2px solid var(--accent); outline-offset: 1px; }
   .thumb { width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0; object-fit: cover; background: var(--bg-hover); }
   .thumb--empty { background: var(--bg-hover); }
   .img-meta { min-width: 0; }
@@ -546,9 +549,8 @@
 
   .url-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
   .src-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--bg-hover); color: var(--text-muted); }
-  .url { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .url:hover { text-decoration: underline; }
-  .url--empty { color: var(--text-muted); font-style: italic; }
+  .filename { font-family: 'SF Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .filename--empty { font-style: italic; }
 
   .muted { color: var(--text-muted); }
   .load-eager { color: var(--warning); font-weight: 500; }
