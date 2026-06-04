@@ -1,7 +1,7 @@
 # Changelog
 
-## 2026.06.04
-@ 2026-06-04
+## 2026.06.05
+@ 2026-06-05
 
 ### SEO Images Analyzer
 New Images tab in the popup audits every image on any page — for SEO, accessibility, and performance — in one sortable, filterable table.
