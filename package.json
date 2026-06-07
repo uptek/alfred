@@ -32,11 +32,11 @@
     "@wxt-dev/auto-icons": "^1.1.1",
     "@wxt-dev/module-svelte": "^2.0.5",
     "chokidar-cli": "^3.0.0",
-    "oxfmt": "^0.52.0",
-    "oxlint": "^1.67.0",
-    "svelte": "^5.56.0",
+    "oxfmt": "^0.53.0",
+    "oxlint": "^1.68.0",
+    "svelte": "^5.56.3",
     "typescript": "^6.0.3",
-    "wrangler": "^4.95.0",
+    "wrangler": "^4.98.0",
     "wxt": "^0.20.26"
   },
   "packageManager": "bun@1.2.14"
