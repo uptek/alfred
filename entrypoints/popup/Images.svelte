@@ -1,30 +1,41 @@
 <script lang="ts">
-  import type { RawLink } from './types';
-  import { highlightLinks, scrollToLink } from './utils';
+  import type { RawImage, ImageStatus } from './types';
+  import { highlightImages, scrollToImage } from './utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
 
-  let { links, domain }: { links: RawLink[]; domain: string | null } = $props();
+  let { images, domain }: { images: RawImage[]; domain: string | null } = $props();
 
   const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
 
+  function statusOf(img: RawImage): ImageStatus {
+    if (img.broken) return 'broken';
+    if (img.lacksAlt && img.source !== 'background') return 'missing-alt';
+    return 'ok';
+  }
+
   let tracked = false;
   $effect(() => {
-    if (tracked || links.length === 0) return;
+    if (tracked || images.length === 0) return;
     tracked = true;
     untrack(() => {
-      trackAction('links_view', { link_count: links.length, external_count: links.filter(l => l.isExternal).length, nofollow_count: links.filter(l => l.isNofollow).length });
+      trackAction('images_view', {
+        image_count: images.length,
+        missing_alt_count: images.filter(i => i.lacksAlt).length,
+        broken_count: images.filter(i => i.broken).length
+      });
     });
   });
 
-  let typeFilter = $state('all');
-  let followFilter = $state('all');
-  let anchorFilter = $state('all');
+  let altFilter = $state('all');
+  let formatFilter = $state('all');
+  let loadingFilter = $state('all');
+  let statusFilter = $state('all');
   let search = $state('');
   let searchOpen = $state(false);
-  let openMenu = $state<'type' | 'follow' | 'anchor' | 'export' | null>(null);
+  let openMenu = $state<'alt' | 'format' | 'loading' | 'status' | 'export' | null>(null);
 
-  type SortKey = 'index' | 'url' | 'follow' | 'type';
+  type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
   let sortKey = $state<SortKey>('index');
   let sortDir = $state<'asc' | 'desc'>('asc');
 
@@ -49,44 +60,51 @@
   }
 
   const stats = $derived.by(() => {
-    let internal = 0, external = 0, dofollow = 0, nofollow = 0, image = 0, text = 0, none = 0;
-    const counts: Record<string, number> = {};
-    for (const l of links) {
-      if (l.isExternal) external++; else internal++;
-      if (l.isNofollow) nofollow++; else dofollow++;
-      if (l.isImage) image++; else if (l.text !== '') text++; else none++;
-      counts[l.href] = (counts[l.href] ?? 0) + 1;
+    let altPresent = 0, altMissing = 0, ok = 0, missingAlt = 0, broken = 0, lazy = 0, eager = 0, noLoad = 0;
+    const formatCounts: Record<string, number> = {};
+    for (const img of images) {
+      // Background images have no alt concept; exclude them from both alt buckets.
+      if (img.source !== 'background') {
+        if (img.lacksAlt) altMissing++; else altPresent++;
+      }
+      const st = statusOf(img);
+      if (st === 'broken') broken++; else if (st === 'missing-alt') missingAlt++; else ok++;
+      if (img.loading === 'lazy') lazy++; else if (img.loading === 'eager') eager++; else noLoad++;
+      const f = img.format || 'other';
+      formatCounts[f] = (formatCounts[f] ?? 0) + 1;
     }
-    return { total: links.length, internal, external, dofollow, nofollow, image, text, none, hrefCounts: counts };
+    return { total: images.length, altPresent, altMissing, ok, missingAlt, broken, lazy, eager, noLoad, formatCounts };
   });
 
   const filtered = $derived.by(() => {
     const q = search.toLowerCase();
-    return links.filter(link => {
-      if (typeFilter === 'internal' && link.isExternal) return false;
-      if (typeFilter === 'external' && !link.isExternal) return false;
-      if (followFilter === 'dofollow' && link.isNofollow) return false;
-      if (followFilter === 'nofollow' && !link.isNofollow) return false;
-      if (anchorFilter === 'text' && (link.isImage || link.text === '')) return false;
-      if (anchorFilter === 'image' && !link.isImage) return false;
-      if (anchorFilter === 'none' && (link.isImage || link.text !== '')) return false;
-      if (q && !link.href.toLowerCase().includes(q) && !link.text.toLowerCase().includes(q)) return false;
+    return images.filter(img => {
+      if (altFilter === 'notempty' && (img.lacksAlt || img.source === 'background')) return false;
+      if (altFilter === 'empty' && (!img.lacksAlt || img.source === 'background')) return false;
+      if (formatFilter !== 'all' && (img.format || 'other') !== formatFilter) return false;
+      if (loadingFilter !== 'all' && img.loading !== loadingFilter) return false;
+      if (statusFilter !== 'all' && statusOf(img) !== statusFilter) return false;
+      if (q && !img.src.toLowerCase().includes(q) && !(img.alt ?? '').toLowerCase().includes(q)) return false;
       return true;
     });
   });
+
+  const statusRank: Record<ImageStatus, number> = { ok: 0, 'missing-alt': 1, broken: 2 };
 
   const sorted = $derived.by(() => {
     const dir = sortDir === 'asc' ? 1 : -1;
     return [...filtered].sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
-        case 'url': cmp = a.href.localeCompare(b.href); break;
-        case 'follow': cmp = (a.isNofollow ? 1 : 0) - (b.isNofollow ? 1 : 0); break;
-        case 'type': cmp = (a.isExternal ? 1 : 0) - (b.isExternal ? 1 : 0); break;
+        case 'size': cmp = a.size - b.size; break;
+        case 'format': cmp = (a.format || '').localeCompare(b.format || ''); break;
+        case 'dims': cmp = (a.naturalWidth * a.naturalHeight) - (b.naturalWidth * b.naturalHeight); break;
+        case 'load': cmp = a.loading.localeCompare(b.loading); break;
+        case 'status': cmp = statusRank[statusOf(a)] - statusRank[statusOf(b)]; break;
         default: cmp = a.index - b.index;
       }
       if (cmp !== 0) return cmp * dir;
-      return a.index - b.index; // stable tiebreak in DOM order
+      return a.index - b.index; // stable tiebreak in collection order
     });
   });
 
@@ -97,40 +115,47 @@
       sortKey = key;
       sortDir = 'asc';
     }
-    trackAction('links_sort', { key, dir: sortDir });
+    trackAction('images_sort', { key, dir: sortDir });
   }
 
-  function displayUrl(link: RawLink): string {
+  function fileName(src: string): string {
+    if (!src) return '(no source)';
     try {
-      const url = new URL(link.href);
-      if (!link.isExternal) {
-        const path = url.pathname + url.search + url.hash;
-        return path || '/';
-      }
-      const host = url.hostname.replace(/^www\./, '');
-      const rest = url.pathname + url.search + url.hash;
-      if (rest === '/') return host;
-      return host + rest;
+      const u = new URL(src);
+      const segments = u.pathname.split('/').filter(Boolean);
+      return (segments[segments.length - 1] ?? u.pathname) + u.search;
     } catch {
-      return link.href;
+      return src;
     }
+  }
+
+  function formatBytes(n: number): string {
+    if (!n) return '—';
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function dimsLabel(img: RawImage): string {
+    if (!img.naturalWidth || !img.naturalHeight) return '—';
+    return `${img.naturalWidth}×${img.naturalHeight}`;
   }
 
   function toggleHighlight() {
     highlightOn = !highlightOn;
-    highlightLinks(highlightOn);
-    trackAction('links_highlight', { enabled: highlightOn });
+    highlightImages(highlightOn);
+    trackAction('images_highlight', { enabled: highlightOn });
   }
 
   onDestroy(() => {
-    if (highlightOn) highlightLinks(false);
+    if (highlightOn) highlightImages(false);
     if (copyResetTimer) clearTimeout(copyResetTimer);
   });
 
   function handleRowClick(e: MouseEvent, index: number) {
     if ((e.target as HTMLElement).closest('a')) return;
-    scrollToLink(index);
-    trackAction('links_scroll_to', {});
+    scrollToImage(index);
+    trackAction('images_scroll_to', {});
   }
 
   function downloadFile(content: string, filename: string, mime: string) {
@@ -144,96 +169,100 @@
   }
 
   function exportCsv() {
-    const header = 'URL,Anchor Text,Dofollow,Type,Rel,Is Image';
-    const rows = links.map(l => {
-      const anchor = l.isImage ? '[image]' : l.text;
-      return [l.href, anchor, !l.isNofollow, l.isExternal ? 'External' : 'Internal', l.rel, l.isImage]
+    const header = 'URL,Alt,Source,Format,Width,Height,Size (bytes),Loading,Status';
+    const rows = images.map(img => {
+      return [img.src, img.alt ?? '', img.source, img.format, img.naturalWidth, img.naturalHeight, img.size, img.loading, statusOf(img)]
         .map(v => `"${String(v).replace(/"/g, '""')}"`)
         .join(',');
     });
-    downloadFile([header, ...rows].join('\n'), `alfred-links-${siteSlug}.csv`, 'text/csv');
-    trackAction('links_export', { format: 'csv', link_count: links.length });
+    downloadFile([header, ...rows].join('\n'), `alfred-images-${siteSlug}.csv`, 'text/csv');
+    trackAction('images_export', { format: 'csv', image_count: images.length });
     openMenu = null;
   }
 
   function exportJson() {
-    const data = links.map(l => ({
-      url: l.href,
-      anchorText: l.isImage ? '[image]' : l.text,
-      dofollow: !l.isNofollow,
-      type: l.isExternal ? 'external' : 'internal',
-      rel: l.rel,
-      isImage: l.isImage,
+    const data = images.map(img => ({
+      url: img.src,
+      alt: img.alt,
+      source: img.source,
+      format: img.format,
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+      size: img.size,
+      loading: img.loading,
+      status: statusOf(img)
     }));
-    downloadFile(JSON.stringify(data, null, 2), `alfred-links-${siteSlug}.json`, 'application/json');
-    trackAction('links_export', { format: 'json', link_count: links.length });
-    openMenu = null;
-  }
-
-  function exportText() {
-    const text = links.map(l => l.href).join('\n');
-    downloadFile(text, `alfred-links-${siteSlug}.txt`, 'text/plain');
-    trackAction('links_export', { format: 'text', link_count: links.length });
+    downloadFile(JSON.stringify(data, null, 2), `alfred-images-${siteSlug}.json`, 'application/json');
+    trackAction('images_export', { format: 'json', image_count: images.length });
     openMenu = null;
   }
 
   async function copyUrls() {
-    const text = links.map(l => l.href).join('\n');
+    const text = images.map(img => img.src).filter(Boolean).join('\n');
     try {
       await navigator.clipboard.writeText(text);
       copied = true;
       if (copyResetTimer) clearTimeout(copyResetTimer);
       copyResetTimer = setTimeout(() => { copied = false; }, 1500);
-      trackAction('links_copy', { format: 'urls', link_count: links.length });
+      trackAction('images_copy', { format: 'urls', image_count: images.length });
     } catch {
       // ignore clipboard errors
     }
   }
 
-  const typeOptions = $derived([
+  const altOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
-    { value: 'internal', label: 'Internal', count: stats.internal },
-    { value: 'external', label: 'External', count: stats.external },
+    { value: 'notempty', label: 'Not empty', count: stats.altPresent },
+    { value: 'empty', label: 'Empty', count: stats.altMissing },
   ]);
-  const followOptions = $derived([
+  const formatOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
-    { value: 'dofollow', label: 'Dofollow', count: stats.dofollow },
-    { value: 'nofollow', label: 'Nofollow', count: stats.nofollow },
+    ...Object.entries(stats.formatCounts)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([f, c]) => ({ value: f, label: f.toUpperCase(), count: c })),
   ]);
-  const anchorOptions = $derived([
+  const loadingOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
-    { value: 'text', label: 'Text', count: stats.text },
-    { value: 'image', label: 'Image', count: stats.image },
-    { value: 'none', label: 'None', count: stats.none },
+    { value: 'lazy', label: 'Lazy', count: stats.lazy },
+    { value: 'eager', label: 'Eager', count: stats.eager },
+    { value: 'none', label: 'None', count: stats.noLoad },
+  ]);
+  const statusOptions = $derived([
+    { value: 'all', label: 'All', count: stats.total },
+    { value: 'ok', label: 'OK', count: stats.ok },
+    { value: 'missing-alt', label: 'Missing alt', count: stats.missingAlt },
+    { value: 'broken', label: 'Broken', count: stats.broken },
   ]);
 
-  const anyFilterActive = $derived(typeFilter !== 'all' || followFilter !== 'all' || anchorFilter !== 'all' || search.length > 0);
+  const anyFilterActive = $derived(altFilter !== 'all' || formatFilter !== 'all' || loadingFilter !== 'all' || statusFilter !== 'all' || search.length > 0);
 
-  function setType(v: string) { typeFilter = v; openMenu = null; trackAction('links_filter', { facet: 'type', value: v }); }
-  function setFollow(v: string) { followFilter = v; openMenu = null; trackAction('links_filter', { facet: 'follow', value: v }); }
-  function setAnchor(v: string) { anchorFilter = v; openMenu = null; trackAction('links_filter', { facet: 'anchor', value: v }); }
+  function setAlt(v: string) { altFilter = v; openMenu = null; trackAction('images_filter', { facet: 'alt', value: v }); }
+  function setFormat(v: string) { formatFilter = v; openMenu = null; trackAction('images_filter', { facet: 'format', value: v }); }
+  function setLoading(v: string) { loadingFilter = v; openMenu = null; trackAction('images_filter', { facet: 'loading', value: v }); }
+  function setStatus(v: string) { statusFilter = v; openMenu = null; trackAction('images_filter', { facet: 'status', value: v }); }
 
   function resetFilters() {
-    typeFilter = 'all';
-    followFilter = 'all';
-    anchorFilter = 'all';
+    altFilter = 'all';
+    formatFilter = 'all';
+    loadingFilter = 'all';
+    statusFilter = 'all';
     search = '';
     searchOpen = false;
     openMenu = null;
-    trackAction('links_filter', { reset: true });
+    trackAction('images_filter', { reset: true });
   }
 </script>
 
 <svelte:window onclick={handleWindowClick} onkeydown={(e) => { if (e.key === 'Escape') closeDropdowns(); }} />
 
-{#if links.length === 0}
+{#if images.length === 0}
   <div class="empty-state">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="empty-state__icon"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-    <p>No links found on this page</p>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="empty-state__icon"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    <p>No images found on this page</p>
   </div>
 {:else}
-  <div class="links-tab">
-    {#snippet facet(name: string, key: 'type' | 'follow' | 'anchor', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
+  <div class="images-tab">
+    {#snippet facet(name: string, key: 'alt' | 'format' | 'loading' | 'status', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
       <div class="dropdown menu">
         <button class="dropdown__trigger" class:dropdown__trigger--active={selected !== 'all'} onclick={() => { openMenu = openMenu === key ? null : key; }}>
           {selected === 'all' ? name : (options.find(o => o.value === selected)?.label ?? name)}
@@ -267,9 +296,10 @@
     <div class="toolbar">
       <div class="toolbar__row">
         <div class="toolbar__filters">
-          {@render facet('Type', 'type', typeOptions, typeFilter, setType)}
-          {@render facet('Follow', 'follow', followOptions, followFilter, setFollow)}
-          {@render facet('Anchor', 'anchor', anchorOptions, anchorFilter, setAnchor)}
+          {@render facet('Alt', 'alt', altOptions, altFilter, setAlt)}
+          {@render facet('Format', 'format', formatOptions, formatFilter, setFormat)}
+          {@render facet('Loading', 'loading', loadingOptions, loadingFilter, setLoading)}
+          {@render facet('Status', 'status', statusOptions, statusFilter, setStatus)}
           {#if anyFilterActive}
             <button class="reset-btn" onclick={resetFilters} title="Reset all filters">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -277,15 +307,15 @@
           {/if}
         </div>
         <div class="toolbar__actions">
-          <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} title="Highlight links on page">
+          <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} title="Highlight images on page">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Highlight
           </button>
-          <button class="toolbar-btn" class:toolbar-btn--active={searchOpen} onclick={toggleSearch} title="Search links">
+          <button class="toolbar-btn" class:toolbar-btn--active={searchOpen} onclick={toggleSearch} title="Search images">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           </button>
           <div class="export menu">
-            <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} title="Download links">
+            <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} title="Download images">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__chevron"><path d="M6 9l6 6 6-6"/></svg>
@@ -300,10 +330,6 @@
                   <span class="export__item-label">JSON</span>
                   <span class="export__item-desc">All fields</span>
                 </button>
-                <button class="export__item" onclick={exportText}>
-                  <span class="export__item-label">Text</span>
-                  <span class="export__item-desc">URLs only</span>
-                </button>
                 <div class="export__divider"></div>
                 <button class="export__item" onclick={copyUrls}>
                   <span class="export__item-label">{copied ? 'Copied!' : 'Copy'}</span>
@@ -317,7 +343,7 @@
       {#if searchOpen}
         <div class="search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="search__icon"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input class="search__input" type="text" placeholder="Filter URLs or anchor text..." bind:value={search} bind:this={searchInput} />
+          <input class="search__input" type="text" placeholder="Filter by alt text or URL..." bind:value={search} bind:this={searchInput} />
           {#if search}
             <button class="search__clear" onclick={() => { search = ''; searchInput?.focus(); }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -332,53 +358,86 @@
       <table class="table">
         <thead>
           <tr>
-            <th class="th th--num"><button class="th-btn" class:th-btn--active={sortKey === 'index'} onclick={() => toggleSort('index')} title="Sort by document order">#{@render sortIcon('index')}</button></th>
-            <th class="th th--url"><button class="th-btn" class:th-btn--active={sortKey === 'url'} onclick={() => toggleSort('url')} title="Sort by URL">Target URL{@render sortIcon('url')}</button> <span class="th__count">({filtered.length}/{stats.total})</span></th>
-            <th class="th th--follow"><button class="th-btn" class:th-btn--active={sortKey === 'follow'} onclick={() => toggleSort('follow')} title="Sort by dofollow">Dofollow{@render sortIcon('follow')}</button></th>
-            <th class="th th--type"><button class="th-btn" class:th-btn--active={sortKey === 'type'} onclick={() => toggleSort('type')} title="Sort by type">Type{@render sortIcon('type')}</button></th>
+            <th class="th th--img">Image <span class="th__count">({filtered.length}/{stats.total})</span></th>
+            <th class="th th--size"><button class="th-btn" class:th-btn--active={sortKey === 'size'} onclick={() => toggleSort('size')} title="Sort by size">Size{@render sortIcon('size')}</button></th>
+            <th class="th th--fmt"><button class="th-btn" class:th-btn--active={sortKey === 'format'} onclick={() => toggleSort('format')} title="Sort by format">Fmt{@render sortIcon('format')}</button></th>
+            <th class="th th--dims"><button class="th-btn" class:th-btn--active={sortKey === 'dims'} onclick={() => toggleSort('dims')} title="Sort by dimensions">Dims{@render sortIcon('dims')}</button></th>
+            <th class="th th--load"><button class="th-btn" class:th-btn--active={sortKey === 'load'} onclick={() => toggleSort('load')} title="Sort by loading">Load{@render sortIcon('load')}</button></th>
+            <th class="th th--status"><button class="th-btn" class:th-btn--active={sortKey === 'status'} onclick={() => toggleSort('status')} title="Sort by status">Status{@render sortIcon('status')}</button></th>
           </tr>
         </thead>
         <tbody>
-          {#each sorted as link, i (link.index)}
-            <tr class="row" onclick={(e) => handleRowClick(e, link.index)} title="Click to scroll to this link">
-              <td class="td td--num">{i + 1}</td>
-              <td class="td td--url">
-                <div class="url-row">
-                  <a href={link.href} target="_blank" rel="noopener noreferrer" class="url" title={link.href}>{displayUrl(link)}</a>
-                  {#if stats.hrefCounts[link.href]! > 1}
-                    <span class="dup-badge">&times;{stats.hrefCounts[link.href]}</span>
+          {#each sorted as img (img.index)}
+            <tr class="row" class:row--hidden={img.isHidden} onclick={(e) => handleRowClick(e, img.index)} title="Click to scroll to this image">
+              <td class="td td--img">
+                <div class="img-cell">
+                  {#if img.src}
+                    <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab" onclick={() => trackAction('images_open', { source: img.source })}>
+                      <img class="thumb" src={img.src} alt="" loading="lazy" />
+                    </a>
+                  {:else}
+                    <div class="thumb thumb--empty"></div>
                   {/if}
+                  <div class="img-meta">
+                    {#if img.source === 'background'}
+                      <span class="alt-text alt-text--muted">Background image</span>
+                    {:else}
+                      <span class="alt-text" title={img.lacksAlt ? 'Missing alt text' : img.alt}>
+                        <span class="alt-label">Alt:</span>
+                        {#if img.lacksAlt}
+                          <span class="alt-missing">Missing</span>
+                        {:else}
+                          {img.alt}
+                        {/if}
+                      </span>
+                    {/if}
+                    <div class="url-row">
+                      {#if img.source === 'background'}<span class="src-tag">bg</span>{/if}
+                      {#if img.src}
+                        <span class="filename" title={img.src}>{fileName(img.src)}</span>
+                      {:else}
+                        <span class="filename filename--empty">(no source)</span>
+                      {/if}
+                    </div>
+                  </div>
                 </div>
-                {#if link.isImage}
-                  <span class="anchor-text anchor-text--image">[image]</span>
-                {:else if link.text}
-                  <span class="anchor-text">{link.text}</span>
+              </td>
+              <td class="td td--size">{formatBytes(img.size)}</td>
+              <td class="td td--fmt">{img.format ? img.format.toUpperCase() : '—'}</td>
+              <td class="td td--dims">{dimsLabel(img)}</td>
+              <td class="td td--load">
+                {#if img.source === 'background'}
+                  <span class="muted">—</span>
+                {:else if img.loading === 'eager'}
+                  <span class="load-eager">eager</span>
+                {:else if img.loading === 'lazy'}
+                  lazy
                 {:else}
-                  <span class="anchor-text anchor-text--empty">(no anchor text)</span>
+                  <span class="muted">none</span>
                 {/if}
               </td>
-              <td class="td td--follow">
-                {#if link.isNofollow}
-                  <span class="pill pill--red">No</span>
+              <td class="td td--status">
+                {#if statusOf(img) === 'broken'}
+                  <span class="pill pill--red">Broken</span>
+                {:else if statusOf(img) === 'missing-alt'}
+                  <span class="pill pill--red">Alt</span>
                 {:else}
-                  <span class="pill pill--green">Yes</span>
+                  <span class="pill pill--green">OK</span>
                 {/if}
               </td>
-              <td class="td td--type">{link.isExternal ? 'External' : 'Internal'}</td>
             </tr>
           {/each}
         </tbody>
       </table>
       {#if filtered.length === 0}
-        <div class="no-results">No links match this filter</div>
+        <div class="no-results">No images match this filter</div>
       {/if}
     </div>
-
   </div>
 {/if}
 
 <style>
-  .links-tab { display: flex; flex-direction: column; height: 100%; animation: fadeUp 0.4s ease both; }
+  .images-tab { display: flex; flex-direction: column; height: 100%; animation: fadeUp 0.4s ease both; }
 
   /* Empty state */
   .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: var(--text-muted); }
@@ -454,9 +513,11 @@
   .th:last-child, .td:last-child { padding-right: 20px; }
 
   .th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); padding: 8px 8px 8px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-canvas); z-index: 1; }
-  .th--num { width: 30px; padding-right: 0; }
-  .th--follow { width: 76px; }
-  .th--type { width: 76px; }
+  .th--size { width: 58px; text-align: right; }
+  .th--fmt { width: 42px; text-align: center; }
+  .th--dims { width: 72px; text-align: center; }
+  .th--load { width: 50px; text-align: center; }
+  .th--status { width: 58px; text-align: center; padding-right: 0; }
   .th__count { font-weight: 500; color: var(--text-muted); letter-spacing: 0; text-transform: none; }
 
   .th-btn { display: inline-flex; align-items: center; gap: 2px; padding: 0; border: none; background: none; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; transition: color 0.12s; }
@@ -468,19 +529,35 @@
 
   .row { cursor: pointer; transition: background 0.1s; }
   .row:hover { background: var(--bg-hover); }
+  .row--hidden { opacity: 0.5; }
 
-  .td { padding: 9px 8px 9px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border-muted); vertical-align: middle; }
-  .td--num { color: var(--text-muted); font-size: 12px; padding-right: 0; }
-  .td--url { overflow: hidden; }
+  .td { padding: 9px 8px 9px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border-muted); vertical-align: top; }
+  .td--size { text-align: right; white-space: nowrap; }
+  .td--fmt { text-align: center; }
+  .td--dims { text-align: center; white-space: nowrap; }
+  .td--load { text-align: center; white-space: nowrap; }
+  .td--status { text-align: center; padding-right: 0; }
+  .td--img { overflow: hidden; }
 
-  .url-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .url { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .url:hover { text-decoration: underline; }
-  .dup-badge { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; background: var(--warning-bg); color: var(--warning); }
+  .img-cell { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+  .thumb-link { display: block; flex-shrink: 0; line-height: 0; border-radius: 4px; }
+  .thumb-link:hover { box-shadow: 0 0 0 1.5px var(--accent); }
+  .thumb { width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0; object-fit: cover; background: var(--bg-hover); }
+  .thumb--empty { background: var(--bg-hover); }
+  .img-meta { min-width: 0; }
 
-  .anchor-text { display: block; font-size: 11.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
-  .anchor-text--empty { color: var(--error); font-style: italic; }
-  .anchor-text--image { color: var(--text-muted); font-style: italic; }
+  .alt-text { display: block; font-size: 12px; color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 210px; }
+  .alt-text--muted { color: var(--text-muted); font-style: italic; font-weight: 400; }
+  .alt-label { color: var(--text-muted); font-weight: 600; margin-right: 1px; }
+  .alt-missing { color: var(--error); font-weight: 600; }
+
+  .url-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
+  .src-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--bg-hover); color: var(--text-muted); }
+  .filename { font-family: 'SF Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .filename--empty { font-style: italic; }
+
+  .muted { color: var(--text-muted); }
+  .load-eager { color: var(--warning); font-weight: 500; }
 
   /* Pills */
   .pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }

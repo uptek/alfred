@@ -27,7 +27,9 @@
     // Static-only classes used for Toast API
     "typescript/no-extraneous-class": "off",
     // onchange handlers are fine for file inputs
-    "unicorn/prefer-add-event-listener": "off"
+    "unicorn/prefer-add-event-listener": "off",
+    // _-prefix marks internal Alfred members (_lastRightClickedElement, _init*)
+    "no-underscore-dangle": "off"
   },
   "ignorePatterns": [".output", ".wxt", "public", "node_modules", "*.config.*", "supabase"]
 }

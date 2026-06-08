@@ -87,3 +87,25 @@ export interface ThemeStoreEntry {
     url: string;
   };
 }
+
+export type ImageSource = 'img' | 'picture' | 'background';
+export type ImageLoading = 'lazy' | 'eager' | 'none';
+export type ImageStatus = 'ok' | 'missing-alt' | 'broken';
+
+export interface RawImage {
+  index: number; // stable key: position in collectImageEls() order (DOM order: imgs, then backgrounds)
+  source: ImageSource;
+  src: string; // resolved currentSrc (img/picture) or background-image URL; '' if none
+  alt: string | null; // null when source === 'background'; '' when attr present but empty
+  lacksAlt: boolean; // true when alt attr is absent or empty/whitespace (img/picture only)
+  isResponsive: boolean; // had srcset/sizes, or was inside <picture>
+  naturalWidth: number; // 0 if unknown (lazy / not decoded / background)
+  naturalHeight: number;
+  format: string; // png|jpg|webp|avif|gif|svg, parsed from src extension; '' if unknown
+  loading: ImageLoading;
+  size: number; // bytes from Resource Timing; 0 = unknown
+  cached: boolean; // served from cache (transferSize === 0 && decodedBodySize > 0)
+  isExternal: boolean; // src host !== page host
+  isHidden: boolean; // !checkVisibility()
+  broken: boolean; // loaded <img> with naturalWidth === 0
+}

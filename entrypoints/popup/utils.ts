@@ -1,4 +1,4 @@
-import type { StoreInfo, Theme, RawHeading, RawLink, RawAsset, HeadingIssue } from './types';
+import type { StoreInfo, Theme, RawHeading, RawLink, RawAsset, RawImage, HeadingIssue } from './types';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
 
 /**
@@ -186,3 +186,59 @@ export const getTheme = async (): Promise<StoreInfo | null> => {
     return null;
   }
 };
+
+/**
+ * Extracts all images (img/picture/background) from the active tab via content script.
+ * @returns {Promise<RawImage[]>} Array of images in collectImageEls() order, or empty on failure.
+ */
+export const getImages = async (): Promise<RawImage[]> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      const response = await browser.tabs.sendMessage(tab.id, { action: 'get_images' });
+      return Array.isArray(response) ? response : [];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Toggles colored dashed outlines on all images in the active tab (green=ok, amber=missing alt, red=broken).
+ * @param {boolean} enabled - Whether to apply or remove highlights.
+ */
+export const highlightImages = async (enabled: boolean): Promise<void> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      await browser.tabs.sendMessage(tab.id, { action: 'highlight_images', enabled });
+    }
+  } catch {
+    // silently fail
+  }
+};
+
+/**
+ * Scrolls the active tab to an image by its collectImageEls() index and briefly highlights it.
+ * @param {number} index - Zero-based index in collectImageEls() order.
+ */
+export const scrollToImage = async (index: number): Promise<void> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      await browser.tabs.sendMessage(tab.id, { action: 'scroll_to_image', index });
+    }
+  } catch {
+    // silently fail
+  }
+};
+
+/**
+ * Counts images missing alt text (the badge source).
+ * @param {RawImage[]} images
+ * @returns {number} Number of images with `lacksAlt`.
+ */
+export function analyzeImages(images: RawImage[]): number {
+  return images.reduce((n, img) => n + (img.lacksAlt ? 1 : 0), 0);
+}
