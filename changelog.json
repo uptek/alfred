@@ -1,7 +1,7 @@
 [
   {
-    "version": "2026.06.05",
-    "date": "2026-06-05",
+    "version": "2026.06.09",
+    "date": "2026-06-09",
     "changes": [
       {
         "type": "heading",
@@ -23,6 +23,10 @@
           "Export everything as CSV or JSON, or copy all image URLs to your clipboard.",
           "Works on any website, not just Shopify stores."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-images.mp4"
       }
     ]
   },

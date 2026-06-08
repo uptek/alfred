@@ -1,7 +1,7 @@
 # Changelog
 
-## 2026.06.05
-@ 2026-06-05
+## 2026.06.09
+@ 2026-06-09
 
 ### SEO Images Analyzer
 New Images tab in the popup audits every image on any page — for SEO, accessibility, and performance — in one sortable, filterable table.
@@ -14,6 +14,8 @@ New Images tab in the popup audits every image on any page — for SEO, accessib
 - Click any row to scroll to that image on the page with a brief highlight.
 - Export everything as CSV or JSON, or copy all image URLs to your clipboard.
 - Works on any website, not just Shopify stores.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-images.mp4"></video>
 
 ## 2026.06.01.1
 @ 2026-06-01
