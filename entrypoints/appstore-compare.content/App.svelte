@@ -19,14 +19,6 @@
     columns.flatMap((column) => (column.status === 'loaded' && column.listing ? [column.listing] : []))
   );
 
-  $effect(() => {
-    sendTrackEvent('compare_view', { app_count: handles.length, page_url: window.location.href });
-
-    for (const handle of handles) {
-      void loadColumn(handle);
-    }
-  });
-
   async function loadColumn(handle: string) {
     columns = columns.map((column) => (column.handle === handle ? { handle, status: 'loading' } : column));
 
@@ -62,6 +54,12 @@
       Toast.error('Could not copy to clipboard');
     }
   }
+
+  sendTrackEvent('compare_view', { app_count: handles.length, page_url: window.location.href });
+
+  for (const handle of handles) {
+    void loadColumn(handle);
+  }
 </script>
 
 <div class="compare">
@@ -81,7 +79,7 @@
       <table class="compare-table">
         <thead>
           <tr>
-            <td class="compare-label"></td>
+            <th class="compare-label" scope="col" aria-label="Attribute"></th>
             {#each columns as column (column.handle)}
               <th class="compare-app" scope="col">
                 {#if column.status === 'loaded' && column.listing}

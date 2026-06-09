@@ -55,7 +55,8 @@ function cleanText(value: string | null | undefined): string | undefined {
 
 function safeUrl(href: string, base: string): string | undefined {
   try {
-    return new URL(href, base).href;
+    const url = new URL(href, base);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : undefined;
   } catch {
     return undefined;
   }
@@ -120,7 +121,8 @@ export function parseAppListing(html: string, handle: string): AppListing {
 
   const name = jsonLd?.name ?? cleanText(hero?.querySelector('h1')?.textContent);
   const tagline = jsonLd?.description;
-  const iconUrl = Array.isArray(jsonLd?.image) ? jsonLd.image[0] : jsonLd?.image;
+  const rawIconUrl = Array.isArray(jsonLd?.image) ? jsonLd.image[0] : jsonLd?.image;
+  const iconUrl = rawIconUrl ? safeUrl(rawIconUrl, APP_STORE_ORIGIN) : undefined;
   const developerName = typeof brand === 'string' ? brand : brand?.name;
   const developerUrl = developerHref ? safeUrl(developerHref, APP_STORE_ORIGIN) : undefined;
   const rating = jsonLd?.aggregateRating?.ratingValue;

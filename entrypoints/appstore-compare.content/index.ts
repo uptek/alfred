@@ -38,7 +38,6 @@ export default defineContentScript({
       return;
     }
 
-    main.replaceChildren();
     document.title = 'Compare apps · Shopify App Store';
 
     let app: Record<string, unknown> | undefined;
@@ -49,6 +48,14 @@ export default defineContentScript({
       append: 'first',
       onMount: (container) => {
         app = mount(App, { target: container, props: { handles } });
+
+        // Mount succeeded — now clear the native 404 content around us
+        for (const child of Array.from(main.children)) {
+          if (child !== container) {
+            child.remove();
+          }
+        }
+
         return container;
       },
       onRemove: (elements) => {
