@@ -397,13 +397,25 @@
 </div>
 
 <style>
+  /* Radius system: page controls 8px, tray container 12px, injected card
+     chips 4px (matching the store's own chip radius). Fonts inherit from the
+     App Store page so the takeover blends with the host brand. */
   .compare {
     max-width: 1200px;
     margin: 0 auto;
     padding: 32px 20px 64px;
     color: #1a1a1a;
-    font-family:
-      -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    font-family: inherit;
+  }
+
+  .compare :is(button, a):focus-visible {
+    outline: 2px solid #1a1a1a;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .compare button:active {
+    transform: scale(0.98);
   }
 
   .compare-header {
@@ -487,6 +499,12 @@
     min-width: 180px;
   }
 
+  /* Soft alternating bands for scanability across wide tables — the same
+     device Shopify's original compare page used */
+  .compare-table tbody tr:nth-child(even) :is(td, th) {
+    background: rgba(26, 26, 26, 0.022);
+  }
+
   thead td,
   thead th {
     border-top: none;
@@ -549,7 +567,7 @@
   .compare-app-error button {
     padding: 4px 10px;
     border: 1px solid rgba(26, 26, 26, 0.3);
-    border-radius: 6px;
+    border-radius: 8px;
     background: #ffffff;
     font-size: 12px;
     cursor: pointer;

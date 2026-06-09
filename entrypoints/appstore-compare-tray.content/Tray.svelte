@@ -69,8 +69,16 @@
     border: 1px solid rgba(26, 26, 26, 0.15);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(26, 26, 26, 0.2);
-    font-family:
-      -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    font-family: inherit;
+  }
+
+  .tray :is(button):focus-visible {
+    outline: 2px solid #1a1a1a;
+    outline-offset: 2px;
+  }
+
+  .tray button:active {
+    transform: scale(0.97);
   }
 
   .tray-items {
