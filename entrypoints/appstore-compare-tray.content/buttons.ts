@@ -115,22 +115,44 @@ function flyToTray(sourceImage: HTMLImageElement | null, iconUrl: string | undef
 
   const deltaX = target.left + 28 - (origin.left + origin.width / 2);
   const deltaY = target.top + target.height / 2 - (origin.top + origin.height / 2);
-  const lift = Math.min(140, Math.abs(deltaX) * 0.15 + 60);
+  const lift = Math.min(160, Math.abs(deltaX) * 0.18 + 80);
 
   const animation = ghost.animate(
     [
-      { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 0 },
+      { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 0, easing: 'cubic-bezier(0.3, 0, 0.4, 1)' },
       {
-        transform: `translate(${deltaX * 0.55}px, ${deltaY * 0.45 - lift}px) scale(0.55)`,
-        opacity: 0.95,
-        offset: 0.55
+        transform: `translate(${deltaX * 0.55}px, ${deltaY * 0.4 - lift}px) scale(0.65)`,
+        opacity: 1,
+        offset: 0.5,
+        easing: 'cubic-bezier(0.5, 0, 0.6, 1)'
       },
-      { transform: `translate(${deltaX}px, ${deltaY}px) scale(0.18)`, opacity: 0.15, offset: 1 }
+      // Touch down…
+      { transform: `translate(${deltaX}px, ${deltaY}px) scale(0.35)`, opacity: 1, offset: 0.78, easing: 'ease-out' },
+      // …bounce…
+      {
+        transform: `translate(${deltaX}px, ${deltaY - 16}px) scale(0.32)`,
+        opacity: 0.9,
+        offset: 0.89,
+        easing: 'ease-in'
+      },
+      // …settle and fade
+      { transform: `translate(${deltaX}px, ${deltaY}px) scale(0.3)`, opacity: 0, offset: 1 }
     ],
-    { duration: 650, easing: 'cubic-bezier(0.3, 0.7, 0.35, 1)' }
+    { duration: 1000 }
   );
 
-  animation.onfinish = () => ghost.remove();
+  animation.onfinish = () => {
+    ghost.remove();
+
+    // Give the tray a little landing pop (re-query: on the first add the
+    // tray mounts mid-flight)
+    document
+      .querySelector('aside[aria-label="Compare apps tray"]')
+      ?.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.07)', offset: 0.4 }, { transform: 'scale(1)' }], {
+        duration: 250,
+        easing: 'ease-out'
+      });
+  };
   animation.oncancel = () => ghost.remove();
 }
 
