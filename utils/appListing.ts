@@ -60,12 +60,12 @@ export function parseAppListing(html: string, handle: string): AppListing {
         cleanText(card.querySelector('.app-details-pricing-format-group')?.getAttribute('aria-label')) ??
         cleanText(card.querySelector('[data-test-id="price"]')?.textContent);
       return {
-        name: name ?? undefined,
-        price: price ?? undefined,
+        name,
+        price,
         features: Array.from(card.querySelectorAll('[data-test-id="features"] li'))
           .map((li) => cleanText(li.textContent) ?? '')
           .filter(Boolean)
-      } as AppListingPlan;
+      };
     }
   );
 
@@ -109,23 +109,23 @@ export function parseAppListing(html: string, handle: string): AppListing {
   return {
     handle,
     url: `${APP_STORE_ORIGIN}/${handle}`,
-    name: name ?? undefined,
-    tagline: tagline ?? undefined,
-    iconUrl: iconUrl ?? undefined,
-    developerName: developerName ?? undefined,
-    developerUrl: developerUrl ?? undefined,
-    rating: rating ?? undefined,
-    reviewCount: reviewCount ?? undefined,
+    name,
+    tagline,
+    iconUrl,
+    developerName,
+    developerUrl,
+    rating,
+    reviewCount,
     builtForShopify: Boolean(hero?.querySelector('.built-for-shopify-badge-container')),
-    pricingSummary: pricingSummary ?? undefined,
+    pricingSummary,
     plans,
     hasFreePlan: pricingText.includes('free plan') || plans.some((plan) => plan.price?.toLowerCase() === 'free'),
     hasFreeTrial: pricingText.includes('free trial'),
     worksWith,
-    launchDate: launchDate ?? undefined,
-    languages: languages ?? undefined,
+    launchDate,
+    languages,
     categories
-  } as AppListing;
+  };
 }
 
 /**

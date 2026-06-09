@@ -79,36 +79,36 @@ declare interface AlfredSettings {
 }
 
 declare interface AppListingPlan {
-  name?: string;
-  price?: string;
+  name?: string | undefined;
+  price?: string | undefined;
   features: string[];
 }
 
 declare interface AppListing {
   handle: string;
   url: string;
-  name?: string;
-  tagline?: string;
-  iconUrl?: string;
-  developerName?: string;
-  developerUrl?: string;
-  rating?: number;
-  reviewCount?: number;
+  name?: string | undefined;
+  tagline?: string | undefined;
+  iconUrl?: string | undefined;
+  developerName?: string | undefined;
+  developerUrl?: string | undefined;
+  rating?: number | undefined;
+  reviewCount?: number | undefined;
   builtForShopify: boolean;
-  pricingSummary?: string;
+  pricingSummary?: string | undefined;
   plans: AppListingPlan[];
   hasFreePlan: boolean;
   hasFreeTrial: boolean;
   worksWith: string[];
-  launchDate?: string;
-  languages?: string;
+  launchDate?: string | undefined;
+  languages?: string | undefined;
   categories: string[];
 }
 
 declare interface CompareTrayItem {
   handle: string;
   name: string;
-  iconUrl?: string;
+  iconUrl?: string | undefined;
 }
 
 declare interface SettingItem {
