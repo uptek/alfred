@@ -84,6 +84,21 @@ declare interface AppListingPlan {
   features: string[];
 }
 
+declare interface AppListingLink {
+  label: string;
+  url: string;
+}
+
+declare interface AppListingDataAccess {
+  group: string;
+  summary?: string | undefined;
+}
+
+declare interface AppListingRatingCount {
+  stars: number;
+  count: string;
+}
+
 declare interface AppListing {
   handle: string;
   url: string;
@@ -103,6 +118,11 @@ declare interface AppListing {
   launchDate?: string | undefined;
   languages?: string | undefined;
   categories: string[];
+  screenshots: string[];
+  ratingDistribution: AppListingRatingCount[];
+  freeTrialDays?: number | undefined;
+  links: AppListingLink[];
+  dataAccess: AppListingDataAccess[];
 }
 
 declare interface CompareTrayItem {
