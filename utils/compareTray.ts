@@ -17,6 +17,8 @@ export async function getTray(): Promise<CompareTrayItem[]> {
 
 /**
  * Add an app to the compare tray.
+ * Note: non-atomic read-modify-write — concurrent calls from multiple tabs
+ * can clobber each other. Acceptable for low-frequency add/remove actions.
  * @returns 'added' on success, 'duplicate' if already present, 'full' at the limit
  */
 export async function addToTray(item: CompareTrayItem): Promise<AddToTrayResult> {
@@ -34,6 +36,9 @@ export async function addToTray(item: CompareTrayItem): Promise<AddToTrayResult>
   return 'added';
 }
 
+/**
+ * Remove an app from the compare tray by handle. No-op if not present.
+ */
 export async function removeFromTray(handle: string): Promise<void> {
   const items = await getTray();
   await setItem(
