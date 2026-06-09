@@ -145,6 +145,7 @@ export function parseAppListing(html: string, handle: string): AppListing {
     plans,
     hasFreePlan:
       (pricingSummary?.toLowerCase().includes('free plan') ?? false) ||
+      pricingSummary?.toLowerCase() === 'free' || // fully free app, no plan cards
       plans.some((plan) => plan.price?.toLowerCase() === 'free'),
     hasFreeTrial: pricingText.includes('free trial'),
     worksWith,
