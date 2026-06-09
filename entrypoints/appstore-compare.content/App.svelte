@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fetchAppListing } from '~/utils/appListing';
+  import { removeFromTray } from '~/utils/compareTray';
   import { sendTrackEvent } from '@/utils/analytics';
   import { Toast } from '~/utils/toast';
   import { buildComparisonMarkdown } from './markdown';
@@ -43,6 +44,8 @@
   function removeColumn(handle: string) {
     columns = columns.filter((column) => column.handle !== handle);
     window.history.replaceState(null, '', `/compare/${columns.map((column) => column.handle).join(',')}`);
+    // Keep the tray in sync — no-op if the app was never in it (shared URLs)
+    void removeFromTray(handle);
   }
 
   async function copyMarkdown() {
