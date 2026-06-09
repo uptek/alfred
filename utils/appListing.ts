@@ -4,7 +4,7 @@ interface ListingJsonLd {
   '@type'?: string;
   name?: string;
   description?: string;
-  image?: string[];
+  image?: string | string[];
   brand?: string | { name?: string };
   aggregateRating?: { ratingValue?: number; ratingCount?: number };
 }
@@ -28,14 +28,23 @@ function parseJsonLd(doc: Document): ListingJsonLd | null {
 
 /**
  * Listing detail rows are a label element (<p>/<dt>) followed by a sibling
- * holding the value, e.g. <p>Works with</p><ul>…</ul>. Returns the sibling.
+ * holding the value, e.g. <p>Works with</p><ul>…</ul>. Scoped to the hero
+ * and app-details containers to avoid false matches in reviews or footer;
+ * falls back to the whole document if neither container exists.
  */
 function findLabelledSibling(doc: Document, label: string): Element | null {
-  for (const el of doc.querySelectorAll('p, dt')) {
-    if (el.textContent?.trim().toLowerCase() === label) {
-      return el.nextElementSibling;
+  const roots: (Element | Document)[] = ['#adp-hero', '#app-details']
+    .map((selector) => doc.querySelector(selector))
+    .filter((root): root is Element => root !== null);
+
+  for (const root of roots.length > 0 ? roots : [doc]) {
+    for (const el of root.querySelectorAll('p, dt')) {
+      if (el.textContent?.trim().toLowerCase() === label) {
+        return el.nextElementSibling;
+      }
     }
   }
+
   return null;
 }
 
@@ -44,9 +53,20 @@ function cleanText(value: string | null | undefined): string | undefined {
   return cleaned || undefined;
 }
 
+function safeUrl(href: string, base: string): string | undefined {
+  try {
+    return new URL(href, base).href;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Parse a Shopify App Store listing page into structured data.
  * Resilient by design: every selector miss yields undefined/empty, never a throw.
+ *
+ * @param html - Raw listing page HTML
+ * @param handle - The app's handle (URL slug)
  */
 export function parseAppListing(html: string, handle: string): AppListing {
   const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -100,9 +120,9 @@ export function parseAppListing(html: string, handle: string): AppListing {
 
   const name = jsonLd?.name ?? cleanText(hero?.querySelector('h1')?.textContent);
   const tagline = jsonLd?.description;
-  const iconUrl = jsonLd?.image?.[0];
+  const iconUrl = Array.isArray(jsonLd?.image) ? jsonLd.image[0] : jsonLd?.image;
   const developerName = typeof brand === 'string' ? brand : brand?.name;
-  const developerUrl = developerHref ? new URL(developerHref, APP_STORE_ORIGIN).href : undefined;
+  const developerUrl = developerHref ? safeUrl(developerHref, APP_STORE_ORIGIN) : undefined;
   const rating = jsonLd?.aggregateRating?.ratingValue;
   const reviewCount = jsonLd?.aggregateRating?.ratingCount;
 
@@ -119,7 +139,9 @@ export function parseAppListing(html: string, handle: string): AppListing {
     builtForShopify: Boolean(hero?.querySelector('.built-for-shopify-badge-container')),
     pricingSummary,
     plans,
-    hasFreePlan: pricingText.includes('free plan') || plans.some((plan) => plan.price?.toLowerCase() === 'free'),
+    hasFreePlan:
+      (pricingSummary?.toLowerCase().includes('free plan') ?? false) ||
+      plans.some((plan) => plan.price?.toLowerCase() === 'free'),
     hasFreeTrial: pricingText.includes('free trial'),
     worksWith,
     launchDate,
