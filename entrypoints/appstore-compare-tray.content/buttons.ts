@@ -62,7 +62,9 @@ function applyButtonState(button: HTMLButtonElement) {
   const inTray = trayHandles.has(button.dataset.handle ?? '');
   button.textContent = inTray ? '✓ Compare' : '+ Compare';
   button.classList.toggle(`${BUTTON_CLASS}--active`, inTray);
-  button.title = inTray ? 'Remove from comparison' : 'Add to comparison';
+  const label = inTray ? 'Remove from comparison' : 'Add to comparison';
+  button.title = label;
+  button.setAttribute('aria-label', label);
 }
 
 function refreshButtons() {
@@ -163,6 +165,7 @@ function injectListingButton() {
 }
 
 export function initCompareButtons(): () => void {
+  trayHandles = new Set();
   injectStyles();
 
   const injectAll = () => {
@@ -170,38 +173,41 @@ export function initCompareButtons(): () => void {
     injectListingButton();
   };
 
-  getTray().then((items) => {
-    trayHandles = new Set(items.map((item) => item.handle));
-    injectAll();
-    refreshButtons();
-  });
+  let observer: MutationObserver | undefined;
 
   const unwatch = watchTray((items) => {
     trayHandles = new Set(items.map((item) => item.handle));
     refreshButtons();
   });
 
-  const observer = new MutationObserver((mutations) => {
-    const hasNewCards = mutations.some(
-      (mutation) =>
-        mutation.type === 'childList' &&
-        Array.from(mutation.addedNodes).some(
-          (node) =>
-            node.nodeType === Node.ELEMENT_NODE &&
-            ((node as Element).matches('[data-controller="app-card"]') ||
-              (node as Element).querySelector('[data-controller="app-card"]') !== null)
-        )
-    );
+  getTray().then((items) => {
+    trayHandles = new Set(items.map((item) => item.handle));
+    injectAll();
+    refreshButtons();
 
-    if (hasNewCards) {
-      setTimeout(injectAll, 100);
-    }
+    observer = new MutationObserver((mutations) => {
+      const hasNewCards = mutations.some(
+        (mutation) =>
+          mutation.type === 'childList' &&
+          Array.from(mutation.addedNodes).some(
+            (node) =>
+              node.nodeType === Node.ELEMENT_NODE &&
+              ((node as Element).matches('[data-controller="app-card"]') ||
+                (node as Element).querySelector('[data-controller="app-card"]') !== null)
+          )
+      );
+
+      if (hasNewCards) {
+        setTimeout(injectAll, 100);
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
-
   return () => {
-    observer.disconnect();
+    observer?.disconnect();
     unwatch();
+    document.getElementById(STYLE_ID)?.remove();
   };
 }
