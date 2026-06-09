@@ -43,6 +43,17 @@ const BUTTON_STYLES = `
     font-size: 13px;
     padding: 4px 12px;
   }
+
+  .alfred-compare-fly {
+    position: fixed;
+    z-index: 2147483001;
+    border-radius: 10px;
+    border: 1px solid rgba(26, 26, 26, 0.15);
+    box-shadow: 0 8px 24px rgba(26, 26, 26, 0.25);
+    object-fit: cover;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
 `;
 
 let trayHandles = new Set<string>();
@@ -71,7 +82,59 @@ function refreshButtons() {
   document.querySelectorAll<HTMLButtonElement>(`.${BUTTON_CLASS}`).forEach(applyButtonState);
 }
 
-function createButton(item: CompareTrayItem): HTMLButtonElement {
+/**
+ * Fly a clone of the app icon from its card into the compare tray,
+ * Horizon-theme style: an arced path that shrinks and fades on landing.
+ */
+function flyToTray(sourceImage: HTMLImageElement | null, iconUrl: string | undefined, fallbackOrigin: DOMRect) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
+  const src = sourceImage?.currentSrc || sourceImage?.src || iconUrl;
+
+  if (!src) {
+    return;
+  }
+
+  const origin = sourceImage?.getBoundingClientRect() ?? fallbackOrigin;
+
+  // The tray pill sits fixed bottom-right; aim for its icon strip. On the
+  // very first add it hasn't mounted yet, so fall back to where it will be.
+  const tray = document.querySelector('aside[aria-label="Compare apps tray"]');
+  const target = tray?.getBoundingClientRect() ?? new DOMRect(window.innerWidth - 240, window.innerHeight - 76, 56, 56);
+
+  const ghost = document.createElement('img');
+  ghost.src = src;
+  ghost.className = 'alfred-compare-fly';
+  ghost.style.left = `${origin.left}px`;
+  ghost.style.top = `${origin.top}px`;
+  ghost.style.width = `${Math.min(origin.width, 96)}px`;
+  ghost.style.height = `${Math.min(origin.height, 96)}px`;
+  document.body.appendChild(ghost);
+
+  const deltaX = target.left + 28 - (origin.left + origin.width / 2);
+  const deltaY = target.top + target.height / 2 - (origin.top + origin.height / 2);
+  const lift = Math.min(140, Math.abs(deltaX) * 0.15 + 60);
+
+  const animation = ghost.animate(
+    [
+      { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 0 },
+      {
+        transform: `translate(${deltaX * 0.55}px, ${deltaY * 0.45 - lift}px) scale(0.55)`,
+        opacity: 0.95,
+        offset: 0.55
+      },
+      { transform: `translate(${deltaX}px, ${deltaY}px) scale(0.18)`, opacity: 0.15, offset: 1 }
+    ],
+    { duration: 650, easing: 'cubic-bezier(0.3, 0.7, 0.35, 1)' }
+  );
+
+  animation.onfinish = () => ghost.remove();
+  animation.oncancel = () => ghost.remove();
+}
+
+function createButton(item: CompareTrayItem, getSourceImage?: () => HTMLImageElement | null): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = BUTTON_CLASS;
@@ -93,6 +156,7 @@ function createButton(item: CompareTrayItem): HTMLButtonElement {
     if (result === 'full') {
       Toast.error(`You can compare up to ${COMPARE_TRAY_LIMIT} apps`);
     } else if (result === 'added') {
+      flyToTray(getSourceImage?.() ?? null, item.iconUrl, button.getBoundingClientRect());
       sendTrackEvent('compare_add_app', {
         handle: item.handle,
         page_url: window.location.href
@@ -120,11 +184,14 @@ function injectCardButtons() {
     }
 
     target.appendChild(
-      createButton({
-        handle,
-        name,
-        iconUrl: card.getAttribute('data-app-card-icon-url-value') ?? undefined
-      })
+      createButton(
+        {
+          handle,
+          name,
+          iconUrl: card.getAttribute('data-app-card-icon-url-value') ?? undefined
+        },
+        () => card.querySelector('figure img')
+      )
     );
     card.dataset.alfredCompare = 'true';
   });
@@ -155,11 +222,14 @@ function injectListingButton() {
     return;
   }
 
-  const button = createButton({
-    handle: match[1],
-    name: h1.textContent?.trim() ?? match[1],
-    iconUrl: getListingIconUrl()
-  });
+  const button = createButton(
+    {
+      handle: match[1],
+      name: h1.textContent?.trim() ?? match[1],
+      iconUrl: getListingIconUrl()
+    },
+    () => hero.querySelector('img')
+  );
   button.classList.add(`${BUTTON_CLASS}--listing`);
   h1.parentElement?.appendChild(button);
 }
