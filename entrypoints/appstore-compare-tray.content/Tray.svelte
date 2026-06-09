@@ -4,13 +4,22 @@
   let items = $state.raw<CompareTrayItem[]>([]);
 
   $effect(() => {
+    let cancelled = false;
+
     getTray().then((stored) => {
+      if (!cancelled) {
+        items = stored;
+      }
+    });
+
+    const unwatch = watchTray((stored) => {
       items = stored;
     });
 
-    return watchTray((stored) => {
-      items = stored;
-    });
+    return () => {
+      cancelled = true;
+      unwatch();
+    };
   });
 
   function openComparison() {

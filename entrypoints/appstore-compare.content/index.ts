@@ -1,10 +1,10 @@
 import { createIntegratedUi } from '#imports';
 import { mount, unmount } from 'svelte';
 import { getItem } from '~/utils/storage';
+import { COMPARE_TRAY_LIMIT } from '~/utils/compareTray';
 import App from './App.svelte';
 
 const HANDLE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
-const MAX_COMPARE_APPS = 8;
 
 export default defineContentScript({
   matches: ['*://apps.shopify.com/compare/*'],
@@ -25,7 +25,7 @@ export default defineContentScript({
           .map((handle) => decodeURIComponent(handle).trim().toLowerCase())
           .filter((handle) => HANDLE_PATTERN.test(handle))
       )
-    ].slice(0, MAX_COMPARE_APPS);
+    ].slice(0, COMPARE_TRAY_LIMIT);
 
     if (handles.length === 0) {
       return; // Leave the native 404 page untouched
