@@ -235,7 +235,7 @@
             <tr>
               <th class="compare-label" scope="row">Built for Shopify</th>
               {#each columns as column (column.handle)}
-                <td>{column.listing ? (column.listing.builtForShopify ? '✓ Yes' : 'No') : '—'}</td>
+                <td>{column.listing ? (column.listing.builtForShopify ? 'Yes' : 'No') : '—'}</td>
               {/each}
             </tr>
           {/if}
@@ -678,6 +678,7 @@
   .compare-winner {
     position: relative;
     background: rgba(0, 122, 92, 0.07);
+    padding-right: 48px;
   }
 
   .compare-winner::after {

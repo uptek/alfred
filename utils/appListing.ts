@@ -126,7 +126,8 @@ export function parseAppListing(html: string, handle: string): AppListing {
   const screenshots: string[] = [];
   const seenScreenshots = new Set<string>();
   for (const img of doc.querySelectorAll('#adp-details-section img[src*="_screenshot/"]')) {
-    const src = img.getAttribute('src');
+    const rawSrc = img.getAttribute('src');
+    const src = rawSrc ? safeUrl(rawSrc, APP_STORE_ORIGIN) : undefined;
     const base = src?.split('?')[0];
     if (src && base && !seenScreenshots.has(base)) {
       seenScreenshots.add(base);
@@ -153,7 +154,10 @@ export function parseAppListing(html: string, handle: string): AppListing {
     }
   }
 
-  const trialMatch = pricingText.match(/(\d+)[- ]day free trial/);
+  // Trial length lives in a plan-card footer <p>, not the feature bullets,
+  // so scan the whole pricing section as well as the combined pricing text.
+  const pricingSectionText = doc.querySelector('#adp-pricing')?.textContent?.toLowerCase() ?? '';
+  const trialMatch = `${pricingText} ${pricingSectionText}`.match(/(\d+)[- ]day free trial/);
   const freeTrialDays = trialMatch?.[1] ? Number(trialMatch[1]) : undefined;
 
   // Resource links: demo store + everything in the developer section except
@@ -227,7 +231,7 @@ export function parseAppListing(html: string, handle: string): AppListing {
       (pricingSummary?.toLowerCase().includes('free plan') ?? false) ||
       pricingSummary?.toLowerCase() === 'free' || // fully free app, no plan cards
       plans.some((plan) => plan.price?.toLowerCase() === 'free'),
-    hasFreeTrial: pricingText.includes('free trial'),
+    hasFreeTrial: pricingText.includes('free trial') || pricingSectionText.includes('free trial'),
     worksWith,
     launchDate,
     languages,
