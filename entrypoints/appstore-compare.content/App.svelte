@@ -520,6 +520,24 @@
     color: #1a1a1a;
   }
 
+  .compare-app-name:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* The App Store's Tailwind preflight strips anchor styling — restore the
+     store's own link treatment (underlined, underline drops on hover) */
+  .compare-table tbody a {
+    color: #1a1a1a;
+    text-decoration: underline;
+    text-decoration-color: rgba(26, 26, 26, 0.4);
+    text-underline-offset: 2px;
+  }
+
+  .compare-table tbody a:hover {
+    text-decoration: none;
+  }
+
   .compare-app-tagline {
     margin: 0;
     font-size: 12px;
