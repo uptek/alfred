@@ -28,12 +28,14 @@ function parseJsonLd(doc: Document): ListingJsonLd | null {
 
 /**
  * Listing detail rows are a label element (<p>/<dt>) followed by a sibling
- * holding the value, e.g. <p>Works with</p><ul>…</ul>. Scoped to the hero
- * and app-details containers to avoid false matches in reviews or footer;
- * falls back to the whole document if neither container exists.
+ * holding the value, e.g. <p>Works with</p><ul>…</ul>. Scoped to the
+ * containers where these rows live (pricing in the hero, works-with and
+ * languages in the details section, launched in the developer section) to
+ * avoid false matches in reviews or footer; falls back to the whole
+ * document if none of the containers exist.
  */
 function findLabelledSibling(doc: Document, label: string): Element | null {
-  const roots: (Element | Document)[] = ['#adp-hero', '#app-details']
+  const roots: (Element | Document)[] = ['#adp-hero', '#adp-details-section', '#adp-developer']
     .map((selector) => doc.querySelector(selector))
     .filter((root): root is Element => root !== null);
 
