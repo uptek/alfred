@@ -149,8 +149,16 @@ export function parseAppListing(html: string, handle: string): AppListing {
         counts.set(Number(match[1]), count);
       }
     }
+    // Bar widths come from the "98% of ratings are 5 stars" labels
+    const percents = new Map<number, number>();
+    for (const match of reviewsRoot.textContent?.matchAll(/(\d+)% of ratings are (\d) stars?/g) ?? []) {
+      const stars = Number(match[2]);
+      if (!percents.has(stars)) {
+        percents.set(stars, Number(match[1]));
+      }
+    }
     for (const stars of [5, 4, 3, 2, 1]) {
-      ratingDistribution.push({ stars, count: counts.get(stars) ?? '0' });
+      ratingDistribution.push({ stars, count: counts.get(stars) ?? '0', percent: percents.get(stars) ?? 0 });
     }
   }
 
@@ -191,17 +199,27 @@ export function parseAppListing(html: string, handle: string): AppListing {
     addLink(cleanText(anchor.textContent), href);
   }
 
-  // Data access: permission group headings (h4 ending with ':') followed by a
-  // sibling <p> summary, e.g. "View customer data" -> "Device and activity data".
+  // Data access: each permission group is a div holding the group heading
+  // (h4 ending with ':'), a summary <p>, and a <ul> of li > h4 (item name) +
+  // p (item details) — e.g. "View products" -> "Products, product listings".
   const dataAccess: AppListingDataAccess[] = [];
   for (const heading of doc.querySelectorAll('#adp-permissions h4')) {
     const text = cleanText(heading.textContent);
     if (!text?.endsWith(':')) {
       continue;
     }
+    const items = Array.from(heading.parentElement?.querySelectorAll('ul li') ?? [])
+      .map(
+        (item): AppListingDataAccessItem => ({
+          name: cleanText(item.querySelector('h4')?.textContent) ?? '',
+          details: cleanText(item.querySelector('p')?.textContent)
+        })
+      )
+      .filter((item) => item.name);
     dataAccess.push({
       group: text.slice(0, -1),
-      summary: cleanText(heading.nextElementSibling?.textContent)
+      summary: cleanText(heading.nextElementSibling?.textContent),
+      items
     });
   }
 

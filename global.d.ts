@@ -89,14 +89,21 @@ declare interface AppListingLink {
   url: string;
 }
 
+declare interface AppListingDataAccessItem {
+  name: string;
+  details?: string | undefined;
+}
+
 declare interface AppListingDataAccess {
   group: string;
   summary?: string | undefined;
+  items: AppListingDataAccessItem[];
 }
 
 declare interface AppListingRatingCount {
   stars: number;
   count: string;
+  percent: number;
 }
 
 declare interface AppListing {

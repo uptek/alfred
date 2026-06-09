@@ -259,7 +259,20 @@
                     {#if column.listing.ratingDistribution.length > 0}
                       <ul class="compare-distribution">
                         {#each column.listing.ratingDistribution as level (level.stars)}
-                          <li><span class="compare-distribution-stars">{level.stars}★</span>{level.count}</li>
+                          <li>
+                            <span class="compare-distribution-stars">{level.stars} ★</span>
+                            <span class="compare-distribution-track">
+                              <span class="compare-distribution-fill" style:width={`${level.percent}%`}></span>
+                            </span>
+                            <a
+                              class="compare-distribution-count"
+                              href={`${column.listing.url}/reviews?ratings%5B%5D=${level.stars}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {level.count}
+                            </a>
+                          </li>
                         {/each}
                       </ul>
                     {/if}
@@ -407,7 +420,18 @@
                       {#each column.listing.dataAccess as access (access.group)}
                         <li>
                           <strong>{access.group}</strong>
-                          {#if access.summary}<div class="compare-muted">{access.summary}</div>{/if}
+                          {#if access.items.length > 0}
+                            <ul class="compare-access-items">
+                              {#each access.items as item (item.name)}
+                                <li>
+                                  {item.name}
+                                  {#if item.details}<div class="compare-muted">{item.details}</div>{/if}
+                                </li>
+                              {/each}
+                            </ul>
+                          {:else if access.summary}
+                            <div class="compare-muted">{access.summary}</div>
+                          {/if}
                         </li>
                       {/each}
                     </ul>
@@ -645,17 +669,54 @@
   }
 
   .compare-distribution {
-    margin: 6px 0 0;
+    margin: 8px 0 0;
     padding: 0;
     list-style: none;
     font-size: 12px;
     color: #616161;
+    min-width: 150px;
+  }
+
+  .compare-distribution li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
   }
 
   .compare-distribution-stars {
-    display: inline-block;
-    width: 28px;
+    flex-shrink: 0;
+    width: 24px;
     color: #1a1a1a;
+    white-space: nowrap;
+  }
+
+  .compare-distribution-track {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(26, 26, 26, 0.08);
+    overflow: hidden;
+  }
+
+  .compare-distribution-fill {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: #1a1a1a;
+  }
+
+  .compare-distribution-count {
+    flex-shrink: 0;
+    min-width: 30px;
+    text-align: right;
+    color: #1a1a1a;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .compare-distribution-count:hover {
+    text-decoration: none;
   }
 
   .compare-muted {
@@ -673,6 +734,20 @@
   .compare-links li,
   .compare-access li {
     margin-bottom: 4px;
+  }
+
+  .compare-access > li {
+    margin-bottom: 10px;
+  }
+
+  .compare-access-items {
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .compare-access-items li {
+    margin-bottom: 6px;
   }
 
   .compare-winner {

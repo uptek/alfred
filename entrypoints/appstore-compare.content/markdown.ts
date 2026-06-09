@@ -62,7 +62,13 @@ export const COMPARISON_ROWS: [string, RowRenderer][] = [
     (l) =>
       l.dataAccess.length > 0
         ? l.dataAccess
-            .map((access) => (access.summary ? `${access.group}: ${access.summary}` : access.group))
+            .map((access) => {
+              const detail =
+                access.items.length > 0
+                  ? access.items.map((item) => (item.details ? `${item.name} (${item.details})` : item.name)).join(', ')
+                  : access.summary;
+              return detail ? `${access.group}: ${detail}` : access.group;
+            })
             .join('; ')
         : '—'
   ]
