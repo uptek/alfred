@@ -63,6 +63,7 @@ declare interface AlfredSettings {
   appStore?: {
     searchIndexing?: boolean;
     enhancedPartnerPages?: boolean;
+    compareApps?: boolean;
   };
   collaboratorAccess?: {
     presets?: boolean;
@@ -75,6 +76,39 @@ declare interface AlfredSettings {
     warnBeforeClosingCodeEditor?: boolean;
     themeListUtils?: boolean;
   };
+}
+
+declare interface AppListingPlan {
+  name?: string;
+  price?: string;
+  features: string[];
+}
+
+declare interface AppListing {
+  handle: string;
+  url: string;
+  name?: string;
+  tagline?: string;
+  iconUrl?: string;
+  developerName?: string;
+  developerUrl?: string;
+  rating?: number;
+  reviewCount?: number;
+  builtForShopify: boolean;
+  pricingSummary?: string;
+  plans: AppListingPlan[];
+  hasFreePlan: boolean;
+  hasFreeTrial: boolean;
+  worksWith: string[];
+  launchDate?: string;
+  languages?: string;
+  categories: string[];
+}
+
+declare interface CompareTrayItem {
+  handle: string;
+  name: string;
+  iconUrl?: string;
 }
 
 declare interface SettingItem {
