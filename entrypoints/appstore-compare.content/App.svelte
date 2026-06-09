@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { flip } from 'svelte/animate';
   import { fetchAppListing, formatAppAge } from '~/utils/appListing';
   import { removeFromTray } from '~/utils/compareTray';
   import { sendTrackEvent } from '@/utils/analytics';
   import { Toast } from '~/utils/toast';
-  import { buildComparisonMarkdown, COMPARISON_ROWS } from './markdown';
+  import { buildComparisonCsv, buildComparisonJson, buildComparisonMarkdown, COMPARISON_ROWS } from './exporters';
 
   type Column = {
     handle: string;
@@ -68,7 +69,33 @@
     void removeFromTray(handle);
   }
 
+  const flipDuration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300;
+
+  function moveColumn(handle: string, direction: -1 | 1) {
+    const index = columns.findIndex((column) => column.handle === handle);
+    const target = index + direction;
+
+    if (index === -1 || target < 0 || target >= columns.length) {
+      return;
+    }
+
+    const next = [...columns];
+    const [moved] = next.splice(index, 1);
+
+    if (!moved) {
+      return;
+    }
+
+    next.splice(target, 0, moved);
+    columns = next;
+    window.history.replaceState(null, '', `/compare/${columns.map((column) => column.handle).join(',')}`);
+  }
+
+  let exportOpen = $state(false);
+
   async function copyMarkdown() {
+    exportOpen = false;
+
     try {
       await navigator.clipboard.writeText(buildComparisonMarkdown(loadedListings));
       Toast.success('Comparison copied as markdown');
@@ -78,12 +105,50 @@
     }
   }
 
+  function downloadFile(filename: string, content: string, type: string) {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportFilename(extension: string): string {
+    return `shopify-alfred-compare-${new Date().toISOString().split('T')[0]}.${extension}`;
+  }
+
+  function downloadCsv() {
+    exportOpen = false;
+    downloadFile(exportFilename('csv'), buildComparisonCsv(loadedListings), 'text/csv;charset=utf-8;');
+    Toast.success('Comparison downloaded as CSV');
+    sendTrackEvent('compare_export_csv', { app_count: loadedListings.length });
+  }
+
+  function downloadJson() {
+    exportOpen = false;
+    downloadFile(exportFilename('json'), buildComparisonJson(loadedListings), 'application/json');
+    Toast.success('Comparison downloaded as JSON');
+    sendTrackEvent('compare_export_json', { app_count: loadedListings.length });
+  }
+
   sendTrackEvent('compare_view', { app_count: handles.length, page_url: window.location.href });
 
   for (const handle of handles) {
     void loadColumn(handle);
   }
 </script>
+
+<svelte:window
+  onclick={() => (exportOpen = false)}
+  onkeydown={(event) => {
+    if (event.key === 'Escape') {
+      exportOpen = false;
+    }
+  }}
+/>
 
 <!-- The App Store's own star icon (listing page rating/review sections) -->
 {#snippet starIcon()}
@@ -104,9 +169,27 @@
         <input type="checkbox" bind:checked={differencesOnly} disabled={loadedColumns.length < 2} />
         Differences only
       </label>
-      <button class="compare-export" disabled={loadedListings.length === 0} onclick={copyMarkdown}>
-        Copy as markdown
-      </button>
+      <div class="compare-export-wrap">
+        <button
+          class="compare-export"
+          disabled={loadedListings.length === 0}
+          aria-haspopup="menu"
+          aria-expanded={exportOpen}
+          onclick={(event) => {
+            event.stopPropagation();
+            exportOpen = !exportOpen;
+          }}
+        >
+          Export ▾
+        </button>
+        {#if exportOpen}
+          <div class="compare-export-menu" role="menu">
+            <button role="menuitem" onclick={copyMarkdown}>Copy as Markdown</button>
+            <button role="menuitem" onclick={downloadCsv}>Download CSV</button>
+            <button role="menuitem" onclick={downloadJson}>Download JSON</button>
+          </div>
+        {/if}
+      </div>
     </div>
   </header>
 
@@ -120,8 +203,8 @@
         <thead>
           <tr>
             <th class="compare-label" scope="col" aria-label="Attribute"></th>
-            {#each columns as column (column.handle)}
-              <th class="compare-app" scope="col">
+            {#each columns as column, index (column.handle)}
+              <th class="compare-app" scope="col" animate:flip={{ duration: flipDuration }}>
                 {#if column.status === 'loaded' && column.listing}
                   {@const listing = column.listing}
                   <div class="compare-app-card">
@@ -132,9 +215,29 @@
                     {#if listing.tagline}
                       <p class="compare-app-tagline">{listing.tagline}</p>
                     {/if}
-                    <button class="compare-app-remove" onclick={() => removeColumn(column.handle)}>
-                      Remove
-                    </button>
+                    <div class="compare-app-controls">
+                      {#if columns.length > 1}
+                        <button
+                          class="compare-app-move"
+                          aria-label={`Move ${listing.name ?? column.handle} left`}
+                          disabled={index === 0}
+                          onclick={() => moveColumn(column.handle, -1)}
+                        >
+                          ←
+                        </button>
+                        <button
+                          class="compare-app-move"
+                          aria-label={`Move ${listing.name ?? column.handle} right`}
+                          disabled={index === columns.length - 1}
+                          onclick={() => moveColumn(column.handle, 1)}
+                        >
+                          →
+                        </button>
+                      {/if}
+                      <button class="compare-app-remove" onclick={() => removeColumn(column.handle)}>
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 {:else if column.status === 'loading'}
                   <div class="compare-app-card compare-app-loading" aria-busy="true">
@@ -159,7 +262,7 @@
             <tr>
               <th class="compare-label" scope="row">Screenshots</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {#if column.listing && column.listing.screenshots.length > 0}
                     <div class="compare-screenshots">
                       {#each column.listing.screenshots as shot (shot)}
@@ -179,7 +282,7 @@
             <tr>
               <th class="compare-label" scope="row">Built for Shopify</th>
               {#each columns as column (column.handle)}
-                <td>{column.listing ? (column.listing.builtForShopify ? 'Yes' : 'No') : '—'}</td>
+                <td animate:flip={{ duration: flipDuration }}>{column.listing ? (column.listing.builtForShopify ? 'Yes' : 'No') : '—'}</td>
               {/each}
             </tr>
           {/if}
@@ -187,7 +290,7 @@
             <tr>
               <th class="compare-label" scope="row">Rating</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {#if column.listing?.rating != null}
                     <span class="compare-rating">{column.listing.rating}{@render starIcon()}</span>
                   {:else}
@@ -201,7 +304,7 @@
             <tr>
               <th class="compare-label" scope="row">Reviews</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {#if column.listing?.reviewCount != null}
                     <div class="compare-review-total">{column.listing.reviewCount.toLocaleString()}</div>
                     {#if column.listing.ratingDistribution.length > 0}
@@ -235,7 +338,7 @@
             <tr>
               <th class="compare-label" scope="row">Pricing</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {#if column.listing}
                     {#if column.listing.plans.length > 0}
                       <ul class="compare-plans">
@@ -260,7 +363,7 @@
             <tr>
               <th class="compare-label" scope="row">Free plan</th>
               {#each columns as column (column.handle)}
-                <td>{column.listing ? (column.listing.hasFreePlan ? 'Yes' : 'No') : '—'}</td>
+                <td animate:flip={{ duration: flipDuration }}>{column.listing ? (column.listing.hasFreePlan ? 'Yes' : 'No') : '—'}</td>
               {/each}
             </tr>
           {/if}
@@ -268,7 +371,7 @@
             <tr>
               <th class="compare-label" scope="row">Free trial</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {column.listing
                     ? column.listing.hasFreeTrial
                       ? column.listing.freeTrialDays
@@ -284,7 +387,7 @@
             <tr>
               <th class="compare-label" scope="row">Launched</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {#if column.listing?.launchDate}
                     {@const age = formatAppAge(column.listing.launchDate)}
                     <div>{column.listing.launchDate}</div>
@@ -300,7 +403,7 @@
             <tr>
               <th class="compare-label" scope="row">Developer</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {#if column.listing?.developerName}
                     {#if column.listing.developerUrl}
                       <a href={column.listing.developerUrl}>{column.listing.developerName}</a>
@@ -318,7 +421,7 @@
             <tr>
               <th class="compare-label" scope="row">Languages</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {column.listing?.languages ?? '—'}
                 </td>
               {/each}
@@ -328,7 +431,7 @@
             <tr>
               <th class="compare-label" scope="row">Links</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {#if column.listing && column.listing.links.length > 0}
                     <ul class="compare-links">
                       {#each column.listing.links as link (link.url)}
@@ -346,7 +449,7 @@
             <tr>
               <th class="compare-label" scope="row">Works with</th>
               {#each columns as column (column.handle)}
-                <td>{column.listing?.worksWith.length ? column.listing.worksWith.join(', ') : '—'}</td>
+                <td animate:flip={{ duration: flipDuration }}>{column.listing?.worksWith.length ? column.listing.worksWith.join(', ') : '—'}</td>
               {/each}
             </tr>
           {/if}
@@ -354,7 +457,7 @@
             <tr>
               <th class="compare-label" scope="row">Categories</th>
               {#each columns as column (column.handle)}
-                <td>{column.listing?.categories.length ? column.listing.categories.join(', ') : '—'}</td>
+                <td animate:flip={{ duration: flipDuration }}>{column.listing?.categories.length ? column.listing.categories.join(', ') : '—'}</td>
               {/each}
             </tr>
           {/if}
@@ -362,7 +465,7 @@
             <tr>
               <th class="compare-label" scope="row">Data access</th>
               {#each columns as column (column.handle)}
-                <td>
+                <td animate:flip={{ duration: flipDuration }}>
                   {#if column.listing && column.listing.dataAccess.length > 0}
                     <ul class="compare-access">
                       {#each column.listing.dataAccess as access (access.group)}
@@ -476,6 +579,39 @@
     cursor: not-allowed;
   }
 
+  .compare-export-wrap {
+    position: relative;
+  }
+
+  .compare-export-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 10;
+    min-width: 190px;
+    padding: 4px;
+    background: #ffffff;
+    border: 1px solid rgba(26, 26, 26, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(26, 26, 26, 0.15);
+  }
+
+  .compare-export-menu button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .compare-export-menu button:hover {
+    background: #f1f1f1;
+  }
+
   .compare-empty {
     font-size: 15px;
   }
@@ -518,11 +654,19 @@
     white-space: nowrap;
   }
 
+  /* height: 1px on the cell lets the card stretch to the row's full height,
+     so the control rows bottom-align across columns with different tagline
+     lengths */
+  .compare-app {
+    height: 1px;
+  }
+
   .compare-app-card {
     display: flex;
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
+    height: 100%;
   }
 
   .compare-app-icon {
@@ -563,6 +707,14 @@
     color: #616161;
   }
 
+  .compare-app-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 8px;
+  }
+
   .compare-app-remove,
   .compare-app-error button {
     padding: 4px 10px;
@@ -571,6 +723,30 @@
     background: #ffffff;
     font-size: 12px;
     cursor: pointer;
+  }
+
+  /* Reorder is a secondary action: quiet ghost buttons so Remove stays the
+     only bordered control in the row */
+  .compare-app-move {
+    min-width: 28px;
+    padding: 5px 8px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: #616161;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .compare-app-move:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+
+  .compare-app-move:hover:not(:disabled) {
+    background: #f1f1f1;
+    color: #1a1a1a;
   }
 
   .compare-app-remove:hover,

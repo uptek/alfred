@@ -24,6 +24,8 @@ const VALID_ACTIONS = [
   'compare_add_app',
   'compare_view',
   'compare_export_markdown',
+  'compare_export_csv',
+  'compare_export_json',
   'open_section_in_code_editor',
   'disable_theme_inspector',
   'resize_theme_customizer',

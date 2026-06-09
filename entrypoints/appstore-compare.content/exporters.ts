@@ -88,3 +88,44 @@ export function buildComparisonMarkdown(listings: AppListing[]): string {
     )
   ].join('\n');
 }
+
+function csvCell(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+/** Flatten the renderers' markdown links for plain-text formats: [label](url) -> label (url) */
+function plainText(value: string): string {
+  return value.replace(/\[([^\]]*)\]\(([^)]*)\)/g, '$1 ($2)');
+}
+
+/**
+ * Render loaded listings as a CSV comparison table (one row per attribute,
+ * one column per app), reusing the shared row renderers.
+ */
+export function buildComparisonCsv(listings: AppListing[]): string {
+  const header = ['Attribute', ...listings.map((l) => l.name ?? l.handle)];
+  const lines = [header.map(csvCell).join(',')];
+
+  for (const [label, render] of COMPARISON_ROWS) {
+    lines.push([label, ...listings.map((l) => plainText(render(l)))].map(csvCell).join(','));
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Export the comparison as structured JSON: the full parsed listing data per
+ * app, plus provenance metadata.
+ */
+export function buildComparisonJson(listings: AppListing[]): string {
+  return JSON.stringify(
+    {
+      source: 'Alfred - Compare Shopify apps',
+      url: window.location.href,
+      exportedAt: new Date().toISOString(),
+      apps: listings
+    },
+    null,
+    2
+  );
+}
