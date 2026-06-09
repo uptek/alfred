@@ -44,10 +44,8 @@ two comparison features (differences-only toggle, per-row winner highlight).
 - **"Differences only" toggle** — a switch in the page header; when on, rows
   where every app renders an identical value are hidden. Off by default.
   Needs ≥2 loaded columns to be meaningful; disabled otherwise.
-- **Per-row winner highlight** — subtle highlight (background tint + small
-  "best" marker) on: highest rating, most reviews, cheapest entry price
-  (cheapest plan, Free = 0), most languages. Only when ≥2 columns are loaded
-  and there is a strict winner (no tie).
+- ~~Per-row winner highlight~~ — built, then removed at Junaid's request
+  (visual noise outweighed the value).
 
 ## Data sourcing (all verified against live DOM)
 

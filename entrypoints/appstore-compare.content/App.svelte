@@ -26,73 +26,6 @@
 
   const loadedColumns = $derived(columns.filter((column) => column.status === 'loaded' && column.listing));
 
-  function strictWinner(values: { handle: string; value: number | undefined }[], prefer: 'max' | 'min') {
-    const present = values.filter((entry): entry is { handle: string; value: number } => entry.value !== undefined);
-
-    if (present.length < 2) {
-      return undefined;
-    }
-
-    const sorted = [...present].sort((a, b) => (prefer === 'max' ? b.value - a.value : a.value - b.value));
-    return sorted[0] && sorted[1] && sorted[0].value !== sorted[1].value ? sorted[0].handle : undefined;
-  }
-
-  function entryPrice(listing: AppListing): number | undefined {
-    if (listing.plans.length === 0) {
-      return listing.pricingSummary?.toLowerCase() === 'free' ? 0 : undefined;
-    }
-
-    const prices = listing.plans
-      .map((plan) => {
-        const price = plan.price?.toLowerCase() ?? '';
-        if (price === 'free') {
-          return 0;
-        }
-        const match = price.match(/\$([\d,]+(?:\.\d+)?)/);
-        return match?.[1] ? parseFloat(match[1].replace(/,/g, '')) : undefined;
-      })
-      .filter((value): value is number => value !== undefined);
-
-    return prices.length > 0 ? Math.min(...prices) : undefined;
-  }
-
-  function languageCount(listing: AppListing): number | undefined {
-    if (!listing.languages) {
-      return undefined;
-    }
-
-    return listing.languages
-      .replace(/,? and /g, ',')
-      .split(',')
-      .map((language) => language.trim())
-      .filter(Boolean).length;
-  }
-
-  const winners = $derived({
-    rating: strictWinner(
-      loadedColumns.map((column) => ({ handle: column.handle, value: column.listing?.rating })),
-      'max'
-    ),
-    reviews: strictWinner(
-      loadedColumns.map((column) => ({ handle: column.handle, value: column.listing?.reviewCount })),
-      'max'
-    ),
-    price: strictWinner(
-      loadedColumns.map((column) => ({
-        handle: column.handle,
-        value: column.listing ? entryPrice(column.listing) : undefined
-      })),
-      'min'
-    ),
-    languages: strictWinner(
-      loadedColumns.map((column) => ({
-        handle: column.handle,
-        value: column.listing ? languageCount(column.listing) : undefined
-      })),
-      'max'
-    )
-  });
-
   function rowVisible(label: string): boolean {
     if (!differencesOnly || loadedColumns.length < 2) {
       return true;
@@ -243,7 +176,7 @@
             <tr>
               <th class="compare-label" scope="row">Rating</th>
               {#each columns as column (column.handle)}
-                <td class:compare-winner={winners.rating === column.handle}>
+                <td>
                   {column.listing?.rating != null ? `${column.listing.rating} ★` : '—'}
                 </td>
               {/each}
@@ -253,7 +186,7 @@
             <tr>
               <th class="compare-label" scope="row">Reviews</th>
               {#each columns as column (column.handle)}
-                <td class:compare-winner={winners.reviews === column.handle}>
+                <td>
                   {#if column.listing?.reviewCount != null}
                     <div class="compare-review-total">{column.listing.reviewCount.toLocaleString()}</div>
                     {#if column.listing.ratingDistribution.length > 0}
@@ -287,7 +220,7 @@
             <tr>
               <th class="compare-label" scope="row">Pricing</th>
               {#each columns as column (column.handle)}
-                <td class:compare-winner={winners.price === column.handle}>
+                <td>
                   {#if column.listing}
                     {#if column.listing.plans.length > 0}
                       <ul class="compare-plans">
@@ -370,7 +303,7 @@
             <tr>
               <th class="compare-label" scope="row">Languages</th>
               {#each columns as column (column.handle)}
-                <td class:compare-winner={winners.languages === column.handle}>
+                <td>
                   {column.listing?.languages ?? '—'}
                 </td>
               {/each}
@@ -750,21 +683,4 @@
     margin-bottom: 6px;
   }
 
-  .compare-winner {
-    position: relative;
-    background: rgba(0, 122, 92, 0.07);
-    padding-right: 48px;
-  }
-
-  .compare-winner::after {
-    content: 'Best';
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    font-size: 10px;
-    font-weight: 650;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-    color: #007a5c;
-  }
 </style>
