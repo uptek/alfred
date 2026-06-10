@@ -433,7 +433,7 @@
                         {#if img.lacksAlt}
                           <span class="alt-missing">Missing</span>
                         {:else if img.decorative}
-                          <span class="alt-decorative">Decorative</span>
+                          <span class="alt-decorative">decorative</span>
                         {:else}
                           {img.alt}
                         {/if}
@@ -621,7 +621,7 @@
   .alt-text--muted { color: var(--text-muted); font-style: italic; font-weight: 400; }
   .alt-label { color: var(--text-muted); font-weight: 600; margin-right: 1px; }
   .alt-missing { color: var(--error); font-weight: 600; }
-  .alt-decorative { color: var(--text-muted); font-style: italic; font-weight: 400; }
+  .alt-decorative { display: inline-block; vertical-align: 1px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--bg-hover); color: var(--text-muted); }
 
   .url-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
   .src-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--bg-hover); color: var(--text-muted); }

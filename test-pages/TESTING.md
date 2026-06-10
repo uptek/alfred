@@ -250,7 +250,7 @@ export is hardened with Display Width/Height and Oversized columns.
 
 - [ ] 10 images; tab badge shows **1** (was 2: the empty-alt image no longer
       counts)
-- [ ] Row 3 (empty alt) reads italic "Decorative", status **OK**
+- [ ] Row 3 (empty alt) shows a gray "decorative" tag, status **OK**
 - [ ] Alt filter: Present 7, Decorative 1, Missing 1
 - [ ] Row 2 (no alt attribute) shows the **amber** "Alt" pill; only Broken is
       red
@@ -281,7 +281,7 @@ export is hardened with Display Width/Height and Oversized columns.
 - [ ] The gradient+url element still yields its photo.svg row
 - [ ] Data-URI image: filename reads `data:image/svg+xml`, Format SVG, thumb
       is not a link
-- [ ] Badge 0; decorative row shows "Decorative"
+- [ ] Badge 0; decorative row shows the gray "decorative" tag
 - [ ] Format filter: SVG 3, PNG 1, GIF 1
 - [ ] Search "pixel" matches the two background rows; a base64 fragment from
       the data URI matches nothing
