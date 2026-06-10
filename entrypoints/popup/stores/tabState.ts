@@ -4,7 +4,7 @@
  * in tabState.svelte.ts.
  */
 
-export type PopupSection = 'theme' | 'headings' | 'links' | 'assets' | 'images' | 'schema' | 'settings';
+export type PopupSection = 'theme' | 'headings' | 'links' | 'assets' | 'images' | 'robots' | 'schema' | 'settings';
 
 export const SCHEMA_VERSION = 1;
 

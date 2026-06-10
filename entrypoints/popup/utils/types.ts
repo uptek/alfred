@@ -144,6 +144,14 @@ export interface ThemeStoreEntry {
   };
 }
 
+export interface RobotsResponse {
+  ok: boolean; // fetch reached the server (any HTTP status)
+  status: number; // HTTP status; 0 on network error
+  content: string; // raw robots.txt text ('' when not 2xx)
+  finalUrl: string; // URL after redirects
+  size: number; // body size in bytes
+}
+
 export type ImageSource = 'img' | 'picture' | 'background';
 export type ImageLoading = 'lazy' | 'eager' | 'none';
 export type ImageStatus = 'ok' | 'missing-alt' | 'broken';

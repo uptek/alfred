@@ -6,6 +6,7 @@ import type {
   RawAsset,
   RawImage,
   RawSchemaBlock,
+  RobotsResponse,
   LinkStatusResult
 } from './types';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
@@ -225,5 +226,22 @@ export const scrollToImage = async (index: number): Promise<void> => {
     }
   } catch {
     // silently fail
+  }
+};
+
+/**
+ * Fetches the site's robots.txt via the content script (same-origin fetch).
+ * @returns {Promise<RobotsResponse | null>} Raw file + HTTP metadata, or null when the tab is unreachable.
+ */
+export const getRobots = async (): Promise<RobotsResponse | null> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      const response = await browser.tabs.sendMessage(tab.id, { action: 'get_robots' });
+      return response && typeof response.status === 'number' ? response : null;
+    }
+    return null;
+  } catch {
+    return null;
   }
 };

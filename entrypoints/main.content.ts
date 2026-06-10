@@ -582,6 +582,29 @@ export default defineContentScript({
       }
 
       /**
+       * Fetches the site's robots.txt (same-origin, so no CORS) and returns the
+       * raw text plus HTTP metadata. Analysis happens in the popup.
+       * @returns {{ ok: boolean, status: number, content: string, finalUrl: string, size: number }}
+       */
+      if (request.action === 'get_robots') {
+        fetch(`${location.origin}/robots.txt`)
+          .then(async (res) => {
+            const content = res.ok ? await res.text() : '';
+            sendResponse({
+              ok: true,
+              status: res.status,
+              content,
+              finalUrl: res.url,
+              size: new TextEncoder().encode(content).length
+            });
+          })
+          .catch(() => {
+            sendResponse({ ok: false, status: 0, content: '', finalUrl: '', size: 0 });
+          });
+        return true;
+      }
+
+      /**
        * Toggles colored dashed outlines on all page links (green=internal, purple=external, red=nofollow).
        * @param {boolean} request.enabled - Whether to apply or remove highlights.
        */
