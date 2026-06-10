@@ -14,9 +14,10 @@
 
   let {
     robots,
+    loading = false,
     pageUrl,
     isShopify
-  }: { robots: RobotsResponse | null; pageUrl: string | null; isShopify: boolean } = $props();
+  }: { robots: RobotsResponse | null; loading?: boolean; pageUrl: string | null; isShopify: boolean } = $props();
 
   // Same pipeline as the App.svelte tab badge — the two can't disagree.
   const analysis = $derived(analyzeRobots(robots, isShopify, pageUrl));
@@ -187,7 +188,12 @@
   }
 </script>
 
-{#if robots === null || !robots.ok}
+{#if loading}
+  <div class="empty-state">
+    <div class="empty-state__spinner"></div>
+    <p>Loading robots.txt…</p>
+  </div>
+{:else if robots === null || !robots.ok}
   <div class="empty-state">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="empty-state__icon"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4M8 5l4 4 4-4"/></svg>
     <p>Couldn't load robots.txt for this page</p>
@@ -386,6 +392,7 @@
   /* Empty state */
   .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: var(--text-muted); }
   .empty-state__icon { width: 28px; height: 28px; opacity: 0.3; stroke-width: 1.7; }
+  .empty-state__spinner { width: 20px; height: 20px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
   .empty-state p { font-size: 13px; margin: 0; }
 
   /* Header */
@@ -490,4 +497,5 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>

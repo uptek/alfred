@@ -43,6 +43,7 @@
   let rawImages = $state<RawImage[]>([]);
   let rawSchema = $state<RawSchemaBlock[]>([]);
   let rawRobots = $state<RobotsResponse | null>(null);
+  let robotsLoading = $state(true);
   let loading = $state(true);
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
@@ -80,16 +81,22 @@
   ]);
 
   $effect(() => {
+    // Robots.txt is a real network fetch (slow origins take seconds, timeout
+    // is 8s) — never gate first paint on it. The tab and badge fill in
+    // reactively when it lands.
+    getRobots().then((robotsData) => {
+      rawRobots = robotsData;
+      robotsLoading = false;
+    });
     const fetchData = async () => {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      const [storeData, headingsData, linksData, assetsData, imagesData, schemaData, robotsData] = await Promise.all([
+      const [storeData, headingsData, linksData, assetsData, imagesData, schemaData] = await Promise.all([
         getTheme(),
         getHeadings(),
         getLinks(),
         getAssets(),
         getImages(),
         getSchema(),
-        getRobots(),
         tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
       ]);
       trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
@@ -99,7 +106,6 @@
       rawAssets = assetsData;
       rawImages = imagesData;
       rawSchema = schemaData;
-      rawRobots = robotsData;
       // A restored section wins; otherwise non-Shopify pages skip the Theme tab.
       if (tabState.restoredActiveSection) {
         activeTab = tabState.restoredActiveSection;
@@ -244,7 +250,7 @@
         {:else if activeTab === 'schema'}
           <Schema schema={rawSchema} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'robots'}
-          <Robots robots={rawRobots} pageUrl={storeInfo?.page_url ?? null} isShopify={storeInfo?.isShopify ?? false} />
+          <Robots robots={rawRobots} loading={robotsLoading} pageUrl={storeInfo?.page_url ?? null} isShopify={storeInfo?.isShopify ?? false} />
         {:else if activeTab === 'settings'}
           <div class="content__pad">
             <Settings storeInfo={storeInfo ?? { isShopify: false, shopDomain: null, domain: null, page_url: null, theme: null }} />
