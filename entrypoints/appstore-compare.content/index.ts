@@ -3,8 +3,14 @@ import { mount, unmount } from 'svelte';
 import { getItem } from '~/utils/storage';
 import { COMPARE_TRAY_LIMIT } from '~/utils/compareTray';
 import App from './App.svelte';
+import './style.css';
 
 const HANDLE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+
+/** Lift the pre-paint curtain from style.css (shows whatever main holds). */
+function revealMain() {
+  document.documentElement.classList.add('alfred-compare-ready');
+}
 
 export default defineContentScript({
   matches: ['*://apps.shopify.com/compare/*'],
@@ -14,6 +20,7 @@ export default defineContentScript({
     const isCompareAppsEnabled = settings?.appStore?.compareApps !== false;
 
     if (!isCompareAppsEnabled) {
+      revealMain();
       return; // Exit early if compare apps is disabled
     }
 
@@ -28,6 +35,7 @@ export default defineContentScript({
     ].slice(0, COMPARE_TRAY_LIMIT);
 
     if (handles.length === 0) {
+      revealMain();
       return; // Leave the native 404 page untouched
     }
 
@@ -35,6 +43,7 @@ export default defineContentScript({
     const main = document.querySelector('main');
 
     if (!main) {
+      revealMain();
       return;
     }
 
@@ -66,6 +75,7 @@ export default defineContentScript({
           }
         }
 
+        revealMain();
         return container;
       },
       onRemove: (elements) => {

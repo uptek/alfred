@@ -655,10 +655,6 @@
     background: rgba(26, 26, 26, 0.022);
   }
 
-  thead td,
-  thead th {
-    border-top: none;
-  }
 
   .compare-label {
     min-width: 130px;
@@ -733,10 +729,6 @@
 
 
 
-  .compare-app-remove:hover,
-  .compare-app-error button:hover {
-    background: #f1f1f1;
-  }
 
   .compare-app-error p {
     margin: 0 0 4px;
