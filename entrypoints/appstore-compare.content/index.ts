@@ -38,6 +38,16 @@ export default defineContentScript({
       return;
     }
 
+    // Load Shopify's Polaris web components (vendored, already used by the
+    // options page) so the comparison UI can use s-* elements. Extension
+    // resource URLs are exempt from the page CSP.
+    if (!document.getElementById('alfred-polaris-web-components')) {
+      const polaris = document.createElement('script');
+      polaris.id = 'alfred-polaris-web-components';
+      polaris.src = browser.runtime.getURL('/libs/shopify-polaris.js');
+      document.head.appendChild(polaris);
+    }
+
     document.title = 'Compare apps · Shopify App Store';
 
     let app: Record<string, unknown> | undefined;

@@ -93,8 +93,12 @@
 
   let exportOpen = $state(false);
 
-  async function copyMarkdown() {
+  function closeExportMenu() {
     exportOpen = false;
+  }
+
+  async function copyMarkdown() {
+    closeExportMenu();
 
     try {
       await navigator.clipboard.writeText(buildComparisonMarkdown(loadedListings));
@@ -121,14 +125,14 @@
   }
 
   function downloadCsv() {
-    exportOpen = false;
+    closeExportMenu();
     downloadFile(exportFilename('csv'), buildComparisonCsv(loadedListings), 'text/csv;charset=utf-8;');
     Toast.success('Comparison downloaded as CSV');
     sendTrackEvent('compare_export_csv', { app_count: loadedListings.length });
   }
 
   function downloadJson() {
-    exportOpen = false;
+    closeExportMenu();
     downloadFile(exportFilename('json'), buildComparisonJson(loadedListings), 'application/json');
     Toast.success('Comparison downloaded as JSON');
     sendTrackEvent('compare_export_json', { app_count: loadedListings.length });
@@ -165,23 +169,30 @@
   <header class="compare-header">
     <h1>Compare apps</h1>
     <div class="compare-actions">
-      <label class="compare-toggle">
-        <input type="checkbox" bind:checked={differencesOnly} disabled={loadedColumns.length < 2} />
-        Differences only
-      </label>
+      <!-- Polaris components live in the page world; the content script can
+           only reach them via attributes and events. Boolean attributes are
+           presence-based, so pass undefined (not false) to keep them absent,
+           and mirror the checkbox by toggling our own state on change. -->
+      <s-checkbox
+        label="Differences only"
+        checked={differencesOnly || undefined}
+        disabled={loadedColumns.length < 2 || undefined}
+        onchange={() => (differencesOnly = !differencesOnly)}
+      ></s-checkbox>
+      <!-- s-popover can't position itself outside Shopify's own embedding
+           (its activator measurement comes up empty), so the trigger is
+           Polaris and the panel is ours -->
       <div class="compare-export-wrap">
-        <button
-          class="compare-export"
-          disabled={loadedListings.length === 0}
-          aria-haspopup="menu"
-          aria-expanded={exportOpen}
-          onclick={(event) => {
+        <s-button
+          icon="chevron-down"
+          disabled={loadedListings.length === 0 || undefined}
+          onclick={(event: Event) => {
             event.stopPropagation();
             exportOpen = !exportOpen;
           }}
         >
-          Export ▾
-        </button>
+          Export
+        </s-button>
         {#if exportOpen}
           <div class="compare-export-menu" role="menu">
             <button role="menuitem" onclick={copyMarkdown}>Copy as Markdown</button>
@@ -217,26 +228,22 @@
                     {/if}
                     <div class="compare-app-controls">
                       {#if columns.length > 1}
-                        <button
-                          class="compare-app-move"
-                          aria-label={`Move ${listing.name ?? column.handle} left`}
-                          disabled={index === 0}
+                        <s-button
+                          variant="tertiary"
+                          icon="arrow-left"
+                          accessibilityLabel={`Move ${listing.name ?? column.handle} left`}
+                          disabled={index === 0 || undefined}
                           onclick={() => moveColumn(column.handle, -1)}
-                        >
-                          ←
-                        </button>
-                        <button
-                          class="compare-app-move"
-                          aria-label={`Move ${listing.name ?? column.handle} right`}
-                          disabled={index === columns.length - 1}
+                        ></s-button>
+                        <s-button
+                          variant="tertiary"
+                          icon="arrow-right"
+                          accessibilityLabel={`Move ${listing.name ?? column.handle} right`}
+                          disabled={index === columns.length - 1 || undefined}
                           onclick={() => moveColumn(column.handle, 1)}
-                        >
-                          →
-                        </button>
+                        ></s-button>
                       {/if}
-                      <button class="compare-app-remove" onclick={() => removeColumn(column.handle)}>
-                        Remove
-                      </button>
+                      <s-button variant="secondary" onclick={() => removeColumn(column.handle)}>Remove</s-button>
                     </div>
                   </div>
                 {:else if column.status === 'loading'}
@@ -249,8 +256,10 @@
                   <div class="compare-app-card compare-app-error">
                     <p>Couldn't load <strong>{column.handle}</strong></p>
                     <p class="compare-error-detail">{column.error}</p>
-                    <button onclick={() => loadColumn(column.handle)}>Retry</button>
-                    <button onclick={() => removeColumn(column.handle)}>Remove</button>
+                    <div class="compare-app-controls">
+                      <s-button variant="secondary" onclick={() => loadColumn(column.handle)}>Retry</s-button>
+                      <s-button variant="tertiary" onclick={() => removeColumn(column.handle)}>Remove</s-button>
+                    </div>
                   </div>
                 {/if}
               </th>
@@ -541,44 +550,6 @@
     gap: 16px;
   }
 
-  .compare-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 550;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .compare-toggle input {
-    accent-color: #1a1a1a;
-  }
-
-  .compare-toggle:has(input:disabled) {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .compare-export {
-    padding: 8px 14px;
-    border: 1px solid rgba(26, 26, 26, 0.3);
-    border-radius: 8px;
-    background: #ffffff;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .compare-export:hover:not(:disabled) {
-    background: #f1f1f1;
-  }
-
-  .compare-export:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
   .compare-export-wrap {
     position: relative;
   }
@@ -611,6 +582,16 @@
   .compare-export-menu button:hover {
     background: #f1f1f1;
   }
+
+
+
+
+
+
+
+
+
+
 
   .compare-empty {
     font-size: 15px;
@@ -715,39 +696,9 @@
     padding-top: 8px;
   }
 
-  .compare-app-remove,
-  .compare-app-error button {
-    padding: 4px 10px;
-    border: 1px solid rgba(26, 26, 26, 0.3);
-    border-radius: 8px;
-    background: #ffffff;
-    font-size: 12px;
-    cursor: pointer;
-  }
 
-  /* Reorder is a secondary action: quiet ghost buttons so Remove stays the
-     only bordered control in the row */
-  .compare-app-move {
-    min-width: 28px;
-    padding: 5px 8px;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    color: #616161;
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-  }
 
-  .compare-app-move:disabled {
-    opacity: 0.25;
-    cursor: not-allowed;
-  }
 
-  .compare-app-move:hover:not(:disabled) {
-    background: #f1f1f1;
-    color: #1a1a1a;
-  }
 
   .compare-app-remove:hover,
   .compare-app-error button:hover {
