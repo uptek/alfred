@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Well-formed outline — no issues (positive control)</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Headings tab</div>
+      <ul>
+        <li>Counts: H1 ×1, H2 ×2, H3 ×3 (H4–H6 dimmed at 0)</li>
+        <li>No issue box, no badge on the tab</li>
+        <li>No "hidden" filter chip</li>
+        <li>Clicking any row scrolls to it and flashes a dashed outline</li>
+      </ul>
+    </aside>
+    <main>
+      <h1>The Field Guide to Sourdough</h1>
+      <p>Everything below follows a clean, sequential outline.</p>
+      <h2>Starters</h2>
+      <h3>Feeding schedule</h3>
+      <p>Feed twice daily at room temperature.</p>
+      <h3>Hydration</h3>
+      <p>Keep it at 100% hydration for predictable rises.</p>
+      <h2>Baking</h2>
+      <h3>Oven spring</h3>
+      <p>Preheat the dutch oven for forty-five minutes.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Internal, external, nofollow, image, hidden, and mailto links</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      main li {
+        margin-bottom: 6px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Links tab</div>
+      <ul>
+        <li>9 links total (the 8 below plus the "← all test pages" nav link)</li>
+        <li>Internal ×5: fixture link, anchor link, image link, hidden link, nav link</li>
+        <li>
+          External ×4: example.com plain, nofollow, sponsored+nofollow, and the mailto (no hostname, counted external)
+        </li>
+        <li>Nofollow ×2; image link ×1; hidden ×1</li>
+        <li>"Highlight" outlines links on the page: green internal, purple external, red nofollow</li>
+        <li>Clicking a row scrolls to that link (hidden link cannot scroll)</li>
+      </ul>
+    </aside>
+    <main id="top">
+      <ul>
+        <li><a href="/headings/clean.html">Internal link to another fixture</a></li>
+        <li><a href="#top">Internal anchor link (same page)</a></li>
+        <li><a href="https://example.com/">External link, plain</a></li>
+        <li><a href="https://example.com/partner" rel="nofollow">External link, rel=nofollow</a></li>
+        <li><a href="https://example.com/ad" rel="sponsored nofollow">External link, rel=sponsored nofollow</a></li>
+        <li>
+          <a href="/"><img src="/images/static/photo.svg" alt="Image link" width="80" height="50" /></a> ← image link
+        </li>
+        <li><a href="/hidden-target" style="display: none">Hidden link (display:none)</a> ← hidden link lives here</li>
+        <li><a href="mailto:hello@example.com">mailto link</a></li>
+      </ul>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

@@ -23,6 +23,15 @@ This project uses WXT - a modern framework for building browser extensions.
 - Options page uses Shopify Polaris web components (custom elements, not Svelte
   components) with polyfill helpers in `utils/polaris.polyfill.ts`
 
+## Visual Test Pages
+
+`bun run testpages` serves `test-pages/` at http://localhost:4242 — a fixture
+site with one folder per popup tab (headings, links, images, assets, theme,
+robots) and one page per scenario. Each page states the expected popup output
+in a blue panel. The index is auto-generated; adding a scenario is just adding
+an `.html` file. See `test-pages/README.md` for conventions (no heading tags
+in page chrome, referer-based robots.txt fixtures).
+
 ## Version Bumping & Changelog
 
 When bumping the version or updating the changelog, use the `/version-bump`

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Blocking/defer/async/module/json scripts, screen/print/inline styles</title>
+    <script src="/assets/static/blocking.js"></script>
+    <script src="/assets/static/deferred.js" defer></script>
+    <script src="/assets/static/async.js" async></script>
+    <link rel="stylesheet" href="/assets/static/styles.css" />
+    <link rel="stylesheet" href="/assets/static/print.css" media="print" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Assets tab</div>
+      <ul>
+        <li>
+          Scripts ×7: blocking.js (head, render-blocking), deferred.js (defer), async.js (async), footer.js (body
+          placement), inline classic, inline module, inline JSON
+        </li>
+        <li>
+          Styles ×3: styles.css (head, render-blocking), print.css (media="print", not render-blocking), this page's
+          inline style block
+        </li>
+        <li>All external assets are same-host (no external or extension-injected entries from this page itself)</li>
+        <li>Sizes/durations populate from Resource Timing; everything should report HTTP 200</li>
+      </ul>
+    </aside>
+    <main>
+      <p class="from-external-css">This sentence is colored by the external stylesheet.</p>
+      <p>View the Assets tab to verify script and stylesheet detection, load strategy, and placement.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+    <script type="application/json" id="test-data">
+      { "purpose": "inline JSON script entry" }
+    </script>
+    <script>
+      // Inline classic script.
+      window.__alfredTestInlineClassic = true;
+    </script>
+    <script type="module">
+      // Inline module script.
+      window.__alfredTestInlineModule = true;
+    </script>
+    <script src="/assets/static/footer.js"></script>
+  </body>
+</html>

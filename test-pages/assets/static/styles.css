@@ -1,0 +1,4 @@
+/* Head stylesheet — render-blocking. */
+.from-external-css {
+  color: #5c6ac4;
+}

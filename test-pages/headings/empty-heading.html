@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Empty and whitespace-only headings — empty issues</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Headings tab</div>
+      <ul>
+        <li>2 issues: "Empty H2" twice (one truly empty, one whitespace-only)</li>
+        <li>Badge "2" on the tab</li>
+        <li>Both offending rows show "(empty)" in italics with a red dot</li>
+      </ul>
+    </aside>
+    <main>
+      <h1>Lookbook</h1>
+      <p>The two section headings below have no text content.</p>
+      <h2></h2>
+      <p>The heading above is completely empty.</p>
+      <h2>&nbsp;</h2>
+      <p>The heading above contains only a non-breaking space (whitespace-only).</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
