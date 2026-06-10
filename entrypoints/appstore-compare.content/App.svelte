@@ -195,6 +195,22 @@
   </svg>
 {/snippet}
 
+<!-- The App Store's own Built for Shopify diamond -->
+{#snippet bfsBadge()}
+  <span class="compare-bfs">
+    <svg class="compare-bfs-diamond" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="m13 0-1 5-4 9 8-9.5L13 0ZM3 0l1 5 4 9-8-9.5L3 0Z" fill="#1495CC" />
+      <path d="m3 0 1 5 4 9 4-9 1-5H3Z" fill="#58B7DF" />
+      <path d="M8 14 4 5l-4-.5L8 14ZM8 14l4-9 4-.5L8 14Z" fill="#035F86" />
+      <path d="M8 5.5 4 5l4 9 4-9-4 .5Z" fill="#1495CC" />
+      <path d="m4 5 4-5 4 5-4.001.5L4 5Z" fill="#A9DEF4" />
+      <path d="M4 5 3 0h5L4 5ZM12 5l1-5H8l4 5Z" fill="#58B7DF" />
+      <path d="M4 5 3 0 0 4.5 4 5ZM12 5l1-5 3 4.5-4 .5Z" fill="#1495CC" />
+    </svg>
+    Built for Shopify
+  </span>
+{/snippet}
+
 <div class="compare">
   <header class="compare-header">
     <div>
@@ -324,7 +340,17 @@
             <tr>
               <th class="compare-label" scope="row">Built for Shopify</th>
               {#each columns as column (column.handle)}
-                <td animate:flip={{ duration: flipDuration }}>{column.listing ? (column.listing.builtForShopify ? 'Yes' : 'No') : '—'}</td>
+                <td animate:flip={{ duration: flipDuration }}>
+                  {#if column.listing}
+                    {#if column.listing.builtForShopify}
+                      {@render bfsBadge()}
+                    {:else}
+                      <span class="compare-muted">No</span>
+                    {/if}
+                  {:else}
+                    —
+                  {/if}
+                </td>
               {/each}
             </tr>
           {/if}
@@ -879,6 +905,26 @@
   .compare-muted {
     font-size: 12px;
     color: #616161;
+  }
+
+  .compare-bfs {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border: 1px solid rgba(20, 149, 204, 0.3);
+    border-radius: 4px;
+    background: rgba(20, 149, 204, 0.08);
+    color: #035f86;
+    font-size: 12px;
+    font-weight: 550;
+    white-space: nowrap;
+  }
+
+  .compare-bfs-diamond {
+    width: 13px;
+    height: 11px;
+    flex-shrink: 0;
   }
 
   .compare-links,
