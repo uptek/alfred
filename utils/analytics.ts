@@ -6,82 +6,10 @@ const SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9icmppcmRucW9pYWlsaGJzbm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA0NzAyMzQsImV4cCI6MjA2NjA0NjIzNH0.i0cWjFKNk8HDZQsVkCn83fTKFROiNzvPf_sTP5xQwAM';
 const TRACK_ENDPOINT = `${SUPABASE_URL}/functions/v1/track`;
 
-// Valid action types
-export type AnalyticsAction =
-  | 'open_in_admin'
-  | 'open_in_customizer'
-  | 'copy_product_json'
-  | 'copy_cart_json'
-  | 'copy_theme_preview_url'
-  | 'clear_cart'
-  | 'save_preset'
-  | 'apply_preset'
-  | 'preset_auto_submit'
-  | 'request_access_context_menu'
-  | 'appstore_partner_table_view'
-  | 'appstore_partner_table_sort'
-  | 'appstore_partner_table_export'
-  | 'open_section_in_code_editor'
-  | 'disable_theme_inspector'
-  | 'resize_theme_customizer'
-  | 'toggle_admin_sidebar'
-  | 'detect_theme'
-  | 'autofill_storefront_password'
-  | 'open_image_in_admin'
-  | 'exit_theme_preview'
-  | 'theme_list_copy_id'
-  | 'theme_list_copy_preview_url'
-  | 'cartograph_open'
-  | 'cartograph_add_item'
-  | 'cartograph_update_quantity'
-  | 'cartograph_remove_item'
-  | 'cartograph_clear'
-  | 'cartograph_apply_discount'
-  | 'cartograph_update_note'
-  | 'cartograph_calculate_shipping'
-  | 'cartograph_update_properties'
-  | 'cartograph_switch_variant'
-  | 'cartograph_update_attributes'
-  | 'cartograph_remove_discount'
-  | 'cartograph_inspect_json'
-  | 'permission_search'
-  | 'expand_all_permissions'
-  | 'collapse_all_permissions'
-  | 'popup_open'
-  | 'review_nudge_show'
-  | 'review_nudge_click'
-  | 'review_nudge_dismiss'
-  | 'headings_view'
-  | 'headings_scroll_to'
-  | 'headings_copy'
-  | 'headings_toggle_hidden'
-  | 'links_view'
-  | 'links_filter'
-  | 'links_highlight'
-  | 'links_scroll_to'
-  | 'links_export'
-  | 'links_copy'
-  | 'links_sort'
-  | 'links_toggle_hidden'
-  | 'links_check_status'
-  | 'assets_view'
-  | 'assets_filter'
-  | 'assets_export'
-  | 'assets_copy'
-  | 'assets_view_source'
-  | 'assets_expand_inline'
-  | 'assets_sort'
-  | 'images_view'
-  | 'images_filter'
-  | 'images_highlight'
-  | 'images_scroll_to'
-  | 'images_export'
-  | 'images_copy'
-  | 'images_sort'
-  | 'images_open'
-  | 'schema_view'
-  | 'schema_copy'
-  | 'schema_export';
+// Valid action types — single source of truth in analytics-actions.ts;
+// analytics-actions.test.ts keeps the Supabase track function's allowlist in sync.
+export type { AnalyticsAction } from './analytics-actions';
+import type { AnalyticsAction } from './analytics-actions';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -168,7 +96,13 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   images_open: 5,
   schema_view: 60,
   schema_copy: 60,
-  schema_export: 60
+  schema_export: 60,
+  robots_view: 90,
+  robots_goto_line: 5,
+  robots_copy: 30,
+  robots_open: 5,
+  robots_ai_toggle: 5,
+  robots_wrap_toggle: 0
 };
 
 // --- Usage Stats (local tracking) ---
@@ -272,7 +206,13 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   images_open: 'SEO',
   schema_view: 'SEO',
   schema_copy: 'SEO',
-  schema_export: 'SEO'
+  schema_export: 'SEO',
+  robots_view: 'SEO',
+  robots_goto_line: 'SEO',
+  robots_copy: 'SEO',
+  robots_open: 'SEO',
+  robots_ai_toggle: 'SEO',
+  robots_wrap_toggle: 'SEO'
 };
 
 /** Local usage stats persisted in `local:usage_stats`.
@@ -310,8 +250,10 @@ function defaultUsageStats(): UsageStats {
  * @returns Estimated seconds saved
  */
 export function getTimeSaved(action: AnalyticsAction, metadata?: Record<string, unknown>): number {
+  // `?? 0` guards unregistered actions: .svelte call sites bypass tsc, and an
+  // undefined here would NaN-poison the accumulated totalTimeSaved forever.
   const config = TIME_SAVINGS[action];
-  return typeof config === 'function' ? config(metadata) : config;
+  return (typeof config === 'function' ? config(metadata) : config) ?? 0;
 }
 
 /**
@@ -473,9 +415,11 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       return;
     }
 
-    // Send to Supabase (fire and forget)
+    // Send to Supabase (fire and forget). keepalive lets the request survive
+    // the popup closing mid-flight (e.g. actions that open a new tab).
     fetch(TRACK_ENDPOINT, {
       method: 'POST',
+      keepalive: true,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`
