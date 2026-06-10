@@ -26,6 +26,7 @@ const VALID_ACTIONS = [
   'compare_export_markdown',
   'compare_export_csv',
   'compare_export_json',
+  'compare_share',
   'open_section_in_code_editor',
   'disable_theme_inspector',
   'resize_theme_customizer',

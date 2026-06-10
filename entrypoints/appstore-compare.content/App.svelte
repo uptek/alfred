@@ -138,6 +138,18 @@
     sendTrackEvent('compare_export_json', { app_count: loadedListings.length });
   }
 
+  // The comparison URL works for anyone with Alfred installed. Desktop
+  // "share" means copy-the-link; the OS share sheet is a detour here.
+  async function shareComparison() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      Toast.success('Comparison link copied');
+      sendTrackEvent('compare_share', { app_count: loadedListings.length });
+    } catch {
+      Toast.error('Could not copy the link');
+    }
+  }
+
   sendTrackEvent('compare_view', { app_count: handles.length, page_url: window.location.href });
 
   for (const handle of handles) {
@@ -179,6 +191,7 @@
         disabled={loadedColumns.length < 2 || undefined}
         onchange={() => (differencesOnly = !differencesOnly)}
       ></s-checkbox>
+      <s-button icon="link" onclick={shareComparison}>Share</s-button>
       <!-- s-popover can't position itself outside Shopify's own embedding
            (its activator measurement comes up empty), so the trigger is
            Polaris and the panel is ours -->
