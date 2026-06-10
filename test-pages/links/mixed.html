@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Internal, external, nofollow, image, hidden, and mailto links</title>
+    <title>Internal, external, rel hints, image, hidden, broken-anchor, and non-web links</title>
     <style>
       body {
         font:
@@ -36,6 +36,14 @@
       main li {
         margin-bottom: 6px;
       }
+      .aria-box {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        background: #c7d8f7;
+        border-radius: 4px;
+        vertical-align: middle;
+      }
       .back {
         display: inline-block;
         margin: 0 16px 24px;
@@ -47,28 +55,62 @@
     <aside class="expected">
       <div class="t">Expected — Links tab</div>
       <ul>
-        <li>9 links total (the 8 below plus the "← all test pages" nav link)</li>
-        <li>Internal ×5: fixture link, anchor link, image link, hidden link, nav link</li>
+        <li>18 links total (the 17 below plus the "← all test pages" nav link)</li>
         <li>
-          External ×4: example.com plain, nofollow, sponsored+nofollow, and the mailto (no hostname, counted external)
+          Type: Internal ×10 (www.localhost counts as internal), External ×5, Other ×3 (mailto, tel, javascript) —
+          "Other" appears in the Type filter
         </li>
-        <li>Nofollow ×2; image link ×1; hidden ×1</li>
-        <li>"Highlight" outlines links on the page: green internal, purple external, red nofollow</li>
-        <li>Clicking a row scrolls to that link (hidden link cannot scroll)</li>
+        <li>
+          Follow column: Dofollow ×15; "No" on the nofollow link, "Sponsored" and "UGC" amber pills on those rel hints
+          (both in the Follow filter)
+        </li>
+        <li>
+          Anchor text: img alt "Image link" (10), "Shop the collection" beats its image (11), aria-label "Theme fixture"
+          (13); 12 shows "(image without alt text)"; image links carry a small "img" tag
+        </li>
+        <li>
+          Badges: amber "http" on the plain-http external (8); red "broken #" on the #nowhere anchor (3); ×3 dup badge
+          on the three links to "/"
+        </li>
+        <li>"1 hidden" toolbar toggle; the hidden row (14) is dimmed with an eye icon</li>
+        <li>"Highlight" outlines: green internal, purple external/other, red for nofollow/sponsored/ugc</li>
+        <li>Clicking a row scrolls to that link (the hidden link cannot scroll)</li>
       </ul>
     </aside>
     <main id="top">
       <ul>
-        <li><a href="/headings/clean.html">Internal link to another fixture</a></li>
-        <li><a href="#top">Internal anchor link (same page)</a></li>
-        <li><a href="https://example.com/">External link, plain</a></li>
-        <li><a href="https://example.com/partner" rel="nofollow">External link, rel=nofollow</a></li>
-        <li><a href="https://example.com/ad" rel="sponsored nofollow">External link, rel=sponsored nofollow</a></li>
+        <li><a href="/headings/clean.html">1. Internal link to another fixture</a></li>
+        <li><a href="#top">2. Internal anchor link (same page, valid target)</a></li>
+        <li><a href="#nowhere">3. Broken same-page anchor (no #nowhere element)</a></li>
+        <li><a href="https://example.com/">4. External link, plain</a></li>
+        <li><a href="https://example.com/partner" rel="nofollow">5. External link, rel=nofollow</a></li>
+        <li><a href="https://example.com/ad" rel="sponsored">6. External link, rel=sponsored</a></li>
+        <li><a href="https://example.com/forum" rel="ugc">7. External link, rel=ugc</a></li>
+        <li><a href="http://example.com/legacy">8. External link over plain http</a></li>
+        <li><a href="http://www.localhost:4242/">9. www variant of this host (internal, no http badge)</a></li>
         <li>
-          <a href="/"><img src="/images/static/photo.svg" alt="Image link" width="80" height="50" /></a> ← image link
+          <a href="/"><img src="/images/static/photo.svg" alt="Image link" width="80" height="50" /></a> ← 10. image
+          link, alt supplies the anchor text
         </li>
-        <li><a href="/hidden-target" style="display: none">Hidden link (display:none)</a> ← hidden link lives here</li>
-        <li><a href="mailto:hello@example.com">mailto link</a></li>
+        <li>
+          <a href="/headings/clean.html"
+            ><img src="/images/static/photo.svg" alt="thumb" width="40" height="25" />Shop the collection</a
+          >
+          ← 11. image + text, text wins
+        </li>
+        <li>
+          <a href="/"><img src="/images/static/photo.svg" width="80" height="50" /></a> ← 12. image link without alt (no
+          anchor text)
+        </li>
+        <li>
+          <a href="/theme/dawn.html" aria-label="Theme fixture" class="aria-box"></a> ← 13. empty anchor with aria-label
+        </li>
+        <li>
+          <a href="/hidden-target" style="display: none">14. Hidden link (display:none)</a> ← hidden link lives here
+        </li>
+        <li><a href="mailto:hello@example.com">15. mailto link (Other)</a></li>
+        <li><a href="tel:+15551234567">16. tel link (Other)</a></li>
+        <li><a href="javascript:void(0)">17. javascript pseudo-link (Other)</a></li>
       </ul>
     </main>
     <a class="back" href="/">← all test pages</a>
