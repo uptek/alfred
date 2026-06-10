@@ -152,9 +152,27 @@
 
   sendTrackEvent('compare_view', { app_count: handles.length, page_url: window.location.href });
 
-  for (const handle of handles) {
-    void loadColumn(handle);
-  }
+  // Fetch all listings in parallel but reveal them in a single paint:
+  // per-column reveals make the columns reflow each other as they load.
+  // Retry still uses loadColumn for a single-column update.
+  void (async () => {
+    const results = await Promise.allSettled(handles.map((handle) => fetchAppListing(handle)));
+
+    columns = handles.map((handle, index): Column => {
+      const result = results[index];
+
+      if (result?.status === 'fulfilled') {
+        return { handle, status: 'loaded', listing: result.value };
+      }
+
+      const reason = result?.status === 'rejected' ? result.reason : undefined;
+      return {
+        handle,
+        status: 'error',
+        error: reason instanceof Error ? reason.message : 'Failed to load listing'
+      };
+    });
+  })();
 </script>
 
 <svelte:window
@@ -185,14 +203,12 @@
            only reach them via attributes and events. Boolean attributes are
            presence-based, so pass undefined (not false) to keep them absent,
            and mirror the checkbox by toggling our own state on change. -->
-      <div class="compare-filter">
-        <s-checkbox
-          label="Differences only"
-          checked={differencesOnly || undefined}
-          disabled={loadedColumns.length < 2 || undefined}
-          onchange={() => (differencesOnly = !differencesOnly)}
-        ></s-checkbox>
-      </div>
+      <s-checkbox
+        label="Differences only"
+        checked={differencesOnly || undefined}
+        disabled={loadedColumns.length < 2 || undefined}
+        onchange={() => (differencesOnly = !differencesOnly)}
+      ></s-checkbox>
     </div>
     <div class="compare-actions">
       <s-button icon="link" onclick={shareComparison}>Share</s-button>
@@ -549,7 +565,7 @@
 
   .compare-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 24px;
@@ -565,10 +581,6 @@
     display: flex;
     align-items: center;
     gap: 8px;
-  }
-
-  .compare-filter {
-    margin-top: 10px;
   }
 
   .compare-export-wrap {
