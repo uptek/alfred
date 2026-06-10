@@ -492,4 +492,19 @@ Non-blocking findings from the popup-improvements pre-landing review, deferred t
 - **Popup renders non-http(s) hrefs as live anchors** — javascript:/data: links rely on MV3 CSP to stay inert; render `other`-kind schemes as plain text in Links (and the same pattern in Images/Assets open actions)
 - **Link index stamping is page-visible** — `data-alfred-link-index` lets pages fingerprint the extension; accepted tradeoff for mutation-safe scroll-to-link, revisit with a WeakRef snapshot if it ever matters
 
+### Robots.txt Tab — Matcher Edge Cases
+
+**Priority:** P3
+
+Refinements flagged by the v2026.06.10 adversarial review as INVESTIGATE (correct enough to ship, worth revisiting):
+
+- Percent-encoding normalization: `Disallow: /café` doesn't match the already-encoded `URL.pathname` `/caf%C3%A9`; Google normalizes both sides, some crawlers don't
+- Versioned user-agent tokens: a group declared as `User-agent: Googlebot/2.1` never prefix-matches the bot token `Googlebot`
+- Empty `User-agent:` value is silently unmatched and unlinted (could be an info-level lint)
+- Decide what `robots_view` means long-term: currently once per popup session (module flag); per-render would overcount the 90s time-saved credit
+
+**Context:**
+
+- All in `entrypoints/popup/robots.ts` / `Robots.svelte`; matcher has full test coverage in `robots.test.ts` to refactor against
+
 ## Completed

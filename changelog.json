@@ -41,6 +41,30 @@
     ]
   },
   {
+    "version": "2026.06.20.1",
+    "date": "2026-06-20",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Robots.txt Analyzer"
+      },
+      {
+        "type": "paragraph",
+        "content": "New Robots.txt tab in the popup fetches and analyzes any site's robots.txt — not just the raw file, but what it actually means for crawlers."
+      },
+      {
+        "type": "list",
+        "content": [
+          "AI Crawler Access summary shows at a glance which AI bots (GPTBot, ClaudeBot, PerplexityBot, and 10 more) can access the current page — expandable into a full per-bot matrix grouped by training, AI search, and user-fetch crawlers.",
+          "Issue detection catches common robots.txt mistakes: rules that crawlers silently ignore, retired directives like Noindex, site-wide blocks, blocked CSS/JS assets, misspellings, and more — each linked to the exact line.",
+          "Shopify stores get a Default vs Customized badge, with customized lines highlighted in the source view.",
+          "Syntax-highlighted source with line numbers, click-to-jump from any finding, line wrapping, and one-click copy or open.",
+          "Friendly explanations for edge cases: missing robots.txt (404), server errors, and files that accidentally serve HTML."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.06.22",
     "date": "2026-06-22",
     "changes": [
