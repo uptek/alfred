@@ -1,14 +1,14 @@
-# Manual test guide: Headings + Links tab updates
+# Manual test guide: Headings + Links + Assets tab updates
 
 Checklist for verifying everything that changed on the `feat/popup-improvements`
-branch: the three Headings fixes, the Links classification rework, and the
-toolbar polish. Work top to bottom; every step says which page to open and what
-to look for.
+branch: the three Headings fixes, the Links classification rework, the toolbar
+polish, and the Assets classification rework. Work top to bottom; every step
+says which page to open and what to look for.
 
 ## Setup
 
-1. Run the automated suite first. It covers the analyzers and link
-   classification logic (71 tests):
+1. Run the automated suite first. It covers the analyzers, link
+   classification, and asset classification logic (111 tests):
 
    ```sh
    bun test
@@ -161,3 +161,73 @@ numbered links on that page.
       shop are Internal, mailto/tel sit under Other, the hidden count matches
       reality (mega menus produce many), no console errors in the popup or
       page
+
+---
+
+## Assets tab
+
+What changed: script subtypes (Module/JSON/JSON-LD/Map/Rules) with correct
+load semantics, render-blocking detection that understands modules, nomodule,
+media queries, and disabled/alternate stylesheets, www-internal hosts,
+path-only display for same-host sources, search inside inline source, a Flags
+filter, a summary bar, media tags, MB sizes, and hardened CSV export.
+
+### `/assets/mixed.html` (baseline)
+
+- [ ] 7 scripts + 3 styles; same-host sources show path only (no
+      `localhost` prefix)
+- [ ] Inline module row shows Type **Module**; inline JSON shows **JSON**
+- [ ] Render-blocking pills on exactly blocking.js and styles.css; Flags
+      filter appears with Render-blocking 2
+- [ ] print.css carries a gray "print" media tag and no render-blocking pill
+- [ ] Summary bar reads "7 scripts · 3 styles · (size) · 2 render-blocking"
+- [ ] Search for `alfredTestInlineClassic` finds the inline classic script
+      (search now covers inline source)
+
+### `/assets/modules-and-data.html` (module + data correctness)
+
+- [ ] module.js: Load **defer**, Type **Module**, NOT render-blocking
+- [ ] nomodule.js: NOT render-blocking, size/time both "—" (never fetched)
+- [ ] Importmap, JSON-LD, and speculation-rules blocks show Types **Map**,
+      **JSON-LD**, **Rules**, all load "inline", none flagged
+- [ ] Only blocking.js is render-blocking; Flags shows Render-blocking 1
+
+### `/assets/media-styles.html` (stylesheet applicability)
+
+- [ ] Render-blocking on exactly styles.css and matching-mq.css
+- [ ] print.css and nonmatching-mq.css show media tags, no flags
+- [ ] disabled.css and alternate.css: no flags, no size/time (never fetched)
+- [ ] Flags shows Render-blocking 2
+
+### `/assets/broken-and-duplicate.html` (failures + duplicates)
+
+- [ ] missing.js and missing.css show red **404** pills
+- [ ] Both footer.js rows show **×2** duplicate badges
+- [ ] Flags filter offers Render-blocking 2, Failed 2, Duplicate 2; each
+      selection narrows the table correctly and the reset button restores
+
+### `/assets/external-hosts.html` (host classification)
+
+- [ ] Source filter: External 1 — only the 127.0.0.1 script
+- [ ] The www.localhost script counts as same-site (path-only source cell)
+- [ ] The 127.0.0.1 row shows host + path and "—" size/status (opaque
+      cross-origin)
+
+### Load facet consistency
+
+- [ ] On `/assets/media-styles.html`, filtering Load = Blocking shows no
+      external stylesheets (their Load cell is "—"; they no longer match the
+      Blocking filter)
+
+### Exports
+
+- [ ] CSV columns: Kind, Source, Type, Subtype, Load, Placement, Media, Size,
+      Time, Status, Cached, Render-Blocking, Duplicate, Browser Extension
+- [ ] JSON has the same fields per asset; Text/Copy give one URL per line
+
+### Real-world spot check
+
+- [ ] Open any live Shopify store: JSON-LD blocks show as JSON-LD (not
+      Script), theme module scripts show Module/defer without render-blocking
+      pills, cdn.shopify.com assets are External, the summary bar total looks
+      plausible, no console errors
