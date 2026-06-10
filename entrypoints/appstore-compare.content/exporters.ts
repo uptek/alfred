@@ -11,12 +11,11 @@ type RowRenderer = (listing: AppListing) => string;
  * markdown export and the comparison page's "differences only" check.
  */
 export const COMPARISON_ROWS: [string, RowRenderer][] = [
+  // Full-size URLs (sizing query stripped), comma-separated with one per
+  // line — CSV cells keep the newlines, the markdown table flattens them.
   [
     'Screenshots',
-    (l) =>
-      l.screenshots.length > 0
-        ? l.screenshots.map((shot, index) => `[${index + 1}](${shot.split('?')[0]})`).join(' ')
-        : '—'
+    (l) => (l.screenshots.length > 0 ? l.screenshots.map((shot) => shot.split('?')[0]).join(',\n') : '—')
   ],
   ['Built for Shopify', (l) => (l.builtForShopify ? 'Yes' : 'No')],
   ['Rating', (l) => (l.rating != null ? `${l.rating} ★` : '—')],

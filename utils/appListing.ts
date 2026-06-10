@@ -186,7 +186,8 @@ export function parseAppListing(html: string, handle: string): AppListing {
 
   for (const anchor of doc.querySelectorAll('a')) {
     if (cleanText(anchor.textContent)?.toLowerCase() === 'view demo store') {
-      addLink('Demo store', anchor.getAttribute('href'));
+      // Demo links carry tracking params (utm_*) — strip the query string
+      addLink('Demo store', anchor.getAttribute('href')?.split('?')[0]);
       break;
     }
   }
