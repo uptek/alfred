@@ -9,7 +9,7 @@ Work top to bottom; every step says which page to open and what to look for.
 
 1. Run the automated suite first. It covers the analyzers, link
    classification, asset classification, and image classification logic
-   (152 tests):
+   (154 tests):
 
    ```sh
    bun test
@@ -267,6 +267,9 @@ export is hardened with Display Width/Height and Oversized columns.
       natural-vs-displayed tooltip
 - [ ] wide.svg at 800×500 (exactly 2× per dimension) is NOT flagged
 - [ ] photo.svg at its natural size is NOT flagged
+- [ ] photo.svg shrunk to 32×20 is NOT flagged: small images never clear the
+      waste floor, so icons/emoji (e.g. Reddit's 128px emoji at 20px) stay
+      out of the Oversized flag
 - [ ] Flags filter appears with Oversized 1; selecting it narrows to 1 row;
       reset restores
 - [ ] Summary bar ends with "1 oversized"

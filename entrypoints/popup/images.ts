@@ -106,10 +106,19 @@ export function parseBackgroundUrls(bg: string): string[] {
 }
 
 /**
+ * Small images never flag: the wasted pixels must exceed a 256x256 image's
+ * worth before the ratio matters (the pixel analogue of Lighthouse's
+ * minimum-wasted-bytes floor). Keeps icon/emoji-sized sources out of the
+ * Oversized flag no matter how small their rendered box is.
+ */
+const OVERSIZED_WASTE_FLOOR = 256 * 256;
+
+/**
  * Lighthouse-style "properly size images" check: an image is oversized when
  * it ships more than 4x the pixels its rendered box needs at the device's
- * pixel ratio (2x headroom per dimension). Unknown natural sizes (lazy, not
- * decoded) and unrendered boxes never flag.
+ * pixel ratio (2x headroom per dimension) AND the waste clears
+ * OVERSIZED_WASTE_FLOOR. Unknown natural sizes (lazy, not decoded) and
+ * unrendered boxes never flag.
  * @param {number} naturalWidth - Intrinsic width in px.
  * @param {number} naturalHeight - Intrinsic height in px.
  * @param {number} displayWidth - Rendered CSS width in px.
@@ -126,5 +135,7 @@ export function isOversized(
 ): boolean {
   if (!naturalWidth || !naturalHeight || !displayWidth || !displayHeight) return false;
   const ratio = dpr > 0 ? dpr : 1;
-  return naturalWidth * naturalHeight > displayWidth * displayHeight * ratio * ratio * 4;
+  const natural = naturalWidth * naturalHeight;
+  const needed = displayWidth * displayHeight * ratio * ratio;
+  return natural > needed * 4 && natural - needed > OVERSIZED_WASTE_FLOOR;
 }

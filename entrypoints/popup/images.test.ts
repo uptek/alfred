@@ -161,7 +161,16 @@ describe('isOversized', () => {
   test('allows 2x headroom for retina before flagging at dpr 1', () => {
     // 2x per dimension = exactly 4x the pixels: not flagged (threshold is strict)
     expect(isOversized(320, 200, 160, 100, 1)).toBe(false);
-    expect(isOversized(321, 201, 160, 100, 1)).toBe(true);
+  });
+
+  test('small icons never flag even at huge ratios (waste floor)', () => {
+    // 128px emoji rendered at 20px wastes ~16k pixels: trivial, not worth surfacing
+    expect(isOversized(128, 128, 20, 20, 1)).toBe(false);
+    expect(isOversized(256, 256, 32, 32, 1)).toBe(false);
+  });
+
+  test('flags once the waste passes the floor', () => {
+    expect(isOversized(512, 512, 64, 64, 1)).toBe(true);
   });
 
   test('accounts for devicePixelRatio', () => {
