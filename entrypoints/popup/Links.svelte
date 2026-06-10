@@ -318,9 +318,9 @@
         </div>
         <div class="toolbar__actions">
           {#if stats.hidden > 0}
-            <button class="toolbar-btn" class:toolbar-btn--active={!showHidden} onclick={toggleHidden} title={showHidden ? 'Exclude links hidden via CSS' : 'Show hidden links'}>
+            <button class="toolbar-btn" class:toolbar-btn--active={!showHidden} onclick={toggleHidden} title={showHidden ? `Exclude ${stats.hidden} hidden links` : `Show ${stats.hidden} hidden links`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              {stats.hidden} hidden
+              {stats.hidden}
             </button>
           {/if}
           <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} title="Highlight links on page">
@@ -468,11 +468,11 @@
   .dropdown__item-count { font-size: 11.5px; font-weight: 500; color: var(--text-muted); }
 
   /* Toolbar actions */
-  .toolbar__actions { display: flex; align-items: center; gap: 6px; }
+  .toolbar__actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
   /* Export dropdown */
   .export { position: relative; }
-  .export__trigger { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+  .export__trigger { white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
   .export__trigger:hover { border-color: var(--border-hover); color: var(--text-secondary); }
   .export__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; }
   .export__chevron { width: 10px; height: 10px; stroke-width: 2; opacity: 0.6; }
@@ -484,7 +484,7 @@
   .export__divider { height: 1px; margin: 4px 6px; background: var(--border); }
 
   /* Toolbar buttons */
-  .toolbar-btn { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+  .toolbar-btn { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; white-space: nowrap; flex-shrink: 0; }
   .toolbar-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
   .toolbar-btn--active { background: var(--btn-bg); color: var(--btn-text); border-color: var(--btn-bg); }
   .toolbar-btn--active:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); color: var(--btn-text); }
