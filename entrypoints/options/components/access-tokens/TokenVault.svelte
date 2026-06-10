@@ -73,7 +73,7 @@
 <s-section heading="Token vault">
   <s-paragraph>
     Tokens are stored locally in your browser and are never synced or included in any export. Remember
-    to uninstall the app on stores you no longer work with — that revokes its tokens.
+    to uninstall the app on stores you no longer work with: that revokes its tokens.
   </s-paragraph>
 
   {#if loading}
