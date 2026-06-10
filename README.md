@@ -11,6 +11,9 @@ who got tired of clicking through endless menus.
 
 - **Theme Inspector** — detect what theme any Shopify store is running, with
   links to the theme store listing, documentation, and demo
+- **Robots.txt Analyzer** — fetch and analyze any site's robots.txt: AI crawler
+  access matrix (GPTBot, ClaudeBot, PerplexityBot, and more), issue detection
+  with line-linked findings, and Shopify default-vs-customized detection
 - **Smart Shortcuts**
   - Copy Theme Preview URL
   - Open in Admin (products, collections, pages, articles)
@@ -71,6 +74,7 @@ This opens Chrome with Alfred loaded and hot-reloading on file changes.
 | `bun run lint`      | Run linter (oxlint)       |
 | `bun run format`    | Format code (oxfmt)       |
 | `bun run typecheck` | TypeScript validation     |
+| `bun test`          | Run unit tests            |
 
 ### Project Structure
 
