@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Module, nomodule, importmap, JSON-LD, and speculation-rules scripts</title>
+    <script type="importmap">
+      { "imports": {} }
+    </script>
+    <script src="/assets/static/blocking.js"></script>
+    <script type="module" src="/assets/static/module.js"></script>
+    <script src="/assets/static/nomodule.js" nomodule></script>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Assets tab</div>
+      <ul>
+        <li>Scripts ×6, Styles ×1 (this page's inline style block)</li>
+        <li>
+          Type column: blocking.js = Script, module.js = Module, nomodule.js = Script, plus Map (importmap), JSON-LD,
+          and Rules (speculationrules)
+        </li>
+        <li>
+          module.js: Load shows <b>defer</b> (modules defer by default) and it is NOT render-blocking despite living in
+          head
+        </li>
+        <li>nomodule.js: NOT render-blocking, and no size/time (modern browsers never fetch it)</li>
+        <li>The three inline data blocks (Map, JSON-LD, Rules) load "inline" and are never render-blocking</li>
+        <li>Only blocking.js carries the render-blocking pill; Flags filter shows Render-blocking 1</li>
+        <li>Summary bar: 6 scripts · 1 style · total size · 1 render-blocking</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        Only the plain synchronous head script should be flagged render-blocking. Modules, nomodule fallbacks, and data
+        blocks never block first paint.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+    <script type="application/ld+json">
+      { "@context": "https://schema.org", "@type": "WebPage", "name": "Assets fixture" }
+    </script>
+    <script type="speculationrules">
+      { "prerender": [] }
+    </script>
+  </body>
+</html>

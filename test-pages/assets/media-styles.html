@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stylesheet media queries, disabled, and alternate stylesheets</title>
+    <link rel="stylesheet" href="/assets/static/styles.css" />
+    <link rel="stylesheet" href="/assets/static/print.css" media="print" />
+    <link rel="stylesheet" href="/assets/static/matching-mq.css" media="(min-width: 100px)" />
+    <link rel="stylesheet" href="/assets/static/nonmatching-mq.css" media="(max-width: 1px)" />
+    <link rel="stylesheet" href="/assets/static/disabled.css" disabled />
+    <link rel="alternate stylesheet" href="/assets/static/alternate.css" title="High contrast" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Assets tab</div>
+      <ul>
+        <li>Styles ×7 (six links + this page's inline style block), Scripts ×0</li>
+        <li>Render-blocking pills on exactly two: styles.css (no media) and matching-mq.css (query matches)</li>
+        <li>print.css and nonmatching-mq.css: NOT render-blocking, each shows a gray media tag with its query</li>
+        <li>disabled.css and alternate.css: NOT render-blocking and no size/time (never fetched)</li>
+        <li>Flags filter shows Render-blocking 2</li>
+        <li>This sentence below is green only if the matching media query stylesheet applied</li>
+      </ul>
+    </aside>
+    <main>
+      <p class="from-matching-mq">Colored by matching-mq.css — its (min-width: 100px) query matches every screen.</p>
+      <p class="from-external-css">Colored by styles.css, the plain render-blocking stylesheet.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
