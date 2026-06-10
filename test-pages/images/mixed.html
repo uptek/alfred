@@ -59,10 +59,18 @@
       <div class="t">Expected — Images tab</div>
       <ul>
         <li>10 images: 9 from img/picture tags + 1 CSS background (listed last)</li>
-        <li>Badge "2": missing-alt count (no alt attribute ×1, empty alt ×1; backgrounds never count)</li>
+        <li>
+          Badge "1": only the image with NO alt attribute counts; empty alt is decorative, backgrounds never count
+        </li>
+        <li>
+          Row 3 (empty alt) shows italic "Decorative" with status OK; Alt filter: Present 7 / Decorative 1 / Missing 1
+        </li>
+        <li>Missing alt gets an <b>amber</b> "Alt" pill; red is reserved for Broken</li>
         <li>Broken ×1 locally (the 404 src) — the external placehold.co image also shows broken when offline</li>
-        <li>Lazy ×1, responsive ×2 (picture + srcset), hidden ×1, external ×1</li>
-        <li>"Highlight" outlines images on the page: green ok, amber missing alt, red broken</li>
+        <li>Lazy ×1; Loading filter counts exclude the background (its Load cell shows "—")</li>
+        <li>No Flags filter on this page: nothing is oversized, so the facet stays hidden</li>
+        <li>"Highlight" outlines images on the page: green ok (incl. decorative), amber missing alt, red broken</li>
+        <li>Summary bar: 10 images · total size · 1 missing alt · 1 broken</li>
       </ul>
     </aside>
     <main>
@@ -76,7 +84,7 @@
       </figure>
       <figure>
         <img src="/images/static/photo.svg" alt="" width="160" height="100" />
-        <figcaption>3. empty alt — missing alt</figcaption>
+        <figcaption>3. empty alt — decorative, status OK</figcaption>
       </figure>
       <figure>
         <img src="/images/static/does-not-exist.png" alt="Broken source" width="160" height="100" />

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Oversized image detection: natural vs displayed size at the device pixel ratio</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 980px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      main figure {
+        margin: 0 0 14px;
+      }
+      main figcaption {
+        font-size: 12px;
+        color: #777;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Images tab</div>
+      <ul>
+        <li>3 images, all OK status (sizing is a flag, not a status)</li>
+        <li>
+          wide.svg at 160px: <b>Oversized</b> — Dims cell shows 1600×1000 in amber with a tooltip naming natural vs
+          displayed size
+        </li>
+        <li>wide.svg at 800px (exactly 2× per dimension) is NOT flagged: that headroom is reserved for retina</li>
+        <li>photo.svg at its natural 160×100 is NOT flagged</li>
+        <li>Flags filter appears (it is hidden when nothing is flagged) and shows Oversized 1</li>
+        <li>Summary bar: 3 images · total size · 1 oversized</li>
+        <li>CSV/JSON exports carry Display Width/Height and Oversized columns</li>
+      </ul>
+    </aside>
+    <main>
+      <figure>
+        <img src="/images/static/wide.svg" alt="Oversized hero" width="160" height="100" />
+        <figcaption>1. natural 1600×1000 displayed at 160×100 — oversized</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/static/wide.svg" alt="Retina headroom" width="800" height="500" />
+        <figcaption>2. natural 1600×1000 displayed at 800×500 — exactly 2× per dimension, allowed</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/static/photo.svg" alt="Properly sized" width="160" height="100" />
+        <figcaption>3. natural 160×100 displayed at 160×100 — properly sized</figcaption>
+      </figure>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

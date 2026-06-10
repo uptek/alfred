@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Multiple backgrounds, gradient combos, data URIs, and decorative alt=""</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      main figure {
+        margin: 0 0 14px;
+      }
+      main figcaption {
+        font-size: 12px;
+        color: #777;
+      }
+      .multi-bg {
+        width: 160px;
+        height: 100px;
+        border: 1px dashed #bbb;
+        border-radius: 8px;
+        background-image: url('/images/static/pixel.png'), url('/images/static/pixel.gif');
+        background-repeat: repeat;
+      }
+      .gradient-hero {
+        width: 160px;
+        height: 100px;
+        border-radius: 8px;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/images/static/photo.svg');
+        background-size: cover;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Images tab</div>
+      <ul>
+        <li>5 images: 2 img tags + 3 CSS backgrounds (the multi-background div yields TWO bg rows)</li>
+        <li>Badge 0: the decorative alt="" image is deliberate and never counted as missing</li>
+        <li>Row "Decorative" in italic gray, status OK; Alt filter shows Present 1 / Decorative 1 / Missing 0</li>
+        <li>
+          The data-URI image's filename reads <b>data:image/svg+xml</b> (never the payload), its Format is SVG, and its
+          thumbnail is not a link (browsers block opening data: URLs)
+        </li>
+        <li>The gradient+url combo still surfaces its photo.svg background row</li>
+        <li>Format filter: SVG 3, PNG 1, GIF 1</li>
+        <li>Searching "pixel" matches the two background rows; pasting base64 garbage matches nothing</li>
+      </ul>
+    </aside>
+    <main>
+      <figure>
+        <img
+          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100'%3E%3Crect width='160' height='100' fill='%23f59e0b' rx='8'/%3E%3C/svg%3E"
+          alt="Data URI image"
+          width="160"
+          height="100" />
+        <figcaption>1. data: URI src — MIME label, SVG format, unlinked thumb</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/static/photo.svg" alt="" width="160" height="100" />
+        <figcaption>2. alt="" — decorative, not missing</figcaption>
+      </figure>
+      <figure>
+        <div class="multi-bg"></div>
+        <figcaption>3. two background-image urls on one element — two rows</figcaption>
+      </figure>
+      <figure>
+        <div class="gradient-hero"></div>
+        <figcaption>4. linear-gradient + url() — the url still counts</figcaption>
+      </figure>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
