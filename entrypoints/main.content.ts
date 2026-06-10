@@ -2,6 +2,7 @@ import { getItem } from '@/utils/storage';
 import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
+import { headingText } from './popup/headings';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -194,7 +195,7 @@ export default defineContentScript({
       if (request.action === 'get_headings') {
         const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).map((el) => ({
           level: parseInt(el.tagName.charAt(1)),
-          text: (el.textContent ?? '').trim(),
+          text: headingText(el),
           isHidden: !(el as HTMLElement).checkVisibility()
         }));
         sendResponse(headings);

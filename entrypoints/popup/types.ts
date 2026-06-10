@@ -43,7 +43,8 @@ export type HeadingIssueType = 'missing-h1' | 'multiple-h1' | 'skipped-level' | 
 export interface HeadingIssue {
   type: HeadingIssueType;
   details?: string;
-  index?: number;
+  index?: number; // single affected heading (position in the full headings array)
+  indexes?: number[]; // all affected headings (multiple-h1: every H1 gets a row marker)
 }
 
 export type InfoItemType = 'url' | 'text';

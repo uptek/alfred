@@ -36,14 +36,13 @@
 
   const issuesByIndex = $derived(
     issues.reduce<Record<number, HeadingIssue[]>>((acc, issue) => {
-      if (issue.index != null) {
-        (acc[issue.index] ??= []).push(issue);
+      const indexes = issue.indexes ?? (issue.index != null ? [issue.index] : []);
+      for (const index of indexes) {
+        (acc[index] ??= []).push(issue);
       }
       return acc;
     }, {})
   );
-
-  const pageLevelIssues = $derived(issues.filter(i => i.index == null));
 
   function issueLabel(issue: HeadingIssue): string {
     switch (issue.type) {
@@ -122,10 +121,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="issues__icon"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
             <span class="issues__count">{issues.length} {issues.length === 1 ? 'issue' : 'issues'}</span>
           </div>
-          {#each pageLevelIssues as issue}
-            <div class="issues__item">{issueLabel(issue)}</div>
-          {/each}
-          {#each issues.filter(i => i.index != null) as issue}
+          {#each issues as issue}
             <div class="issues__item">{issueLabel(issue)}</div>
           {/each}
         </div>
