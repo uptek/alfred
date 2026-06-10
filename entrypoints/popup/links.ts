@@ -4,7 +4,7 @@ import type { LinkKind } from './types';
 const collapse = (text: string): string => text.replace(/\s+/g, ' ').trim();
 
 /** Lowercases a hostname and strips a leading `www.` so the www variant compares as the same site. */
-const normalizeHost = (host: string): string => host.toLowerCase().replace(/^www\./, '');
+export const normalizeHost = (host: string): string => host.toLowerCase().replace(/^www\./, '');
 
 /**
  * Classifies a link by where it points. Only http(s) links are judged

@@ -24,15 +24,26 @@ export interface RawLink {
 export type AssetKind = 'script' | 'style';
 export type AssetLoad = 'async' | 'defer' | 'blocking' | 'inline';
 export type AssetPlacement = 'head' | 'body' | 'footer';
+// Script subtypes come from assets.ts scriptSubtype(); all styles are 'stylesheet'.
+export type AssetSubtype =
+  | 'classic'
+  | 'module'
+  | 'importmap'
+  | 'speculationrules'
+  | 'json'
+  | 'ld+json'
+  | 'data'
+  | 'stylesheet';
 
 export interface RawAsset {
   index: number; // index among all script/link/style nodes in DOM order (stable key)
   kind: AssetKind;
   src: string | null; // resolved URL for external; null for inline
-  isExternal: boolean; // src/href points to a different host
+  isExternal: boolean; // src/href points to a different host (www variant counts as same site)
   isBrowserExtension: boolean; // injected by a browser extension (chrome-extension:// etc.)
   isInline: boolean; // no src/href
-  type: string; // script: module/classic/json/importmap; style: 'stylesheet' | 'inline'
+  type: string; // raw type attribute ('classic'/'stylesheet'/'inline' fallbacks); searchable
+  subtype: AssetSubtype; // classified type: only classic/module scripts execute or fetch
   load: AssetLoad; // async/defer/blocking for scripts; 'inline' for inline; 'blocking' for stylesheets
   media: string; // stylesheet media attribute (empty otherwise)
   size: number; // transfer/byte size; 0 if unknown (opaque cross-origin)

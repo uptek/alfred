@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { RawAsset } from './types';
+  import { csvField } from './links';
+  import { displaySource as displaySourceUrl, formatSize } from './assets';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
 
@@ -27,10 +29,11 @@
 
   let search = $state('');
   let searchOpen = $state(false);
-  let openMenu = $state<'type' | 'source' | 'load' | 'export' | null>(null);
+  let openMenu = $state<'type' | 'source' | 'load' | 'flag' | 'export' | null>(null);
   let typeFilter = $state('all');
   let sourceFilter = $state('all');
   let loadFilter = $state('all');
+  let flagFilter = $state('all');
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
   let searchInput = $state<HTMLInputElement | null>(null);
@@ -51,8 +54,13 @@
     if (!target.closest('.menu')) openMenu = null;
   }
 
+  // External stylesheets are excluded from load counts: async/defer don't apply
+  // to them and their Load cell shows '—', so they'd look wrong in a load filter.
+  const hasOwnLoad = (a: RawAsset) => a.kind === 'script' || a.isInline;
+
   const stats = $derived.by(() => {
     let scripts = 0, styles = 0, external = 0, inline = 0, browserExtension = 0;
+    let renderBlocking = 0, failed = 0;
     const hrefCounts: Record<string, number> = {};
     const loadCounts: Record<string, number> = { async: 0, defer: 0, blocking: 0, inline: 0 };
     for (const a of assets) {
@@ -60,10 +68,16 @@
       if (a.isExternal) external++;
       if (a.isInline) inline++;
       if (a.isBrowserExtension) browserExtension++;
-      loadCounts[a.load] = (loadCounts[a.load] ?? 0) + 1;
+      if (a.renderBlocking) renderBlocking++;
+      if (a.status >= 400) failed++;
+      if (hasOwnLoad(a)) loadCounts[a.load] = (loadCounts[a.load] ?? 0) + 1;
       if (a.src) hrefCounts[a.src] = (hrefCounts[a.src] ?? 0) + 1;
     }
-    return { total: assets.length, scripts, styles, external, inline, browserExtension, loadCounts, hrefCounts };
+    let duplicates = 0;
+    for (const a of assets) {
+      if (a.src && (hrefCounts[a.src] ?? 0) > 1) duplicates++;
+    }
+    return { total: assets.length, scripts, styles, external, inline, browserExtension, renderBlocking, failed, duplicates, loadCounts, hrefCounts };
   });
 
   function matchesSource(a: RawAsset): boolean {
@@ -75,22 +89,33 @@
     }
   }
 
+  function matchesFlag(a: RawAsset): boolean {
+    switch (flagFilter) {
+      case 'render-blocking': return a.renderBlocking;
+      case 'failed': return a.status >= 400;
+      case 'duplicate': return !!a.src && (stats.hrefCounts[a.src] ?? 0) > 1;
+      default: return true;
+    }
+  }
+
   // Each facet is one single-select dimension; they combine with AND.
   function matchesFilter(a: RawAsset): boolean {
     if (typeFilter !== 'all' && a.kind !== typeFilter) return false;
     if (sourceFilter !== 'all' && !matchesSource(a)) return false;
-    if (loadFilter !== 'all' && a.load !== loadFilter) return false;
+    if (loadFilter !== 'all' && (!hasOwnLoad(a) || a.load !== loadFilter)) return false;
+    if (flagFilter !== 'all' && !matchesFlag(a)) return false;
     return true;
   }
+
+  // Search matches URL, type, and inline source content; lowercased once per
+  // asset list instead of on every keystroke.
+  const haystacks = $derived(new Map(assets.map(a => [a.index, `${a.src ?? ''} ${a.type} ${a.content ?? ''}`.toLowerCase()])));
 
   const filtered = $derived.by(() => {
     const q = search.toLowerCase();
     return assets.filter(a => {
       if (!matchesFilter(a)) return false;
-      if (q) {
-        const hay = `${a.src ?? ''} ${a.type}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
+      if (q && !(haystacks.get(a.index) ?? '').includes(q)) return false;
       return true;
     });
   });
@@ -103,7 +128,7 @@
         case 'src': cmp = (a.src ?? 'inline').localeCompare(b.src ?? 'inline'); break;
         case 'size': cmp = a.size - b.size; break;
         case 'time': cmp = a.duration - b.duration; break;
-        case 'type': cmp = a.kind.localeCompare(b.kind); break;
+        case 'type': cmp = typeLabel(a).localeCompare(typeLabel(b)); break;
         case 'load': cmp = a.load.localeCompare(b.load); break;
         default: cmp = a.index - b.index;
       }
@@ -125,20 +150,24 @@
 
   function displaySource(a: RawAsset): string {
     if (!a.src) return 'inline';
-    try {
-      const url = new URL(a.src);
-      const host = url.hostname.replace(/^www\./, '');
-      const rest = url.pathname + url.search;
-      if (rest === '/' || rest === '') return host;
-      return host + rest;
-    } catch {
-      return a.src;
-    }
+    return displaySourceUrl(a.src, domain);
   }
 
-  function formatSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    return `${(bytes / 1024).toFixed(1)} KB`;
+  // Type column: stylesheets stay 'Style'; scripts surface their subtype so
+  // JSON-LD/data blocks aren't mistaken for executable code.
+  const SUBTYPE_LABEL: Record<string, string> = {
+    classic: 'Script',
+    module: 'Module',
+    importmap: 'Map',
+    speculationrules: 'Rules',
+    json: 'JSON',
+    'ld+json': 'JSON-LD',
+    data: 'Data'
+  };
+
+  function typeLabel(a: RawAsset): string {
+    if (a.kind === 'style') return 'Style';
+    return SUBTYPE_LABEL[a.subtype] ?? 'Script';
   }
 
   // Load = neutral fact about how the asset is declared. 'sync' (was 'blocking')
@@ -186,11 +215,11 @@
   }
 
   function exportCsv() {
-    const header = 'Kind,Source,Type,Load,Placement,Size (bytes),Time (ms),Status,Cached,Render-Blocking,Duplicate,Browser Extension';
+    const header = 'Kind,Source,Type,Subtype,Load,Placement,Media,Size (bytes),Time (ms),Status,Cached,Render-Blocking,Duplicate,Browser Extension';
     const rows = assets.map(a => {
       const dup = a.src ? (stats.hrefCounts[a.src] ?? 1) : 1;
-      return [a.kind, a.src ?? 'inline', a.type, a.load, a.placement, a.size || '', a.duration || '', a.status || '', a.cached, a.renderBlocking, dup, a.isBrowserExtension]
-        .map(v => `"${String(v).replace(/"/g, '""')}"`)
+      return [a.kind, a.src ?? 'inline', a.type, a.subtype, a.load, a.placement, a.media, a.size || '', a.duration || '', a.status || '', a.cached, a.renderBlocking, dup, a.isBrowserExtension]
+        .map(csvField)
         .join(',');
     });
     downloadFile([header, ...rows].join('\n'), `alfred-assets-${siteSlug}.csv`, 'text/csv');
@@ -203,8 +232,10 @@
       kind: a.kind,
       source: a.src ?? 'inline',
       type: a.type,
+      subtype: a.subtype,
       load: a.load,
       placement: a.placement,
+      media: a.media || null,
       size: a.size || null,
       duration: a.duration || null,
       status: a.status || null,
@@ -256,24 +287,45 @@
     { value: 'blocking', label: 'Blocking', count: stats.loadCounts.blocking ?? 0 },
     { value: 'inline', label: 'Inline', count: stats.loadCounts.inline ?? 0 },
   ]);
+  // Only offered when something is flagged, so clean pages keep a short toolbar.
+  const flagOptions = $derived([
+    { value: 'all', label: 'All', count: stats.total },
+    ...(stats.renderBlocking > 0 ? [{ value: 'render-blocking', label: 'Render-blocking', count: stats.renderBlocking }] : []),
+    ...(stats.failed > 0 ? [{ value: 'failed', label: 'Failed', count: stats.failed }] : []),
+    ...(stats.duplicates > 0 ? [{ value: 'duplicate', label: 'Duplicate', count: stats.duplicates }] : []),
+  ]);
 
   const anyFilterActive = $derived(
-    typeFilter !== 'all' || sourceFilter !== 'all' || loadFilter !== 'all' || search.length > 0
+    typeFilter !== 'all' || sourceFilter !== 'all' || loadFilter !== 'all' || flagFilter !== 'all' || search.length > 0
   );
 
   function setType(v: string) { typeFilter = v; openMenu = null; trackAction('assets_filter', { facet: 'type', value: v }); }
   function setSource(v: string) { sourceFilter = v; openMenu = null; trackAction('assets_filter', { facet: 'source', value: v }); }
   function setLoad(v: string) { loadFilter = v; openMenu = null; trackAction('assets_filter', { facet: 'load', value: v }); }
+  function setFlag(v: string) { flagFilter = v; openMenu = null; trackAction('assets_filter', { facet: 'flag', value: v }); }
 
   function resetFilters() {
     typeFilter = 'all';
     sourceFilter = 'all';
     loadFilter = 'all';
+    flagFilter = 'all';
     search = '';
     searchOpen = false;
     openMenu = null;
     trackAction('assets_filter', { reset: true });
   }
+
+  // Summary of the current view: known sizes only — opaque cross-origin
+  // assets report 0 and are left out of the total.
+  const summary = $derived.by(() => {
+    let scripts = 0, styles = 0, bytes = 0, renderBlocking = 0;
+    for (const a of filtered) {
+      if (a.kind === 'script') scripts++; else styles++;
+      bytes += a.size;
+      if (a.renderBlocking) renderBlocking++;
+    }
+    return { scripts, styles, bytes, renderBlocking };
+  });
 </script>
 
 <svelte:window onclick={handleWindowClick} onkeydown={(e) => { if (e.key === 'Escape') closeDropdowns(); }} />
@@ -285,7 +337,7 @@
   </div>
 {:else}
   <div class="assets-tab">
-    {#snippet facet(name: string, key: 'type' | 'source' | 'load', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
+    {#snippet facet(name: string, key: 'type' | 'source' | 'load' | 'flag', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
       <div class="dropdown menu">
         <button class="dropdown__trigger" class:dropdown__trigger--active={selected !== 'all'} onclick={() => { openMenu = openMenu === key ? null : key; }}>
           {selected === 'all' ? name : (options.find(o => o.value === selected)?.label ?? name)}
@@ -312,6 +364,9 @@
           {@render facet('Type', 'type', typeOptions, typeFilter, setType)}
           {@render facet('Source', 'source', sourceOptions, sourceFilter, setSource)}
           {@render facet('Loading', 'load', loadOptions, loadFilter, setLoad)}
+          {#if flagOptions.length > 1}
+            {@render facet('Flags', 'flag', flagOptions, flagFilter, setFlag)}
+          {/if}
 
           {#if anyFilterActive}
             <button class="reset-btn" onclick={resetFilters} title="Reset all filters">
@@ -406,6 +461,9 @@
                   {#if asset.renderBlocking}
                     <span class="pill pill--amber" title="Blocks first render">render-blocking</span>
                   {/if}
+                  {#if asset.kind === 'style' && asset.media}
+                    <span class="media-tag" title="Applies when media query matches: {asset.media}">{asset.media}</span>
+                  {/if}
                   {#if asset.src && (stats.hrefCounts[asset.src] ?? 0) > 1}
                     <span class="dup-badge" title="Loaded {stats.hrefCounts[asset.src]} times">&times;{stats.hrefCounts[asset.src]}</span>
                   {/if}
@@ -430,7 +488,7 @@
                   <span class="muted">&mdash;</span>
                 {/if}
               </td>
-              <td class="td td--kind">{asset.kind === 'script' ? 'Script' : 'Style'}</td>
+              <td class="td td--kind"><span title={asset.type}>{typeLabel(asset)}</span></td>
               <td class="td td--load"><span class="load-tag" class:load-tag--na={asset.kind === 'style' && !asset.isInline} title={loadTitle(asset)}>{loadLabel(asset)}</span></td>
             </tr>
             {#if asset.isInline && asset.content && expanded.has(asset.index)}
@@ -446,6 +504,21 @@
         <div class="no-results">No assets match this filter</div>
       {/if}
     </div>
+    {#if filtered.length > 0}
+      <div class="summary">
+        <span>{summary.scripts} {summary.scripts === 1 ? 'script' : 'scripts'}</span>
+        <span class="summary__sep">&middot;</span>
+        <span>{summary.styles} {summary.styles === 1 ? 'style' : 'styles'}</span>
+        {#if summary.bytes > 0}
+          <span class="summary__sep">&middot;</span>
+          <span title="Sum of known sizes; opaque cross-origin assets are not included">{formatSize(summary.bytes)}</span>
+        {/if}
+        {#if summary.renderBlocking > 0}
+          <span class="summary__sep">&middot;</span>
+          <span class="summary__warn">{summary.renderBlocking} render-blocking</span>
+        {/if}
+      </div>
+    {/if}
   </div>
 {/if}
 
@@ -576,7 +649,15 @@
   .code::-webkit-scrollbar { width: 4px; height: 4px; }
   .code::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 
+  /* Stylesheet media attribute — neutral fact, not a problem flag */
+  .media-tag { flex-shrink: 0; font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 20px; white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; background: var(--bg-raised); color: var(--text-muted); border: 1px solid var(--border); }
+
   .no-results { text-align: center; padding: 24px; font-size: 13px; color: var(--text-muted); }
+
+  /* Summary bar — totals for the current filter view */
+  .summary { display: flex; align-items: center; gap: 6px; padding: 7px 20px; border-top: 1px solid var(--border); flex-shrink: 0; font-size: 11.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .summary__sep { opacity: 0.5; }
+  .summary__warn { color: var(--warning); font-weight: 600; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }

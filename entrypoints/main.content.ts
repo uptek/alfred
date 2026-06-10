@@ -4,6 +4,13 @@ import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
 import { headingText } from './popup/headings';
 import { classifyLink, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/links';
+import {
+  isExternalAssetUrl,
+  isRenderBlockingScript,
+  isRenderBlockingStylesheet,
+  scriptLoad,
+  scriptSubtype
+} from './popup/assets';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -271,17 +278,17 @@ export default defineContentScript({
        * Extracts all scripts and stylesheets from the page in DOM order.
        * Covers <script> (external + inline), <link rel="stylesheet">, and inline <style>.
        * Inline content is capped to bound the messaging payload.
-       * @returns {{ index: number, kind: 'script'|'style', src: string|null, isExternal: boolean, isInline: boolean, type: string, load: string, media: string, size: number, content: string|null }[]}
+       * @returns {import('./popup/types').RawAsset[]}
        */
       if (request.action === 'get_assets') {
         const pageHost = location.hostname;
         const MAX_INLINE = 20000; // cap inline content per asset (~20KB)
 
-        const isExternalUrl = (url: string): boolean => {
+        const mediaMatches = (query: string): boolean => {
           try {
-            return new URL(url, location.href).hostname !== pageHost;
+            return window.matchMedia(query).matches;
           } catch {
-            return true;
+            return true; // on bad input, assume blocking (the pre-matchMedia behavior)
           }
         };
         // Browser-extension injected assets (e.g. content scripts) use these schemes.
@@ -332,17 +339,19 @@ export default defineContentScript({
             const inline = !src;
             const content = inline ? (s.textContent ?? '') : '';
             const t = src ? timingByUrl.get(src) : undefined;
-            const load = inline ? 'inline' : s.async ? 'async' : s.defer ? 'defer' : 'blocking';
+            const subtype = scriptSubtype(s.type);
+            const load = scriptLoad(subtype, s.async, s.defer, inline);
             const placement = placementOf(s);
             return {
               index: i,
               kind: 'script' as const,
               src,
               // Extension-injected assets are tracked separately, not as third-party "External"
-              isExternal: src ? !isBrowserExtensionUrl(src) && isExternalUrl(src) : false,
+              isExternal: src ? !isBrowserExtensionUrl(src) && isExternalAssetUrl(src, pageHost) : false,
               isBrowserExtension: src ? isBrowserExtensionUrl(src) : false,
               isInline: inline,
               type: s.type ? s.type : 'classic',
+              subtype,
               load,
               media: '',
               size: inline ? byteSize(content) : sizeFromTiming(t),
@@ -351,8 +360,13 @@ export default defineContentScript({
               cached: cachedOf(t),
               duration: durationOf(t),
               status: statusOf(t),
-              // Sync external script in <head> blocks the parser before first paint
-              renderBlocking: placement === 'head' && !inline && load === 'blocking'
+              renderBlocking: isRenderBlockingScript({
+                subtype,
+                load,
+                placement,
+                isInline: inline,
+                noModule: s.noModule
+              })
             };
           }
 
@@ -366,11 +380,12 @@ export default defineContentScript({
               index: i,
               kind: 'style' as const,
               src: href,
-              isExternal: href ? !isBrowserExtensionUrl(href) && isExternalUrl(href) : false,
+              isExternal: href ? !isBrowserExtensionUrl(href) && isExternalAssetUrl(href, pageHost) : false,
               isBrowserExtension: href ? isBrowserExtensionUrl(href) : false,
               isInline: false,
               type: 'stylesheet',
-              load: 'blocking',
+              subtype: 'stylesheet' as const,
+              load: 'blocking' as const,
               media,
               size: sizeFromTiming(t),
               content: null,
@@ -378,8 +393,10 @@ export default defineContentScript({
               cached: cachedOf(t),
               duration: durationOf(t),
               status: statusOf(t),
-              // Stylesheets in <head> block render unless they target print only
-              renderBlocking: placement === 'head' && media !== 'print'
+              renderBlocking: isRenderBlockingStylesheet(
+                { placement, media, disabled: l.disabled, alternate: l.relList.contains('alternate') },
+                mediaMatches
+              )
             };
           }
 
@@ -394,7 +411,8 @@ export default defineContentScript({
             isBrowserExtension: false,
             isInline: true,
             type: 'inline',
-            load: 'inline',
+            subtype: 'stylesheet' as const,
+            load: 'inline' as const,
             media: st.media ?? '',
             size: byteSize(content),
             content: content.slice(0, MAX_INLINE),
