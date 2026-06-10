@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { RawImage, ImageStatus } from './types';
   import type { AltState } from './images';
-  import { fileLabel, imageStatus } from './images';
-  import { csvField } from './links';
-  import { formatSize } from './assets';
+  import { altState, fileLabel, imageStatus } from './images';
+  import { csvField, formatSize } from './format';
+  import SummaryBar from './SummaryBar.svelte';
+  import type { SummaryItem } from './SummaryBar.svelte';
   import { highlightImages, scrollToImage } from './utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
@@ -12,7 +13,9 @@
 
   const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
 
-  const altOf = (img: RawImage): AltState => (img.lacksAlt ? 'missing' : img.decorative ? 'decorative' : 'present');
+  // Backgrounds have no alt concept (alt is null); everything else defers to altState
+  // so the classification has a single source of truth.
+  const altOf = (img: RawImage): AltState => (img.source === 'background' ? 'present' : altState(img.alt));
 
   // Status is read several times per row (cell, sort, filter, summary); compute once per list.
   const statusByIndex = $derived(
@@ -159,7 +162,7 @@
     return src.startsWith('data:') ? fileLabel(src) : src;
   }
 
-  const summary = $derived.by(() => {
+  const summaryItems = $derived.by(() => {
     let bytes = 0, missingAlt = 0, broken = 0, oversized = 0;
     for (const img of filtered) {
       bytes += img.size;
@@ -167,7 +170,12 @@
       if (st === 'broken') broken++; else if (st === 'missing-alt') missingAlt++;
       if (img.oversized) oversized++;
     }
-    return { count: filtered.length, bytes, missingAlt, broken, oversized };
+    const items: SummaryItem[] = [{ text: `${filtered.length} ${filtered.length === 1 ? 'image' : 'images'}` }];
+    if (bytes > 0) items.push({ text: formatSize(bytes), title: 'Sum of known sizes; opaque cross-origin images are not included' });
+    if (missingAlt > 0) items.push({ text: `${missingAlt} missing alt`, tone: 'warn' });
+    if (broken > 0) items.push({ text: `${broken} broken`, tone: 'err' });
+    if (oversized > 0) items.push({ text: `${oversized} oversized`, tone: 'warn' });
+    return items;
   });
 
   function toggleHighlight() {
@@ -418,10 +426,11 @@
                     <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab" onclick={() => trackAction('images_open', { source: img.source })}>
                       <img class="thumb" src={img.src} alt="" loading="lazy" />
                     </a>
-                  {:else if img.src}
+                  {:else if img.src.includes(',')}
                     <!-- Browsers block top-frame navigation to data: URLs, so no link -->
                     <img class="thumb" src={img.src} alt="" loading="lazy" />
                   {:else}
+                    <!-- No src, or a data URI capped to its MIME essence (no renderable payload) -->
                     <div class="thumb thumb--empty"></div>
                   {/if}
                   <div class="img-meta">
@@ -484,25 +493,7 @@
     </div>
 
     {#if filtered.length > 0}
-      <div class="summary">
-        <span>{summary.count} {summary.count === 1 ? 'image' : 'images'}</span>
-        {#if summary.bytes > 0}
-          <span class="summary__sep">&middot;</span>
-          <span title="Sum of known sizes; opaque cross-origin images are not included">{formatSize(summary.bytes)}</span>
-        {/if}
-        {#if summary.missingAlt > 0}
-          <span class="summary__sep">&middot;</span>
-          <span class="summary__warn">{summary.missingAlt} missing alt</span>
-        {/if}
-        {#if summary.broken > 0}
-          <span class="summary__sep">&middot;</span>
-          <span class="summary__err">{summary.broken} broken</span>
-        {/if}
-        {#if summary.oversized > 0}
-          <span class="summary__sep">&middot;</span>
-          <span class="summary__warn">{summary.oversized} oversized</span>
-        {/if}
-      </div>
+      <SummaryBar items={summaryItems} />
     {/if}
   </div>
 {/if}
@@ -620,7 +611,7 @@
   .alt-text { display: block; font-size: 12px; color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 210px; }
   .alt-text--muted { color: var(--text-muted); font-style: italic; font-weight: 400; }
   .alt-label { color: var(--text-muted); font-weight: 600; margin-right: 1px; }
-  .alt-missing { color: var(--error); font-weight: 600; }
+  .alt-missing { color: var(--warning); font-weight: 600; }
   .alt-decorative { display: inline-block; vertical-align: 1px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--bg-hover); color: var(--text-muted); }
 
   .url-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
@@ -639,12 +630,6 @@
   .pill--amber { background: var(--warning-bg); color: var(--warning); }
 
   .no-results { text-align: center; padding: 24px; font-size: 13px; color: var(--text-muted); }
-
-  /* Summary bar */
-  .summary { display: flex; align-items: center; gap: 6px; padding: 7px 20px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--text-muted); flex-shrink: 0; }
-  .summary__sep { opacity: 0.5; }
-  .summary__warn { color: var(--warning); font-weight: 600; }
-  .summary__err { color: var(--error); font-weight: 600; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }

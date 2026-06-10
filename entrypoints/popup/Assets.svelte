@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { RawAsset } from './types';
-  import { csvField } from './links';
-  import { displaySource as displaySourceUrl, formatSize } from './assets';
+  import type { AssetFlag } from './assets';
+  import { displaySource as displaySourceUrl, hasOwnLoad, matchesAssetFlag, typeLabel } from './assets';
+  import { csvField, formatSize } from './format';
+  import SummaryBar from './SummaryBar.svelte';
+  import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
 
@@ -54,10 +57,6 @@
     if (!target.closest('.menu')) openMenu = null;
   }
 
-  // External stylesheets are excluded from load counts: async/defer don't apply
-  // to them and their Load cell shows '—', so they'd look wrong in a load filter.
-  const hasOwnLoad = (a: RawAsset) => a.kind === 'script' || a.isInline;
-
   const stats = $derived.by(() => {
     let scripts = 0, styles = 0, external = 0, inline = 0, browserExtension = 0;
     let renderBlocking = 0, failed = 0;
@@ -90,12 +89,8 @@
   }
 
   function matchesFlag(a: RawAsset): boolean {
-    switch (flagFilter) {
-      case 'render-blocking': return a.renderBlocking;
-      case 'failed': return a.status >= 400;
-      case 'duplicate': return !!a.src && (stats.hrefCounts[a.src] ?? 0) > 1;
-      default: return true;
-    }
+    if (flagFilter === 'all') return true;
+    return matchesAssetFlag(a, flagFilter as AssetFlag, stats.hrefCounts);
   }
 
   // Each facet is one single-select dimension; they combine with AND.
@@ -151,23 +146,6 @@
   function displaySource(a: RawAsset): string {
     if (!a.src) return 'inline';
     return displaySourceUrl(a.src, domain);
-  }
-
-  // Type column: stylesheets stay 'Style'; scripts surface their subtype so
-  // JSON-LD/data blocks aren't mistaken for executable code.
-  const SUBTYPE_LABEL: Record<string, string> = {
-    classic: 'Script',
-    module: 'Module',
-    importmap: 'Map',
-    speculationrules: 'Rules',
-    json: 'JSON',
-    'ld+json': 'JSON-LD',
-    data: 'Data'
-  };
-
-  function typeLabel(a: RawAsset): string {
-    if (a.kind === 'style') return 'Style';
-    return SUBTYPE_LABEL[a.subtype] ?? 'Script';
   }
 
   // Load = neutral fact about how the asset is declared. 'sync' (was 'blocking')
@@ -317,14 +295,20 @@
 
   // Summary of the current view: known sizes only — opaque cross-origin
   // assets report 0 and are left out of the total.
-  const summary = $derived.by(() => {
+  const summaryItems = $derived.by(() => {
     let scripts = 0, styles = 0, bytes = 0, renderBlocking = 0;
     for (const a of filtered) {
       if (a.kind === 'script') scripts++; else styles++;
       bytes += a.size;
       if (a.renderBlocking) renderBlocking++;
     }
-    return { scripts, styles, bytes, renderBlocking };
+    const items: SummaryItem[] = [
+      { text: `${scripts} ${scripts === 1 ? 'script' : 'scripts'}` },
+      { text: `${styles} ${styles === 1 ? 'style' : 'styles'}` }
+    ];
+    if (bytes > 0) items.push({ text: formatSize(bytes), title: 'Sum of known sizes; opaque cross-origin assets are not included' });
+    if (renderBlocking > 0) items.push({ text: `${renderBlocking} render-blocking`, tone: 'warn' });
+    return items;
   });
 </script>
 
@@ -505,19 +489,7 @@
       {/if}
     </div>
     {#if filtered.length > 0}
-      <div class="summary">
-        <span>{summary.scripts} {summary.scripts === 1 ? 'script' : 'scripts'}</span>
-        <span class="summary__sep">&middot;</span>
-        <span>{summary.styles} {summary.styles === 1 ? 'style' : 'styles'}</span>
-        {#if summary.bytes > 0}
-          <span class="summary__sep">&middot;</span>
-          <span title="Sum of known sizes; opaque cross-origin assets are not included">{formatSize(summary.bytes)}</span>
-        {/if}
-        {#if summary.renderBlocking > 0}
-          <span class="summary__sep">&middot;</span>
-          <span class="summary__warn">{summary.renderBlocking} render-blocking</span>
-        {/if}
-      </div>
+      <SummaryBar items={summaryItems} />
     {/if}
   </div>
 {/if}
@@ -653,11 +625,6 @@
   .media-tag { flex-shrink: 0; font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 20px; white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; background: var(--bg-raised); color: var(--text-muted); border: 1px solid var(--border); }
 
   .no-results { text-align: center; padding: 24px; font-size: 13px; color: var(--text-muted); }
-
-  /* Summary bar — totals for the current filter view */
-  .summary { display: flex; align-items: center; gap: 6px; padding: 7px 20px; border-top: 1px solid var(--border); flex-shrink: 0; font-size: 11.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-  .summary__sep { opacity: 0.5; }
-  .summary__warn { color: var(--warning); font-weight: 600; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }

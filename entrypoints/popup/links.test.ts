@@ -1,5 +1,40 @@
 import { describe, expect, it } from 'bun:test';
-import { classifyLink, csvField, isInsecureHttp, linkText, relFlags, samePageFragment } from './links';
+import { csvField } from './format';
+import { classifyLink, followRank, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './links';
+
+describe('isDofollow', () => {
+  const link = (over: Partial<{ isNofollow: boolean; isSponsored: boolean; isUgc: boolean }>) => ({
+    isNofollow: false,
+    isSponsored: false,
+    isUgc: false,
+    ...over
+  });
+
+  it('passes follow equity only without any nofollow-class hint', () => {
+    expect(isDofollow(link({}))).toBe(true);
+  });
+
+  it('nofollow, sponsored, and ugc each break dofollow', () => {
+    expect(isDofollow(link({ isNofollow: true }))).toBe(false);
+    expect(isDofollow(link({ isSponsored: true }))).toBe(false);
+    expect(isDofollow(link({ isUgc: true }))).toBe(false);
+  });
+
+  it('combined hints stay nofollow', () => {
+    expect(isDofollow(link({ isNofollow: true, isSponsored: true }))).toBe(false);
+  });
+
+  it('ranks dofollow, ugc, sponsored, nofollow in that order', () => {
+    expect(followRank(link({}))).toBe(0);
+    expect(followRank(link({ isUgc: true }))).toBe(1);
+    expect(followRank(link({ isSponsored: true }))).toBe(2);
+    expect(followRank(link({ isNofollow: true }))).toBe(3);
+  });
+
+  it('nofollow dominates the rank when hints combine', () => {
+    expect(followRank(link({ isNofollow: true, isUgc: true }))).toBe(3);
+  });
+});
 
 describe('classifyLink', () => {
   it('classifies a same-host link as internal', () => {
@@ -216,6 +251,11 @@ describe('csvField', () => {
     expect(csvField('+1234')).toBe('"\'+1234"');
     expect(csvField('-cmd')).toBe('"\'-cmd"');
     expect(csvField('@import')).toBe('"\'@import"');
+  });
+
+  it('neutralizes leading tab and CR (spreadsheets strip them before formula detection)', () => {
+    expect(csvField('\t=SUM(A1)')).toBe('"\'\t=SUM(A1)"');
+    expect(csvField('\r-cmd')).toBe('"\'\r-cmd"');
   });
 
   it('leaves values that merely contain formula characters alone', () => {

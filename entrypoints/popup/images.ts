@@ -1,4 +1,4 @@
-import type { ImageSource, ImageStatus } from './types';
+import type { ImageSource, ImageStatus, RawImage } from './types';
 
 /** What the alt attribute says about an image; only 'missing' is an accessibility/SEO failure. */
 export type AltState = 'present' | 'decorative' | 'missing';
@@ -24,6 +24,34 @@ export function imageStatus(img: { broken: boolean; alt: AltState; source: Image
   if (img.broken) return 'broken';
   if (img.alt === 'missing' && img.source !== 'background') return 'missing-alt';
   return 'ok';
+}
+
+/**
+ * Counts images whose alt attribute is absent (the popup badge source).
+ * Decorative alt="" images are deliberate and never counted; backgrounds
+ * have no alt concept and always carry lacksAlt: false.
+ * @param {RawImage[]} images
+ * @returns {number} Number of images with `lacksAlt`.
+ */
+export function analyzeImages(images: RawImage[]): number {
+  return images.reduce((n, img) => n + (img.lacksAlt ? 1 : 0), 0);
+}
+
+/** Largest data: URI shipped whole; anything bigger collapses to its MIME essence. */
+export const DATA_URI_MAX_LENGTH = 65536;
+
+/**
+ * Caps oversized data: URIs to their MIME essence ('data:image/png') so a
+ * page with multi-MB inline images never pushes the payload through
+ * extension messaging or into exports. Regular URLs pass through untouched;
+ * capped URIs keep working with imageFormat() and fileLabel().
+ * @param {string} src - Resolved image URL ('' when none).
+ * @returns {string} The original src, or its MIME essence when oversized.
+ */
+export function capDataUri(src: string): string {
+  if (!src.startsWith('data:') || src.length <= DATA_URI_MAX_LENGTH) return src;
+  const end = src.search(/[;,]/);
+  return end === -1 ? src.slice(0, DATA_URI_MAX_LENGTH) : src.slice(0, end);
 }
 
 const IMAGE_FORMATS = new Set(['png', 'jpg', 'webp', 'avif', 'gif', 'svg']);

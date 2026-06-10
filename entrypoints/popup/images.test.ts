@@ -1,5 +1,35 @@
 import { describe, expect, test } from 'bun:test';
-import { altState, fileLabel, imageFormat, imageStatus, isOversized, parseBackgroundUrls } from './images';
+import type { RawImage } from './types';
+import {
+  altState,
+  analyzeImages,
+  capDataUri,
+  fileLabel,
+  imageFormat,
+  imageStatus,
+  isOversized,
+  parseBackgroundUrls
+} from './images';
+
+describe('capDataUri', () => {
+  test('small data URIs pass through untouched', () => {
+    expect(capDataUri('data:image/gif;base64,R0lGOD')).toBe('data:image/gif;base64,R0lGOD');
+  });
+
+  test('oversized data URIs collapse to their MIME essence', () => {
+    expect(capDataUri(`data:image/png;base64,${'A'.repeat(100_000)}`)).toBe('data:image/png');
+  });
+
+  test('long regular URLs are never touched', () => {
+    const url = `https://example.com/${'a'.repeat(100_000)}.png`;
+    expect(capDataUri(url)).toBe(url);
+  });
+
+  test('malformed oversized data URIs are hard-truncated', () => {
+    const capped = capDataUri(`data:${'A'.repeat(100_000)}`);
+    expect(capped.length).toBeLessThanOrEqual(65536);
+  });
+});
 
 describe('altState', () => {
   test('absent attribute is missing', () => {
@@ -146,6 +176,26 @@ describe('parseBackgroundUrls', () => {
 
   test('empty url() entries are dropped', () => {
     expect(parseBackgroundUrls('url("")')).toEqual([]);
+  });
+});
+
+describe('analyzeImages', () => {
+  const img = (over: Partial<RawImage>): RawImage => ({ lacksAlt: false, decorative: false, ...over }) as RawImage;
+
+  test('counts only images whose alt attribute is absent', () => {
+    expect(analyzeImages([img({ lacksAlt: true }), img({ lacksAlt: true }), img({})])).toBe(2);
+  });
+
+  test('decorative alt="" images are never counted', () => {
+    expect(analyzeImages([img({ decorative: true })])).toBe(0);
+  });
+
+  test('background images (lacksAlt always false) are never counted', () => {
+    expect(analyzeImages([img({ source: 'background' })])).toBe(0);
+  });
+
+  test('empty list yields zero', () => {
+    expect(analyzeImages([])).toBe(0);
   });
 });
 

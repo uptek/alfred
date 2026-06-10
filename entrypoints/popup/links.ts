@@ -1,4 +1,6 @@
 import type { LinkKind } from './types';
+import type { TextSourceElement } from './dom-text';
+import { accessibleText } from './dom-text';
 
 /** Collapses runs of whitespace (newlines/tabs from multi-line markup) into single spaces. */
 const collapse = (text: string): string => text.replace(/\s+/g, ' ').trim();
@@ -55,23 +57,8 @@ export function relFlags(rel: string): { nofollow: boolean; sponsored: boolean; 
  * @param el - The anchor element (or a minimal stand-in).
  * @returns {string} The anchor text; '' when the link has no accessible name.
  */
-export function linkText(el: {
-  textContent: string | null;
-  getAttribute(name: string): string | null;
-  querySelectorAll(selectors: string): Iterable<{ getAttribute(name: string): string | null }>;
-}): string {
-  const text = collapse(el.textContent ?? '');
-  if (text) return text;
-
-  const ariaLabel = collapse(el.getAttribute('aria-label') ?? '');
-  if (ariaLabel) return ariaLabel;
-
-  for (const img of el.querySelectorAll('img[alt]')) {
-    const alt = collapse(img.getAttribute('alt') ?? '');
-    if (alt) return alt;
-  }
-
-  return '';
+export function linkText(el: TextSourceElement): string {
+  return accessibleText(el, collapse);
 }
 
 /**
@@ -121,15 +108,17 @@ export function isInsecureHttp(href: string): boolean {
   }
 }
 
+/** Follow-hint flags as carried on RawLink. */
+type FollowFlags = { isNofollow: boolean; isSponsored: boolean; isUgc: boolean };
+
 /**
- * Encodes one CSV field: quotes it, doubles embedded quotes, and prefixes
- * formula-leading characters (= + - @, tab, CR) with an apostrophe so anchor
- * text scraped from arbitrary pages can't execute as a spreadsheet formula.
- * @param {unknown} value - Field value; stringified before encoding.
- * @returns {string} The encoded field including surrounding quotes.
+ * A link passes follow equity only when it carries none of the nofollow-class
+ * hints; Google treats sponsored and ugc as nofollow variants. Shared by the
+ * popup's Dofollow column and the on-page link highlighter so the two can't
+ * drift apart.
  */
-export function csvField(value: unknown): string {
-  let text = String(value);
-  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
-  return `"${text.replace(/"/g, '""')}"`;
-}
+export const isDofollow = (link: FollowFlags): boolean => !link.isNofollow && !link.isSponsored && !link.isUgc;
+
+/** Sort rank for the Dofollow column: dofollow, then ugc, sponsored, nofollow. */
+export const followRank = (link: FollowFlags): number =>
+  link.isNofollow ? 3 : link.isSponsored ? 2 : link.isUgc ? 1 : 0;

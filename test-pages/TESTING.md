@@ -138,6 +138,11 @@ numbered links on that page.
       and other, **red on rows 5, 6, and 7** (sponsored/ugc now count, not
       just nofollow)
 
+### Summary bar
+
+- [ ] Bottom of the table reads "18 links · 5 external · 3 nofollow ·
+      1 insecure http · 1 broken #" and updates when a filter is active
+
 ### Scroll to link
 
 - [ ] Clicking a row scrolls the page to the link with a green flash

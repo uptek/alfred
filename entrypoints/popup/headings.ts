@@ -1,4 +1,6 @@
 import type { RawHeading, HeadingIssue } from './types';
+import type { TextSourceElement } from './dom-text';
+import { accessibleText } from './dom-text';
 
 /**
  * Analyzes heading structure and returns SEO/accessibility issues.
@@ -64,21 +66,6 @@ export function analyzeHeadings(headings: RawHeading[]): HeadingIssue[] {
  * @param el - The heading element (or a minimal stand-in).
  * @returns {string} The heading text; '' when it has no accessible name.
  */
-export function headingText(el: {
-  textContent: string | null;
-  getAttribute(name: string): string | null;
-  querySelectorAll(selectors: string): Iterable<{ getAttribute(name: string): string | null }>;
-}): string {
-  const text = (el.textContent ?? '').trim();
-  if (text) return text;
-
-  const ariaLabel = el.getAttribute('aria-label')?.trim();
-  if (ariaLabel) return ariaLabel;
-
-  for (const img of el.querySelectorAll('img[alt]')) {
-    const alt = img.getAttribute('alt')?.trim();
-    if (alt) return alt;
-  }
-
-  return '';
+export function headingText(el: TextSourceElement): string {
+  return accessibleText(el, (text) => text.trim());
 }

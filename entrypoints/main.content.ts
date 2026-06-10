@@ -3,7 +3,7 @@ import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
 import { headingText } from './popup/headings';
-import { classifyLink, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/links';
+import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/links';
 import {
   isExternalAssetUrl,
   isRenderBlockingScript,
@@ -11,7 +11,7 @@ import {
   scriptLoad,
   scriptSubtype
 } from './popup/assets';
-import { altState, imageFormat, isOversized, parseBackgroundUrls } from './popup/images';
+import { altState, capDataUri, imageFormat, isOversized, parseBackgroundUrls } from './popup/images';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -37,7 +37,37 @@ function collectImageEls(): CollectedImage[] {
   return out;
 }
 
+/** Size of a Resource Timing entry; 0 when opaque cross-origin. */
+const resourceSize = (e: PerformanceResourceTiming): number => e.encodedBodySize || e.decodedBodySize || 0;
+
+/** Served from cache: nothing transferred but a decoded body exists. */
+const resourceCached = (t?: PerformanceResourceTiming): boolean => !!t && t.transferSize === 0 && t.decodedBodySize > 0;
+
+/**
+ * Indexes already-recorded Resource Timing entries by URL — no new network
+ * requests. Cross-origin assets without a Timing-Allow-Origin header report
+ * 0 (opaque). When a URL has several entries, the largest-size one wins.
+ * Shared by the get_assets and get_images handlers.
+ */
+function buildResourceTimingIndex(): Map<string, PerformanceResourceTiming> {
+  const index = new Map<string, PerformanceResourceTiming>();
+  try {
+    for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
+      const prev = index.get(entry.name);
+      if (!prev || resourceSize(entry) > resourceSize(prev)) index.set(entry.name, entry);
+    }
+  } catch {
+    // Resource Timing unavailable; timing-derived fields stay at defaults
+  }
+  return index;
+}
+
 const flashTimers = new WeakMap<HTMLElement, number[]>();
+
+/** How long a scroll-to flash highlight stays fully visible before fading. */
+const FLASH_HOLD_MS = 5000;
+/** Fade-out duration; the cleanup timer must wait for hold + fade. */
+const FLASH_FADE_MS = 800;
 
 /**
  * Scrolls an element into view and applies a brief green dashed outline.
@@ -49,16 +79,16 @@ function flashOutline(target: HTMLElement): void {
   target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   target.style.outline = '2px dashed #95bf47';
   target.style.outlineOffset = '3px';
-  target.style.transition = 'outline-color 0.8s';
+  target.style.transition = `outline-color ${FLASH_FADE_MS}ms`;
   const fade = window.setTimeout(() => {
     target.style.outlineColor = 'transparent';
-  }, 5000);
+  }, FLASH_HOLD_MS);
   const clear = window.setTimeout(() => {
     target.style.outline = '';
     target.style.outlineOffset = '';
     target.style.transition = '';
     flashTimers.delete(target);
-  }, 5800);
+  }, FLASH_HOLD_MS + FLASH_FADE_MS);
   flashTimers.set(target, [fade, clear]);
 }
 
@@ -243,9 +273,18 @@ export default defineContentScript({
        */
       if (request.action === 'get_links') {
         const pageHost = location.hostname;
-        const links = Array.from(document.querySelectorAll('a[href]')).map((el, i) => {
-          const anchor = el as HTMLAnchorElement;
-          anchor.setAttribute('data-alfred-link-index', String(i));
+        const anchors = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'));
+        // Stamp in a separate write-only pass: interleaving setAttribute with the
+        // checkVisibility/querySelector reads below risks a style recalc per anchor.
+        anchors.forEach((anchor, i) => anchor.setAttribute('data-alfred-link-index', String(i)));
+        // Built lazily on the first getElementById miss; getElementsByName walks the
+        // whole document per call, which is O(links x DOM) on hash-router pages.
+        let anchorNames: Set<string | null> | null = null;
+        const hasNamedAnchor = (fragment: string): boolean => {
+          anchorNames ??= new Set(Array.from(document.querySelectorAll('[name]'), (el) => el.getAttribute('name')));
+          return anchorNames.has(fragment);
+        };
+        const links = anchors.map((anchor, i) => {
           const rel = anchor.getAttribute('rel') ?? '';
           const { nofollow, sponsored, ugc } = relFlags(rel);
           const fragment = samePageFragment(anchor.href, location.href);
@@ -254,7 +293,7 @@ export default defineContentScript({
             fragment !== '' &&
             fragment !== 'top' && // #top scrolls to the document top even without a target
             !document.getElementById(fragment) &&
-            document.getElementsByName(fragment).length === 0;
+            !hasNamedAnchor(fragment);
           return {
             index: i,
             href: anchor.href,
@@ -302,26 +341,11 @@ export default defineContentScript({
           }
         };
 
-        // Pull already-recorded timing from the Resource Timing API — no new network
-        // request. Cross-origin assets without a Timing-Allow-Origin header report 0
-        // (opaque), so third-party trackers often have no size/status/duration.
-        const sizeOf = (e: PerformanceResourceTiming) => e.encodedBodySize || e.decodedBodySize || 0;
-        const timingByUrl = new Map<string, PerformanceResourceTiming>();
-        try {
-          for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
-            const prev = timingByUrl.get(entry.name);
-            if (!prev || sizeOf(entry) > sizeOf(prev)) timingByUrl.set(entry.name, entry);
-          }
-        } catch {
-          // Resource Timing unavailable; timing-derived fields stay at defaults
-        }
-
-        const cachedOf = (t?: PerformanceResourceTiming): boolean =>
-          !!t && t.transferSize === 0 && t.decodedBodySize > 0;
+        const timingByUrl = buildResourceTimingIndex();
         const durationOf = (t?: PerformanceResourceTiming): number => (t ? Math.round(t.duration) : 0);
         const statusOf = (t?: PerformanceResourceTiming): number =>
           t ? ((t as PerformanceResourceTiming & { responseStatus?: number }).responseStatus ?? 0) : 0;
-        const sizeFromTiming = (t?: PerformanceResourceTiming): number => (t ? sizeOf(t) : 0);
+        const sizeFromTiming = (t?: PerformanceResourceTiming): number => (t ? resourceSize(t) : 0);
 
         const placementOf = (el: Element): 'head' | 'body' | 'footer' => {
           if (document.head?.contains(el)) return 'head';
@@ -357,7 +381,7 @@ export default defineContentScript({
               size: inline ? byteSize(content) : sizeFromTiming(t),
               content: inline ? content.slice(0, MAX_INLINE) : null,
               placement,
-              cached: cachedOf(t),
+              cached: resourceCached(t),
               duration: durationOf(t),
               status: statusOf(t),
               renderBlocking: isRenderBlockingScript({
@@ -390,7 +414,7 @@ export default defineContentScript({
               size: sizeFromTiming(t),
               content: null,
               placement,
-              cached: cachedOf(t),
+              cached: resourceCached(t),
               duration: durationOf(t),
               status: statusOf(t),
               renderBlocking: isRenderBlockingStylesheet(
@@ -434,18 +458,7 @@ export default defineContentScript({
        */
       if (request.action === 'get_images') {
         const pageHost = location.hostname;
-        const sizeOf = (e: PerformanceResourceTiming) => e.encodedBodySize || e.decodedBodySize || 0;
-        const timingByUrl = new Map<string, PerformanceResourceTiming>();
-        try {
-          for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
-            const prev = timingByUrl.get(entry.name);
-            if (!prev || sizeOf(entry) > sizeOf(prev)) timingByUrl.set(entry.name, entry);
-          }
-        } catch {
-          // Resource Timing unavailable; size/cached stay at defaults
-        }
-        const cachedOf = (t?: PerformanceResourceTiming): boolean =>
-          !!t && t.transferSize === 0 && t.decodedBodySize > 0;
+        const timingByUrl = buildResourceTimingIndex();
 
         const resolveUrl = (url: string): string => {
           try {
@@ -457,7 +470,7 @@ export default defineContentScript({
 
         const images = collectImageEls().map(({ el, source, bg }, i) => {
           if (source === 'background') {
-            const src = bg ? resolveUrl(bg) : '';
+            const src = bg ? capDataUri(resolveUrl(bg)) : '';
             const t = src ? timingByUrl.get(src) : undefined;
             const rect = el.getBoundingClientRect();
             return {
@@ -474,8 +487,8 @@ export default defineContentScript({
               displayHeight: Math.round(rect.height),
               format: imageFormat(src),
               loading: 'none',
-              size: t ? sizeOf(t) : 0,
-              cached: cachedOf(t),
+              size: t ? resourceSize(t) : 0,
+              cached: resourceCached(t),
               isExternal: src ? isExternalAssetUrl(src, pageHost) : false,
               isHidden: !(el as HTMLElement).checkVisibility(),
               broken: false,
@@ -483,7 +496,7 @@ export default defineContentScript({
             };
           }
           const img = el as HTMLImageElement;
-          const src = img.currentSrc || img.src || '';
+          const src = capDataUri(img.currentSrc || img.src || '');
           const t = src ? timingByUrl.get(src) : undefined;
           const alt = altState(img.getAttribute('alt'));
           const loadingAttr = img.getAttribute('loading');
@@ -504,8 +517,8 @@ export default defineContentScript({
             displayHeight,
             format: imageFormat(src),
             loading: loadingAttr === 'lazy' ? 'lazy' : loadingAttr === 'eager' ? 'eager' : 'none',
-            size: t ? sizeOf(t) : 0,
-            cached: cachedOf(t),
+            size: t ? resourceSize(t) : 0,
+            cached: resourceCached(t),
             isExternal: src ? isExternalAssetUrl(src, pageHost) : false,
             isHidden: !img.checkVisibility(),
             broken: img.complete && img.naturalWidth === 0 && src !== '',
@@ -552,10 +565,11 @@ export default defineContentScript({
         document.querySelectorAll('a[href]').forEach((el) => {
           const anchor = el as HTMLAnchorElement;
           const { nofollow, sponsored, ugc } = relFlags(anchor.getAttribute('rel') ?? '');
+          const dofollow = isDofollow({ isNofollow: nofollow, isSponsored: sponsored, isUgc: ugc });
           const kind = classifyLink(anchor.href, pageHost);
           anchor.setAttribute(
             'data-alfred-link-highlight',
-            nofollow || sponsored || ugc ? 'nofollow' : kind === 'internal' ? 'internal' : 'external'
+            !dofollow ? 'nofollow' : kind === 'internal' ? 'internal' : 'external'
           );
         });
         sendResponse(true);
@@ -636,7 +650,7 @@ export default defineContentScript({
               // Skip removal if the global Highlight toggle was switched on meanwhile.
               const globalOn = !!document.getElementById(IMAGE_HIGHLIGHT_STYLE_ID)?.dataset.global;
               if (!globalOn) el.removeAttribute('data-alfred-image-highlight');
-            }, 5000);
+            }, FLASH_HOLD_MS);
           }
         }
         sendResponse(true);

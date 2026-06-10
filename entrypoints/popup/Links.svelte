@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { LinkKind, RawLink } from './types';
-  import { csvField } from './links';
+  import { followRank, isDofollow } from './links';
+  import { csvField } from './format';
+  import SummaryBar from './SummaryBar.svelte';
+  import type { SummaryItem } from './SummaryBar.svelte';
   import { highlightLinks, scrollToLink } from './utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
@@ -50,9 +53,6 @@
     if (!target.closest('.menu')) openMenu = null;
   }
 
-  // dofollow = passes link equity = none of the nofollow-class hints
-  const isDofollow = (l: RawLink) => !l.isNofollow && !l.isSponsored && !l.isUgc;
-
   const stats = $derived.by(() => {
     let internal = 0, external = 0, other = 0, dofollow = 0, nofollow = 0, sponsored = 0, ugc = 0,
       image = 0, text = 0, none = 0, hidden = 0;
@@ -71,6 +71,9 @@
     return { total: links.length, internal, external, other, dofollow, nofollow, sponsored, ugc, image, text, none, hidden, hrefCounts: counts };
   });
 
+  // Lowercased searchable text per link, built once per list (not per keystroke).
+  const haystacks = $derived(new Map(links.map((l) => [l.index, `${l.href} ${l.text}`.toLowerCase()])));
+
   const filtered = $derived.by(() => {
     const q = search.toLowerCase();
     return links.filter(link => {
@@ -85,13 +88,31 @@
       if (anchorFilter === 'image' && !link.isImage) return false;
       if (anchorFilter === 'none' && link.text !== '') return false;
       if (!showHidden && link.isHidden) return false;
-      if (q && !link.href.toLowerCase().includes(q) && !link.text.toLowerCase().includes(q)) return false;
+      if (q && !(haystacks.get(link.index) ?? '').includes(q)) return false;
       return true;
     });
   });
 
   const KIND_RANK: Record<LinkKind, number> = { internal: 0, external: 1, mailto: 2, tel: 3, other: 4 };
-  const followRank = (l: RawLink) => (l.isNofollow ? 3 : l.isSponsored ? 2 : l.isUgc ? 1 : 0);
+
+  // Summary of the current view, mirroring the Assets and Images tabs.
+  const summaryItems = $derived.by(() => {
+    let external = 0, nofollowish = 0, insecure = 0, broken = 0;
+    for (const l of filtered) {
+      if (l.kind === 'external') external++;
+      if (!isDofollow(l)) nofollowish++;
+      if (l.isInsecure) insecure++;
+      if (l.isBrokenAnchor) broken++;
+    }
+    const items: SummaryItem[] = [
+      { text: `${filtered.length} ${filtered.length === 1 ? 'link' : 'links'}` },
+      { text: `${external} external` }
+    ];
+    if (nofollowish > 0) items.push({ text: `${nofollowish} nofollow`, title: 'Links carrying nofollow, sponsored, or ugc hints' });
+    if (insecure > 0) items.push({ text: `${insecure} insecure http`, tone: 'warn' });
+    if (broken > 0) items.push({ text: `${broken} broken #`, tone: 'err' });
+    return items;
+  });
 
   const sorted = $derived.by(() => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -438,6 +459,9 @@
       {/if}
     </div>
 
+    {#if filtered.length > 0}
+      <SummaryBar items={summaryItems} />
+    {/if}
   </div>
 {/if}
 

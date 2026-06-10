@@ -122,6 +122,6 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`Alfred test pages → http://localhost:${PORT}`);
 });

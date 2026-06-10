@@ -1,13 +1,71 @@
 import { describe, expect, test } from 'bun:test';
 import {
   displaySource,
-  formatSize,
+  hasOwnLoad,
   isExternalAssetUrl,
   isRenderBlockingScript,
   isRenderBlockingStylesheet,
+  matchesAssetFlag,
   scriptLoad,
-  scriptSubtype
+  scriptSubtype,
+  typeLabel
 } from './assets';
+import { formatSize } from './format';
+
+describe('hasOwnLoad', () => {
+  test('scripts and inline styles have a load strategy', () => {
+    expect(hasOwnLoad({ kind: 'script', isInline: false })).toBe(true);
+    expect(hasOwnLoad({ kind: 'script', isInline: true })).toBe(true);
+    expect(hasOwnLoad({ kind: 'style', isInline: true })).toBe(true);
+  });
+
+  test('external stylesheets do not (async/defer never apply to them)', () => {
+    expect(hasOwnLoad({ kind: 'style', isInline: false })).toBe(false);
+  });
+});
+
+describe('typeLabel', () => {
+  test('stylesheets are always Style', () => {
+    expect(typeLabel({ kind: 'style', subtype: 'stylesheet' })).toBe('Style');
+  });
+
+  test('script subtypes get their own labels', () => {
+    expect(typeLabel({ kind: 'script', subtype: 'classic' })).toBe('Script');
+    expect(typeLabel({ kind: 'script', subtype: 'module' })).toBe('Module');
+    expect(typeLabel({ kind: 'script', subtype: 'importmap' })).toBe('Map');
+    expect(typeLabel({ kind: 'script', subtype: 'speculationrules' })).toBe('Rules');
+    expect(typeLabel({ kind: 'script', subtype: 'json' })).toBe('JSON');
+    expect(typeLabel({ kind: 'script', subtype: 'ld+json' })).toBe('JSON-LD');
+    expect(typeLabel({ kind: 'script', subtype: 'data' })).toBe('Data');
+  });
+});
+
+describe('matchesAssetFlag', () => {
+  const asset = (over: Partial<{ renderBlocking: boolean; status: number; src: string | null }>) => ({
+    renderBlocking: false,
+    status: 0,
+    src: null,
+    ...over
+  });
+
+  test('render-blocking flag', () => {
+    expect(matchesAssetFlag(asset({ renderBlocking: true }), 'render-blocking', {})).toBe(true);
+    expect(matchesAssetFlag(asset({}), 'render-blocking', {})).toBe(false);
+  });
+
+  test('failed starts exactly at HTTP 400', () => {
+    expect(matchesAssetFlag(asset({ status: 400 }), 'failed', {})).toBe(true);
+    expect(matchesAssetFlag(asset({ status: 399 }), 'failed', {})).toBe(false);
+    expect(matchesAssetFlag(asset({ status: 0 }), 'failed', {})).toBe(false);
+  });
+
+  test('duplicate needs a src that appears more than once', () => {
+    const counts = { 'https://a.com/x.js': 2, 'https://a.com/y.js': 1 };
+    expect(matchesAssetFlag(asset({ src: 'https://a.com/x.js' }), 'duplicate', counts)).toBe(true);
+    expect(matchesAssetFlag(asset({ src: 'https://a.com/y.js' }), 'duplicate', counts)).toBe(false);
+    expect(matchesAssetFlag(asset({ src: null }), 'duplicate', counts)).toBe(false);
+  });
+});
 
 describe('scriptSubtype', () => {
   test('empty type is a classic script', () => {
@@ -64,6 +122,14 @@ describe('scriptLoad', () => {
     expect(scriptLoad('classic', true, true, false)).toBe('async');
     expect(scriptLoad('classic', false, true, false)).toBe('defer');
     expect(scriptLoad('classic', false, false, false)).toBe('blocking');
+  });
+
+  test('inert data blocks never load, even with a src (browsers ignore it)', () => {
+    expect(scriptLoad('json', false, false, false)).toBe('inline');
+    expect(scriptLoad('ld+json', false, false, false)).toBe('inline');
+    expect(scriptLoad('data', true, true, false)).toBe('inline');
+    expect(scriptLoad('importmap', false, false, false)).toBe('inline');
+    expect(scriptLoad('speculationrules', false, false, false)).toBe('inline');
   });
 });
 

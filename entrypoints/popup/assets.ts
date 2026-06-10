@@ -1,4 +1,4 @@
-import type { AssetLoad, AssetPlacement } from './types';
+import type { AssetKind, AssetLoad, AssetPlacement, AssetSubtype } from './types';
 import { normalizeHost } from './links';
 
 /** How a script's type attribute classifies it; only classic and module ever execute or fetch. */
@@ -46,6 +46,8 @@ export function scriptSubtype(type: string): ScriptSubtype {
 /**
  * Resolves how a script loads. Module scripts are deferred by default (the
  * defer attribute is a no-op on them), so only async changes their behavior.
+ * Inert subtypes (json, data blocks, maps, rules) never fetch even with a
+ * src — browsers ignore it — so no network load strategy applies to them.
  * @param {ScriptSubtype} subtype - Classification from scriptSubtype().
  * @param {boolean} async - The async IDL attribute.
  * @param {boolean} defer - The defer IDL attribute.
@@ -55,7 +57,58 @@ export function scriptSubtype(type: string): ScriptSubtype {
 export function scriptLoad(subtype: ScriptSubtype, async: boolean, defer: boolean, inline: boolean): AssetLoad {
   if (inline) return 'inline';
   if (subtype === 'module') return async ? 'async' : 'defer';
+  if (subtype !== 'classic') return 'inline';
   return async ? 'async' : defer ? 'defer' : 'blocking';
+}
+
+/**
+ * Whether an asset has its own load strategy. External stylesheets do not:
+ * async/defer never apply to them and their Load cell shows '—', so they
+ * are excluded from load counts and the load filter.
+ */
+export const hasOwnLoad = (a: { kind: AssetKind; isInline: boolean }): boolean => a.kind === 'script' || a.isInline;
+
+// Type column: stylesheets stay 'Style'; scripts surface their subtype so
+// JSON-LD/data blocks aren't mistaken for executable code.
+const SUBTYPE_LABEL: Record<string, string> = {
+  classic: 'Script',
+  module: 'Module',
+  importmap: 'Map',
+  speculationrules: 'Rules',
+  json: 'JSON',
+  'ld+json': 'JSON-LD',
+  data: 'Data'
+};
+
+/** Display label for the Type column (and its sort order). */
+export function typeLabel(a: { kind: AssetKind; subtype: AssetSubtype }): string {
+  if (a.kind === 'style') return 'Style';
+  return SUBTYPE_LABEL[a.subtype] ?? 'Script';
+}
+
+/** The Flags facet values. */
+export type AssetFlag = 'render-blocking' | 'failed' | 'duplicate';
+
+/**
+ * Whether an asset carries the given flag: render-blocking, failed (HTTP
+ * status 400+), or duplicate (its src appears more than once on the page).
+ * @param a - The asset's flag-relevant facts.
+ * @param {AssetFlag} flag - Which flag to test.
+ * @param {Record<string, number>} srcCounts - Occurrences per src URL.
+ */
+export function matchesAssetFlag(
+  a: { renderBlocking: boolean; status: number; src: string | null },
+  flag: AssetFlag,
+  srcCounts: Record<string, number>
+): boolean {
+  switch (flag) {
+    case 'render-blocking':
+      return a.renderBlocking;
+    case 'failed':
+      return a.status >= 400;
+    case 'duplicate':
+      return !!a.src && (srcCounts[a.src] ?? 0) > 1;
+  }
 }
 
 /**
@@ -138,16 +191,4 @@ export function displaySource(src: string, pageHost: string | null): string {
   if (rest === '/' || rest === '') return host;
   if (pageHost && host === normalizeHost(pageHost)) return rest;
   return host + rest;
-}
-
-/**
- * Formats a byte count for the Size column: B under 1 KB, then KB and MB
- * with one decimal.
- * @param {number} bytes - Byte count.
- * @returns {string} Human-readable size.
- */
-export function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

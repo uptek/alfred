@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { getTheme, getHeadings, getLinks, getAssets, getImages, analyzeImages } from './utils';
+  import { getTheme, getHeadings, getLinks, getAssets, getImages } from './utils';
   import { analyzeHeadings } from './headings';
+  import { analyzeImages } from './images';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
