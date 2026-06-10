@@ -115,15 +115,19 @@ export interface RawImage {
   source: ImageSource;
   src: string; // resolved currentSrc (img/picture) or background-image URL; '' if none
   alt: string | null; // null when source === 'background'; '' when attr present but empty
-  lacksAlt: boolean; // true when alt attr is absent or empty/whitespace (img/picture only)
+  lacksAlt: boolean; // alt attribute absent (img/picture only); alt="" is decorative, not missing
+  decorative: boolean; // alt attribute present but empty/whitespace (intentionally unlabeled)
   isResponsive: boolean; // had srcset/sizes, or was inside <picture>
   naturalWidth: number; // 0 if unknown (lazy / not decoded / background)
   naturalHeight: number;
-  format: string; // png|jpg|webp|avif|gif|svg, parsed from src extension; '' if unknown
+  displayWidth: number; // rendered CSS px from getBoundingClientRect (0 when not rendered)
+  displayHeight: number;
+  format: string; // png|jpg|webp|avif|gif|svg from data-URI MIME, extension, or format/fm param; '' if unknown
   loading: ImageLoading;
   size: number; // bytes from Resource Timing; 0 = unknown
   cached: boolean; // served from cache (transferSize === 0 && decodedBodySize > 0)
-  isExternal: boolean; // src host !== page host
+  isExternal: boolean; // different host (www variant counts as same site); data:/blob: never external
   isHidden: boolean; // !checkVisibility()
   broken: boolean; // loaded <img> with naturalWidth === 0
+  oversized: boolean; // ships >4x the pixels its rendered box needs at the device DPR
 }

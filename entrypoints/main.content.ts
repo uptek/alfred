@@ -11,6 +11,7 @@ import {
   scriptLoad,
   scriptSubtype
 } from './popup/assets';
+import { altState, imageFormat, isOversized, parseBackgroundUrls } from './popup/images';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -18,7 +19,8 @@ type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; b
  * Collects all page images in a deterministic order shared by get_images,
  * highlight_images, and scroll_to_image so indices stay consistent across calls.
  * Order: every <img> in DOM order, then every element with a CSS background-image
- * in DOM order. Inline <svg> icons are intentionally excluded.
+ * in DOM order; multiple backgrounds on one element yield one entry per url().
+ * Inline <svg> icons are intentionally excluded.
  */
 function collectImageEls(): CollectedImage[] {
   const out: CollectedImage[] = [];
@@ -27,9 +29,8 @@ function collectImageEls(): CollectedImage[] {
   }
   for (const el of document.querySelectorAll<HTMLElement>('body *')) {
     if (el.tagName === 'IMG') continue;
-    const bg = getComputedStyle(el).backgroundImage;
-    if (bg && bg !== 'none' && /url\(/i.test(bg)) {
-      // Carry the resolved background-image string so get_images doesn't re-run getComputedStyle.
+    // Carry each extracted url so get_images doesn't re-run getComputedStyle.
+    for (const bg of parseBackgroundUrls(getComputedStyle(el).backgroundImage)) {
       out.push({ el, source: 'background', bg });
     }
   }
@@ -87,9 +88,8 @@ function imageHighlightState(el: Element, source: CollectedImage['source']): str
   if (source === 'background') return 'ok';
   const img = el as HTMLImageElement;
   if (img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src)) return 'broken';
-  const altAttr = img.getAttribute('alt');
-  if (altAttr === null || altAttr.trim() === '') return 'alt';
-  return 'ok';
+  // Decorative alt="" is a deliberate signal, not a failure; only an absent attribute flags.
+  return altState(img.getAttribute('alt')) === 'missing' ? 'alt' : 'ok';
 }
 
 export default defineContentScript({
@@ -434,13 +434,6 @@ export default defineContentScript({
        */
       if (request.action === 'get_images') {
         const pageHost = location.hostname;
-        const isExternalUrl = (url: string): boolean => {
-          try {
-            return new URL(url, location.href).hostname !== pageHost;
-          } catch {
-            return true;
-          }
-        };
         const sizeOf = (e: PerformanceResourceTiming) => e.encodedBodySize || e.decodedBodySize || 0;
         const timingByUrl = new Map<string, PerformanceResourceTiming>();
         try {
@@ -461,64 +454,68 @@ export default defineContentScript({
             return url;
           }
         };
-        const bgUrl = (bg: string): string => {
-          const m = /url\((['"]?)(.*?)\1\)/i.exec(bg);
-          return m && m[2] ? resolveUrl(m[2]) : '';
-        };
-        const formatOf = (url: string): string => {
-          try {
-            const path = new URL(url, location.href).pathname;
-            const ext = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
-            if (ext === 'jpeg') return 'jpg';
-            return /^(png|jpg|webp|avif|gif|svg)$/.test(ext) ? ext : '';
-          } catch {
-            return '';
-          }
-        };
 
         const images = collectImageEls().map(({ el, source, bg }, i) => {
           if (source === 'background') {
-            const src = bgUrl(bg ?? '');
+            const src = bg ? resolveUrl(bg) : '';
             const t = src ? timingByUrl.get(src) : undefined;
+            const rect = el.getBoundingClientRect();
             return {
               index: i,
               source,
               src,
               alt: null,
               lacksAlt: false,
+              decorative: false,
               isResponsive: false,
               naturalWidth: 0,
               naturalHeight: 0,
-              format: formatOf(src),
+              displayWidth: Math.round(rect.width),
+              displayHeight: Math.round(rect.height),
+              format: imageFormat(src),
               loading: 'none',
               size: t ? sizeOf(t) : 0,
               cached: cachedOf(t),
-              isExternal: src ? isExternalUrl(src) : false,
+              isExternal: src ? isExternalAssetUrl(src, pageHost) : false,
               isHidden: !(el as HTMLElement).checkVisibility(),
-              broken: false
+              broken: false,
+              oversized: false // natural size is unknowable for backgrounds without a fetch
             };
           }
           const img = el as HTMLImageElement;
           const src = img.currentSrc || img.src || '';
           const t = src ? timingByUrl.get(src) : undefined;
-          const altAttr = img.getAttribute('alt');
+          const alt = altState(img.getAttribute('alt'));
           const loadingAttr = img.getAttribute('loading');
+          const rect = img.getBoundingClientRect();
+          const displayWidth = Math.round(rect.width);
+          const displayHeight = Math.round(rect.height);
           return {
             index: i,
             source,
             src,
-            alt: altAttr,
-            lacksAlt: altAttr === null || altAttr.trim() === '',
+            alt: img.getAttribute('alt'),
+            lacksAlt: alt === 'missing',
+            decorative: alt === 'decorative',
             isResponsive: source === 'picture' || img.srcset !== '' || img.sizes !== '',
             naturalWidth: img.naturalWidth,
             naturalHeight: img.naturalHeight,
-            format: formatOf(src),
+            displayWidth,
+            displayHeight,
+            format: imageFormat(src),
             loading: loadingAttr === 'lazy' ? 'lazy' : loadingAttr === 'eager' ? 'eager' : 'none',
             size: t ? sizeOf(t) : 0,
             cached: cachedOf(t),
-            isExternal: src ? isExternalUrl(src) : false,
+            isExternal: src ? isExternalAssetUrl(src, pageHost) : false,
             isHidden: !img.checkVisibility(),
-            broken: img.complete && img.naturalWidth === 0 && src !== ''
+            broken: img.complete && img.naturalWidth === 0 && src !== '',
+            oversized: isOversized(
+              img.naturalWidth,
+              img.naturalHeight,
+              displayWidth,
+              displayHeight,
+              window.devicePixelRatio
+            )
           };
         });
         sendResponse(images);

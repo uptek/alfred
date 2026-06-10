@@ -188,7 +188,8 @@ export const scrollToImage = async (index: number): Promise<void> => {
 };
 
 /**
- * Counts images missing alt text (the badge source).
+ * Counts images whose alt attribute is absent (the badge source). Decorative
+ * alt="" images are deliberate and never counted.
  * @param {RawImage[]} images
  * @returns {number} Number of images with `lacksAlt`.
  */

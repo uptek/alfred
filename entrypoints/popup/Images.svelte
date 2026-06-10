@@ -1,5 +1,9 @@
 <script lang="ts">
   import type { RawImage, ImageStatus } from './types';
+  import type { AltState } from './images';
+  import { fileLabel, imageStatus } from './images';
+  import { csvField } from './links';
+  import { formatSize } from './assets';
   import { highlightImages, scrollToImage } from './utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
@@ -8,11 +12,13 @@
 
   const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
 
-  function statusOf(img: RawImage): ImageStatus {
-    if (img.broken) return 'broken';
-    if (img.lacksAlt && img.source !== 'background') return 'missing-alt';
-    return 'ok';
-  }
+  const altOf = (img: RawImage): AltState => (img.lacksAlt ? 'missing' : img.decorative ? 'decorative' : 'present');
+
+  // Status is read several times per row (cell, sort, filter, summary); compute once per list.
+  const statusByIndex = $derived(
+    new Map(images.map((img) => [img.index, imageStatus({ broken: img.broken, alt: altOf(img), source: img.source })]))
+  );
+  const statusOf = (img: RawImage): ImageStatus => statusByIndex.get(img.index) ?? 'ok';
 
   let tracked = false;
   $effect(() => {
@@ -31,9 +37,10 @@
   let formatFilter = $state('all');
   let loadingFilter = $state('all');
   let statusFilter = $state('all');
+  let flagFilter = $state('all');
   let search = $state('');
   let searchOpen = $state(false);
-  let openMenu = $state<'alt' | 'format' | 'loading' | 'status' | 'export' | null>(null);
+  let openMenu = $state<'alt' | 'format' | 'loading' | 'status' | 'flag' | 'export' | null>(null);
 
   type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
   let sortKey = $state<SortKey>('index');
@@ -60,31 +67,45 @@
   }
 
   const stats = $derived.by(() => {
-    let altPresent = 0, altMissing = 0, ok = 0, missingAlt = 0, broken = 0, lazy = 0, eager = 0, noLoad = 0;
+    let altPresent = 0, altDecorative = 0, altMissing = 0, ok = 0, missingAlt = 0, broken = 0, lazy = 0, eager = 0, noLoad = 0, oversized = 0;
     const formatCounts: Record<string, number> = {};
     for (const img of images) {
-      // Background images have no alt concept; exclude them from both alt buckets.
+      // Background images have no alt concept and no loading attribute; exclude them from those buckets.
       if (img.source !== 'background') {
-        if (img.lacksAlt) altMissing++; else altPresent++;
+        const alt = altOf(img);
+        if (alt === 'missing') altMissing++; else if (alt === 'decorative') altDecorative++; else altPresent++;
+        if (img.loading === 'lazy') lazy++; else if (img.loading === 'eager') eager++; else noLoad++;
       }
       const st = statusOf(img);
       if (st === 'broken') broken++; else if (st === 'missing-alt') missingAlt++; else ok++;
-      if (img.loading === 'lazy') lazy++; else if (img.loading === 'eager') eager++; else noLoad++;
+      if (img.oversized) oversized++;
       const f = img.format || 'other';
       formatCounts[f] = (formatCounts[f] ?? 0) + 1;
     }
-    return { total: images.length, altPresent, altMissing, ok, missingAlt, broken, lazy, eager, noLoad, formatCounts };
+    return { total: images.length, altPresent, altDecorative, altMissing, ok, missingAlt, broken, lazy, eager, noLoad, oversized, formatCounts };
   });
+
+  // Lowercased searchable text per image, built once per list (not per keystroke).
+  // Data URIs contribute their MIME label so a base64 payload never enters the haystack.
+  const haystacks = $derived(
+    new Map(
+      images.map((img) => [
+        img.index,
+        `${img.src.startsWith('data:') ? fileLabel(img.src) : img.src} ${img.alt ?? ''}`.toLowerCase()
+      ])
+    )
+  );
 
   const filtered = $derived.by(() => {
     const q = search.toLowerCase();
     return images.filter(img => {
-      if (altFilter === 'notempty' && (img.lacksAlt || img.source === 'background')) return false;
-      if (altFilter === 'empty' && (!img.lacksAlt || img.source === 'background')) return false;
+      if (altFilter !== 'all' && (img.source === 'background' || altOf(img) !== altFilter)) return false;
       if (formatFilter !== 'all' && (img.format || 'other') !== formatFilter) return false;
-      if (loadingFilter !== 'all' && img.loading !== loadingFilter) return false;
+      // Backgrounds have no loading attribute (the cell shows "—"), so they never match a loading filter.
+      if (loadingFilter !== 'all' && (img.source === 'background' || img.loading !== loadingFilter)) return false;
       if (statusFilter !== 'all' && statusOf(img) !== statusFilter) return false;
-      if (q && !img.src.toLowerCase().includes(q) && !(img.alt ?? '').toLowerCase().includes(q)) return false;
+      if (flagFilter === 'oversized' && !img.oversized) return false;
+      if (q && !(haystacks.get(img.index) ?? '').includes(q)) return false;
       return true;
     });
   });
@@ -118,28 +139,36 @@
     trackAction('images_sort', { key, dir: sortDir });
   }
 
-  function fileName(src: string): string {
-    if (!src) return '(no source)';
-    try {
-      const u = new URL(src);
-      const segments = u.pathname.split('/').filter(Boolean);
-      return (segments[segments.length - 1] ?? u.pathname) + u.search;
-    } catch {
-      return src;
-    }
-  }
-
   function formatBytes(n: number): string {
-    if (!n) return '—';
-    if (n < 1024) return n + ' B';
-    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
-    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+    return n ? formatSize(n) : '—';
   }
 
   function dimsLabel(img: RawImage): string {
     if (!img.naturalWidth || !img.naturalHeight) return '—';
     return `${img.naturalWidth}×${img.naturalHeight}`;
   }
+
+  function dimsTitle(img: RawImage): string | undefined {
+    if (!img.naturalWidth || !img.displayWidth) return undefined;
+    const base = `Natural ${img.naturalWidth}×${img.naturalHeight} px, displayed ${img.displayWidth}×${img.displayHeight} px`;
+    return img.oversized ? `Oversized: ${base}` : base;
+  }
+
+  /** Tooltip-safe source: data URIs collapse to their MIME label instead of the payload. */
+  function srcTitle(src: string): string {
+    return src.startsWith('data:') ? fileLabel(src) : src;
+  }
+
+  const summary = $derived.by(() => {
+    let bytes = 0, missingAlt = 0, broken = 0, oversized = 0;
+    for (const img of filtered) {
+      bytes += img.size;
+      const st = statusOf(img);
+      if (st === 'broken') broken++; else if (st === 'missing-alt') missingAlt++;
+      if (img.oversized) oversized++;
+    }
+    return { count: filtered.length, bytes, missingAlt, broken, oversized };
+  });
 
   function toggleHighlight() {
     highlightOn = !highlightOn;
@@ -169,10 +198,10 @@
   }
 
   function exportCsv() {
-    const header = 'URL,Alt,Source,Format,Width,Height,Size (bytes),Loading,Status';
+    const header = 'URL,Alt,Source,Format,Width,Height,Display Width,Display Height,Size (bytes),Loading,Status,Oversized';
     const rows = images.map(img => {
-      return [img.src, img.alt ?? '', img.source, img.format, img.naturalWidth, img.naturalHeight, img.size, img.loading, statusOf(img)]
-        .map(v => `"${String(v).replace(/"/g, '""')}"`)
+      return [img.src, img.alt ?? '', img.source, img.format, img.naturalWidth, img.naturalHeight, img.displayWidth, img.displayHeight, img.size, img.loading, statusOf(img), img.oversized]
+        .map(csvField)
         .join(',');
     });
     downloadFile([header, ...rows].join('\n'), `alfred-images-${siteSlug}.csv`, 'text/csv');
@@ -188,9 +217,12 @@
       format: img.format,
       width: img.naturalWidth,
       height: img.naturalHeight,
+      displayWidth: img.displayWidth,
+      displayHeight: img.displayHeight,
       size: img.size,
       loading: img.loading,
-      status: statusOf(img)
+      status: statusOf(img),
+      oversized: img.oversized
     }));
     downloadFile(JSON.stringify(data, null, 2), `alfred-images-${siteSlug}.json`, 'application/json');
     trackAction('images_export', { format: 'json', image_count: images.length });
@@ -212,8 +244,9 @@
 
   const altOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
-    { value: 'notempty', label: 'Not empty', count: stats.altPresent },
-    { value: 'empty', label: 'Empty', count: stats.altMissing },
+    { value: 'present', label: 'Present', count: stats.altPresent },
+    { value: 'decorative', label: 'Decorative', count: stats.altDecorative },
+    { value: 'missing', label: 'Missing', count: stats.altMissing },
   ]);
   const formatOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
@@ -233,19 +266,26 @@
     { value: 'missing-alt', label: 'Missing alt', count: stats.missingAlt },
     { value: 'broken', label: 'Broken', count: stats.broken },
   ]);
+  // Only offered when something is flagged, so clean pages keep a short toolbar.
+  const flagOptions = $derived([
+    { value: 'all', label: 'All', count: stats.total },
+    ...(stats.oversized > 0 ? [{ value: 'oversized', label: 'Oversized', count: stats.oversized }] : []),
+  ]);
 
-  const anyFilterActive = $derived(altFilter !== 'all' || formatFilter !== 'all' || loadingFilter !== 'all' || statusFilter !== 'all' || search.length > 0);
+  const anyFilterActive = $derived(altFilter !== 'all' || formatFilter !== 'all' || loadingFilter !== 'all' || statusFilter !== 'all' || flagFilter !== 'all' || search.length > 0);
 
   function setAlt(v: string) { altFilter = v; openMenu = null; trackAction('images_filter', { facet: 'alt', value: v }); }
   function setFormat(v: string) { formatFilter = v; openMenu = null; trackAction('images_filter', { facet: 'format', value: v }); }
   function setLoading(v: string) { loadingFilter = v; openMenu = null; trackAction('images_filter', { facet: 'loading', value: v }); }
   function setStatus(v: string) { statusFilter = v; openMenu = null; trackAction('images_filter', { facet: 'status', value: v }); }
+  function setFlag(v: string) { flagFilter = v; openMenu = null; trackAction('images_filter', { facet: 'flag', value: v }); }
 
   function resetFilters() {
     altFilter = 'all';
     formatFilter = 'all';
     loadingFilter = 'all';
     statusFilter = 'all';
+    flagFilter = 'all';
     search = '';
     searchOpen = false;
     openMenu = null;
@@ -262,7 +302,7 @@
   </div>
 {:else}
   <div class="images-tab">
-    {#snippet facet(name: string, key: 'alt' | 'format' | 'loading' | 'status', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
+    {#snippet facet(name: string, key: 'alt' | 'format' | 'loading' | 'status' | 'flag', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
       <div class="dropdown menu">
         <button class="dropdown__trigger" class:dropdown__trigger--active={selected !== 'all'} onclick={() => { openMenu = openMenu === key ? null : key; }}>
           {selected === 'all' ? name : (options.find(o => o.value === selected)?.label ?? name)}
@@ -300,6 +340,9 @@
           {@render facet('Format', 'format', formatOptions, formatFilter, setFormat)}
           {@render facet('Loading', 'loading', loadingOptions, loadingFilter, setLoading)}
           {@render facet('Status', 'status', statusOptions, statusFilter, setStatus)}
+          {#if flagOptions.length > 1}
+            {@render facet('Flags', 'flag', flagOptions, flagFilter, setFlag)}
+          {/if}
           {#if anyFilterActive}
             <button class="reset-btn" onclick={resetFilters} title="Reset all filters">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -371,10 +414,13 @@
             <tr class="row" class:row--hidden={img.isHidden} onclick={(e) => handleRowClick(e, img.index)} title="Click to scroll to this image">
               <td class="td td--img">
                 <div class="img-cell">
-                  {#if img.src}
+                  {#if img.src && !img.src.startsWith('data:')}
                     <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab" onclick={() => trackAction('images_open', { source: img.source })}>
                       <img class="thumb" src={img.src} alt="" loading="lazy" />
                     </a>
+                  {:else if img.src}
+                    <!-- Browsers block top-frame navigation to data: URLs, so no link -->
+                    <img class="thumb" src={img.src} alt="" loading="lazy" />
                   {:else}
                     <div class="thumb thumb--empty"></div>
                   {/if}
@@ -382,10 +428,12 @@
                     {#if img.source === 'background'}
                       <span class="alt-text alt-text--muted">Background image</span>
                     {:else}
-                      <span class="alt-text" title={img.lacksAlt ? 'Missing alt text' : img.alt}>
+                      <span class="alt-text" title={img.lacksAlt ? 'Missing alt text' : img.decorative ? 'Empty alt attribute (decorative image)' : img.alt}>
                         <span class="alt-label">Alt:</span>
                         {#if img.lacksAlt}
                           <span class="alt-missing">Missing</span>
+                        {:else if img.decorative}
+                          <span class="alt-decorative">Decorative</span>
                         {:else}
                           {img.alt}
                         {/if}
@@ -394,7 +442,7 @@
                     <div class="url-row">
                       {#if img.source === 'background'}<span class="src-tag">bg</span>{/if}
                       {#if img.src}
-                        <span class="filename" title={img.src}>{fileName(img.src)}</span>
+                        <span class="filename" title={srcTitle(img.src)}>{fileLabel(img.src)}</span>
                       {:else}
                         <span class="filename filename--empty">(no source)</span>
                       {/if}
@@ -404,7 +452,7 @@
               </td>
               <td class="td td--size">{formatBytes(img.size)}</td>
               <td class="td td--fmt">{img.format ? img.format.toUpperCase() : '—'}</td>
-              <td class="td td--dims">{dimsLabel(img)}</td>
+              <td class="td td--dims"><span class:dims--oversized={img.oversized} title={dimsTitle(img)}>{dimsLabel(img)}</span></td>
               <td class="td td--load">
                 {#if img.source === 'background'}
                   <span class="muted">—</span>
@@ -420,7 +468,8 @@
                 {#if statusOf(img) === 'broken'}
                   <span class="pill pill--red">Broken</span>
                 {:else if statusOf(img) === 'missing-alt'}
-                  <span class="pill pill--red">Alt</span>
+                  <!-- Amber, matching the on-page highlight severity (red is reserved for broken) -->
+                  <span class="pill pill--amber">Alt</span>
                 {:else}
                   <span class="pill pill--green">OK</span>
                 {/if}
@@ -433,6 +482,28 @@
         <div class="no-results">No images match this filter</div>
       {/if}
     </div>
+
+    {#if filtered.length > 0}
+      <div class="summary">
+        <span>{summary.count} {summary.count === 1 ? 'image' : 'images'}</span>
+        {#if summary.bytes > 0}
+          <span class="summary__sep">&middot;</span>
+          <span title="Sum of known sizes; opaque cross-origin images are not included">{formatSize(summary.bytes)}</span>
+        {/if}
+        {#if summary.missingAlt > 0}
+          <span class="summary__sep">&middot;</span>
+          <span class="summary__warn">{summary.missingAlt} missing alt</span>
+        {/if}
+        {#if summary.broken > 0}
+          <span class="summary__sep">&middot;</span>
+          <span class="summary__err">{summary.broken} broken</span>
+        {/if}
+        {#if summary.oversized > 0}
+          <span class="summary__sep">&middot;</span>
+          <span class="summary__warn">{summary.oversized} oversized</span>
+        {/if}
+      </div>
+    {/if}
   </div>
 {/if}
 
@@ -550,6 +621,7 @@
   .alt-text--muted { color: var(--text-muted); font-style: italic; font-weight: 400; }
   .alt-label { color: var(--text-muted); font-weight: 600; margin-right: 1px; }
   .alt-missing { color: var(--error); font-weight: 600; }
+  .alt-decorative { color: var(--text-muted); font-style: italic; font-weight: 400; }
 
   .url-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
   .src-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--bg-hover); color: var(--text-muted); }
@@ -558,13 +630,21 @@
 
   .muted { color: var(--text-muted); }
   .load-eager { color: var(--warning); font-weight: 500; }
+  .dims--oversized { color: var(--warning); font-weight: 600; }
 
   /* Pills */
   .pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
   .pill--green { background: var(--success-bg); color: var(--success-strong); }
   .pill--red { background: var(--error-bg); color: var(--error-strong); }
+  .pill--amber { background: var(--warning-bg); color: var(--warning); }
 
   .no-results { text-align: center; padding: 24px; font-size: 13px; color: var(--text-muted); }
+
+  /* Summary bar */
+  .summary { display: flex; align-items: center; gap: 6px; padding: 7px 20px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--text-muted); flex-shrink: 0; }
+  .summary__sep { opacity: 0.5; }
+  .summary__warn { color: var(--warning); font-weight: 600; }
+  .summary__err { color: var(--error); font-weight: 600; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
