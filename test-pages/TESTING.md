@@ -1,14 +1,15 @@
-# Manual test guide: Headings + Links + Assets tab updates
+# Manual test guide: Headings + Links + Assets + Images tab updates
 
 Checklist for verifying everything that changed on the `feat/popup-improvements`
 branch: the three Headings fixes, the Links classification rework, the toolbar
-polish, and the Assets classification rework. Work top to bottom; every step
-says which page to open and what to look for.
+polish, the Assets classification rework, and the Images alt/sizing rework.
+Work top to bottom; every step says which page to open and what to look for.
 
 ## Setup
 
 1. Run the automated suite first. It covers the analyzers, link
-   classification, and asset classification logic (111 tests):
+   classification, asset classification, and image classification logic
+   (152 tests):
 
    ```sh
    bun test
@@ -231,3 +232,68 @@ filter, a summary bar, media tags, MB sizes, and hardened CSV export.
       Script), theme module scripts show Module/defer without render-blocking
       pills, cdn.shopify.com assets are External, the summary bar total looks
       plausible, no console errors
+
+---
+
+## Images tab
+
+What changed: decorative `alt=""` is no longer flagged (only an absent alt
+attribute counts, including in the badge and the on-page highlight), the Alt
+filter gained Present/Decorative/Missing, oversized-image detection with a
+Flags filter and amber Dims cell, a summary bar, data-URI sources collapse to
+their MIME label, multiple backgrounds yield one row per url(), the
+missing-alt pill turned amber, format detection reads data-URI MIMEs and
+format/fm query params, the Loading filter excludes backgrounds, and CSV
+export is hardened with Display Width/Height and Oversized columns.
+
+### `/images/mixed.html` (baseline)
+
+- [ ] 10 images; tab badge shows **1** (was 2: the empty-alt image no longer
+      counts)
+- [ ] Row 3 (empty alt) reads italic "Decorative", status **OK**
+- [ ] Alt filter: Present 7, Decorative 1, Missing 1
+- [ ] Row 2 (no alt attribute) shows the **amber** "Alt" pill; only Broken is
+      red
+- [ ] Loading filter: the background row never matches Lazy/Eager/None (its
+      Load cell is "—")
+- [ ] No Flags filter on this page (nothing oversized, facet stays hidden)
+- [ ] Highlight: the decorative image gets a green outline, only the
+      missing-alt image is amber, the 404 image is red
+- [ ] Summary bar: 10 images · (size) · 1 missing alt · 1 broken
+
+### `/images/sizing.html` (oversized detection)
+
+- [ ] wide.svg at 160×100: amber **1600×1000** in the Dims cell with a
+      natural-vs-displayed tooltip
+- [ ] wide.svg at 800×500 (exactly 2× per dimension) is NOT flagged
+- [ ] photo.svg at its natural size is NOT flagged
+- [ ] Flags filter appears with Oversized 1; selecting it narrows to 1 row;
+      reset restores
+- [ ] Summary bar ends with "1 oversized"
+
+### `/images/backgrounds-and-data.html` (backgrounds + data URIs)
+
+- [ ] 5 images: the multi-background div contributes TWO bg rows (pixel.png
+      and pixel.gif)
+- [ ] The gradient+url element still yields its photo.svg row
+- [ ] Data-URI image: filename reads `data:image/svg+xml`, Format SVG, thumb
+      is not a link
+- [ ] Badge 0; decorative row shows "Decorative"
+- [ ] Format filter: SVG 3, PNG 1, GIF 1
+- [ ] Search "pixel" matches the two background rows; a base64 fragment from
+      the data URI matches nothing
+
+### Exports
+
+- [ ] CSV columns: URL, Alt, Source, Format, Width, Height, Display Width,
+      Display Height, Size, Loading, Status, Oversized; opens fine in a
+      spreadsheet (formula injection neutralized in code and unit tests)
+- [ ] JSON has the same fields per image; Copy gives one URL per line
+
+### Real-world spot check
+
+- [ ] Open any live Shopify store: decorative logos/spacers with `alt=""`
+      are not flagged, the badge matches truly missing alts, hero images
+      sized by the theme are not falsely Oversized at your display's DPR,
+      data-URI lazy-load placeholders show MIME labels instead of base64,
+      scroll-to-image and Highlight still land correctly, no console errors
