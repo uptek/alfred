@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'bun:test';
-import { detectShopifyDefault, isAllowed, lintRobots, parseRobots, SHOPIFY_DEFAULT_RULES } from './robots';
+import {
+  detectShopifyDefault,
+  isAllowed,
+  lintRobots,
+  looksLikeHtml,
+  parseRobots,
+  SHOPIFY_DEFAULT_RULES
+} from './robots';
+
+describe('looksLikeHtml', () => {
+  it('detects SPA fallback HTML served at /robots.txt', () => {
+    expect(looksLikeHtml('<!doctype html><html><head></head></html>')).toBe(true);
+    expect(looksLikeHtml('<HTML lang="en">')).toBe(true);
+    expect(looksLikeHtml('User-agent: *\nDisallow: /admin\n')).toBe(false);
+    expect(looksLikeHtml(`# comment mentioning <html> usage\n${'x'.repeat(2000)}<html>`)).toBe(true);
+  });
+});
 
 const parse = parseRobots;
 
@@ -48,6 +64,20 @@ describe('parseRobots', () => {
   it('keeps the first Crawl-delay of a group', () => {
     const p = parse('User-agent: AhrefsBot\nCrawl-delay: 10\nCrawl-delay: 20\n');
     expect(p.groups[0]!.crawlDelay).toEqual({ value: '10', line: 2 });
+  });
+
+  it('handles CRLF and bare CR line endings with correct line numbers', () => {
+    const p = parse('User-agent: *\r\nDisallow: /a\rAllow: /b\n');
+    expect(p.groups[0]!.rules).toEqual([
+      { type: 'disallow', path: '/a', line: 2 },
+      { type: 'allow', path: '/b', line: 3 }
+    ]);
+  });
+
+  it('treats Crawl-delay before any group as an other directive', () => {
+    const p = parse('Crawl-delay: 5\nUser-agent: *\nDisallow: /a\n');
+    expect(p.otherDirectives).toEqual([{ name: 'crawl-delay', value: '5', line: 1 }]);
+    expect(p.groups[0]!.crawlDelay).toBeNull();
   });
 });
 
@@ -110,6 +140,13 @@ describe('isAllowed', () => {
     expect(isAllowed(p, '/x', 'GPTBot').allowed).toBe(true);
   });
 
+  it('picks the longest matching token among multiple named groups', () => {
+    const p = parse('User-agent: Googlebot\nDisallow: /broad\nUser-agent: Googlebot-Image\nDisallow: /narrow\n');
+    const v = isAllowed(p, '/broad', 'Googlebot-Image');
+    expect(v.allowed).toBe(true); // only the most specific group applies
+    expect(isAllowed(p, '/narrow', 'Googlebot-Image').group).toBe('googlebot-image');
+  });
+
   it('reports the matched rule and group', () => {
     const p = parse('User-agent: *\nDisallow: /admin\n');
     const v = isAllowed(p, '/admin', 'Googlebot');
@@ -145,6 +182,25 @@ describe('lintRobots', () => {
 
   it('flags oversized files', () => {
     expect(codes('User-agent: *\nDisallow:\n', 501 * 1024)).toContain('too-large');
+  });
+
+  it('warns when approaching the 500 KiB limit but errors only past it', () => {
+    const near = lint('User-agent: *\nDisallow:\n', 460 * 1024).find((f) => f.code === 'too-large')!;
+    expect(near.severity).toBe('warning');
+    expect(codes('User-agent: *\nDisallow:\n', 450 * 1024)).not.toContain('too-large');
+    // Exactly at the limit is still a warning; one byte past is an error.
+    expect(lint('User-agent: *\nDisallow:\n', 500 * 1024).find((f) => f.code === 'too-large')!.severity).toBe(
+      'warning'
+    );
+    expect(lint('User-agent: *\nDisallow:\n', 500 * 1024 + 1).find((f) => f.code === 'too-large')!.severity).toBe(
+      'error'
+    );
+  });
+
+  it('reports content-signal and unknown directives as info', () => {
+    const findings = lint('User-agent: *\nDisallow: /a\nContent-Signal: ai-train=no\nFoo-bar: baz\n');
+    expect(findings.find((f) => f.code === 'content-signal')!.severity).toBe('info');
+    expect(findings.find((f) => f.code === 'unknown-directive')!.severity).toBe('info');
   });
 
   it('flags misspelled and retired directives', () => {
@@ -206,9 +262,11 @@ const stockFile = () =>
     return `${label}: ${value}`;
   }).join('\n');
 
+const STOCK_HOST = 'test-store.myshopify.com';
+
 describe('detectShopifyDefault', () => {
   it('recognizes the stock Shopify robots.txt', () => {
-    const diff = detectShopifyDefault(parse(`# we use Shopify\n${stockFile()}\n`));
+    const diff = detectShopifyDefault(parse(`# we use Shopify\n${stockFile()}\n`), STOCK_HOST);
     expect(diff.isDefault).toBe(true);
     expect(diff.addedLines).toEqual([]);
     expect(diff.removedRules).toEqual([]);
@@ -216,7 +274,7 @@ describe('detectShopifyDefault', () => {
 
   it('reports added lines with their line numbers', () => {
     const text = `${stockFile()}\nUser-agent: GPTBot\nDisallow: /\n`;
-    const diff = detectShopifyDefault(parse(text));
+    const diff = detectShopifyDefault(parse(text), STOCK_HOST);
     expect(diff.isDefault).toBe(false);
     const lineCount = stockFile().split('\n').length;
     expect(diff.addedLines).toEqual([lineCount + 1, lineCount + 2]);
@@ -226,16 +284,24 @@ describe('detectShopifyDefault', () => {
     const lines = stockFile()
       .split('\n')
       .filter((l) => l !== 'Disallow: /admin');
-    const diff = detectShopifyDefault(parse(lines.join('\n')));
+    const diff = detectShopifyDefault(parse(lines.join('\n')), STOCK_HOST);
     expect(diff.isDefault).toBe(false);
     expect(diff.removedRules).toEqual(['disallow: /admin']);
   });
 
-  it('treats any store id and origin as default', () => {
-    const text = stockFile()
-      .replaceAll('/12345678901', '/99')
-      .replaceAll('test-store.myshopify.com', 'shop.example.com');
-    expect(detectShopifyDefault(parse(text)).isDefault).toBe(true);
+  it('treats any store id and matching origin as default', () => {
+    const text = stockFile().replaceAll('/12345678901', '/99').replaceAll(STOCK_HOST, 'shop.example.com');
+    expect(detectShopifyDefault(parse(text), 'shop.example.com').isDefault).toBe(true);
+  });
+
+  it('flags a sitemap pointing at a foreign host as a customization', () => {
+    const text = stockFile().replace(
+      `Sitemap: https://${STOCK_HOST}/sitemap.xml`,
+      'Sitemap: https://attacker.example/sitemap.xml'
+    );
+    const diff = detectShopifyDefault(parse(text), STOCK_HOST);
+    expect(diff.isDefault).toBe(false);
+    expect(diff.removedRules).toContain('sitemap: {origin}/sitemap.xml');
   });
 });
 

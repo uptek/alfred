@@ -147,9 +147,10 @@ export interface ThemeStoreEntry {
 export interface RobotsResponse {
   ok: boolean; // fetch reached the server (any HTTP status)
   status: number; // HTTP status; 0 on network error
-  content: string; // raw robots.txt text ('' when not 2xx)
+  content: string; // raw robots.txt text ('' when not 2xx), capped at 600 KiB
   finalUrl: string; // URL after redirects
-  size: number; // body size in bytes
+  size: number; // full body size in bytes (pre-truncation)
+  truncated: boolean; // body exceeded the cap and was cut for transport/display
 }
 
 export type ImageSource = 'img' | 'picture' | 'background';

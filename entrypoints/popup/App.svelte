@@ -2,7 +2,7 @@
   import { getTheme, getHeadings, getLinks, getAssets, getImages, getSchema, getRobots } from './utils/utils';
   import { analyzeHeadings } from './utils/headings';
   import { analyzeImages } from './utils/images';
-  import { lintRobots, parseRobots } from './robots';
+  import { analyzeRobots } from './robots';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
@@ -47,11 +47,9 @@
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
   const imageIssueCount = $derived(analyzeImages(rawImages));
-  const robotsErrorCount = $derived.by(() => {
-    if (!rawRobots?.ok || rawRobots.status < 200 || rawRobots.status >= 300) return 0;
-    return lintRobots(parseRobots(rawRobots.content), { size: rawRobots.size }).filter((f) => f.severity === 'error')
-      .length;
-  });
+  const robotsErrorCount = $derived(
+    analyzeRobots(rawRobots, storeInfo?.isShopify ?? false, storeInfo?.page_url ?? null).errorCount
+  );
 
   const seoTabs = $derived<Tab[]>([
     {

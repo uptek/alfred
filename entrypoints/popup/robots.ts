@@ -173,19 +173,43 @@ function byteLength(s: string): number {
   return encoder.encode(s).length;
 }
 
-// `*` matches any sequence; `$` is only special at the end of the pattern.
-function patternToRegex(pattern: string): RegExp {
+/** SPA fallbacks commonly serve index.html with a 200 at /robots.txt. */
+export function looksLikeHtml(text: string): boolean {
+  return /<html|<!doctype/i.test(text.slice(0, 1024));
+}
+
+/**
+ * RFC 9309 pattern match: `*` matches any sequence, `$` is only special at
+ * the end. Greedy two-pointer scan — linear in path length, so hostile
+ * patterns with many wildcards can't trigger regex-style catastrophic
+ * backtracking (the file comes from the site being inspected, i.e. untrusted).
+ */
+function matchesPattern(pattern: string, path: string): boolean {
   let p = pattern;
   let anchored = false;
   if (p.endsWith('$')) {
     anchored = true;
     p = p.slice(0, -1);
   }
-  const escaped = p
-    .split('*')
-    .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
-    .join('.*');
-  return new RegExp(`^${escaped}${anchored ? '$' : ''}`);
+  const parts = p.split('*');
+  if (!path.startsWith(parts[0]!)) return false;
+  let pos = parts[0]!.length;
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i]!;
+    if (part === '') continue; // consecutive or trailing '*'
+    if (anchored && i === parts.length - 1) {
+      return path.endsWith(part) && path.length - part.length >= pos;
+    }
+    const idx = path.indexOf(part, pos);
+    if (idx === -1) return false;
+    pos = idx + part.length;
+  }
+  if (anchored) {
+    // A trailing '*' before '$' consumes the rest; otherwise the prefix
+    // matched so far must already be the whole path.
+    return parts[parts.length - 1] === '' || pos === path.length;
+  }
+  return true;
 }
 
 function selectGroups(parsed: ParsedRobots, botToken: string): { groups: RobotsGroup[]; token: string | null } {
@@ -220,7 +244,7 @@ export function isAllowed(parsed: ParsedRobots, path: string, botToken: string):
   for (const g of groups) {
     for (const rule of g.rules) {
       if (rule.path === '') continue; // empty Disallow = no restriction
-      if (!patternToRegex(rule.path).test(path)) continue;
+      if (!matchesPattern(rule.path, path)) continue;
       const len = byteLength(rule.path);
       if (len > bestLen) {
         best = rule;
@@ -245,6 +269,10 @@ const ASSET_PROBES = [
 ];
 
 const KIB = 1024;
+/** Google stops processing robots.txt past this size. */
+const GOOGLE_SIZE_LIMIT = 500 * KIB;
+/** Warn at 90% of the limit. */
+const SIZE_WARN_THRESHOLD = 450 * KIB;
 
 export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFinding[] {
   const findings: LintFinding[] = [];
@@ -297,13 +325,13 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
     });
   }
 
-  if (meta.size > 500 * KIB) {
+  if (meta.size > GOOGLE_SIZE_LIMIT) {
     findings.push({
       severity: 'error',
       code: 'too-large',
       message: 'File exceeds 500 KiB — Google ignores everything past that limit'
     });
-  } else if (meta.size > 450 * KIB) {
+  } else if (meta.size > SIZE_WARN_THRESHOLD) {
     findings.push({
       severity: 'warning',
       code: 'too-large',
@@ -532,29 +560,45 @@ export const SHOPIFY_DEFAULT_RULES: string[] = [
   'sitemap: {origin}/sitemap.xml'
 ];
 
-function normalizeEntry(name: string, value: string): string {
+function normalizeEntry(name: string, value: string, pageHost: string | null): string {
   let v = value;
   if ((name === 'allow' || name === 'disallow') && /^\/\d+$/.test(v)) v = '/{store-id}';
   if (name === 'user-agent') v = v.toLowerCase();
-  if (name === 'sitemap' && /^https?:\/\/[^/]+\/sitemap\.xml$/i.test(v)) v = '{origin}/sitemap.xml';
+  if (name === 'sitemap' && /^https?:\/\/[^/]+\/sitemap\.xml$/i.test(v)) {
+    // Only treat the sitemap as stock when it points at the store itself — a
+    // sitemap redirected to a foreign host is a customization worth surfacing.
+    try {
+      if (pageHost !== null && new URL(v).host.toLowerCase() === pageHost.toLowerCase()) {
+        v = '{origin}/sitemap.xml';
+      }
+    } catch {
+      // unparseable URL: leave as-is, shows up in the diff
+    }
+  }
   return `${name}: ${v}`;
 }
 
 /**
  * Multiset diff of the live file's directives against the stock Shopify
  * robots.txt. Comments and blank lines are ignored; order is ignored.
+ * @param pageHost - Host of the store being inspected; sitemap URLs only
+ *   normalize to the stock placeholder when they point at this host.
  */
-export function detectShopifyDefault(parsed: ParsedRobots): ShopifyDiff {
+export function detectShopifyDefault(parsed: ParsedRobots, pageHost: string | null): ShopifyDiff {
   const live: { entry: string; line: number }[] = [];
 
   for (const g of parsed.groups) {
-    for (const ua of g.userAgents) live.push({ entry: normalizeEntry('user-agent', ua.token), line: ua.line });
-    for (const r of g.rules) live.push({ entry: normalizeEntry(r.type, r.path), line: r.line });
-    if (g.crawlDelay) live.push({ entry: normalizeEntry('crawl-delay', g.crawlDelay.value), line: g.crawlDelay.line });
+    for (const ua of g.userAgents) {
+      live.push({ entry: normalizeEntry('user-agent', ua.token, pageHost), line: ua.line });
+    }
+    for (const r of g.rules) live.push({ entry: normalizeEntry(r.type, r.path, pageHost), line: r.line });
+    if (g.crawlDelay) {
+      live.push({ entry: normalizeEntry('crawl-delay', g.crawlDelay.value, pageHost), line: g.crawlDelay.line });
+    }
   }
-  for (const r of parsed.orphanRules) live.push({ entry: normalizeEntry(r.type, r.path), line: r.line });
-  for (const d of parsed.otherDirectives) live.push({ entry: normalizeEntry(d.name, d.value), line: d.line });
-  for (const s of parsed.sitemaps) live.push({ entry: normalizeEntry('sitemap', s.url), line: s.line });
+  for (const r of parsed.orphanRules) live.push({ entry: normalizeEntry(r.type, r.path, pageHost), line: r.line });
+  for (const d of parsed.otherDirectives) live.push({ entry: normalizeEntry(d.name, d.value, pageHost), line: d.line });
+  for (const s of parsed.sitemaps) live.push({ entry: normalizeEntry('sitemap', s.url, pageHost), line: s.line });
 
   const remaining = new Map<string, number>();
   for (const entry of SHOPIFY_DEFAULT_RULES) {
@@ -583,4 +627,102 @@ export function detectShopifyDefault(parsed: ParsedRobots): ShopifyDiff {
     addedLines: addedLines.sort((a, b) => a - b),
     removedRules
   };
+}
+
+/** Minimal fetch-result shape analyzeRobots needs (RobotsResponse satisfies it). */
+export interface RobotsFetchResult {
+  ok: boolean;
+  status: number;
+  content: string;
+  size: number;
+  truncated?: boolean;
+}
+
+export interface RobotsAnalysis {
+  /** Fetch succeeded with a 2xx. */
+  ok: boolean;
+  isHtml: boolean;
+  parsed: ParsedRobots | null;
+  /** Capped at MAX_FINDINGS for rendering; use errorCount for totals. */
+  findings: LintFinding[];
+  /** Error-severity count over ALL findings, computed before the cap. */
+  errorCount: number;
+  shopifyDiff: ShopifyDiff | null;
+}
+
+/** Bound the Issues list (and its DOM) — a garbage 600 KiB body could otherwise yield ~100k findings. */
+const MAX_FINDINGS = 100;
+
+/**
+ * Single analysis pipeline shared by the tab badge (App.svelte) and the
+ * Robots tab, so the two surfaces can never disagree about the same response.
+ * @param pageUrl - URL of the inspected page (host scopes the Shopify sitemap check).
+ */
+export function analyzeRobots(
+  robots: RobotsFetchResult | null,
+  isShopify: boolean,
+  pageUrl: string | null
+): RobotsAnalysis {
+  const ok = robots !== null && robots.ok && robots.status >= 200 && robots.status < 300;
+  if (!ok) return { ok: false, isHtml: false, parsed: null, findings: [], errorCount: 0, shopifyDiff: null };
+
+  const parsed = parseRobots(robots.content);
+
+  // An HTML body (SPA fallback route) is one misconfiguration, not hundreds
+  // of unparseable lines — short-circuit so findings don't flood.
+  if (looksLikeHtml(robots.content)) {
+    return {
+      ok,
+      isHtml: true,
+      parsed,
+      findings: [
+        {
+          severity: 'warning',
+          code: 'serves-html',
+          message: 'robots.txt serves HTML instead of plain text — crawlers may ignore it'
+        }
+      ],
+      errorCount: 0,
+      shopifyDiff: null
+    };
+  }
+
+  let findings = lintRobots(parsed, { size: robots.size });
+  const errorCount = findings.reduce((n, f) => n + (f.severity === 'error' ? 1 : 0), 0);
+  if (findings.length > MAX_FINDINGS) {
+    const hidden = findings.length - MAX_FINDINGS;
+    findings = findings.slice(0, MAX_FINDINGS);
+    findings.push({
+      severity: 'info',
+      code: 'findings-capped',
+      message: `… ${hidden} more findings not shown`
+    });
+  }
+
+  if (robots.truncated) {
+    findings.push({
+      severity: 'warning',
+      code: 'truncated',
+      message: 'File is larger than crawlers process — only the beginning is analyzed and shown below'
+    });
+  }
+
+  let pageHost: string | null = null;
+  if (pageUrl) {
+    try {
+      pageHost = new URL(pageUrl).host;
+    } catch {
+      pageHost = null;
+    }
+  }
+  const shopifyDiff = isShopify ? detectShopifyDefault(parsed, pageHost) : null;
+  if (shopifyDiff && !shopifyDiff.isDefault) {
+    findings.push({
+      severity: 'info',
+      code: 'shopify-customized',
+      message: `Differs from the default Shopify robots.txt — ${shopifyDiff.addedLines.length} added, ${shopifyDiff.removedRules.length} removed (added lines highlighted below)`
+    });
+  }
+
+  return { ok, isHtml: false, parsed, findings, errorCount, shopifyDiff };
 }

@@ -230,17 +230,17 @@ export const scrollToImage = async (index: number): Promise<void> => {
 };
 
 /**
- * Fetches the site's robots.txt via the content script (same-origin fetch).
- * @returns {Promise<RobotsResponse | null>} Raw file + HTTP metadata, or null when the tab is unreachable.
+ * Fetches the site's robots.txt via the background service worker, whose
+ * fetches are not CORS-bound (handles cross-origin redirects) and work even
+ * when the content script can't run on the page.
+ * @returns {Promise<RobotsResponse | null>} Raw file + HTTP metadata, or null on non-http tabs.
  */
 export const getRobots = async (): Promise<RobotsResponse | null> => {
   try {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      const response = await browser.tabs.sendMessage(tab.id, { action: 'get_robots' });
-      return response && typeof response.status === 'number' ? response : null;
-    }
-    return null;
+    if (!tab?.url || !/^https?:/i.test(tab.url)) return null;
+    const response = await browser.runtime.sendMessage({ type: 'fetch_robots', url: tab.url });
+    return response && typeof response.status === 'number' ? response : null;
   } catch {
     return null;
   }

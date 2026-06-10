@@ -12,9 +12,10 @@ detection, on top of the existing raw-file view with Open/Copy.
 
 ## Scope (v1)
 
-1. **Current-page check** — verdict banner: is the current URL allowed or
-   blocked for Googlebot (RFC 9309 matching, `*` group fallback)? Clicking the
-   matched rule scrolls the raw file view to that line and flashes it.
+1. **Current-page check** — _removed 2026-06-10 after implementation: the
+   per-page crawlability verdict banner will live in the planned SEO Overview
+   tab instead. The RFC 9309 matcher (`isAllowed`) stays in `robots.ts` — the
+   AI matrix and the `site-blocked`/`blocks-assets` lint rules depend on it._
 2. **AI crawler access matrix** — per-bot allowed/blocked chips for the
    current page, grouped by purpose (AI training / AI search / user fetch),
    with a one-line summary per group.
