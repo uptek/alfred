@@ -121,11 +121,15 @@ export function parseAppListing(html: string, handle: string): AppListing {
     .join(' ')
     .toLowerCase();
 
-  // Featured-gallery screenshots: thumbnails keep their sizing query; the
-  // bare URL (query stripped) serves the original full-size image.
+  // Featured-gallery images: the promotional image (first gallery tile) plus
+  // desktop screenshots. Mobile screenshots are responsive duplicates of the
+  // same content, so they are skipped. Thumbnails keep their sizing query;
+  // the bare URL (query stripped) serves the original full-size image.
   const screenshots: string[] = [];
   const seenScreenshots = new Set<string>();
-  for (const img of doc.querySelectorAll('#adp-details-section img[src*="_screenshot/"]')) {
+  for (const img of doc.querySelectorAll(
+    '#adp-details-section img[src*="promotional_image/"], #adp-details-section img[src*="desktop_screenshot/"]'
+  )) {
     const rawSrc = img.getAttribute('src');
     const src = rawSrc ? safeUrl(rawSrc, APP_STORE_ORIGIN) : undefined;
     const base = src?.split('?')[0];
