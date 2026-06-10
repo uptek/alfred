@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { RawLink } from './types';
+  import type { LinkKind, RawLink } from './types';
+  import { csvField } from './links';
   import { highlightLinks, scrollToLink } from './utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
@@ -13,13 +14,14 @@
     if (tracked || links.length === 0) return;
     tracked = true;
     untrack(() => {
-      trackAction('links_view', { link_count: links.length, external_count: links.filter(l => l.isExternal).length, nofollow_count: links.filter(l => l.isNofollow).length });
+      trackAction('links_view', { link_count: links.length, external_count: links.filter(l => l.kind === 'external').length, nofollow_count: links.filter(l => l.isNofollow).length });
     });
   });
 
   let typeFilter = $state('all');
   let followFilter = $state('all');
   let anchorFilter = $state('all');
+  let showHidden = $state(true);
   let search = $state('');
   let searchOpen = $state(false);
   let openMenu = $state<'type' | 'follow' | 'anchor' | 'export' | null>(null);
@@ -48,32 +50,48 @@
     if (!target.closest('.menu')) openMenu = null;
   }
 
+  // dofollow = passes link equity = none of the nofollow-class hints
+  const isDofollow = (l: RawLink) => !l.isNofollow && !l.isSponsored && !l.isUgc;
+
   const stats = $derived.by(() => {
-    let internal = 0, external = 0, dofollow = 0, nofollow = 0, image = 0, text = 0, none = 0;
+    let internal = 0, external = 0, other = 0, dofollow = 0, nofollow = 0, sponsored = 0, ugc = 0,
+      image = 0, text = 0, none = 0, hidden = 0;
     const counts: Record<string, number> = {};
     for (const l of links) {
-      if (l.isExternal) external++; else internal++;
-      if (l.isNofollow) nofollow++; else dofollow++;
-      if (l.isImage) image++; else if (l.text !== '') text++; else none++;
+      if (l.kind === 'internal') internal++; else if (l.kind === 'external') external++; else other++;
+      if (l.isNofollow) nofollow++;
+      if (l.isSponsored) sponsored++;
+      if (l.isUgc) ugc++;
+      if (isDofollow(l)) dofollow++;
+      if (l.isImage) image++;
+      if (l.text !== '') text++; else none++;
+      if (l.isHidden) hidden++;
       counts[l.href] = (counts[l.href] ?? 0) + 1;
     }
-    return { total: links.length, internal, external, dofollow, nofollow, image, text, none, hrefCounts: counts };
+    return { total: links.length, internal, external, other, dofollow, nofollow, sponsored, ugc, image, text, none, hidden, hrefCounts: counts };
   });
 
   const filtered = $derived.by(() => {
     const q = search.toLowerCase();
     return links.filter(link => {
-      if (typeFilter === 'internal' && link.isExternal) return false;
-      if (typeFilter === 'external' && !link.isExternal) return false;
-      if (followFilter === 'dofollow' && link.isNofollow) return false;
+      if (typeFilter === 'internal' && link.kind !== 'internal') return false;
+      if (typeFilter === 'external' && link.kind !== 'external') return false;
+      if (typeFilter === 'other' && (link.kind === 'internal' || link.kind === 'external')) return false;
+      if (followFilter === 'dofollow' && !isDofollow(link)) return false;
       if (followFilter === 'nofollow' && !link.isNofollow) return false;
-      if (anchorFilter === 'text' && (link.isImage || link.text === '')) return false;
+      if (followFilter === 'sponsored' && !link.isSponsored) return false;
+      if (followFilter === 'ugc' && !link.isUgc) return false;
+      if (anchorFilter === 'text' && link.text === '') return false;
       if (anchorFilter === 'image' && !link.isImage) return false;
-      if (anchorFilter === 'none' && (link.isImage || link.text !== '')) return false;
+      if (anchorFilter === 'none' && link.text !== '') return false;
+      if (!showHidden && link.isHidden) return false;
       if (q && !link.href.toLowerCase().includes(q) && !link.text.toLowerCase().includes(q)) return false;
       return true;
     });
   });
+
+  const KIND_RANK: Record<LinkKind, number> = { internal: 0, external: 1, mailto: 2, tel: 3, other: 4 };
+  const followRank = (l: RawLink) => (l.isNofollow ? 3 : l.isSponsored ? 2 : l.isUgc ? 1 : 0);
 
   const sorted = $derived.by(() => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -81,8 +99,8 @@
       let cmp = 0;
       switch (sortKey) {
         case 'url': cmp = a.href.localeCompare(b.href); break;
-        case 'follow': cmp = (a.isNofollow ? 1 : 0) - (b.isNofollow ? 1 : 0); break;
-        case 'type': cmp = (a.isExternal ? 1 : 0) - (b.isExternal ? 1 : 0); break;
+        case 'follow': cmp = followRank(a) - followRank(b); break;
+        case 'type': cmp = KIND_RANK[a.kind] - KIND_RANK[b.kind]; break;
         default: cmp = a.index - b.index;
       }
       if (cmp !== 0) return cmp * dir;
@@ -101,9 +119,10 @@
   }
 
   function displayUrl(link: RawLink): string {
+    if (link.kind !== 'internal' && link.kind !== 'external') return link.href;
     try {
       const url = new URL(link.href);
-      if (!link.isExternal) {
+      if (link.kind === 'internal') {
         const path = url.pathname + url.search + url.hash;
         return path || '/';
       }
@@ -114,6 +133,21 @@
     } catch {
       return link.href;
     }
+  }
+
+  function kindLabel(kind: LinkKind): string {
+    switch (kind) {
+      case 'internal': return 'Internal';
+      case 'external': return 'External';
+      case 'mailto': return 'Mailto';
+      case 'tel': return 'Tel';
+      default: return 'Other';
+    }
+  }
+
+  function toggleHidden() {
+    showHidden = !showHidden;
+    trackAction('links_toggle_hidden', { show_hidden: showHidden });
   }
 
   function toggleHighlight() {
@@ -144,13 +178,12 @@
   }
 
   function exportCsv() {
-    const header = 'URL,Anchor Text,Dofollow,Type,Rel,Is Image';
-    const rows = links.map(l => {
-      const anchor = l.isImage ? '[image]' : l.text;
-      return [l.href, anchor, !l.isNofollow, l.isExternal ? 'External' : 'Internal', l.rel, l.isImage]
-        .map(v => `"${String(v).replace(/"/g, '""')}"`)
-        .join(',');
-    });
+    const header = 'URL,Anchor Text,Type,Dofollow,Rel,Is Image,Is Hidden,Insecure HTTP,Broken Anchor';
+    const rows = links.map(l =>
+      [l.href, l.text, l.kind, isDofollow(l), l.rel, l.isImage, l.isHidden, l.isInsecure, l.isBrokenAnchor]
+        .map(csvField)
+        .join(',')
+    );
     downloadFile([header, ...rows].join('\n'), `alfred-links-${siteSlug}.csv`, 'text/csv');
     trackAction('links_export', { format: 'csv', link_count: links.length });
     openMenu = null;
@@ -159,11 +192,14 @@
   function exportJson() {
     const data = links.map(l => ({
       url: l.href,
-      anchorText: l.isImage ? '[image]' : l.text,
-      dofollow: !l.isNofollow,
-      type: l.isExternal ? 'external' : 'internal',
+      anchorText: l.text,
+      type: l.kind,
+      dofollow: isDofollow(l),
       rel: l.rel,
       isImage: l.isImage,
+      isHidden: l.isHidden,
+      isInsecure: l.isInsecure,
+      isBrokenAnchor: l.isBrokenAnchor,
     }));
     downloadFile(JSON.stringify(data, null, 2), `alfred-links-${siteSlug}.json`, 'application/json');
     trackAction('links_export', { format: 'json', link_count: links.length });
@@ -194,11 +230,14 @@
     { value: 'all', label: 'All', count: stats.total },
     { value: 'internal', label: 'Internal', count: stats.internal },
     { value: 'external', label: 'External', count: stats.external },
+    ...(stats.other > 0 ? [{ value: 'other', label: 'Other', count: stats.other }] : []),
   ]);
   const followOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
     { value: 'dofollow', label: 'Dofollow', count: stats.dofollow },
     { value: 'nofollow', label: 'Nofollow', count: stats.nofollow },
+    ...(stats.sponsored > 0 ? [{ value: 'sponsored', label: 'Sponsored', count: stats.sponsored }] : []),
+    ...(stats.ugc > 0 ? [{ value: 'ugc', label: 'UGC', count: stats.ugc }] : []),
   ]);
   const anchorOptions = $derived([
     { value: 'all', label: 'All', count: stats.total },
@@ -207,7 +246,7 @@
     { value: 'none', label: 'None', count: stats.none },
   ]);
 
-  const anyFilterActive = $derived(typeFilter !== 'all' || followFilter !== 'all' || anchorFilter !== 'all' || search.length > 0);
+  const anyFilterActive = $derived(typeFilter !== 'all' || followFilter !== 'all' || anchorFilter !== 'all' || !showHidden || search.length > 0);
 
   function setType(v: string) { typeFilter = v; openMenu = null; trackAction('links_filter', { facet: 'type', value: v }); }
   function setFollow(v: string) { followFilter = v; openMenu = null; trackAction('links_filter', { facet: 'follow', value: v }); }
@@ -217,6 +256,7 @@
     typeFilter = 'all';
     followFilter = 'all';
     anchorFilter = 'all';
+    showHidden = true;
     search = '';
     searchOpen = false;
     openMenu = null;
@@ -277,6 +317,12 @@
           {/if}
         </div>
         <div class="toolbar__actions">
+          {#if stats.hidden > 0}
+            <button class="toolbar-btn" class:toolbar-btn--active={!showHidden} onclick={toggleHidden} title={showHidden ? 'Exclude links hidden via CSS' : 'Show hidden links'}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              {stats.hidden} hidden
+            </button>
+          {/if}
           <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} title="Highlight links on page">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Highlight
@@ -340,7 +386,7 @@
         </thead>
         <tbody>
           {#each sorted as link, i (link.index)}
-            <tr class="row" onclick={(e) => handleRowClick(e, link.index)} title="Click to scroll to this link">
+            <tr class="row" class:row--hidden={link.isHidden} onclick={(e) => handleRowClick(e, link.index)} title={link.isHidden ? 'Hidden via CSS' : 'Click to scroll to this link'}>
               <td class="td td--num">{i + 1}</td>
               <td class="td td--url">
                 <div class="url-row">
@@ -348,23 +394,41 @@
                   {#if stats.hrefCounts[link.href]! > 1}
                     <span class="dup-badge">&times;{stats.hrefCounts[link.href]}</span>
                   {/if}
+                  {#if link.isInsecure}
+                    <span class="flag flag--amber" title="Insecure plain-http link">http</span>
+                  {/if}
+                  {#if link.isBrokenAnchor}
+                    <span class="flag flag--red" title="No element on this page matches the #fragment">broken #</span>
+                  {/if}
+                  {#if link.isHidden}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="hidden-icon"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  {/if}
                 </div>
-                {#if link.isImage}
-                  <span class="anchor-text anchor-text--image">[image]</span>
-                {:else if link.text}
-                  <span class="anchor-text">{link.text}</span>
-                {:else}
-                  <span class="anchor-text anchor-text--empty">(no anchor text)</span>
-                {/if}
+                <div class="anchor-row">
+                  {#if link.isImage}
+                    <span class="img-tag">img</span>
+                  {/if}
+                  {#if link.text}
+                    <span class="anchor-text">{link.text}</span>
+                  {:else if link.isImage}
+                    <span class="anchor-text anchor-text--empty">(image without alt text)</span>
+                  {:else}
+                    <span class="anchor-text anchor-text--empty">(no anchor text)</span>
+                  {/if}
+                </div>
               </td>
               <td class="td td--follow">
                 {#if link.isNofollow}
                   <span class="pill pill--red">No</span>
+                {:else if link.isSponsored}
+                  <span class="pill pill--amber">Sponsored</span>
+                {:else if link.isUgc}
+                  <span class="pill pill--amber">UGC</span>
                 {:else}
                   <span class="pill pill--green">Yes</span>
                 {/if}
               </td>
-              <td class="td td--type">{link.isExternal ? 'External' : 'Internal'}</td>
+              <td class="td td--type">{kindLabel(link.kind)}</td>
             </tr>
           {/each}
         </tbody>
@@ -468,6 +532,7 @@
 
   .row { cursor: pointer; transition: background 0.1s; }
   .row:hover { background: var(--bg-hover); }
+  .row--hidden { opacity: 0.45; }
 
   .td { padding: 9px 8px 9px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border-muted); vertical-align: middle; }
   .td--num { color: var(--text-muted); font-size: 12px; padding-right: 0; }
@@ -477,15 +542,21 @@
   .url { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .url:hover { text-decoration: underline; }
   .dup-badge { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; background: var(--warning-bg); color: var(--warning); }
+  .flag { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; }
+  .flag--amber { background: var(--warning-bg); color: var(--warning); }
+  .flag--red { background: var(--error-bg); color: var(--error-strong); }
+  .hidden-icon { flex-shrink: 0; width: 13px; height: 13px; stroke-width: 1.8; color: var(--text-muted); }
 
-  .anchor-text { display: block; font-size: 11.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+  .anchor-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
+  .img-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--accent-tint); color: var(--accent); }
+  .anchor-text { font-size: 11.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .anchor-text--empty { color: var(--error); font-style: italic; }
-  .anchor-text--image { color: var(--text-muted); font-style: italic; }
 
   /* Pills */
   .pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
   .pill--green { background: var(--success-bg); color: var(--success-strong); }
   .pill--red { background: var(--error-bg); color: var(--error-strong); }
+  .pill--amber { background: var(--warning-bg); color: var(--warning); }
 
   .no-results { text-align: center; padding: 24px; font-size: 13px; color: var(--text-muted); }
 

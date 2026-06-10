@@ -4,15 +4,21 @@ export interface RawHeading {
   isHidden: boolean;
 }
 
+export type LinkKind = 'internal' | 'external' | 'mailto' | 'tel' | 'other';
+
 export interface RawLink {
-  index: number;
-  href: string;
-  text: string;
-  rel: string;
-  isExternal: boolean;
-  isNofollow: boolean;
-  isImage: boolean;
-  isHidden: boolean;
+  index: number; // position among all a[href] elements in DOM order (stable key)
+  href: string; // resolved absolute URL
+  text: string; // accessible anchor text: textContent → aria-label → img alt, whitespace collapsed
+  rel: string; // raw rel attribute
+  kind: LinkKind; // internal/external for http(s); mailto/tel/other never count as external
+  isNofollow: boolean; // rel contains nofollow
+  isSponsored: boolean; // rel contains sponsored (nofollow-class hint)
+  isUgc: boolean; // rel contains ugc (nofollow-class hint)
+  isImage: boolean; // contains an img/svg/picture descendant
+  isHidden: boolean; // !checkVisibility()
+  isInsecure: boolean; // plain-http target on a non-loopback host
+  isBrokenAnchor: boolean; // same-page #fragment with no matching id/name on the page
 }
 
 export type AssetKind = 'script' | 'style';

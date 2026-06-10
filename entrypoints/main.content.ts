@@ -3,6 +3,7 @@ import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
 import { headingText } from './popup/headings';
+import { classifyLink, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/links';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -26,6 +27,31 @@ function collectImageEls(): CollectedImage[] {
     }
   }
   return out;
+}
+
+const flashTimers = new WeakMap<HTMLElement, number[]>();
+
+/**
+ * Scrolls an element into view and applies a brief green dashed outline.
+ * Re-triggering on the same element resets its timers, so rapid repeat
+ * clicks can't strip the outline early or leave stale inline styles.
+ */
+function flashOutline(target: HTMLElement): void {
+  for (const id of flashTimers.get(target) ?? []) clearTimeout(id);
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  target.style.outline = '2px dashed #95bf47';
+  target.style.outlineOffset = '3px';
+  target.style.transition = 'outline-color 0.8s';
+  const fade = window.setTimeout(() => {
+    target.style.outlineColor = 'transparent';
+  }, 5000);
+  const clear = window.setTimeout(() => {
+    target.style.outline = '';
+    target.style.outlineOffset = '';
+    target.style.transition = '';
+    flashTimers.delete(target);
+  }, 5800);
+  flashTimers.set(target, [fade, clear]);
 }
 
 const IMAGE_HIGHLIGHT_STYLE_ID = 'alfred-image-highlights';
@@ -203,29 +229,38 @@ export default defineContentScript({
       }
 
       /**
-       * Extracts all anchor links from the page in DOM order.
-       * @returns {{ index: number, href: string, text: string, rel: string, isExternal: boolean, isNofollow: boolean, isImage: boolean, isHidden: boolean }[]}
+       * Extracts all anchor links from the page in DOM order. Each anchor is
+       * stamped with its index so scroll_to_link can find it even if the DOM
+       * mutates afterwards (lazy menus, carousels).
+       * @returns {RawLink[]}
        */
       if (request.action === 'get_links') {
         const pageHost = location.hostname;
         const links = Array.from(document.querySelectorAll('a[href]')).map((el, i) => {
           const anchor = el as HTMLAnchorElement;
+          anchor.setAttribute('data-alfred-link-index', String(i));
           const rel = anchor.getAttribute('rel') ?? '';
-          let isExternal = false;
-          try {
-            isExternal = anchor.hostname !== pageHost;
-          } catch {
-            isExternal = true;
-          }
+          const { nofollow, sponsored, ugc } = relFlags(rel);
+          const fragment = samePageFragment(anchor.href, location.href);
+          const isBrokenAnchor =
+            fragment !== null &&
+            fragment !== '' &&
+            fragment !== 'top' && // #top scrolls to the document top even without a target
+            !document.getElementById(fragment) &&
+            document.getElementsByName(fragment).length === 0;
           return {
             index: i,
             href: anchor.href,
-            text: (anchor.textContent ?? '').trim(),
+            text: linkText(anchor),
             rel,
-            isExternal,
-            isNofollow: /\bnofollow\b/i.test(rel),
+            kind: classifyLink(anchor.href, pageHost),
+            isNofollow: nofollow,
+            isSponsored: sponsored,
+            isUgc: ugc,
             isImage: anchor.querySelector('img, svg, picture') !== null,
-            isHidden: !anchor.checkVisibility()
+            isHidden: !anchor.checkVisibility(),
+            isInsecure: isInsecureHttp(anchor.href),
+            isBrokenAnchor
           };
         });
         sendResponse(links);
@@ -501,17 +536,11 @@ export default defineContentScript({
         const pageHost = location.hostname;
         document.querySelectorAll('a[href]').forEach((el) => {
           const anchor = el as HTMLAnchorElement;
-          const rel = anchor.getAttribute('rel') ?? '';
-          const isNofollow = /\bnofollow\b/i.test(rel);
-          let isExternal = false;
-          try {
-            isExternal = anchor.hostname !== pageHost;
-          } catch {
-            isExternal = true;
-          }
+          const { nofollow, sponsored, ugc } = relFlags(anchor.getAttribute('rel') ?? '');
+          const kind = classifyLink(anchor.href, pageHost);
           anchor.setAttribute(
             'data-alfred-link-highlight',
-            isNofollow ? 'nofollow' : isExternal ? 'external' : 'internal'
+            nofollow || sponsored || ugc ? 'nofollow' : kind === 'internal' ? 'internal' : 'external'
           );
         });
         sendResponse(true);
@@ -519,26 +548,16 @@ export default defineContentScript({
       }
 
       /**
-       * Scrolls to a link by its zero-based DOM index and applies a brief green dashed outline highlight.
+       * Scrolls to a link and applies a brief green dashed outline highlight.
+       * Prefers the index stamped by get_links so DOM mutations since the
+       * snapshot don't shift the target; falls back to the nth a[href].
        * @param {number} request.index - Zero-based index of the link among all `a[href]` elements.
        */
       if (request.action === 'scroll_to_link') {
-        const allLinks = document.querySelectorAll('a[href]');
-        const target = allLinks[(request as { action: string; index: number }).index];
-        if (target instanceof HTMLElement) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          target.style.outline = '2px dashed #95bf47';
-          target.style.outlineOffset = '3px';
-          target.style.transition = 'outline-color 0.8s';
-          setTimeout(() => {
-            target.style.outlineColor = 'transparent';
-            setTimeout(() => {
-              target.style.outline = '';
-              target.style.outlineOffset = '';
-              target.style.transition = '';
-            }, 800);
-          }, 5000);
-        }
+        const { index } = request as { action: string; index: number };
+        const target =
+          document.querySelector(`a[data-alfred-link-index="${index}"]`) ?? document.querySelectorAll('a[href]')[index];
+        if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
       }
@@ -546,20 +565,7 @@ export default defineContentScript({
       if (request.action === 'scroll_to_heading') {
         const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const target = allHeadings[(request as { action: string; index: number }).index];
-        if (target instanceof HTMLElement) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          target.style.outline = '2px dashed #95bf47';
-          target.style.outlineOffset = '3px';
-          target.style.transition = 'outline-color 0.8s';
-          setTimeout(() => {
-            target.style.outlineColor = 'transparent';
-            setTimeout(() => {
-              target.style.outline = '';
-              target.style.outlineOffset = '';
-              target.style.transition = '';
-            }, 800);
-          }, 5000);
-        }
+        if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
       }
