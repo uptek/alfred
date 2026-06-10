@@ -230,17 +230,20 @@ export const scrollToImage = async (index: number): Promise<void> => {
 };
 
 /**
- * Fetches the site's robots.txt via the background service worker, whose
- * fetches are not CORS-bound (handles cross-origin redirects) and work even
- * when the content script can't run on the page.
- * @returns {Promise<RobotsResponse | null>} Raw file + HTTP metadata, or null on non-http tabs.
+ * Fetches the site's robots.txt via the content script. The fetch runs in
+ * the page context, so it reuses the page's HTTP cache, warm connection,
+ * and cookies — fast and reliable where an extension-origin fetch can hang
+ * on proxies, bot protection, or cookie-gated origins.
+ * @returns {Promise<RobotsResponse | null>} Raw file + HTTP metadata, or null when the tab is unreachable.
  */
 export const getRobots = async (): Promise<RobotsResponse | null> => {
   try {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.url || !/^https?:/i.test(tab.url)) return null;
-    const response = await browser.runtime.sendMessage({ type: 'fetch_robots', url: tab.url });
-    return response && typeof response.status === 'number' ? response : null;
+    if (tab?.id) {
+      const response = await browser.tabs.sendMessage(tab.id, { action: 'get_robots' });
+      return response && typeof response.status === 'number' ? response : null;
+    }
+    return null;
   } catch {
     return null;
   }

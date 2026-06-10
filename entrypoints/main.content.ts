@@ -582,6 +582,36 @@ export default defineContentScript({
       }
 
       /**
+       * Fetches the site's robots.txt (same-origin, from the page context, so
+       * it rides the page's HTTP cache, connection, and cookies) and returns
+       * the raw text plus HTTP metadata. Analysis happens in the popup.
+       * @returns {{ ok: boolean, status: number, content: string, finalUrl: string, size: number, truncated: boolean }}
+       */
+      if (request.action === 'get_robots') {
+        // Cap what crosses runtime messaging into the popup — a huge body
+        // would choke sendMessage serialization and the popup renderer.
+        const MAX_ROBOTS_BYTES = 600 * 1024; // Google stops processing at 500 KiB
+        fetch(`${location.origin}/robots.txt`, { signal: AbortSignal.timeout(8000) })
+          .then(async (res) => {
+            const content = res.ok ? await res.text() : '';
+            const truncated = content.length > MAX_ROBOTS_BYTES;
+            const capped = truncated ? content.slice(0, MAX_ROBOTS_BYTES) : content;
+            sendResponse({
+              ok: true,
+              status: res.status,
+              content: capped,
+              finalUrl: res.url,
+              size: new TextEncoder().encode(content).length,
+              truncated
+            });
+          })
+          .catch(() => {
+            sendResponse({ ok: false, status: 0, content: '', finalUrl: '', size: 0, truncated: false });
+          });
+        return true;
+      }
+
+      /**
        * Toggles colored dashed outlines on all page links (green=internal, purple=external, red=nofollow).
        * @param {boolean} request.enabled - Whether to apply or remove highlights.
        */

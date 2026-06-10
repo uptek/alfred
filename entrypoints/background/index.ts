@@ -125,58 +125,6 @@ export default defineBackground(() => {
     storage.removeItem(keyFor(tabId)).catch(() => {});
   });
 
-  // Fetch robots.txt for the popup. Runs here (not in the content script)
-  // because extension fetches with host_permissions are not CORS-bound, so
-  // cross-origin redirects (apex → www, CDN offload) still resolve — a
-  // content-script fetch follows the page's CORS rules and would fail.
-  const MAX_ROBOTS_BYTES = 600 * 1024; // Google stops processing at 500 KiB
-  const ROBOTS_FETCH_TIMEOUT_MS = 8000; // a hung fetch must not stall the popup
-  browser.runtime.onMessage.addListener(
-    (message: { type?: string; url?: string }, _sender, sendResponse: (response: unknown) => void) => {
-      // Validate the scheme here too — this listener is the trust boundary,
-      // not the popup, and the extension has <all_urls> host permissions.
-      if (message.type !== 'fetch_robots' || typeof message.url !== 'string' || !/^https?:/i.test(message.url)) {
-        return;
-      }
-      (async () => {
-        // Resolve against the full URL (location.origin is the string "null"
-        // on sandboxed pages). no-cache revalidates so a just-edited
-        // robots.txt shows fresh.
-        const res = await fetch(new URL('/robots.txt', message.url), {
-          cache: 'no-cache',
-          signal: AbortSignal.timeout(ROBOTS_FETCH_TIMEOUT_MS)
-        });
-        // Stream-read with a byte cap — res.text() would buffer a hostile
-        // multi-GB body (and chunked bodies have no Content-Length to check).
-        let content = '';
-        let bytes = 0;
-        let truncated = false;
-        if (res.ok && res.body) {
-          const reader = res.body.getReader();
-          const decoder = new TextDecoder();
-          for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            bytes += value.byteLength;
-            if (bytes > MAX_ROBOTS_BYTES) {
-              const keep = value.byteLength - (bytes - MAX_ROBOTS_BYTES);
-              content += decoder.decode(value.subarray(0, keep), { stream: true });
-              truncated = true;
-              await reader.cancel();
-              break;
-            }
-            content += decoder.decode(value, { stream: true });
-          }
-          content += decoder.decode();
-        }
-        sendResponse({ ok: true, status: res.status, content, finalUrl: res.url, size: bytes, truncated });
-      })().catch(() => {
-        sendResponse({ ok: false, status: 0, content: '', finalUrl: '', size: 0, truncated: false });
-      });
-      return true;
-    }
-  );
-
   browser.runtime.onInstalled.addListener(async (details) => {
     // Prefetch themes cache on install and update
     refreshThemesCacheIfNeeded();
