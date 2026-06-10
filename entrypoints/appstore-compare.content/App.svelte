@@ -179,18 +179,22 @@
 
 <div class="compare">
   <header class="compare-header">
-    <h1>Compare apps</h1>
-    <div class="compare-actions">
+    <div>
+      <h1>Compare apps</h1>
       <!-- Polaris components live in the page world; the content script can
            only reach them via attributes and events. Boolean attributes are
            presence-based, so pass undefined (not false) to keep them absent,
            and mirror the checkbox by toggling our own state on change. -->
-      <s-checkbox
-        label="Differences only"
-        checked={differencesOnly || undefined}
-        disabled={loadedColumns.length < 2 || undefined}
-        onchange={() => (differencesOnly = !differencesOnly)}
-      ></s-checkbox>
+      <div class="compare-filter">
+        <s-checkbox
+          label="Differences only"
+          checked={differencesOnly || undefined}
+          disabled={loadedColumns.length < 2 || undefined}
+          onchange={() => (differencesOnly = !differencesOnly)}
+        ></s-checkbox>
+      </div>
+    </div>
+    <div class="compare-actions">
       <s-button icon="link" onclick={shareComparison}>Share</s-button>
       <!-- s-popover can't position itself outside Shopify's own embedding
            (its activator measurement comes up empty), so the trigger is
@@ -545,7 +549,7 @@
 
   .compare-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 24px;
@@ -560,7 +564,11 @@
   .compare-actions {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
+  }
+
+  .compare-filter {
+    margin-top: 10px;
   }
 
   .compare-export-wrap {
