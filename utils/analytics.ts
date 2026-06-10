@@ -74,7 +74,10 @@ export type AnalyticsAction =
   | 'images_export'
   | 'images_copy'
   | 'images_sort'
-  | 'images_open';
+  | 'images_open'
+  | 'generate_access_token'
+  | 'copy_access_token'
+  | 'delete_access_token';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -154,7 +157,10 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   images_export: 60,
   images_copy: 60,
   images_sort: 25,
-  images_open: 5
+  images_open: 5,
+  generate_access_token: 300,
+  copy_access_token: 10,
+  delete_access_token: 0
 };
 
 // --- Usage Stats (local tracking) ---
@@ -251,7 +257,10 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   images_export: 'SEO',
   images_copy: 'SEO',
   images_sort: 'SEO',
-  images_open: 'SEO'
+  images_open: 'SEO',
+  generate_access_token: 'Access Tokens',
+  copy_access_token: 'Access Tokens',
+  delete_access_token: 'Access Tokens'
 };
 
 /** Local usage stats persisted in `local:usage_stats`.

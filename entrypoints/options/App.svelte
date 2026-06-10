@@ -2,6 +2,7 @@
   import Navigation from './components/Navigation.svelte';
   import Settings from './components/pages/Settings.svelte';
   import Changelog from './components/pages/Changelog.svelte';
+  import AccessTokens from './components/pages/AccessTokens.svelte';
 
   let currentPage = $state('settings');
   let isLoading = $state(true);
@@ -9,7 +10,7 @@
   $effect(() => {
     const params = new URLSearchParams(window.location.search);
     const page = params.get('page');
-    if (page && ['settings', 'changelog'].includes(page)) {
+    if (page && ['settings', 'changelog', 'access-tokens'].includes(page)) {
       currentPage = page;
     }
 
@@ -56,6 +57,8 @@
         <s-box>
           {#if currentPage === 'settings'}
             <Settings />
+          {:else if currentPage === 'access-tokens'}
+            <AccessTokens />
           {:else if currentPage === 'changelog'}
             <Changelog />
           {/if}
