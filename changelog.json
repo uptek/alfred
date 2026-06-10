@@ -1,5 +1,28 @@
 [
   {
+    "version": "2026.06.10",
+    "date": "2026-06-10",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Admin Access Token Generator"
+      },
+      {
+        "type": "paragraph",
+        "content": "Skip the OAuth dance. The new Access Tokens page in Alfred’s settings generates Shopify Admin API access tokens for your custom apps in seconds — no Postman, no manually copying authorization codes before they expire."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Pick API scopes from a searchable checklist, or use quick-select bundles like Read all, Theme development, and Orders read-only.",
+          "Alfred opens the approval screen, captures the redirect automatically, and exchanges the code for a token — even when the redirect points at localhost.",
+          "Generated tokens land in a local token vault: copy with one click, see granted scopes and age, delete individually or all at once.",
+          "Tokens and client secrets never leave your browser. Secrets are only held while the authorization is in flight, and tokens are excluded from any export."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.06.09",
     "date": "2026-06-09",
     "changes": [

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.06.10
+@ 2026-06-10
+
+### Admin Access Token Generator
+Skip the OAuth dance. The new Access Tokens page in Alfred’s settings generates Shopify Admin API access tokens for your custom apps in seconds — no Postman, no manually copying authorization codes before they expire.
+
+- Pick API scopes from a searchable checklist, or use quick-select bundles like Read all, Theme development, and Orders read-only.
+- Alfred opens the approval screen, captures the redirect automatically, and exchanges the code for a token — even when the redirect points at localhost.
+- Generated tokens land in a local token vault: copy with one click, see granted scopes and age, delete individually or all at once.
+- Tokens and client secrets never leave your browser. Secrets are only held while the authorization is in flight, and tokens are excluded from any export.
+
 ## 2026.06.09
 @ 2026-06-09
 
@@ -15,7 +26,7 @@ New Images tab in the popup audits every image on any page — for SEO, accessib
 - Export everything as CSV or JSON, or copy all image URLs to your clipboard.
 - Works on any website, not just Shopify stores.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-images.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-images.mp4"></video>
 
 ## 2026.06.01.1
 @ 2026-06-01

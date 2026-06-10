@@ -10,6 +10,7 @@
 
   const navItems: NavItem[] = [
     { id: 'settings', label: 'Settings', icon: 'settings' },
+    { id: 'access-tokens', label: 'Access Tokens', icon: 'key' },
     { id: 'changelog', label: 'Changelog', icon: 'clock' },
     { id: 'feedback', label: 'Feedback & Requests', icon: 'lightbulb', url: 'https://github.com/uptek/alfred/issues' }
   ];

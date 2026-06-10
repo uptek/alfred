@@ -1,4 +1,5 @@
 import { storage } from '#imports';
+import { registerOAuthHandler } from './oauth';
 import { registerShortcuts } from './shortcuts';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
@@ -53,6 +54,9 @@ export default defineBackground(() => {
   let currentShortcuts: unknown = null;
 
   registerShortcuts();
+
+  // Capture OAuth redirects for the Access Token Generator
+  registerOAuthHandler();
 
   // Re-register shortcuts when settings change
   storage.watch<AlfredSettings>('local:settings', (newValue) => {
