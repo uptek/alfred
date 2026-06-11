@@ -1,5 +1,15 @@
 [
   {
+    "version": "2026.06.11.1",
+    "date": "2026-06-11",
+    "changes": [
+      {
+        "type": "paragraph",
+        "content": "Fixed auto-submit hotlinks: the prefilled store URL is now validated automatically, and the request is submitted as soon as the Request access button is ready. One-click hotlinks now go through reliably instead of stalling on an unvalidated store URL."
+      }
+    ]
+  },
+  {
     "version": "2026.06.11",
     "date": "2026-06-11",
     "changes": [
