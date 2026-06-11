@@ -1,5 +1,30 @@
 [
   {
+    "version": "2026.06.11",
+    "date": "2026-06-11",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Permission Preset Hotlinks: Auto-Submit"
+      },
+      {
+        "type": "paragraph",
+        "content": "The preset hotlink popup now has an Auto-submit option. When enabled, opening the hotlink fills in the permissions and message and sends the access request automatically, so you can go from link to submitted request in one click. It's off by default, so existing hotlinks still let you review before submitting."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Permission presets now focus solely on the Shopify Dev Dashboard, with cleaner, more consistent buttons that match the dashboard's native styling.",
+          "Hotlink URLs flash briefly when the auto-submit option changes them, so it's clear the link was updated before you copy it."
+        ]
+      },
+      {
+        "type": "image",
+        "content": "https://bucket.alfred.uptek.com/alfred-preset-auto-submit.jpg"
+      }
+    ]
+  },
+  {
     "version": "2026.06.09",
     "date": "2026-06-09",
     "changes": [

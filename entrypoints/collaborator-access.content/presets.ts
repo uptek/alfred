@@ -1,65 +1,273 @@
-import type { PageAdapter, Permission, PermissionSearchController } from './types';
+import { getItem, setItem } from '@/utils/storage';
 import { sendTrackEvent } from '@/utils/analytics';
 
-/** Creates a PageAdapter for the Shopify Partner Dashboard (partners.shopify.com). */
-export function createPartnerAdapter(): PageAdapter {
-  const PERM_SELECTOR = '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) input[type="checkbox"]';
-  const MSG_SELECTOR = '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(3) textarea';
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
+export interface Permission {
+  id: string;
+  label: string;
+}
+
+export interface PermissionPreset {
+  id: string;
+  name: string;
+  handle: string;
+  permissions: Permission[];
+  customMessage?: string;
+  createdAt: number;
+  lastUsed?: number;
+}
+
+export interface PermissionSearchController {
+  clear(): void;
+  destroy(): void;
+}
+
+// ---------------------------------------------------------------------------
+// Preset storage, hotlinks, import/export
+// ---------------------------------------------------------------------------
+
+const STORAGE_KEY = 'alfred:permission-presets';
+const HOTLINK_PRESET_PARAM = 'alfred_preset';
+export const HOTLINK_AUTOSUBMIT_PARAM = 'alfred_submit';
+
+type StoredPermissionPreset = PermissionPreset;
+
+/**
+ * Generates a unique ID for a preset.
+ * @returns A unique preset ID
+ */
+export function generatePresetId(): string {
+  return Math.random().toString(36).substring(2, 8) + Date.now().toString(36);
+}
+
+/**
+ * Builds the hotlink URL for a preset using the current partner ID.
+ * @param handle - The preset handle to include in the hotlink
+ * @param autoSubmit - When true, appends the auto-submit param so the request is sent automatically after applying
+ * @returns A collaborator request URL with the preset param appended
+ */
+export function buildHotlinkUrl(handle: string, autoSubmit = false): string {
+  const url = new URL(window.location.href);
+  const segments = url.pathname.split('/').filter(Boolean);
+  const partnerId = segments[1];
+
+  let hotlink = `${url.host}/dashboard/${partnerId}/stores/collaborations/new?${HOTLINK_PRESET_PARAM}=${handle}&store_url={{ customer.shopifyDomain }}`;
+  if (autoSubmit) {
+    hotlink += `&${HOTLINK_AUTOSUBMIT_PARAM}=1`;
+  }
+  return hotlink;
+}
+
+/**
+ * Normalizes a preset handle into a URL-friendly slug.
+ * @param value - Raw handle input
+ * @returns The normalized handle, or null if empty after normalization
+ */
+export function normalizePresetHandle(value: string | undefined): string | null {
+  const normalized =
+    value
+      ?.trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') ?? '';
+  return normalized || null;
+}
+
+/**
+ * Ensures a preset handle is unique within the current preset collection.
+ * @param handle - Preferred handle, if one exists
+ * @param presets - Current set of presets to compare against
+ * @param currentPresetId - Current preset ID when updating an existing preset
+ * @returns A unique handle
+ */
+function ensureUniquePresetHandle(
+  handle: string | undefined,
+  presets: PermissionPreset[],
+  currentPresetId?: string
+): string {
+  const existingHandles = new Set(
+    presets.filter((preset) => preset.id !== currentPresetId).map((preset) => preset.handle)
+  );
+
+  const preferredHandle = normalizePresetHandle(handle);
+  if (preferredHandle && !existingHandles.has(preferredHandle)) {
+    return preferredHandle;
+  }
+
+  const baseHandle = preferredHandle ?? 'preset';
+  let suffix = 2;
+  let generatedHandle = `${baseHandle}-${suffix}`;
+
+  while (existingHandles.has(generatedHandle)) {
+    suffix += 1;
+    generatedHandle = `${baseHandle}-${suffix}`;
+  }
+
+  return generatedHandle;
+}
+
+/**
+ * Normalizes a stored preset before it is used in the app.
+ * @param preset - Stored preset record
+ * @param presets - Already-normalized presets used for uniqueness checks
+ * @returns A normalized preset ready for runtime use
+ */
+function normalizePreset(preset: StoredPermissionPreset, presets: PermissionPreset[]): PermissionPreset {
   return {
-    type: 'partner',
-
-    /** @returns All currently checked permissions with their Polaris checkbox ID and label text. */
-    getCheckedPermissions(): Permission[] {
-      const permissions: Permission[] = [];
-      document.querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`).forEach((checkbox) => {
-        const label = checkbox.closest('label')?.querySelector('p')?.textContent ?? '';
-        permissions.push({ id: checkbox.id, label: label.trim() });
-      });
-      return permissions;
-    },
-
-    /** Unchecks all currently checked permission checkboxes. Checks `.checked` before clicking to avoid re-toggling cascaded children. */
-    uncheckAll() {
-      document.querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`).forEach((checkbox) => {
-        if (checkbox.checked) checkbox.click();
-      });
-    },
-
-    /**
-     * Checks a single permission checkbox by its DOM element ID.
-     * @param id - The checkbox element ID (Polaris-generated).
-     */
-    checkPermission(id: string) {
-      const checkbox = document.getElementById(id) as HTMLInputElement | null;
-      if (checkbox && !checkbox.checked) checkbox.click();
-    },
-
-    /** @returns The current value of the custom message textarea. */
-    getMessage(): string {
-      return document.querySelector<HTMLTextAreaElement>(MSG_SELECTOR)?.value ?? '';
-    },
-
-    /**
-     * Sets the custom message textarea value and dispatches input/change events.
-     * @param text - The message text to set.
-     */
-    setMessage(text: string) {
-      const textarea = document.querySelector<HTMLTextAreaElement>(MSG_SELECTOR);
-      if (textarea) {
-        textarea.value = text;
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-        textarea.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    },
-
-    /** No-op on the partner dashboard — Polaris does not use collapsible permission sections. */
-    expandCheckedSections() {}
+    ...preset,
+    name: preset.name.trim(),
+    handle: ensureUniquePresetHandle(preset.handle ?? preset.name, presets, preset.id),
+    createdAt: preset.createdAt || Date.now()
   };
 }
 
 /**
- * Injects a search input above the Dev Dashboard permissions card and wires up
+ * Retrieves all permissions presets from browser storage.
+ * @returns Promise that resolves to an array of permissions presets, or empty array if none exist
+ */
+export async function getPresets(): Promise<PermissionPreset[]> {
+  const data = await getItem<{ presets?: StoredPermissionPreset[] }>(STORAGE_KEY);
+  const storedPresets = data?.presets ?? [];
+  const normalizedPresets = storedPresets.reduce<PermissionPreset[]>((acc, preset) => {
+    acc.push(normalizePreset(preset, acc));
+    return acc;
+  }, []);
+
+  if (
+    storedPresets.length !== normalizedPresets.length ||
+    storedPresets.some(
+      (preset, index) =>
+        preset.handle !== normalizedPresets[index]?.handle ||
+        preset.name !== normalizedPresets[index]?.name ||
+        preset.createdAt !== normalizedPresets[index]?.createdAt
+    )
+  ) {
+    await setItem(STORAGE_KEY, { presets: normalizedPresets });
+  }
+
+  return normalizedPresets;
+}
+
+/**
+ * Saves the entire array of permissions presets to browser storage.
+ * @param presets - Array of permissions presets to save
+ * @internal Used internally by savePreset and deletePreset functions
+ */
+export async function savePresets(presets: StoredPermissionPreset[]): Promise<PermissionPreset[]> {
+  const normalizedPresets = presets.reduce<PermissionPreset[]>((acc, preset) => {
+    acc.push(normalizePreset(preset, acc));
+    return acc;
+  }, []);
+
+  await setItem(STORAGE_KEY, { presets: normalizedPresets });
+  return normalizedPresets;
+}
+
+/**
+ * Saves or updates a permissions preset in browser storage.
+ * If a preset with the same ID exists, it will be updated.
+ * If not, the preset will be added as a new entry.
+ * @param preset - The permissions preset to save or update
+ */
+export async function savePreset(preset: StoredPermissionPreset): Promise<PermissionPreset> {
+  const presets = await getPresets();
+  const updatedPresets: StoredPermissionPreset[] = [...presets];
+
+  const existingIndex = updatedPresets.findIndex((p) => p.id === preset.id);
+  if (existingIndex >= 0) {
+    updatedPresets[existingIndex] = preset;
+  } else {
+    updatedPresets.push(preset);
+  }
+
+  const savedPresets = await savePresets(updatedPresets);
+  return savedPresets.find((savedPreset) => savedPreset.id === preset.id)!;
+}
+
+/**
+ * Deletes a permissions preset from browser storage.
+ * @param presetId - The ID of the preset to delete
+ */
+export async function deletePreset(presetId: string): Promise<void> {
+  const presets = await getPresets();
+  const filteredPresets = presets.filter((p) => p.id !== presetId);
+  await savePresets(filteredPresets);
+}
+
+/**
+ * Exports permissions presets as a JSON file download.
+ * @param presetsToExport - Array of presets to export
+ */
+export function exportPresets(presetsToExport: PermissionPreset[]): void {
+  // Remove id and lastUsed fields from export
+  const cleanedPresets = presetsToExport.map(({ id: _id, lastUsed: _lastUsed, ...preset }) => preset);
+  const dataStr = JSON.stringify(cleanedPresets, null, 2);
+  const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+  const filename = `shopify-alfred-permissions-presets-${new Date().toISOString().split('T')[0]}.json`;
+
+  const linkElement = document.createElement('a');
+  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('download', filename);
+  linkElement.click();
+}
+
+/**
+ * Imports permissions presets from a JSON file.
+ * @returns Promise that resolves to the number of imported presets, or null if cancelled
+ */
+export function importPresets(): Promise<number | null> {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) {
+        resolve(null);
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        const importedPresets = JSON.parse(text) as StoredPermissionPreset[];
+
+        if (!Array.isArray(importedPresets)) {
+          throw new Error('Invalid file format. Expected an array of presets.');
+        }
+
+        // Import each preset one by one
+        let importCount = 0;
+        for (const importedPreset of importedPresets) {
+          const newPreset: StoredPermissionPreset = {
+            ...importedPreset,
+            id: generatePresetId(),
+            createdAt: importedPreset.createdAt || Date.now()
+          };
+
+          await savePreset(newPreset);
+          importCount++;
+        }
+
+        resolve(importCount);
+      } catch (error) {
+        reject(error as Error);
+      }
+    };
+
+    input.click();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Permission search filter (injected into the page's permissions card)
+// ---------------------------------------------------------------------------
+
+/**
+ * Injects a search input above the permissions card and wires up
  * real-time filtering. Returns a controller to clear or tear down the search.
  */
 export function setupPermissionSearch(): PermissionSearchController | null {
@@ -339,14 +547,16 @@ export function setupPermissionSearch(): PermissionSearchController | null {
   };
 }
 
-/** Creates a PageAdapter for the Shopify Dev Dashboard (dev.shopify.com). */
-export function createDevDashboardAdapter(): PageAdapter {
+// ---------------------------------------------------------------------------
+// Page interaction (reads/writes the collaborator request form)
+// ---------------------------------------------------------------------------
+
+/** Creates the page-interaction helpers for the Shopify collaborator request form (dev.shopify.com). */
+export function createAdapter() {
   const PERM_SELECTOR = 'input[type="checkbox"][name="permissions[]"]';
   const MSG_SELECTOR = '#collaboration-request-message';
 
   return {
-    type: 'dev',
-
     /** @returns All currently checked permissions with their form `value` attribute and label text. */
     getCheckedPermissions(): Permission[] {
       const permissions: Permission[] = [];
@@ -410,6 +620,19 @@ export function createDevDashboardAdapter(): PageAdapter {
           header?.click();
         }
       });
+    },
+
+    /**
+     * Clicks the "Request access" submit button on the collaboration form.
+     * @returns true if the button was found and clicked, false if missing or still disabled.
+     */
+    submit(): boolean {
+      const button = document.querySelector<HTMLButtonElement>('#collaboration-request-submit-button');
+      if (button && !button.disabled) {
+        button.click();
+        return true;
+      }
+      return false;
     }
   };
 }
