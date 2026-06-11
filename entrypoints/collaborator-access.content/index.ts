@@ -3,26 +3,13 @@ import { mount, unmount } from 'svelte';
 import { getItem } from '~/utils/storage';
 import { waitForElement } from '@/utils/helpers';
 import App from './App.svelte';
-import DevApp from './DevApp.svelte';
-import { createPartnerAdapter, createDevDashboardAdapter } from './adapters';
 import type { ContentScriptContext } from '#imports';
 
 const ALFRED_SENTINEL_ID = 'alfred-collaborator-access';
 
 export default defineContentScript({
-  matches: ['*://partners.shopify.com/*/stores/new*', '*://dev.shopify.com/dashboard/*'],
+  matches: ['*://dev.shopify.com/dashboard/*'],
   async main(ctx) {
-    const isPartnerDashboard = window.location.hostname === 'partners.shopify.com';
-    const isDevDashboard = window.location.hostname === 'dev.shopify.com';
-
-    if (isPartnerDashboard && !window.location.search.includes('store_type=managed_store')) {
-      return;
-    }
-
-    if (!isPartnerDashboard && !isDevDashboard) {
-      return;
-    }
-
     const settings = await getItem<AlfredSettings>('settings');
     const isPresetsEnabled = settings?.collaboratorAccess?.presets !== false;
 
@@ -30,26 +17,19 @@ export default defineContentScript({
       return;
     }
 
-    if (isPartnerDashboard) {
-      await setupPartnerDashboard(ctx);
-    } else {
-      await tryInjectDevDashboard(ctx);
+    await tryInject(ctx);
 
-      let debounceTimer: ReturnType<typeof setTimeout>;
-      const observer = new MutationObserver(() => {
-        if (!isCollaborationNewPage()) return;
-        if (document.getElementById(ALFRED_SENTINEL_ID)) return;
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => tryInjectDevDashboard(ctx), 200);
-      });
-      observer.observe(document.documentElement, { childList: true, subtree: true });
-    }
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    const observer = new MutationObserver(() => {
+      if (!isCollaborationNewPage()) return;
+      if (document.getElementById(ALFRED_SENTINEL_ID)) return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => tryInject(ctx), 200);
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
 
     browser.runtime.onMessage.addListener((event: { type: string }) => {
-      if (event.type === 'MOUNT_UI') {
-        if (isPartnerDashboard) setupPartnerDashboard(ctx);
-        else tryInjectDevDashboard(ctx);
-      }
+      if (event.type === 'MOUNT_UI') tryInject(ctx);
     });
   }
 });
@@ -58,55 +38,10 @@ function isCollaborationNewPage(): boolean {
   return window.location.pathname.includes('/stores/collaborations/new');
 }
 
-async function setupPartnerDashboard(ctx: ContentScriptContext) {
-  await injectScript('/libs/shopify-polaris.js', { keepInDom: true });
-
-  const adapter = createPartnerAdapter();
-  let app: Record<string, unknown> | undefined;
-
-  const ui = createIntegratedUi(ctx, {
-    position: 'inline',
-    anchor: 'body',
-    append: 'first' as const,
-    onMount: async (container) => {
-      const target = await waitForElement(
-        '#AppFrameMain form .Polaris-FormLayout__Item:nth-child(2) > .Polaris-Card > .Polaris-Card__Section:nth-child(2)'
-      );
-      if (!target) return;
-      target.insertAdjacentElement('afterend', container);
-      app = mount(App, { target: container, props: { adapter } });
-      return { container };
-    },
-    onRemove: () => {
-      if (app) {
-        unmount(app);
-        app = undefined;
-      }
-    }
-  });
-
-  const createStoreBtn = await waitForElement('#create-new-store-button');
-  if (createStoreBtn) {
-    const proxyBtn = document.createElement('button');
-    proxyBtn.type = 'button';
-    proxyBtn.textContent = 'Save preset';
-    proxyBtn.className = 'Polaris-Button';
-    proxyBtn.style.cssText = 'margin-right: 8px;';
-    proxyBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      document.dispatchEvent(new CustomEvent('alfred:save-preset'));
-    });
-    createStoreBtn.parentElement?.insertBefore(proxyBtn, createStoreBtn);
-  }
-
-  ui.mount();
-}
-
-async function tryInjectDevDashboard(ctx: ContentScriptContext) {
+async function tryInject(ctx: ContentScriptContext) {
   if (!isCollaborationNewPage()) return;
   if (document.getElementById(ALFRED_SENTINEL_ID)) return;
 
-  const adapter = createDevDashboardAdapter();
   let app: Record<string, unknown> | undefined;
 
   const ui = createIntegratedUi(ctx, {
@@ -115,7 +50,7 @@ async function tryInjectDevDashboard(ctx: ContentScriptContext) {
     append: 'before' as const,
     onMount: async (container) => {
       container.id = ALFRED_SENTINEL_ID;
-      app = mount(DevApp, { target: container, props: { adapter } });
+      app = mount(App, { target: container });
       return { container };
     },
     onRemove: () => {
@@ -136,7 +71,7 @@ async function tryInjectDevDashboard(ctx: ContentScriptContext) {
     const bottomSaveBtn = document.createElement('button');
     bottomSaveBtn.type = 'button';
     bottomSaveBtn.textContent = 'Save preset';
-    bottomSaveBtn.className = 'button button-variant-primary button-size-medium';
+    bottomSaveBtn.className = 'button button-variant-secondary button-size-medium';
     bottomSaveBtn.addEventListener('click', (e) => {
       e.preventDefault();
       document.dispatchEvent(new CustomEvent('alfred:save-preset'));
