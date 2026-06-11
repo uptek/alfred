@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.06.11.1
+@ 2026-06-11
+Fixed auto-submit hotlinks: the prefilled store URL is now validated automatically, and the request is submitted as soon as the Request access button is ready. One-click hotlinks now go through reliably instead of stalling on an unvalidated store URL.
+
+
 ## 2026.06.11
 @ 2026-06-11
 
