@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026.06.15
+@ 2026-06-15
+
+### Smarter SEO Audits Across Every Tab
+The Headings, Links, Assets, and Images tabs got a deep accuracy pass — fewer false alarms, more real findings.
+
+
+### Headings
+- Multiple H1s are reported as one issue instead of one alert per heading.
+- Image-only headings now read their image's alt text instead of showing as empty.
+- Hidden headings no longer skew the outline analysis.
+
+### Links
+- Links are classified as internal, external, mailto, tel, or other — with the www variant counting as the same site.
+- Sponsored and UGC rel hints get their own pills and filters alongside nofollow.
+- New badges flag insecure http links and broken #anchor targets; repeated links show a duplicate counter.
+- Hidden links are surfaced with a toggle, and a summary bar totals the current view.
+
+### Assets
+- Scripts are classified by what they really are: modules, JSON-LD, import maps, speculation rules, or inert data blocks.
+- Render-blocking detection now understands module scripts, nomodule fallbacks, media queries, and disabled or alternate stylesheets.
+- A Flags filter pinpoints render-blocking, failed, and duplicate assets, and a summary bar totals counts and size.
+
+### Images
+- Decorative images with an empty alt are recognized as intentional instead of being flagged as missing alt.
+- Oversized images — shipping far more pixels than they display — are detected, highlighted, and filterable.
+- Data-URI images show a clean label instead of a wall of base64, and huge inline payloads no longer slow the popup.
+- Multiple CSS backgrounds on one element are each listed, and a summary bar totals the view.
+
+### Everywhere
+- Searching, filtering, and sorting stay fast on link- and image-heavy pages.
+- CSV and JSON exports carry the new fields and are hardened against spreadsheet formula injection.
+
 ## 2026.06.14
 @ 2026-06-14
 
@@ -10,7 +43,7 @@ Right-click any Shopify store and choose Request Store Access to open a collabor
 - Curate which presets appear in the menu, and in what order, from the options page.
 - Alfred remembers your Shopify organization automatically the first time you open your dev dashboard, and you can change it in settings if you work across more than one organization.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-storefront-collaborator-request.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-storefront-collaborator-request.mp4"></video>
 
 ## 2026.06.11.1
 @ 2026-06-11
