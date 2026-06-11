@@ -17,6 +17,10 @@
           "Permission presets now focus solely on the Shopify Dev Dashboard, with cleaner, more consistent buttons that match the dashboard's native styling.",
           "Hotlink URLs flash briefly when the auto-submit option changes them, so it's clear the link was updated before you copy it."
         ]
+      },
+      {
+        "type": "image",
+        "content": "https://bucket.alfred.uptek.com/alfred-preset-auto-submit.jpg"
       }
     ]
   },

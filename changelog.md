@@ -8,6 +8,7 @@ The preset hotlink popup now has an Auto-submit option. When enabled, opening th
 
 - Permission presets now focus solely on the Shopify Dev Dashboard, with cleaner, more consistent buttons that match the dashboard's native styling.
 - Hotlink URLs flash briefly when the auto-submit option changes them, so it's clear the link was updated before you copy it.
+![undefined](https://bucket.alfred.uptek.com/alfred-preset-auto-submit.jpg)
 
 ## 2026.06.09
 @ 2026-06-09
