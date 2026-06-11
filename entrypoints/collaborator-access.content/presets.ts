@@ -623,6 +623,51 @@ export function createAdapter() {
     },
 
     /**
+     * Triggers the page's `store-url-debounce` controller to validate the store URL.
+     * Hotlinks prefill the field from the `store_url` query param via server render,
+     * which never fires an `input` event — so the controller never validates the
+     * domain and the Request access button stays disabled. Dispatch one to kick it off.
+     * @returns true if the store URL input was found with a value to validate.
+     */
+    triggerStoreUrlValidation(): boolean {
+      const input = document.querySelector<HTMLInputElement>('#store-url-input');
+      if (input && input.value.trim()) {
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      }
+      return false;
+    },
+
+    /**
+     * Resolves once the Request access button is enabled. The button stays disabled
+     * until the store URL validates and at least one permission is registered, so
+     * auto-submit must wait for the real enabled state rather than a fixed delay.
+     * @param timeoutMs - Max time to wait before giving up.
+     * @returns true when the button became enabled, false on timeout or if missing.
+     */
+    waitForSubmitEnabled(timeoutMs = 3000): Promise<boolean> {
+      const button = document.querySelector<HTMLButtonElement>('#collaboration-request-submit-button');
+      if (!button) return Promise.resolve(false);
+      if (!button.disabled) return Promise.resolve(true);
+
+      return new Promise((resolve) => {
+        let settled = false;
+        const finish = (value: boolean) => {
+          if (settled) return;
+          settled = true;
+          observer.disconnect();
+          clearTimeout(timer);
+          resolve(value);
+        };
+        const observer = new MutationObserver(() => {
+          if (!button.disabled) finish(true);
+        });
+        observer.observe(button, { attributes: true, attributeFilter: ['disabled'] });
+        const timer = setTimeout(() => finish(false), timeoutMs);
+      });
+    },
+
+    /**
      * Clicks the "Request access" submit button on the collaboration form.
      * @returns true if the button was found and clicked, false if missing or still disabled.
      */

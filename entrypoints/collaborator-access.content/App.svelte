@@ -119,6 +119,13 @@
     searchController?.clear();
     adapter.uncheckAll();
 
+    // Hotlink arrivals prefill the store URL from the query param via server render,
+    // which never fires an input event — so the page never validates the domain and
+    // the Request access button stays disabled. Kick off validation explicitly.
+    if (source === 'url_param') {
+      adapter.triggerStoreUrlValidation();
+    }
+
     const permissions = preset.permissions ?? [];
     setTimeout(() => {
       permissions.forEach((permission, index) => {
@@ -139,18 +146,15 @@
       window.scrollTo({ top: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight), behavior: 'smooth' });
     }, 100 + permissions.length * 50 + 400);
 
-    // After every permission is checked, optionally submit the request. The submit
-    // button stays disabled until the page registers the first checked permission, so
-    // retry a few times in case it hasn't re-enabled yet.
+    // Optionally submit once the page actually enables the Request access button.
+    // That happens only after the store URL validates and the checked permissions
+    // register, so wait for the real enabled state instead of guessing with a timer.
     if (autoSubmit) {
-      const trySubmit = (attemptsLeft: number) => {
-        if (adapter.submit()) {
+      void adapter.waitForSubmitEnabled().then((ready) => {
+        if (ready && adapter.submit()) {
           sendTrackEvent('preset_auto_submit', { permissions_count: permissions.length, source });
-        } else if (attemptsLeft > 0) {
-          window.setTimeout(() => trySubmit(attemptsLeft - 1), 200);
         }
-      };
-      window.setTimeout(() => trySubmit(5), 100 + permissions.length * 50 + 600);
+      });
     }
 
     const updatedPreset = await savePreset({ ...preset, lastUsed: Date.now() });
