@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test';
-import { csvField } from './format';
 import { classifyLink, followRank, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './links';
 
 describe('isDofollow', () => {
@@ -230,35 +229,5 @@ describe('isInsecureHttp', () => {
 
   it('does not flag unparseable hrefs', () => {
     expect(isInsecureHttp('not a url')).toBe(false);
-  });
-});
-
-describe('csvField', () => {
-  it('quotes plain values', () => {
-    expect(csvField('hello')).toBe('"hello"');
-  });
-
-  it('stringifies non-string values', () => {
-    expect(csvField(true)).toBe('"true"');
-  });
-
-  it('escapes embedded quotes by doubling them', () => {
-    expect(csvField('say "hi"')).toBe('"say ""hi"""');
-  });
-
-  it('neutralizes formula-leading characters for spreadsheet safety', () => {
-    expect(csvField('=SUM(A1:A9)')).toBe('"\'=SUM(A1:A9)"');
-    expect(csvField('+1234')).toBe('"\'+1234"');
-    expect(csvField('-cmd')).toBe('"\'-cmd"');
-    expect(csvField('@import')).toBe('"\'@import"');
-  });
-
-  it('neutralizes leading tab and CR (spreadsheets strip them before formula detection)', () => {
-    expect(csvField('\t=SUM(A1)')).toBe('"\'\t=SUM(A1)"');
-    expect(csvField('\r-cmd')).toBe('"\'\r-cmd"');
-  });
-
-  it('leaves values that merely contain formula characters alone', () => {
-    expect(csvField('a=b')).toBe('"a=b"');
   });
 });

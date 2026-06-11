@@ -556,7 +556,7 @@
 
   .row { cursor: pointer; transition: background 0.1s; }
   .row:hover { background: var(--bg-hover); }
-  .row--hidden { opacity: 0.45; }
+  .row--hidden { opacity: 0.5; }
 
   .td { padding: 9px 8px 9px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border-muted); vertical-align: middle; }
   .td--num { color: var(--text-muted); font-size: 12px; padding-right: 0; }
@@ -574,7 +574,8 @@
   .anchor-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
   .img-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--accent-tint); color: var(--accent); }
   .anchor-text { font-size: 11.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .anchor-text--empty { color: var(--error); font-style: italic; }
+  /* Amber like missing alt on the Images tab; red stays reserved for broken things */
+  .anchor-text--empty { color: var(--warning); font-style: italic; }
 
   /* Pills */
   .pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }

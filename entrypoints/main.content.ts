@@ -11,7 +11,7 @@ import {
   scriptLoad,
   scriptSubtype
 } from './popup/assets';
-import { altState, capDataUri, imageFormat, isOversized, parseBackgroundUrls } from './popup/images';
+import { altState, capDataUri, imageFormat, isBrokenImage, isOversized, parseBackgroundUrls } from './popup/images';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -117,7 +117,7 @@ function ensureImageHighlightStyle(): void {
 function imageHighlightState(el: Element, source: CollectedImage['source']): string {
   if (source === 'background') return 'ok';
   const img = el as HTMLImageElement;
-  if (img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src)) return 'broken';
+  if (isBrokenImage(img, img.currentSrc || img.src || '')) return 'broken';
   // Decorative alt="" is a deliberate signal, not a failure; only an absent attribute flags.
   return altState(img.getAttribute('alt')) === 'missing' ? 'alt' : 'ok';
 }
@@ -284,10 +284,12 @@ export default defineContentScript({
           anchorNames ??= new Set(Array.from(document.querySelectorAll('[name]'), (el) => el.getAttribute('name')));
           return anchorNames.has(fragment);
         };
+        const pageUrl = location.href;
         const links = anchors.map((anchor, i) => {
+          const href = anchor.href; // serializing getter; read once per anchor
           const rel = anchor.getAttribute('rel') ?? '';
           const { nofollow, sponsored, ugc } = relFlags(rel);
-          const fragment = samePageFragment(anchor.href, location.href);
+          const fragment = samePageFragment(href, pageUrl);
           const isBrokenAnchor =
             fragment !== null &&
             fragment !== '' &&
@@ -296,16 +298,16 @@ export default defineContentScript({
             !hasNamedAnchor(fragment);
           return {
             index: i,
-            href: anchor.href,
+            href,
             text: linkText(anchor),
             rel,
-            kind: classifyLink(anchor.href, pageHost),
+            kind: classifyLink(href, pageHost),
             isNofollow: nofollow,
             isSponsored: sponsored,
             isUgc: ugc,
             isImage: anchor.querySelector('img, svg, picture') !== null,
             isHidden: !anchor.checkVisibility(),
-            isInsecure: isInsecureHttp(anchor.href),
+            isInsecure: isInsecureHttp(href),
             isBrokenAnchor
           };
         });
@@ -521,7 +523,7 @@ export default defineContentScript({
             cached: resourceCached(t),
             isExternal: src ? isExternalAssetUrl(src, pageHost) : false,
             isHidden: !img.checkVisibility(),
-            broken: img.complete && img.naturalWidth === 0 && src !== '',
+            broken: isBrokenImage(img, src),
             oversized: isOversized(
               img.naturalWidth,
               img.naturalHeight,
@@ -583,7 +585,11 @@ export default defineContentScript({
        * @param {number} request.index - Zero-based index of the link among all `a[href]` elements.
        */
       if (request.action === 'scroll_to_link') {
-        const { index } = request as { action: string; index: number };
+        const index = Number((request as { action: string; index: number }).index);
+        if (!Number.isInteger(index) || index < 0) {
+          sendResponse(false);
+          return false;
+        }
         const target =
           document.querySelector(`a[data-alfred-link-index="${index}"]`) ?? document.querySelectorAll('a[href]')[index];
         if (target instanceof HTMLElement) flashOutline(target);

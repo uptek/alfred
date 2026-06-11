@@ -7,9 +7,22 @@ import {
   fileLabel,
   imageFormat,
   imageStatus,
+  isBrokenImage,
   isOversized,
   parseBackgroundUrls
 } from './images';
+
+describe('isBrokenImage', () => {
+  test('loaded with zero natural width and a src is broken', () => {
+    expect(isBrokenImage({ complete: true, naturalWidth: 0 }, 'https://a.com/x.png')).toBe(true);
+  });
+
+  test('still loading, decoded fine, or src-less images are not broken', () => {
+    expect(isBrokenImage({ complete: false, naturalWidth: 0 }, 'https://a.com/x.png')).toBe(false);
+    expect(isBrokenImage({ complete: true, naturalWidth: 100 }, 'https://a.com/x.png')).toBe(false);
+    expect(isBrokenImage({ complete: true, naturalWidth: 0 }, '')).toBe(false);
+  });
+});
 
 describe('capDataUri', () => {
   test('small data URIs pass through untouched', () => {

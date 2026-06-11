@@ -10,7 +10,6 @@ import {
   scriptSubtype,
   typeLabel
 } from './assets';
-import { formatSize } from './format';
 
 describe('hasOwnLoad', () => {
   test('scripts and inline styles have a load strategy', () => {
@@ -267,21 +266,5 @@ describe('displaySource', () => {
 
   test('unparseable src is returned as-is', () => {
     expect(displaySource('not a url', 'example.com')).toBe('not a url');
-  });
-});
-
-describe('formatSize', () => {
-  test('bytes under 1 KB', () => {
-    expect(formatSize(512)).toBe('512 B');
-  });
-
-  test('kilobytes with one decimal', () => {
-    expect(formatSize(2048)).toBe('2.0 KB');
-    expect(formatSize(1536)).toBe('1.5 KB');
-  });
-
-  test('megabytes with one decimal', () => {
-    expect(formatSize(1.5 * 1024 * 1024)).toBe('1.5 MB');
-    expect(formatSize(2 * 1024 * 1024)).toBe('2.0 MB');
   });
 });

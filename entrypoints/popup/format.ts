@@ -19,6 +19,8 @@ export function csvField(value: unknown): string {
  */
 export function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  const kb = bytes / 1024;
+  // Pick the unit after rounding so 1048575 reads "1.0 MB", not "1024.0 KB".
+  if (Math.round(kb * 10) < 1024 * 10) return `${kb.toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

@@ -37,6 +37,15 @@ export function analyzeImages(images: RawImage[]): number {
   return images.reduce((n, img) => n + (img.lacksAlt ? 1 : 0), 0);
 }
 
+/**
+ * A loaded <img> that decoded to zero width is broken (404, corrupt, blocked).
+ * Shared by the get_images handler and the on-page highlighter so the popup's
+ * Broken status and the red outline can't disagree.
+ */
+export function isBrokenImage(img: { complete: boolean; naturalWidth: number }, src: string): boolean {
+  return img.complete && img.naturalWidth === 0 && src !== '';
+}
+
 /** Largest data: URI shipped whole; anything bigger collapses to its MIME essence. */
 export const DATA_URI_MAX_LENGTH = 65536;
 
