@@ -567,11 +567,22 @@ export function createAdapter() {
       return permissions;
     },
 
-    /** Unchecks all currently checked permission checkboxes. Checks `.checked` before clicking to avoid re-toggling cascaded children. */
+    /**
+     * Unchecks the entire permission tree, re-querying after each click until
+     * nothing remains checked. Targets every tree checkbox by
+     * `data-permissions-tree-target`, not just `permissions[]` leaves: a section
+     * group header (e.g. `orders_group`, which has no `name`/`value`) stays checked
+     * after its children are cleared, so a leaf-only sweep left the group still
+     * ticked when switching presets. Clicking a checked group cascades its subtree
+     * clear; the guard caps iterations in case a click ever fails to uncheck.
+     */
     uncheckAll() {
-      document.querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`).forEach((checkbox) => {
-        if (checkbox.checked) checkbox.click();
-      });
+      const TREE_SELECTOR = 'input[type="checkbox"][data-permissions-tree-target="checkbox"]';
+      for (let guard = 0; guard < 1000; guard += 1) {
+        const checkbox = document.querySelector<HTMLInputElement>(`${TREE_SELECTOR}:checked`);
+        if (!checkbox) break;
+        checkbox.click();
+      }
     },
 
     /**
