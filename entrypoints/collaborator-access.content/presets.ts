@@ -1,6 +1,6 @@
 import { getItem, setItem } from '@/utils/storage';
 import { sendTrackEvent, trackAction } from '@/utils/analytics';
-import { getStoreDomain } from '@/utils/shopify';
+import { getShopifyStore } from '@/utils/shopify';
 import { showTabToast } from '@/utils/toast';
 import { type Browser } from 'wxt/browser';
 
@@ -146,6 +146,13 @@ export async function captureOrganizationId(rawUrl: string): Promise<void> {
  */
 export async function openCollaborationRequest(tab: Browser.tabs.Tab, preset?: PermissionPreset): Promise<void> {
   try {
+    // Like the other right-click actions, this only makes sense on a Shopify storefront.
+    const store = tab.id != null ? await getShopifyStore(tab.id) : { isShopify: false, shop: null };
+    if (!store.isShopify) {
+      await showTabToast(tab.id, 'Not a Shopify store');
+      return;
+    }
+
     const settings = await getItem<AlfredSettings>('settings');
     const organizationId = settings?.collaboratorAccess?.organizationId?.trim();
 
@@ -161,7 +168,6 @@ export async function openCollaborationRequest(tab: Browser.tabs.Tab, preset?: P
     }
 
     const action = settings?.collaboratorAccess?.presetMenuItemBehavior === 'submit' ? 'submit' : 'apply';
-    const storeDomain = tab.id != null ? await getStoreDomain(tab.id) : null;
 
     // Picking a preset always applies it (just opening is what the general item is for);
     // 'submit' additionally auto-submits once the form is filled.
@@ -170,7 +176,7 @@ export async function openCollaborationRequest(tab: Browser.tabs.Tab, preset?: P
 
     const url = buildCollaborationRequestUrl({
       organizationId,
-      storeDomain: storeDomain ?? undefined,
+      storeDomain: store.shop ?? undefined,
       presetHandle,
       autoSubmit
     });
