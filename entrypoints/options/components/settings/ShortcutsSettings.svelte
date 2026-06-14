@@ -33,6 +33,12 @@
         { key: 'clearCart', label: 'Clear Cart', details: 'Removes all items from the cart' },
         { key: 'cartograph', label: 'Cartograph', details: 'Opens a full-featured cart editor overlay' }
       ]
+    },
+    {
+      label: 'Collaborator access',
+      items: [
+        { key: 'requestStoreAccess', label: 'Request Store Access', details: 'Right-click any Shopify storefront to start a collaboration request, with your saved presets listed in the menu' }
+      ]
     }
   ];
 

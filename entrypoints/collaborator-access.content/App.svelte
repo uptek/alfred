@@ -91,6 +91,18 @@
     void handleApplyPreset(matchingPresets[0], 'url_param', autoSubmit);
   });
 
+  // Arriving from the storefront context menu without a preset (the "Open request form"
+  // option) prefills ?store_url= via server render, which never fires an input event —
+  // so the store never validates. The preset path handles its own validation, so only
+  // kick it off here for the no-preset case. Small delay lets the page's controllers connect.
+  $effect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get('store_url')) return;
+    if (params.get(AUTO_APPLY_PRESET_PARAM)?.trim()) return;
+    const timer = setTimeout(() => adapter.triggerStoreUrlValidation(), 150);
+    return () => clearTimeout(timer);
+  });
+
   // Listen for the alfred:save-preset custom event dispatched by proxy buttons injected in index.ts.
   $effect(() => {
     const handler = () => handleSavePreset();

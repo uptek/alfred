@@ -17,6 +17,7 @@ export type AnalyticsAction =
   | 'save_preset'
   | 'apply_preset'
   | 'preset_auto_submit'
+  | 'request_access_context_menu'
   | 'appstore_partner_table_view'
   | 'appstore_partner_table_sort'
   | 'appstore_partner_table_export'
@@ -98,6 +99,7 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
     return 45 + (metadata?.has_custom_message ? 20 : 0);
   },
   preset_auto_submit: 20,
+  request_access_context_menu: 30,
   appstore_partner_table_view: (metadata) => Number(metadata?.app_count ?? 0) * 5,
   appstore_partner_table_sort: (metadata) => Number(metadata?.app_count ?? 0) * 2,
   appstore_partner_table_export: (metadata) => Number(metadata?.app_count ?? 0) * 10 + 30,
@@ -217,6 +219,7 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   save_preset: 'Presets',
   apply_preset: 'Presets',
   preset_auto_submit: 'Presets',
+  request_access_context_menu: 'Presets',
   permission_search: 'Presets',
   expand_all_permissions: 'Presets',
   collapse_all_permissions: 'Presets',

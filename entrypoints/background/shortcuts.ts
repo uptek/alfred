@@ -1,6 +1,12 @@
 import { create, createSeparator, removeAll } from '@/utils/contextMenu';
 import { getItem } from '@/utils/storage';
 import { trackAction } from '@/utils/analytics';
+import {
+  getPresets,
+  normalizePresetHandle,
+  openCollaborationRequest,
+  type PermissionPreset
+} from '@/entrypoints/collaborator-access.content/presets';
 
 /**
  * Register shortcuts (context menu items) for the extension
@@ -21,7 +27,8 @@ export const registerShortcuts = async () => {
     copyProductJson: true,
     copyCartJson: true,
     clearCart: true,
-    cartograph: true
+    cartograph: true,
+    requestStoreAccess: true
   };
 
   // Create main menu
@@ -315,5 +322,59 @@ export const registerShortcuts = async () => {
         })();
       }
     );
+  }
+
+  // ── Collaborator Access ──
+  // Request store access for the storefront under the cursor, optionally with a preset.
+  // Laid out as a flat group under the Alfred menu to match its separator-group idiom:
+  // a general "Request Store Access" action, then each saved preset as a child-styled
+  // item directly below it. It's a right-click shortcut, so it's gated by its shortcut flag.
+  if (shortcuts.requestStoreAccess !== false) {
+    createSeparator('separator-collab', alfredMenuId);
+
+    create(
+      {
+        id: 'collab-request-general',
+        title: 'Request Store Access',
+        parentId: alfredMenuId
+      },
+      (_info, tab: Browser.tabs.Tab) => {
+        void openCollaborationRequest(tab);
+      }
+    );
+
+    const allPresets = await getPresets();
+
+    // The presetMenuItemHandles field curates the menu: a comma-separated list of preset
+    // handles. Empty → show every preset in stored order. Otherwise show only the listed
+    // handles, in that order, skipping duplicates and any that don't match a saved preset.
+    const requestedHandles = [
+      ...new Set(
+        (settings?.collaboratorAccess?.presetMenuItemHandles ?? '')
+          .split(',')
+          .map((handle) => normalizePresetHandle(handle))
+          .filter((handle): handle is string => !!handle)
+      )
+    ];
+
+    const menuPresets =
+      requestedHandles.length === 0
+        ? allPresets
+        : requestedHandles
+            .map((handle) => allPresets.find((preset) => preset.handle === handle))
+            .filter((preset): preset is PermissionPreset => preset !== undefined);
+
+    menuPresets.forEach((preset) => {
+      create(
+        {
+          id: `collab-preset-${preset.id}`,
+          title: `↳ ${preset.name}`,
+          parentId: alfredMenuId
+        },
+        (_info, tab: Browser.tabs.Tab) => {
+          void openCollaborationRequest(tab, preset);
+        }
+      );
+    });
   }
 };
