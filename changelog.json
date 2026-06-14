@@ -1,5 +1,27 @@
 [
   {
+    "version": "2026.06.14",
+    "date": "2026-06-14",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Request store access from any storefront"
+      },
+      {
+        "type": "paragraph",
+        "content": "Right-click any Shopify store and choose Request Store Access to open a collaborator access request with that store already filled in. Your saved permission presets show up in the menu too, so you can start one without leaving the page."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Pick a preset from the menu to open the request and apply it automatically, or have it submit the request for you.",
+          "Curate which presets appear in the menu, and in what order, from the options page.",
+          "Alfred remembers your Shopify organization automatically the first time you open your dev dashboard, and you can change it in settings if you work across more than one organization."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.06.11.1",
     "date": "2026-06-11",
     "changes": [
