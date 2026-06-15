@@ -1,5 +1,8 @@
 import { getItem, setItem } from '@/utils/storage';
-import { sendTrackEvent } from '@/utils/analytics';
+import { sendTrackEvent, trackAction } from '@/utils/analytics';
+import { getShopifyStore } from '@/utils/shopify';
+import { showTabToast } from '@/utils/toast';
+import { type Browser } from 'wxt/browser';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,6 +62,135 @@ export function buildHotlinkUrl(handle: string, autoSubmit = false): string {
     hotlink += `&${HOTLINK_AUTOSUBMIT_PARAM}=1`;
   }
   return hotlink;
+}
+
+/**
+ * Builds an absolute collaboration request URL for the Shopify dev dashboard.
+ *
+ * Unlike {@link buildHotlinkUrl}, this takes every input explicitly so it can run
+ * outside a dashboard page (e.g. from the background service worker, where there is
+ * no `window.location` and the organization id must come from saved settings).
+ *
+ * @param options.organizationId - The Shopify Partner organization id. Required: the
+ *   org-less path (`/dashboard/stores/collaborations/new`) 404s, so callers must resolve
+ *   an organization first rather than building a dead-end URL.
+ * @param options.storeDomain - The store's myshopify domain to prefill (`store_url` param).
+ * @param options.presetHandle - When set, appends `alfred_preset` so the content script auto-applies it.
+ * @param options.autoSubmit - When true, appends `alfred_submit=1` to submit automatically.
+ * @returns An absolute `https://dev.shopify.com` collaboration request URL.
+ */
+export function buildCollaborationRequestUrl(options: {
+  organizationId: string;
+  storeDomain?: string | undefined;
+  presetHandle?: string | undefined;
+  autoSubmit?: boolean | undefined;
+}): string {
+  const { organizationId, storeDomain, presetHandle, autoSubmit } = options;
+  const path = `/dashboard/${organizationId}/stores/collaborations/new`;
+  const params = new URLSearchParams();
+
+  if (storeDomain) params.set('store_url', storeDomain);
+  if (presetHandle) params.set(HOTLINK_PRESET_PARAM, presetHandle);
+  if (autoSubmit) params.set(HOTLINK_AUTOSUBMIT_PARAM, '1');
+
+  const query = params.toString();
+  return `https://dev.shopify.com${path}${query ? `?${query}` : ''}`;
+}
+
+/**
+ * Extracts the numeric Shopify organization id from a dev dashboard URL,
+ * matching `https://dev.shopify.com/dashboard/<digits>/...`. Returns null otherwise.
+ */
+export function extractOrganizationId(rawUrl: string): string | null {
+  try {
+    const url = new URL(rawUrl);
+    if (url.hostname !== 'dev.shopify.com') return null;
+    const match = url.pathname.match(/^\/dashboard\/(\d+)(?:\/|$)/);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Persists the organization id seen while browsing the dev dashboard so the
+ * "Request store access" context menu can build collaboration URLs from any storefront.
+ *
+ * Captures only when no organization id is stored yet. Once a value exists, whether
+ * captured automatically the first time or pinned by the user for a specific
+ * organization, it is left untouched, so multi-org users who switch dashboards don't
+ * get their saved choice overwritten. Clearing the field re-enables capture.
+ */
+export async function captureOrganizationId(rawUrl: string): Promise<void> {
+  const organizationId = extractOrganizationId(rawUrl);
+  if (!organizationId) return;
+
+  const settings = (await getItem<AlfredSettings>('settings')) ?? {};
+  if (settings.collaboratorAccess?.organizationId?.trim()) return;
+
+  await setItem('settings', {
+    ...settings,
+    collaboratorAccess: { ...settings.collaboratorAccess, organizationId }
+  });
+}
+
+/**
+ * Opens the Shopify collaboration request page for a store in a new tab, prefilling the
+ * store domain and (optionally) a preset to auto-apply. Driven by the background context menu.
+ *
+ * Reads the organization id and preset behavior from saved settings on every call. Without a
+ * known organization the request URL would 404, so it surfaces a toast asking the user to
+ * visit their dashboard once (which auto-captures the org) rather than opening a dead page.
+ * @param tab - The tab the menu was invoked on (provides the store page).
+ * @param preset - The preset to request with. Omitted for the general "open request" item.
+ */
+export async function openCollaborationRequest(tab: Browser.tabs.Tab, preset?: PermissionPreset): Promise<void> {
+  try {
+    // Like the other right-click actions, this only makes sense on a Shopify storefront.
+    const store = tab.id != null ? await getShopifyStore(tab.id) : { isShopify: false, shop: null };
+    if (!store.isShopify) {
+      await showTabToast(tab.id, 'Not a Shopify store');
+      return;
+    }
+
+    const settings = await getItem<AlfredSettings>('settings');
+    const organizationId = settings?.collaboratorAccess?.organizationId?.trim();
+
+    // Without an organization the request URL would 404. Rather than open a dead page,
+    // tell the user to visit their dashboard once (which auto-captures the org) so every
+    // navigation stays intentional.
+    if (!organizationId) {
+      await showTabToast(
+        tab.id,
+        "Alfred doesn't know your Shopify organization yet. Open your Dev Dashboard once to set it up, then try again."
+      );
+      return;
+    }
+
+    const action = settings?.collaboratorAccess?.presetMenuItemBehavior === 'submit' ? 'submit' : 'apply';
+
+    // Picking a preset always applies it (just opening is what the general item is for);
+    // 'submit' additionally auto-submits once the form is filled.
+    const presetHandle = preset?.handle;
+    const autoSubmit = !!preset && action === 'submit';
+
+    const url = buildCollaborationRequestUrl({
+      organizationId,
+      storeDomain: store.shop ?? undefined,
+      presetHandle,
+      autoSubmit
+    });
+
+    await browser.tabs.create({ url });
+
+    trackAction('request_access_context_menu', {
+      source: preset ? 'preset' : 'general',
+      action: preset ? action : 'open',
+      auto_submit: autoSubmit
+    });
+  } catch (error) {
+    console.error('Error opening collaboration request:', error);
+  }
 }
 
 /**

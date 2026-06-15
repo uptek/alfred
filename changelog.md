@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.06.14
+@ 2026-06-14
+
+### Request store access from any storefront
+Right-click any Shopify store and choose Request Store Access to open a collaborator access request with that store already filled in. Your saved permission presets show up in the menu too, so you can start one without leaving the page.
+
+- Pick a preset from the menu to open the request and apply it automatically, or have it submit the request for you.
+- Curate which presets appear in the menu, and in what order, from the options page.
+- Alfred remembers your Shopify organization automatically the first time you open your dev dashboard, and you can change it in settings if you work across more than one organization.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-storefront-collaborator-request.mp4"></video>
+
 ## 2026.06.11.1
 @ 2026-06-11
 Fixed auto-submit hotlinks: the prefilled store URL is now validated automatically, and the request is submitted as soon as the Request access button is ready. One-click hotlinks now go through reliably instead of stalling on an unvalidated store URL.

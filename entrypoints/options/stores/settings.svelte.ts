@@ -1,5 +1,5 @@
 import { getItem, setItem } from '~/utils/storage';
-import { Toast } from '~/utils/toast';
+import { Toast } from '@/utils/toast';
 
 const defaultSettings: AlfredSettings = {
   general: {
@@ -25,14 +25,16 @@ const defaultSettings: AlfredSettings = {
     clearCart: true,
     cartograph: true,
     openSectionInCodeEditor: true,
-    openImageInAdmin: true
+    openImageInAdmin: true,
+    requestStoreAccess: true
   },
   appStore: {
     searchIndexing: true,
     enhancedPartnerPages: true
   },
   collaboratorAccess: {
-    presets: true
+    presets: true,
+    presetMenuItemBehavior: 'apply'
   },
   admin: {
     collapsibleSidebar: true,

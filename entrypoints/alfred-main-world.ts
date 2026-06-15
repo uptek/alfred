@@ -1,5 +1,5 @@
 import { initRestoreRightClick } from '../utils/restore-right-click';
-import { Toast } from '../utils/toast';
+import { Toast } from '@/utils/toast';
 
 export default defineUnlistedScript(() => {
   // Settings will be received via postMessage

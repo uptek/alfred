@@ -1,6 +1,7 @@
 import { getItem } from '@/utils/storage';
 import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
+import { Toast } from '@/utils/toast';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -114,6 +115,17 @@ export default defineContentScript({
      * and send the response back to the registered script
      */
     browser.runtime.onMessage.addListener((request: { action: string }, _sender, sendResponse) => {
+      // Surface a toast on behalf of the background, which has no DOM of its own.
+      if (request.action === 'alfred_toast') {
+        const { message, toastType } = request as {
+          action: string;
+          message?: string;
+          toastType?: 'success' | 'error';
+        };
+        if (message) Toast.show(message, toastType === 'success' ? 'success' : 'error');
+        return false;
+      }
+
       /**
        * Relays theme detection request to the main world script via postMessage and returns Shopify theme data.
        * @returns {{ isShopify: boolean, theme: object | null, shop: string | null }}

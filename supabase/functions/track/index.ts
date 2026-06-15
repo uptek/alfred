@@ -17,6 +17,7 @@ const VALID_ACTIONS = [
   'save_preset',
   'apply_preset',
   'preset_auto_submit',
+  'request_access_context_menu',
   'appstore_partner_table_view',
   'appstore_partner_table_sort',
   'appstore_partner_table_export',
