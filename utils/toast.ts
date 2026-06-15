@@ -286,3 +286,25 @@ export class Toast {
     this.show(message, 'error', duration);
   }
 }
+
+/**
+ * Shows a toast inside a tab from a context that has no DOM of its own (e.g. the
+ * background service worker) by messaging the tab's content script, which renders it via
+ * {@link Toast}. Best-effort: silently no-ops if the tab has no Alfred content script to
+ * receive the message (restricted pages, the web store, the extension's own pages).
+ * @param tabId - The target tab. No-ops when undefined.
+ * @param message - The toast text.
+ * @param toastType - Toast styling; defaults to 'error'.
+ */
+export async function showTabToast(
+  tabId: number | undefined,
+  message: string,
+  toastType: 'success' | 'error' = 'error'
+): Promise<void> {
+  if (tabId == null) return;
+  try {
+    await browser.tabs.sendMessage(tabId, { action: 'alfred_toast', message, toastType });
+  } catch {
+    // No Alfred content script on this page to surface the toast.
+  }
+}

@@ -3,6 +3,7 @@ import { registerShortcuts } from './shortcuts';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
+import { captureOrganizationId } from '@/entrypoints/collaborator-access.content/presets';
 
 const UNINSTALL_SURVEY_URL = 'https://tally.so/r/zx79O8';
 
@@ -19,6 +20,16 @@ export default defineBackground(() => {
     if (details.frameId === 0) {
       pendingNavigations.set(details.tabId, details.url);
     }
+  });
+
+  // Remember the Shopify organization while browsing the dev dashboard so the
+  // "Request store access" context menu works from any storefront. The dashboard is
+  // an SPA, so capture both full loads and client-side route changes.
+  browser.webNavigation.onCommitted.addListener((details) => {
+    if (details.frameId === 0) void captureOrganizationId(details.url);
+  });
+  browser.webNavigation.onHistoryStateUpdated.addListener((details) => {
+    if (details.frameId === 0) void captureOrganizationId(details.url);
   });
 
   // When navigation completes, check if we ended up on /password
@@ -51,20 +62,32 @@ export default defineBackground(() => {
 
   // Keep track of current shortcuts in memory to avoid unnecessary re-registration
   let currentShortcuts: unknown = null;
+  let currentPresetMenuItemHandles: string | undefined;
 
   registerShortcuts();
 
-  // Re-register shortcuts when settings change
+  // Re-register shortcuts when they change. The "Request store access" menu is a
+  // shortcut flag too, and its preset list/order depends on presetMenuItemHandles, so a
+  // change to either rebuilds the menus.
   storage.watch<AlfredSettings>('local:settings', (newValue) => {
     void (async () => {
       const newShortcuts = newValue?.shortcuts;
-
-      // Only re-register if shortcuts actually changed
-      if (JSON.stringify(newShortcuts) !== JSON.stringify(currentShortcuts)) {
+      const newPresetMenuItemHandles = newValue?.collaboratorAccess?.presetMenuItemHandles;
+      if (
+        JSON.stringify(newShortcuts) !== JSON.stringify(currentShortcuts) ||
+        newPresetMenuItemHandles !== currentPresetMenuItemHandles
+      ) {
         currentShortcuts = newShortcuts;
+        currentPresetMenuItemHandles = newPresetMenuItemHandles;
         await registerShortcuts();
       }
     })();
+  });
+
+  // Saved presets appear as items under the "Request store access" menu —
+  // rebuild the menus whenever the user's presets change.
+  storage.watch('local:alfred:permission-presets', () => {
+    void registerShortcuts();
   });
 
   // Listen for tracking messages from content scripts

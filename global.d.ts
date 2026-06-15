@@ -57,6 +57,7 @@ declare interface AlfredSettings {
     openSectionInCodeEditor?: boolean;
     openImageInAdmin?: boolean;
     exitThemePreview?: boolean;
+    requestStoreAccess?: boolean;
   };
   appStore?: {
     searchIndexing?: boolean;
@@ -64,6 +65,9 @@ declare interface AlfredSettings {
   };
   collaboratorAccess?: {
     presets?: boolean;
+    presetMenuItemBehavior?: 'apply' | 'submit';
+    organizationId?: string;
+    presetMenuItemHandles?: string;
   };
   admin?: {
     collapsibleSidebar?: boolean;

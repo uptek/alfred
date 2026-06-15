@@ -7,7 +7,7 @@
     savePassword
   } from '@/utils/storefrontPasswords';
   import type { StorefrontPasswordsStorage } from '@/utils/storefrontPasswords';
-  import { Toast } from '~/utils/toast';
+  import { Toast } from '@/utils/toast';
 
   let passwords = $state<StorefrontPasswordsStorage>({});
   let loading = $state(true);
