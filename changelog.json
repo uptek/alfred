@@ -18,6 +18,10 @@
           "Curate which presets appear in the menu, and in what order, from the options page.",
           "Alfred remembers your Shopify organization automatically the first time you open your dev dashboard, and you can change it in settings if you work across more than one organization."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-storefront-collaborator-request.mp4"
       }
     ]
   },
