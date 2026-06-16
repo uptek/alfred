@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Logo-in-H1 and aria-label headings — alt/aria fallback, no false "empty"</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Headings tab</div>
+      <ul>
+        <li>H1 row reads "Acme Outfitters" (taken from the logo's alt — used to show "(empty)")</li>
+        <li>H2 row reads "Featured products" (taken from aria-label)</li>
+        <li>1 issue: "Empty H3" — its image has no alt, so there is genuinely no accessible name</li>
+        <li>Badge "1" on the tab</li>
+      </ul>
+    </aside>
+    <main>
+      <h1><img src="/images/static/photo.svg" alt="Acme Outfitters" width="160" height="48" /></h1>
+      <p>The classic Shopify pattern: the store logo wrapped in the homepage H1.</p>
+      <h2 aria-label="Featured products"><span aria-hidden="true">★ ★ ★</span></h2>
+      <p>This heading's visible content is decorative; its name comes from aria-label.</p>
+      <h3><img src="/images/static/photo.svg" width="80" height="24" /></h3>
+      <p>This one is a real problem: an image heading with no alt and no label.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

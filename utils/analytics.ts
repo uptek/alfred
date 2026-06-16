@@ -62,6 +62,7 @@ export type AnalyticsAction =
   | 'links_export'
   | 'links_copy'
   | 'links_sort'
+  | 'links_toggle_hidden'
   | 'assets_view'
   | 'assets_filter'
   | 'assets_export'
@@ -144,6 +145,7 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   links_export: 60,
   links_copy: 60,
   links_sort: 25,
+  links_toggle_hidden: 5,
   assets_view: 60,
   assets_filter: 25,
   assets_export: 60,
@@ -243,6 +245,7 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   links_export: 'SEO',
   links_copy: 'SEO',
   links_sort: 'SEO',
+  links_toggle_hidden: 'SEO',
   assets_view: 'SEO',
   assets_filter: 'SEO',
   assets_export: 'SEO',

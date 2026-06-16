@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>www-variant host counts as internal; 127.0.0.1 counts as external</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Assets tab</div>
+      <ul>
+        <li>Scripts ×2, Styles ×1 (this page's inline style block)</li>
+        <li>Source filter: External ×1 — only the 127.0.0.1 script (different hostname, same server)</li>
+        <li>The www.localhost script counts as same-site: its Source cell shows just the path, no host</li>
+        <li>
+          The 127.0.0.1 script's Source cell shows host + path, and its size/status stay "—" (opaque cross-origin timing
+          without Timing-Allow-Origin)
+        </li>
+        <li>Neither is render-blocking (defer/async, body placement)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>Both scripts are served by this same fixture server, just under different hostnames.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+    <script src="http://www.localhost:4242/assets/static/footer.js" defer></script>
+    <script src="http://127.0.0.1:4242/assets/static/async.js" async></script>
+  </body>
+</html>

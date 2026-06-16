@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Only H1 is display:none — counts as missing H1</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Headings tab</div>
+      <ul>
+        <li>
+          1 issue: "No H1 tag found" — the only H1 is display:none, which search engines and screen readers ignore
+        </li>
+        <li>No "H2 appears before H1" issue (there is no visible H1 to be late)</li>
+        <li>Filter chip shows "1 hidden"; the H1 row is greyed with an eye icon</li>
+        <li>Badge "1" on the tab</li>
+      </ul>
+    </aside>
+    <main>
+      <h1 style="display: none">Gift Cards</h1>
+      <p>The H1 above is hidden with display:none.</p>
+      <h2>Digital gift cards</h2>
+      <p>Delivered by email within minutes.</p>
+      <h3>How to redeem</h3>
+      <p>Enter the code at checkout.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

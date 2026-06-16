@@ -4,29 +4,46 @@ export interface RawHeading {
   isHidden: boolean;
 }
 
+export type LinkKind = 'internal' | 'external' | 'mailto' | 'tel' | 'other';
+
 export interface RawLink {
-  index: number;
-  href: string;
-  text: string;
-  rel: string;
-  isExternal: boolean;
-  isNofollow: boolean;
-  isImage: boolean;
-  isHidden: boolean;
+  index: number; // position among all a[href] elements in DOM order (stable key)
+  href: string; // resolved absolute URL
+  text: string; // accessible anchor text: textContent → aria-label → img alt, whitespace collapsed
+  rel: string; // raw rel attribute
+  kind: LinkKind; // internal/external for http(s); mailto/tel/other never count as external
+  isNofollow: boolean; // rel contains nofollow
+  isSponsored: boolean; // rel contains sponsored (nofollow-class hint)
+  isUgc: boolean; // rel contains ugc (nofollow-class hint)
+  isImage: boolean; // contains an img/svg/picture descendant
+  isHidden: boolean; // !checkVisibility()
+  isInsecure: boolean; // plain-http target on a non-loopback host
+  isBrokenAnchor: boolean; // same-page #fragment with no matching id/name on the page
 }
 
 export type AssetKind = 'script' | 'style';
 export type AssetLoad = 'async' | 'defer' | 'blocking' | 'inline';
 export type AssetPlacement = 'head' | 'body' | 'footer';
+// Script subtypes come from assets.ts scriptSubtype(); all styles are 'stylesheet'.
+export type AssetSubtype =
+  | 'classic'
+  | 'module'
+  | 'importmap'
+  | 'speculationrules'
+  | 'json'
+  | 'ld+json'
+  | 'data'
+  | 'stylesheet';
 
 export interface RawAsset {
   index: number; // index among all script/link/style nodes in DOM order (stable key)
   kind: AssetKind;
   src: string | null; // resolved URL for external; null for inline
-  isExternal: boolean; // src/href points to a different host
+  isExternal: boolean; // src/href points to a different host (www variant counts as same site)
   isBrowserExtension: boolean; // injected by a browser extension (chrome-extension:// etc.)
   isInline: boolean; // no src/href
-  type: string; // script: module/classic/json/importmap; style: 'stylesheet' | 'inline'
+  type: string; // raw type attribute ('classic'/'stylesheet'/'inline' fallbacks); searchable
+  subtype: AssetSubtype; // classified type: only classic/module scripts execute or fetch
   load: AssetLoad; // async/defer/blocking for scripts; 'inline' for inline; 'blocking' for stylesheets
   media: string; // stylesheet media attribute (empty otherwise)
   size: number; // transfer/byte size; 0 if unknown (opaque cross-origin)
@@ -43,7 +60,8 @@ export type HeadingIssueType = 'missing-h1' | 'multiple-h1' | 'skipped-level' | 
 export interface HeadingIssue {
   type: HeadingIssueType;
   details?: string;
-  index?: number;
+  index?: number; // single affected heading (position in the full headings array)
+  indexes?: number[]; // all affected headings (multiple-h1: every H1 gets a row marker)
 }
 
 export type InfoItemType = 'url' | 'text';
@@ -97,15 +115,19 @@ export interface RawImage {
   source: ImageSource;
   src: string; // resolved currentSrc (img/picture) or background-image URL; '' if none
   alt: string | null; // null when source === 'background'; '' when attr present but empty
-  lacksAlt: boolean; // true when alt attr is absent or empty/whitespace (img/picture only)
+  lacksAlt: boolean; // alt attribute absent (img/picture only); alt="" is decorative, not missing
+  decorative: boolean; // alt attribute present but empty/whitespace (intentionally unlabeled)
   isResponsive: boolean; // had srcset/sizes, or was inside <picture>
   naturalWidth: number; // 0 if unknown (lazy / not decoded / background)
   naturalHeight: number;
-  format: string; // png|jpg|webp|avif|gif|svg, parsed from src extension; '' if unknown
+  displayWidth: number; // rendered CSS px from getBoundingClientRect (0 when not rendered)
+  displayHeight: number;
+  format: string; // png|jpg|webp|avif|gif|svg from data-URI MIME, extension, or format/fm param; '' if unknown
   loading: ImageLoading;
   size: number; // bytes from Resource Timing; 0 = unknown
   cached: boolean; // served from cache (transferSize === 0 && decodedBodySize > 0)
-  isExternal: boolean; // src host !== page host
+  isExternal: boolean; // different host (www variant counts as same site); data:/blob: never external
   isHidden: boolean; // !checkVisibility()
   broken: boolean; // loaded <img> with naturalWidth === 0
+  oversized: boolean; // ships >4x the pixels its rendered box needs at the device DPR
 }

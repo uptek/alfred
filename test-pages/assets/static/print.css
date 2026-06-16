@@ -1,0 +1,7 @@
+/* Print stylesheet — media="print", not render-blocking on screen. */
+@media print {
+  .expected,
+  .back {
+    display: none;
+  }
+}

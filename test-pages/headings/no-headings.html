@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Zero headings — empty state</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Headings tab</div>
+      <ul>
+        <li>Empty state: "No headings found on this page"</li>
+        <li>No badge on the tab (zero headings is not reported as an issue)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>This page deliberately contains no h1–h6 elements at all.</p>
+      <p>Bold text styled to look like a title does not count:</p>
+      <p style="font-size: 24px; font-weight: 700">Looks like a heading, is a paragraph</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

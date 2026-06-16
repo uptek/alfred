@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Everything at once — multiple H1s, late H1, empty, skip, hidden, image heading</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Headings tab</div>
+      <ul>
+        <li>
+          4 issues, in this order: "2 H1 tags found" (once), "H2 appears before H1", "Empty H4", "H2 → H4 (skipped H3)"
+        </li>
+        <li>Badge "4" on the tab</li>
+        <li>Both H1 rows dotted; the empty H4 and the skipping H4 dotted</li>
+        <li>Filter chip shows "1 hidden" (the display:none H5 causes no issue)</li>
+        <li>First H1 row reads "Acme Outfitters" via the logo's alt text</li>
+        <li>Copy button output mirrors the tree, indented by level, with "[hidden]" markers</li>
+      </ul>
+    </aside>
+    <main>
+      <h2>Free shipping over $50</h2>
+      <p>Announcement bar heading renders before the H1.</p>
+      <h1><img src="/images/static/photo.svg" alt="Acme Outfitters" width="160" height="48" /></h1>
+      <p>Logo-in-H1, named via alt text.</p>
+      <h2>Best sellers</h2>
+      <h4></h4>
+      <p>The empty H4 above is also a skip (H2 → H4).</p>
+      <h5 style="display: none">Hidden promo block title</h5>
+      <h1>Join the club</h1>
+      <p>A second visible H1 from a signup section.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

@@ -2,6 +2,23 @@ import { getItem } from '@/utils/storage';
 import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
+import { headingText } from './popup/utils/headings';
+import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/utils/links';
+import {
+  isExternalAssetUrl,
+  isRenderBlockingScript,
+  isRenderBlockingStylesheet,
+  scriptLoad,
+  scriptSubtype
+} from './popup/utils/assets';
+import {
+  altState,
+  capDataUri,
+  imageFormat,
+  isBrokenImage,
+  isOversized,
+  parseBackgroundUrls
+} from './popup/utils/images';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -9,7 +26,8 @@ type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; b
  * Collects all page images in a deterministic order shared by get_images,
  * highlight_images, and scroll_to_image so indices stay consistent across calls.
  * Order: every <img> in DOM order, then every element with a CSS background-image
- * in DOM order. Inline <svg> icons are intentionally excluded.
+ * in DOM order; multiple backgrounds on one element yield one entry per url().
+ * Inline <svg> icons are intentionally excluded.
  */
 function collectImageEls(): CollectedImage[] {
   const out: CollectedImage[] = [];
@@ -18,13 +36,67 @@ function collectImageEls(): CollectedImage[] {
   }
   for (const el of document.querySelectorAll<HTMLElement>('body *')) {
     if (el.tagName === 'IMG') continue;
-    const bg = getComputedStyle(el).backgroundImage;
-    if (bg && bg !== 'none' && /url\(/i.test(bg)) {
-      // Carry the resolved background-image string so get_images doesn't re-run getComputedStyle.
+    // Carry each extracted url so get_images doesn't re-run getComputedStyle.
+    for (const bg of parseBackgroundUrls(getComputedStyle(el).backgroundImage)) {
       out.push({ el, source: 'background', bg });
     }
   }
   return out;
+}
+
+/** Size of a Resource Timing entry; 0 when opaque cross-origin. */
+const resourceSize = (e: PerformanceResourceTiming): number => e.encodedBodySize || e.decodedBodySize || 0;
+
+/** Served from cache: nothing transferred but a decoded body exists. */
+const resourceCached = (t?: PerformanceResourceTiming): boolean => !!t && t.transferSize === 0 && t.decodedBodySize > 0;
+
+/**
+ * Indexes already-recorded Resource Timing entries by URL — no new network
+ * requests. Cross-origin assets without a Timing-Allow-Origin header report
+ * 0 (opaque). When a URL has several entries, the largest-size one wins.
+ * Shared by the get_assets and get_images handlers.
+ */
+function buildResourceTimingIndex(): Map<string, PerformanceResourceTiming> {
+  const index = new Map<string, PerformanceResourceTiming>();
+  try {
+    for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
+      const prev = index.get(entry.name);
+      if (!prev || resourceSize(entry) > resourceSize(prev)) index.set(entry.name, entry);
+    }
+  } catch {
+    // Resource Timing unavailable; timing-derived fields stay at defaults
+  }
+  return index;
+}
+
+const flashTimers = new WeakMap<HTMLElement, number[]>();
+
+/** How long a scroll-to flash highlight stays fully visible before fading. */
+const FLASH_HOLD_MS = 5000;
+/** Fade-out duration; the cleanup timer must wait for hold + fade. */
+const FLASH_FADE_MS = 800;
+
+/**
+ * Scrolls an element into view and applies a brief green dashed outline.
+ * Re-triggering on the same element resets its timers, so rapid repeat
+ * clicks can't strip the outline early or leave stale inline styles.
+ */
+function flashOutline(target: HTMLElement): void {
+  for (const id of flashTimers.get(target) ?? []) clearTimeout(id);
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  target.style.outline = '2px dashed #95bf47';
+  target.style.outlineOffset = '3px';
+  target.style.transition = `outline-color ${FLASH_FADE_MS}ms`;
+  const fade = window.setTimeout(() => {
+    target.style.outlineColor = 'transparent';
+  }, FLASH_HOLD_MS);
+  const clear = window.setTimeout(() => {
+    target.style.outline = '';
+    target.style.outlineOffset = '';
+    target.style.transition = '';
+    flashTimers.delete(target);
+  }, FLASH_HOLD_MS + FLASH_FADE_MS);
+  flashTimers.set(target, [fade, clear]);
 }
 
 const IMAGE_HIGHLIGHT_STYLE_ID = 'alfred-image-highlights';
@@ -52,10 +124,9 @@ function ensureImageHighlightStyle(): void {
 function imageHighlightState(el: Element, source: CollectedImage['source']): string {
   if (source === 'background') return 'ok';
   const img = el as HTMLImageElement;
-  if (img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src)) return 'broken';
-  const altAttr = img.getAttribute('alt');
-  if (altAttr === null || altAttr.trim() === '') return 'alt';
-  return 'ok';
+  if (isBrokenImage(img, img.currentSrc || img.src || '')) return 'broken';
+  // Decorative alt="" is a deliberate signal, not a failure; only an absent attribute flags.
+  return altState(img.getAttribute('alt')) === 'missing' ? 'alt' : 'ok';
 }
 
 export default defineContentScript({
@@ -194,7 +265,7 @@ export default defineContentScript({
       if (request.action === 'get_headings') {
         const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).map((el) => ({
           level: parseInt(el.tagName.charAt(1)),
-          text: (el.textContent ?? '').trim(),
+          text: headingText(el),
           isHidden: !(el as HTMLElement).checkVisibility()
         }));
         sendResponse(headings);
@@ -202,29 +273,49 @@ export default defineContentScript({
       }
 
       /**
-       * Extracts all anchor links from the page in DOM order.
-       * @returns {{ index: number, href: string, text: string, rel: string, isExternal: boolean, isNofollow: boolean, isImage: boolean, isHidden: boolean }[]}
+       * Extracts all anchor links from the page in DOM order. Each anchor is
+       * stamped with its index so scroll_to_link can find it even if the DOM
+       * mutates afterwards (lazy menus, carousels).
+       * @returns {RawLink[]}
        */
       if (request.action === 'get_links') {
         const pageHost = location.hostname;
-        const links = Array.from(document.querySelectorAll('a[href]')).map((el, i) => {
-          const anchor = el as HTMLAnchorElement;
+        const anchors = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'));
+        // Stamp in a separate write-only pass: interleaving setAttribute with the
+        // checkVisibility/querySelector reads below risks a style recalc per anchor.
+        anchors.forEach((anchor, i) => anchor.setAttribute('data-alfred-link-index', String(i)));
+        // Built lazily on the first getElementById miss; getElementsByName walks the
+        // whole document per call, which is O(links x DOM) on hash-router pages.
+        let anchorNames: Set<string | null> | null = null;
+        const hasNamedAnchor = (fragment: string): boolean => {
+          anchorNames ??= new Set(Array.from(document.querySelectorAll('[name]'), (el) => el.getAttribute('name')));
+          return anchorNames.has(fragment);
+        };
+        const pageUrl = location.href;
+        const links = anchors.map((anchor, i) => {
+          const href = anchor.href; // serializing getter; read once per anchor
           const rel = anchor.getAttribute('rel') ?? '';
-          let isExternal = false;
-          try {
-            isExternal = anchor.hostname !== pageHost;
-          } catch {
-            isExternal = true;
-          }
+          const { nofollow, sponsored, ugc } = relFlags(rel);
+          const fragment = samePageFragment(href, pageUrl);
+          const isBrokenAnchor =
+            fragment !== null &&
+            fragment !== '' &&
+            fragment !== 'top' && // #top scrolls to the document top even without a target
+            !document.getElementById(fragment) &&
+            !hasNamedAnchor(fragment);
           return {
             index: i,
-            href: anchor.href,
-            text: (anchor.textContent ?? '').trim(),
+            href,
+            text: linkText(anchor),
             rel,
-            isExternal,
-            isNofollow: /\bnofollow\b/i.test(rel),
+            kind: classifyLink(href, pageHost),
+            isNofollow: nofollow,
+            isSponsored: sponsored,
+            isUgc: ugc,
             isImage: anchor.querySelector('img, svg, picture') !== null,
-            isHidden: !anchor.checkVisibility()
+            isHidden: !anchor.checkVisibility(),
+            isInsecure: isInsecureHttp(href),
+            isBrokenAnchor
           };
         });
         sendResponse(links);
@@ -235,17 +326,17 @@ export default defineContentScript({
        * Extracts all scripts and stylesheets from the page in DOM order.
        * Covers <script> (external + inline), <link rel="stylesheet">, and inline <style>.
        * Inline content is capped to bound the messaging payload.
-       * @returns {{ index: number, kind: 'script'|'style', src: string|null, isExternal: boolean, isInline: boolean, type: string, load: string, media: string, size: number, content: string|null }[]}
+       * @returns {import('./popup/utils/types').RawAsset[]}
        */
       if (request.action === 'get_assets') {
         const pageHost = location.hostname;
         const MAX_INLINE = 20000; // cap inline content per asset (~20KB)
 
-        const isExternalUrl = (url: string): boolean => {
+        const mediaMatches = (query: string): boolean => {
           try {
-            return new URL(url, location.href).hostname !== pageHost;
+            return window.matchMedia(query).matches;
           } catch {
-            return true;
+            return true; // on bad input, assume blocking (the pre-matchMedia behavior)
           }
         };
         // Browser-extension injected assets (e.g. content scripts) use these schemes.
@@ -259,26 +350,11 @@ export default defineContentScript({
           }
         };
 
-        // Pull already-recorded timing from the Resource Timing API — no new network
-        // request. Cross-origin assets without a Timing-Allow-Origin header report 0
-        // (opaque), so third-party trackers often have no size/status/duration.
-        const sizeOf = (e: PerformanceResourceTiming) => e.encodedBodySize || e.decodedBodySize || 0;
-        const timingByUrl = new Map<string, PerformanceResourceTiming>();
-        try {
-          for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
-            const prev = timingByUrl.get(entry.name);
-            if (!prev || sizeOf(entry) > sizeOf(prev)) timingByUrl.set(entry.name, entry);
-          }
-        } catch {
-          // Resource Timing unavailable; timing-derived fields stay at defaults
-        }
-
-        const cachedOf = (t?: PerformanceResourceTiming): boolean =>
-          !!t && t.transferSize === 0 && t.decodedBodySize > 0;
+        const timingByUrl = buildResourceTimingIndex();
         const durationOf = (t?: PerformanceResourceTiming): number => (t ? Math.round(t.duration) : 0);
         const statusOf = (t?: PerformanceResourceTiming): number =>
           t ? ((t as PerformanceResourceTiming & { responseStatus?: number }).responseStatus ?? 0) : 0;
-        const sizeFromTiming = (t?: PerformanceResourceTiming): number => (t ? sizeOf(t) : 0);
+        const sizeFromTiming = (t?: PerformanceResourceTiming): number => (t ? resourceSize(t) : 0);
 
         const placementOf = (el: Element): 'head' | 'body' | 'footer' => {
           if (document.head?.contains(el)) return 'head';
@@ -296,27 +372,34 @@ export default defineContentScript({
             const inline = !src;
             const content = inline ? (s.textContent ?? '') : '';
             const t = src ? timingByUrl.get(src) : undefined;
-            const load = inline ? 'inline' : s.async ? 'async' : s.defer ? 'defer' : 'blocking';
+            const subtype = scriptSubtype(s.type);
+            const load = scriptLoad(subtype, s.async, s.defer, inline);
             const placement = placementOf(s);
             return {
               index: i,
               kind: 'script' as const,
               src,
               // Extension-injected assets are tracked separately, not as third-party "External"
-              isExternal: src ? !isBrowserExtensionUrl(src) && isExternalUrl(src) : false,
+              isExternal: src ? !isBrowserExtensionUrl(src) && isExternalAssetUrl(src, pageHost) : false,
               isBrowserExtension: src ? isBrowserExtensionUrl(src) : false,
               isInline: inline,
               type: s.type ? s.type : 'classic',
+              subtype,
               load,
               media: '',
               size: inline ? byteSize(content) : sizeFromTiming(t),
               content: inline ? content.slice(0, MAX_INLINE) : null,
               placement,
-              cached: cachedOf(t),
+              cached: resourceCached(t),
               duration: durationOf(t),
               status: statusOf(t),
-              // Sync external script in <head> blocks the parser before first paint
-              renderBlocking: placement === 'head' && !inline && load === 'blocking'
+              renderBlocking: isRenderBlockingScript({
+                subtype,
+                load,
+                placement,
+                isInline: inline,
+                noModule: s.noModule
+              })
             };
           }
 
@@ -330,20 +413,23 @@ export default defineContentScript({
               index: i,
               kind: 'style' as const,
               src: href,
-              isExternal: href ? !isBrowserExtensionUrl(href) && isExternalUrl(href) : false,
+              isExternal: href ? !isBrowserExtensionUrl(href) && isExternalAssetUrl(href, pageHost) : false,
               isBrowserExtension: href ? isBrowserExtensionUrl(href) : false,
               isInline: false,
               type: 'stylesheet',
-              load: 'blocking',
+              subtype: 'stylesheet' as const,
+              load: 'blocking' as const,
               media,
               size: sizeFromTiming(t),
               content: null,
               placement,
-              cached: cachedOf(t),
+              cached: resourceCached(t),
               duration: durationOf(t),
               status: statusOf(t),
-              // Stylesheets in <head> block render unless they target print only
-              renderBlocking: placement === 'head' && media !== 'print'
+              renderBlocking: isRenderBlockingStylesheet(
+                { placement, media, disabled: l.disabled, alternate: l.relList.contains('alternate') },
+                mediaMatches
+              )
             };
           }
 
@@ -358,7 +444,8 @@ export default defineContentScript({
             isBrowserExtension: false,
             isInline: true,
             type: 'inline',
-            load: 'inline',
+            subtype: 'stylesheet' as const,
+            load: 'inline' as const,
             media: st.media ?? '',
             size: byteSize(content),
             content: content.slice(0, MAX_INLINE),
@@ -380,25 +467,7 @@ export default defineContentScript({
        */
       if (request.action === 'get_images') {
         const pageHost = location.hostname;
-        const isExternalUrl = (url: string): boolean => {
-          try {
-            return new URL(url, location.href).hostname !== pageHost;
-          } catch {
-            return true;
-          }
-        };
-        const sizeOf = (e: PerformanceResourceTiming) => e.encodedBodySize || e.decodedBodySize || 0;
-        const timingByUrl = new Map<string, PerformanceResourceTiming>();
-        try {
-          for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
-            const prev = timingByUrl.get(entry.name);
-            if (!prev || sizeOf(entry) > sizeOf(prev)) timingByUrl.set(entry.name, entry);
-          }
-        } catch {
-          // Resource Timing unavailable; size/cached stay at defaults
-        }
-        const cachedOf = (t?: PerformanceResourceTiming): boolean =>
-          !!t && t.transferSize === 0 && t.decodedBodySize > 0;
+        const timingByUrl = buildResourceTimingIndex();
 
         const resolveUrl = (url: string): string => {
           try {
@@ -407,64 +476,68 @@ export default defineContentScript({
             return url;
           }
         };
-        const bgUrl = (bg: string): string => {
-          const m = /url\((['"]?)(.*?)\1\)/i.exec(bg);
-          return m && m[2] ? resolveUrl(m[2]) : '';
-        };
-        const formatOf = (url: string): string => {
-          try {
-            const path = new URL(url, location.href).pathname;
-            const ext = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
-            if (ext === 'jpeg') return 'jpg';
-            return /^(png|jpg|webp|avif|gif|svg)$/.test(ext) ? ext : '';
-          } catch {
-            return '';
-          }
-        };
 
         const images = collectImageEls().map(({ el, source, bg }, i) => {
           if (source === 'background') {
-            const src = bgUrl(bg ?? '');
+            const src = bg ? capDataUri(resolveUrl(bg)) : '';
             const t = src ? timingByUrl.get(src) : undefined;
+            const rect = el.getBoundingClientRect();
             return {
               index: i,
               source,
               src,
               alt: null,
               lacksAlt: false,
+              decorative: false,
               isResponsive: false,
               naturalWidth: 0,
               naturalHeight: 0,
-              format: formatOf(src),
+              displayWidth: Math.round(rect.width),
+              displayHeight: Math.round(rect.height),
+              format: imageFormat(src),
               loading: 'none',
-              size: t ? sizeOf(t) : 0,
-              cached: cachedOf(t),
-              isExternal: src ? isExternalUrl(src) : false,
+              size: t ? resourceSize(t) : 0,
+              cached: resourceCached(t),
+              isExternal: src ? isExternalAssetUrl(src, pageHost) : false,
               isHidden: !(el as HTMLElement).checkVisibility(),
-              broken: false
+              broken: false,
+              oversized: false // natural size is unknowable for backgrounds without a fetch
             };
           }
           const img = el as HTMLImageElement;
-          const src = img.currentSrc || img.src || '';
+          const src = capDataUri(img.currentSrc || img.src || '');
           const t = src ? timingByUrl.get(src) : undefined;
-          const altAttr = img.getAttribute('alt');
+          const alt = altState(img.getAttribute('alt'));
           const loadingAttr = img.getAttribute('loading');
+          const rect = img.getBoundingClientRect();
+          const displayWidth = Math.round(rect.width);
+          const displayHeight = Math.round(rect.height);
           return {
             index: i,
             source,
             src,
-            alt: altAttr,
-            lacksAlt: altAttr === null || altAttr.trim() === '',
+            alt: img.getAttribute('alt'),
+            lacksAlt: alt === 'missing',
+            decorative: alt === 'decorative',
             isResponsive: source === 'picture' || img.srcset !== '' || img.sizes !== '',
             naturalWidth: img.naturalWidth,
             naturalHeight: img.naturalHeight,
-            format: formatOf(src),
+            displayWidth,
+            displayHeight,
+            format: imageFormat(src),
             loading: loadingAttr === 'lazy' ? 'lazy' : loadingAttr === 'eager' ? 'eager' : 'none',
-            size: t ? sizeOf(t) : 0,
-            cached: cachedOf(t),
-            isExternal: src ? isExternalUrl(src) : false,
+            size: t ? resourceSize(t) : 0,
+            cached: resourceCached(t),
+            isExternal: src ? isExternalAssetUrl(src, pageHost) : false,
             isHidden: !img.checkVisibility(),
-            broken: img.complete && img.naturalWidth === 0 && src !== ''
+            broken: isBrokenImage(img, src),
+            oversized: isOversized(
+              img.naturalWidth,
+              img.naturalHeight,
+              displayWidth,
+              displayHeight,
+              window.devicePixelRatio
+            )
           };
         });
         sendResponse(images);
@@ -500,17 +573,12 @@ export default defineContentScript({
         const pageHost = location.hostname;
         document.querySelectorAll('a[href]').forEach((el) => {
           const anchor = el as HTMLAnchorElement;
-          const rel = anchor.getAttribute('rel') ?? '';
-          const isNofollow = /\bnofollow\b/i.test(rel);
-          let isExternal = false;
-          try {
-            isExternal = anchor.hostname !== pageHost;
-          } catch {
-            isExternal = true;
-          }
+          const { nofollow, sponsored, ugc } = relFlags(anchor.getAttribute('rel') ?? '');
+          const dofollow = isDofollow({ isNofollow: nofollow, isSponsored: sponsored, isUgc: ugc });
+          const kind = classifyLink(anchor.href, pageHost);
           anchor.setAttribute(
             'data-alfred-link-highlight',
-            isNofollow ? 'nofollow' : isExternal ? 'external' : 'internal'
+            !dofollow ? 'nofollow' : kind === 'internal' ? 'internal' : 'external'
           );
         });
         sendResponse(true);
@@ -518,26 +586,20 @@ export default defineContentScript({
       }
 
       /**
-       * Scrolls to a link by its zero-based DOM index and applies a brief green dashed outline highlight.
+       * Scrolls to a link and applies a brief green dashed outline highlight.
+       * Prefers the index stamped by get_links so DOM mutations since the
+       * snapshot don't shift the target; falls back to the nth a[href].
        * @param {number} request.index - Zero-based index of the link among all `a[href]` elements.
        */
       if (request.action === 'scroll_to_link') {
-        const allLinks = document.querySelectorAll('a[href]');
-        const target = allLinks[(request as { action: string; index: number }).index];
-        if (target instanceof HTMLElement) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          target.style.outline = '2px dashed #95bf47';
-          target.style.outlineOffset = '3px';
-          target.style.transition = 'outline-color 0.8s';
-          setTimeout(() => {
-            target.style.outlineColor = 'transparent';
-            setTimeout(() => {
-              target.style.outline = '';
-              target.style.outlineOffset = '';
-              target.style.transition = '';
-            }, 800);
-          }, 5000);
+        const index = Number((request as { action: string; index: number }).index);
+        if (!Number.isInteger(index) || index < 0) {
+          sendResponse(false);
+          return false;
         }
+        const target =
+          document.querySelector(`a[data-alfred-link-index="${index}"]`) ?? document.querySelectorAll('a[href]')[index];
+        if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
       }
@@ -545,20 +607,7 @@ export default defineContentScript({
       if (request.action === 'scroll_to_heading') {
         const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const target = allHeadings[(request as { action: string; index: number }).index];
-        if (target instanceof HTMLElement) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          target.style.outline = '2px dashed #95bf47';
-          target.style.outlineOffset = '3px';
-          target.style.transition = 'outline-color 0.8s';
-          setTimeout(() => {
-            target.style.outlineColor = 'transparent';
-            setTimeout(() => {
-              target.style.outline = '';
-              target.style.outlineOffset = '';
-              target.style.transition = '';
-            }, 800);
-          }, 5000);
-        }
+        if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
       }
@@ -614,7 +663,7 @@ export default defineContentScript({
               // Skip removal if the global Highlight toggle was switched on meanwhile.
               const globalOn = !!document.getElementById(IMAGE_HIGHLIGHT_STYLE_ID)?.dataset.global;
               if (!globalOn) el.removeAttribute('data-alfred-image-highlight');
-            }, 5000);
+            }, FLASH_HOLD_MS);
           }
         }
         sendResponse(true);

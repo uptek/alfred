@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>404 script and stylesheet, plus a script loaded twice</title>
+    <link rel="stylesheet" href="/assets/static/missing.css" />
+    <script src="/assets/static/missing.js"></script>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Assets tab</div>
+      <ul>
+        <li>Scripts ×3 (missing.js + footer.js twice), Styles ×2 (missing.css + inline style block)</li>
+        <li>
+          missing.js and missing.css: red <b>404</b> status pill each (they also carry render-blocking pills — they sat
+          in head and did block until the request failed)
+        </li>
+        <li>Both footer.js rows show a <b>×2</b> duplicate badge</li>
+        <li>Flags filter shows Render-blocking 2, Failed 2, Duplicate 2</li>
+        <li>Sorting by Time still works; the 404s report tiny sizes (the "Not Found" body)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>The two missing assets return HTTP 404 from the fixture server; footer.js is included twice on purpose.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+    <script src="/assets/static/footer.js"></script>
+    <script src="/assets/static/footer.js"></script>
+  </body>
+</html>

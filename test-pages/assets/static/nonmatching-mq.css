@@ -1,0 +1,4 @@
+/* Media query never matches — loaded at low priority, not render-blocking. */
+.from-nonmatching-mq {
+  color: #d72c0d;
+}

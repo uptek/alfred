@@ -1,0 +1,4 @@
+/* Alternate stylesheet — not applied or fetched unless the user selects it. */
+.from-alternate {
+  color: #0000ff;
+}

@@ -1,6 +1,6 @@
 {
   "name": "alfred",
-  "version": "2026.06.14",
+  "version": "2026.06.15",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,6 +17,7 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "changelog:gen": "bun scripts/generate-changelog.ts",
+    "testpages": "bun test-pages/server.ts",
     "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
     "submit": "bash scripts/submit.sh",
     "prepare": "cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",

@@ -1,0 +1,4 @@
+/* Media query matches every screen — render-blocking. */
+.from-matching-mq {
+  color: #95bf47;
+}

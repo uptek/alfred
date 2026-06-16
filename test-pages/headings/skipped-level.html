@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Two skipped levels — skipped-level issues</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Headings tab</div>
+      <ul>
+        <li>2 issues: "H1 → H3 (skipped H2)" and "H2 → H5 (skipped H3)"</li>
+        <li>Badge "2" on the tab</li>
+        <li>The H3 and H5 rows carry red dots</li>
+        <li>Going back up (H4 → H2) is not an issue — only downward jumps count</li>
+      </ul>
+    </aside>
+    <main>
+      <h1>Care instructions</h1>
+      <h3>Machine wash</h3>
+      <p>This jumped from H1 straight to H3.</p>
+      <h4>Cold cycle only</h4>
+      <p>H3 to H4 is fine.</p>
+      <h2>Drying</h2>
+      <p>Moving back up to H2 is fine.</p>
+      <h5>Lay flat</h5>
+      <p>H2 to H5 skipped two levels (reported as skipping H3).</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

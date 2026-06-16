@@ -1,0 +1,7 @@
+<!doctype html>
+<html>
+<head><title>Page Not Found</title></head>
+<body>
+<p>This is what a misconfigured SPA fallback returns for /robots.txt: an HTML page with a 200 status instead of a plain-text robots file.</p>
+</body>
+</html>

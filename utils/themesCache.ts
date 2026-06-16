@@ -1,5 +1,5 @@
 import { getItem, setItem } from './storage';
-import type { ThemeStoreEntry } from '@/entrypoints/popup/types';
+import type { ThemeStoreEntry } from '@/entrypoints/popup/utils/types';
 
 const STORAGE_KEY = 'themes_cache';
 const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours

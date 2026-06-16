@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <rect width="1600" height="1000" rx="40" fill="#b35309"/>
+  <circle cx="450" cy="400" r="140" fill="#fff" opacity="0.9"/>
+  <path d="M200 800 L600 500 L900 700 L1200 450 L1400 800 Z" fill="#fff" opacity="0.7"/>
+  <text x="800" y="120" font-size="80" font-family="system-ui" fill="#fff" text-anchor="middle">1600 × 1000</text>
+</svg>

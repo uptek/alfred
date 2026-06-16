@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fake Shopify storefront — Dawn theme globals</title>
+    <script>
+      // Mimic a Shopify storefront: the extension's main-world script detects
+      // window.Shopify + window.__st and reads theme data from Shopify.theme.
+      window.Shopify = {
+        shop: 'alfred-test-pages.myshopify.com',
+        theme: {
+          name: 'Dawn',
+          id: 142278590001,
+          schema_name: 'Dawn',
+          schema_version: '15.2.0',
+          role: 'main',
+          handle: 'dawn'
+        }
+      };
+      window.__st = { a: 1, pageurl: location.href };
+    </script>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Theme tab</div>
+      <ul>
+        <li>Popup opens on the Theme tab (page detected as Shopify)</li>
+        <li>Theme name "Dawn", version 15.2.0, role "main"</li>
+        <li>Shop domain: alfred-test-pages.myshopify.com</li>
+        <li>Theme Store entry resolves to Dawn via the schema_name match (free, by Shopify)</li>
+      </ul>
+    </aside>
+    <main>
+      <h1>Alfred Test Store</h1>
+      <p>
+        This page fakes the two globals a real storefront exposes. Every other fixture page is detected as not-Shopify
+        and the popup opens on the Headings tab instead.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

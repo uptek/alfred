@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { getTheme, getHeadings, getLinks, getAssets, getImages, analyzeHeadings, analyzeImages } from './utils';
+  import { getTheme, getHeadings, getLinks, getAssets, getImages } from './utils/utils';
+  import { analyzeHeadings } from './utils/headings';
+  import { analyzeImages } from './utils/images';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
@@ -8,7 +10,7 @@
   import Images from './Images.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
-  import type { StoreInfo, RawHeading, RawLink, RawAsset, RawImage } from './types';
+  import type { StoreInfo, RawHeading, RawLink, RawAsset, RawImage } from './utils/types';
 
   type TabId = 'theme' | 'headings' | 'links' | 'assets' | 'images' | 'settings';
   // Future tabs: 'apps' | 'products' | 'overview' | 'hreflangs' | 'schema' | 'social' | 'robots' | 'sitemaps'
@@ -258,7 +260,7 @@
   .tab__badge--green { background: var(--success-bg); color: var(--success-strong); }
 
   /* Content block */
-  .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg-canvas); scrollbar-gutter: stable; }
+  .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg); scrollbar-gutter: stable; }
   .content::-webkit-scrollbar { width: 3px; }
   .content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
   .content__pad { padding: 24px 28px 28px; }

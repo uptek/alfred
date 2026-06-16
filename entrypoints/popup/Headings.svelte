@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { RawHeading, HeadingIssue } from './types';
-  import { scrollToHeading } from './utils';
+  import type { RawHeading, HeadingIssue } from './utils/types';
+  import { scrollToHeading } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack } from 'svelte';
 
@@ -36,14 +36,13 @@
 
   const issuesByIndex = $derived(
     issues.reduce<Record<number, HeadingIssue[]>>((acc, issue) => {
-      if (issue.index != null) {
-        (acc[issue.index] ??= []).push(issue);
+      const indexes = issue.indexes ?? (issue.index != null ? [issue.index] : []);
+      for (const index of indexes) {
+        (acc[index] ??= []).push(issue);
       }
       return acc;
     }, {})
   );
-
-  const pageLevelIssues = $derived(issues.filter(i => i.index == null));
 
   function issueLabel(issue: HeadingIssue): string {
     switch (issue.type) {
@@ -99,7 +98,7 @@
         {#if hiddenCount > 0}
           <button class="filter" class:filter--active={!showHidden} onclick={() => { showHidden = !showHidden; trackAction('headings_toggle_hidden', { show_hidden: showHidden }); }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="filter__icon"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            {hiddenCount} hidden
+            {hiddenCount}
           </button>
         {/if}
         <button class="copy-btn" onclick={handleCopy} title="Copy headings to clipboard">
@@ -122,10 +121,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="issues__icon"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
             <span class="issues__count">{issues.length} {issues.length === 1 ? 'issue' : 'issues'}</span>
           </div>
-          {#each pageLevelIssues as issue}
-            <div class="issues__item">{issueLabel(issue)}</div>
-          {/each}
-          {#each issues.filter(i => i.index != null) as issue}
+          {#each issues as issue}
             <div class="issues__item">{issueLabel(issue)}</div>
           {/each}
         </div>

@@ -1,5 +1,80 @@
 [
   {
+    "version": "2026.06.15",
+    "date": "2026-06-15",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Smarter SEO Audits Across Every Tab"
+      },
+      {
+        "type": "paragraph",
+        "content": "The Headings, Links, Assets, and Images tabs got a deep accuracy pass — fewer false alarms, more real findings."
+      },
+      {
+        "type": "heading",
+        "content": "Headings"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Multiple H1s are reported as one issue instead of one alert per heading.",
+          "Image-only headings now read their image's alt text instead of showing as empty.",
+          "Hidden headings no longer skew the outline analysis."
+        ]
+      },
+      {
+        "type": "heading",
+        "content": "Links"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Links are classified as internal, external, mailto, tel, or other — with the www variant counting as the same site.",
+          "Sponsored and UGC rel hints get their own pills and filters alongside nofollow.",
+          "New badges flag insecure http links and broken #anchor targets; repeated links show a duplicate counter.",
+          "Hidden links are surfaced with a toggle, and a summary bar totals the current view."
+        ]
+      },
+      {
+        "type": "heading",
+        "content": "Assets"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Scripts are classified by what they really are: modules, JSON-LD, import maps, speculation rules, or inert data blocks.",
+          "Render-blocking detection now understands module scripts, nomodule fallbacks, media queries, and disabled or alternate stylesheets.",
+          "A Flags filter pinpoints render-blocking, failed, and duplicate assets, and a summary bar totals counts and size."
+        ]
+      },
+      {
+        "type": "heading",
+        "content": "Images"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Decorative images with an empty alt are recognized as intentional instead of being flagged as missing alt.",
+          "Oversized images — shipping far more pixels than they display — are detected, highlighted, and filterable.",
+          "Data-URI images show a clean label instead of a wall of base64, and huge inline payloads no longer slow the popup.",
+          "Multiple CSS backgrounds on one element are each listed, and a summary bar totals the view."
+        ]
+      },
+      {
+        "type": "heading",
+        "content": "Everywhere"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Searching, filtering, and sorting stay fast on link- and image-heavy pages.",
+          "CSV and JSON exports carry the new fields and are hardened against spreadsheet formula injection."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.06.14",
     "date": "2026-06-14",
     "changes": [
