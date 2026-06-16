@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { StoreInfo } from './types';
+  import type { StoreInfo } from './utils/types';
   import StorefrontPassword from './settings/StorefrontPassword.svelte';
 
   let { storeInfo }: { storeInfo: StoreInfo } = $props();

@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from 'bun:test';
-import { csvField, formatSize } from './format';
+import { csvField, formatSize } from '../utils/format';
 
 describe('csvField', () => {
   it('quotes plain values', () => {

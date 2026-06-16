@@ -2,16 +2,23 @@ import { getItem } from '@/utils/storage';
 import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
-import { headingText } from './popup/headings';
-import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/links';
+import { headingText } from './popup/utils/headings';
+import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/utils/links';
 import {
   isExternalAssetUrl,
   isRenderBlockingScript,
   isRenderBlockingStylesheet,
   scriptLoad,
   scriptSubtype
-} from './popup/assets';
-import { altState, capDataUri, imageFormat, isBrokenImage, isOversized, parseBackgroundUrls } from './popup/images';
+} from './popup/utils/assets';
+import {
+  altState,
+  capDataUri,
+  imageFormat,
+  isBrokenImage,
+  isOversized,
+  parseBackgroundUrls
+} from './popup/utils/images';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
@@ -319,7 +326,7 @@ export default defineContentScript({
        * Extracts all scripts and stylesheets from the page in DOM order.
        * Covers <script> (external + inline), <link rel="stylesheet">, and inline <style>.
        * Inline content is capped to bound the messaging payload.
-       * @returns {import('./popup/types').RawAsset[]}
+       * @returns {import('./popup/utils/types').RawAsset[]}
        */
       if (request.action === 'get_assets') {
         const pageHost = location.hostname;

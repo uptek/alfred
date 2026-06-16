@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'bun:test';
-import { classifyLink, followRank, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './links';
+import {
+  classifyLink,
+  followRank,
+  isDofollow,
+  isInsecureHttp,
+  linkText,
+  relFlags,
+  samePageFragment
+} from '../utils/links';
 
 describe('isDofollow', () => {
   const link = (over: Partial<{ isNofollow: boolean; isSponsored: boolean; isUgc: boolean }>) => ({

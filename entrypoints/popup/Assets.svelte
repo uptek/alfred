@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { RawAsset } from './types';
-  import type { AssetFlag } from './assets';
-  import { displaySource as displaySourceUrl, hasOwnLoad, matchesAssetFlag, typeLabel } from './assets';
-  import { csvField, formatSize } from './format';
+  import type { RawAsset } from './utils/types';
+  import type { AssetFlag } from './utils/assets';
+  import { displaySource as displaySourceUrl, hasOwnLoad, matchesAssetFlag, typeLabel } from './utils/assets';
+  import { csvField, formatSize } from './utils/format';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';

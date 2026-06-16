@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { LinkKind, RawLink } from './types';
-  import { followRank, isDofollow } from './links';
-  import { csvField } from './format';
+  import type { LinkKind, RawLink } from './utils/types';
+  import { followRank, isDofollow } from './utils/links';
+  import { csvField } from './utils/format';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
-  import { highlightLinks, scrollToLink } from './utils';
+  import { highlightLinks, scrollToLink } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
 

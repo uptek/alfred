@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { analyzeHeadings, headingText } from './headings';
-import type { RawHeading } from './types';
+import { analyzeHeadings, headingText } from '../utils/headings';
+import type { RawHeading } from '../utils/types';
 
 function h(level: number, text = 'Heading', isHidden = false): RawHeading {
   return { level, text, isHidden };

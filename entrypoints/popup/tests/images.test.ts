@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { RawImage } from './types';
+import type { RawImage } from '../utils/types';
 import {
   altState,
   analyzeImages,
@@ -10,7 +10,7 @@ import {
   isBrokenImage,
   isOversized,
   parseBackgroundUrls
-} from './images';
+} from '../utils/images';
 
 describe('isBrokenImage', () => {
   test('loaded with zero natural width and a src is broken', () => {

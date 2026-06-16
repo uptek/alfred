@@ -3,7 +3,7 @@
   import CopyIcon from './CopyIcon.svelte';
   import Tooltip from './Tooltip.svelte';
   import { untrack } from 'svelte';
-  import type { StoreInfo } from './types';
+  import type { StoreInfo } from './utils/types';
 
   let { storeInfo }: { storeInfo: StoreInfo } = $props();
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { getTheme, getHeadings, getLinks, getAssets, getImages } from './utils';
-  import { analyzeHeadings } from './headings';
-  import { analyzeImages } from './images';
+  import { getTheme, getHeadings, getLinks, getAssets, getImages } from './utils/utils';
+  import { analyzeHeadings } from './utils/headings';
+  import { analyzeImages } from './utils/images';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
@@ -10,7 +10,7 @@
   import Images from './Images.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
-  import type { StoreInfo, RawHeading, RawLink, RawAsset, RawImage } from './types';
+  import type { StoreInfo, RawHeading, RawLink, RawAsset, RawImage } from './utils/types';
 
   type TabId = 'theme' | 'headings' | 'links' | 'assets' | 'images' | 'settings';
   // Future tabs: 'apps' | 'products' | 'overview' | 'hreflangs' | 'schema' | 'social' | 'robots' | 'sitemaps'

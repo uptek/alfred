@@ -9,7 +9,7 @@ import {
   scriptLoad,
   scriptSubtype,
   typeLabel
-} from './assets';
+} from '../utils/assets';
 
 describe('hasOwnLoad', () => {
   test('scripts and inline styles have a load strategy', () => {
