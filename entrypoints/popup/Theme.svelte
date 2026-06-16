@@ -414,7 +414,7 @@
 <style>
   /* Hero block */
   .hero { padding: 32px 32px 0; position: relative; }
-  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 140px; background: var(--hero-gradient); border-bottom: 1px solid var(--border); }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 165px; background: var(--bg-raised); border-bottom: 1px solid var(--border); }
   .hero__identity { position: relative; display: flex; align-items: flex-end; gap: 20px; padding-bottom: 24px; }
   .hero__meta { flex: 1; min-width: 0; padding-bottom: 2px; }
   .hero__name { font-size: 24px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; line-height: 1.15; margin: 0; }

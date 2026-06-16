@@ -260,7 +260,7 @@
   .tab__badge--green { background: var(--success-bg); color: var(--success-strong); }
 
   /* Content block */
-  .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg-canvas); scrollbar-gutter: stable; }
+  .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg); scrollbar-gutter: stable; }
   .content::-webkit-scrollbar { width: 3px; }
   .content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
   .content__pad { padding: 24px 28px 28px; }
