@@ -5,7 +5,8 @@
 
   const settingsItems = [
     { key: 'analytics', label: 'Share anonymous usage analytics', details: 'When enabled, anonymous feature usage data (e.g. which actions are used) is sent to help improve Alfred. No identifiable data is ever collected.' },
-    { key: 'restoreRightClick', label: 'Restore right-click', details: 'Re-enables right-click context menu and text selection on Shopify sites that block them' }
+    { key: 'restoreRightClick', label: 'Restore right-click', details: 'Re-enables right-click context menu and text selection on Shopify sites that block them' },
+    { key: 'openChangelogOnUpdate', label: 'Open changelog after updates', details: 'Opens the changelog in a new tab whenever Alfred updates to a new version, so you can see what changed. Disable to update silently.' }
   ];
 </script>
 
