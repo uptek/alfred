@@ -4,6 +4,7 @@ import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
 import { captureOrganizationId } from '@/entrypoints/collaborator-access.content/presets';
+import { getItem } from '@/utils/storage';
 
 const UNINSTALL_SURVEY_URL = 'https://tally.so/r/zx79O8';
 
@@ -101,15 +102,18 @@ export default defineBackground(() => {
     }
   });
 
-  browser.runtime.onInstalled.addListener((details) => {
+  browser.runtime.onInstalled.addListener(async (details) => {
     // Prefetch themes cache on install and update
     refreshThemesCacheIfNeeded();
 
-    // Open changelog page when extension is updated
+    // Open changelog page when extension is updated, unless disabled in settings
     if (!import.meta.env.DEV && details.reason === 'update') {
-      browser.tabs.create({
-        url: browser.runtime.getURL('/options.html?page=changelog')
-      });
+      const settings = await getItem<AlfredSettings>('settings');
+      if (settings?.general?.openChangelogOnUpdate !== false) {
+        browser.tabs.create({
+          url: browser.runtime.getURL('/options.html?page=changelog')
+        });
+      }
     }
   });
 });

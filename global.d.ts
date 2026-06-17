@@ -36,6 +36,7 @@ declare interface AlfredSettings {
   general?: {
     analytics?: boolean;
     restoreRightClick?: boolean;
+    openChangelogOnUpdate?: boolean;
   };
   themeCustomizer?: {
     inspector?: 'default' | 'disable' | 'restore';

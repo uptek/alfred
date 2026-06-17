@@ -4,7 +4,8 @@ import { Toast } from '@/utils/toast';
 const defaultSettings: AlfredSettings = {
   general: {
     analytics: true,
-    restoreRightClick: true
+    restoreRightClick: true,
+    openChangelogOnUpdate: true
   },
   themeCustomizer: {
     inspector: 'default',
