@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.06.17
+@ 2026-06-17
+A new General setting lets you stop the changelog from opening in a new tab every time Alfred updates. It stays on by default, so nothing changes unless you turn it off.
+
+
 ## 2026.06.15
 @ 2026-06-15
 
