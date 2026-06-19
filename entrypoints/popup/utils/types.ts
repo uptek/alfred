@@ -60,7 +60,7 @@ export interface RawAsset {
 // text is always sent so the popup can re-parse, pretty-print, and copy it.
 export interface RawSchemaBlock {
   index: number; // position among ld+json scripts in DOM order (stable key)
-  raw: string; // original JSON text, captured in full (not truncated)
+  raw: string;
   parseError: string | null; // JSON.parse message; non-null => malformed block
   placement: 'head' | 'body';
 }

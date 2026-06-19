@@ -12,7 +12,6 @@
 
   const analysis = $derived(analyzeSchema(schema));
 
-  // Entity-level accordion: first entity open by default; explicit toggles override.
   let overrides = $state<Map<number, boolean>>(new Map());
   function isOpen(i: number): boolean {
     return overrides.get(i) ?? i === 0;
@@ -23,9 +22,6 @@
     overrides = next;
   }
 
-  // Flattens a parsed node into table rows. Scalars are leaf rows; nested
-  // objects/arrays become a group header row followed by indented child rows;
-  // an array of plain scalars (e.g. sameAs) collapses into one multi-line cell.
   type Row =
     | { kind: 'leaf'; depth: number; label: string; value: string }
     | { kind: 'list'; depth: number; label: string; items: string[] }
@@ -121,8 +117,6 @@
     trackAction('schema_export', { format: 'json', entities: analysis.entities.length });
   }
 
-  // Per-entity copy: grabs just this type's JSON (handy for pasting one entity
-  // into Google's Rich Results Test, even when several share a @graph block).
   let copiedIndex = $state<number | null>(null);
   let entityTimer: ReturnType<typeof setTimeout> | null = null;
   async function copyEntity(i: number, entity: SchemaEntity) {
@@ -271,7 +265,7 @@
   .entity__header { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 9px; width: 100%; padding: 13px 0; background: none; border: none; font-family: inherit; text-align: left; cursor: pointer; color: var(--text); }
   .entity__header--static { cursor: default; }
 
-  /* Per-type copy: a quiet ghost button, always visible, darkening on hover. */
+  /* Per-type copy button */
   .entity__copy { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 28px; height: 28px; margin-left: 8px; border: none; border-radius: 6px; background: none; color: var(--text-faint); cursor: pointer; transition: color 0.12s, background 0.12s; }
   .entity__copy:hover { color: var(--text-secondary); background: var(--bg-hover); }
   .entity__copy svg { width: 14px; height: 14px; stroke-width: 1.8; }
@@ -282,8 +276,7 @@
   .entity__type { font-size: 14px; font-weight: 650; letter-spacing: -0.01em; color: var(--text); }
   .entity__header .badge { margin-left: auto; }
 
-  /* Key/value table — flattened JSON-LD, one property per row. Hairline rows,
-     muted keys, dark values; nested props indent under a group header. */
+  /* Key/value table */
   .entity__body { padding: 0 0 12px; }
   .kv { width: 100%; border-collapse: collapse; table-layout: auto; }
   .kv__row { border-bottom: 1px solid var(--border-subtle); }
@@ -311,7 +304,7 @@
   .kv__url:hover { text-decoration: underline; text-underline-offset: 2px; }
   .kv__empty { color: var(--text-disabled); font-style: italic; }
 
-  /* Invalid-JSON callout — a tinted error strip for blocks that failed to parse. */
+  /* Invalid-JSON callout */
   .issues { margin: 10px -20px 0; display: flex; flex-direction: column; }
   .issue { display: flex; align-items: baseline; gap: 9px; padding: 7px 20px; font-size: 12.5px; border-top: 1px solid var(--border-subtle); }
   .issue--error { background: var(--error-bg); }
@@ -322,7 +315,7 @@
 
   .entity--invalid .entity__type { color: var(--error-strong); }
 
-  /* Badge — only the invalid-JSON marker remains. */
+  /* Badge */
   .badge { display: inline-flex; align-items: center; flex-shrink: 0; font-size: 10.5px; font-weight: 600; padding: 1px 8px; border-radius: 20px; white-space: nowrap; }
   .badge--red { background: var(--error-bg); color: var(--error-strong); }
 

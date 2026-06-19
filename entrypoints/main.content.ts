@@ -274,9 +274,9 @@ export default defineContentScript({
 
       /**
        * Extracts every JSON-LD block (`<script type="application/ld+json">`) in
-       * DOM order. Each block's text is captured verbatim (capped) and parsed
-       * once only to record whether it is well-formed; the popup re-parses,
-       * validates, and pretty-prints from the raw text.
+       * DOM order. Each block's text is captured verbatim and parsed once to
+       * record whether it is well-formed; the popup re-parses and pretty-prints
+       * from the raw text.
        * @returns {RawSchemaBlock[]}
        */
       if (request.action === 'get_schema') {
@@ -289,9 +289,8 @@ export default defineContentScript({
           ldJsonEssence
         );
         const blocks = scripts.map((el, i) => {
-          // Capture the full block: truncating would make a large-but-valid
-          // schema (e.g. a Product with many variant offers) parse as malformed
-          // and ship a broken payload to Copy/Export.
+          // Full text, never capped: clipping a large valid schema makes it
+          // parse as malformed and corrupts Copy/Export.
           const raw = el.textContent ?? '';
           let parseError: string | null = null;
           try {
