@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Complete product, website, and organization markup</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+      .card {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 16px;
+      }
+    </style>
+
+    <!-- Organization (homepage-style identity block) -->
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        "name": "Acme Coffee",
+        "url": "https://acme-coffee.example",
+        "logo": "https://acme-coffee.example/logo.png",
+        "sameAs": ["https://twitter.com/acme", "https://instagram.com/acme"]
+      }
+    </script>
+
+    <!-- WebSite with sitelinks SearchAction -->
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "WebSite",
+        "name": "Acme Coffee",
+        "url": "https://acme-coffee.example",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://acme-coffee.example/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+
+    <!-- Product with a single, fully-specified Offer (note https://schema.org/ with trailing slash, as Shopify emits) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": "Dark Roast Coffee",
+        "image": ["https://acme-coffee.example/dark-roast.jpg"],
+        "description": "A bold and balanced dark roast.",
+        "brand": { "@type": "Brand", "name": "Acme Coffee Company" },
+        "sku": "50251G",
+        "offers": {
+          "@type": "Offer",
+          "price": 19.99,
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-01-01",
+          "url": "https://acme-coffee.example/products/dark-roast"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Schema tab</div>
+      <ul>
+        <li>Three entities: Organization, WebSite, Product</li>
+        <li>Each expands to a key/value table, one property per row</li>
+        <li>Nested objects (brand, offers, potentialAction) appear as indented group rows tagged with their @type</li>
+        <li>No badges anywhere; no red badge on the Schema sidebar tab</li>
+        <li>Summary bar: 3 types</li>
+      </ul>
+    </aside>
+    <a class="back" href="/">&larr; all test pages</a>
+    <main>
+      <div class="card">
+        Dark Roast Coffee — $19.99. A clean product page whose Product, Organization, and WebSite markup is complete.
+      </div>
+    </main>
+  </body>
+</html>

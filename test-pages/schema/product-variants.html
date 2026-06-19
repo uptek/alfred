@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Multi-variant product with an offers array</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+      .card {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 16px;
+      }
+    </style>
+
+    <!-- Product whose offers is an ARRAY (multi-variant), the shape Shopify emits
+         for products with several variants. The offers differ field-for-field. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": "Variant Tee",
+        "offers": [
+          {
+            "@type": "Offer",
+            "price": 24.99,
+            "priceCurrency": "USD",
+            "availability": "http://schema.org/InStock",
+            "priceValidUntil": "2027-01-01"
+          },
+          { "@type": "Offer", "priceCurrency": "USD", "availability": "http://schema.org/InStock" }
+        ]
+      }
+    </script>
+
+    <!-- Organization with a couple of plain string properties -->
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        "name": "Acme Apparel",
+        "url": "https://acme-apparel.example"
+      }
+    </script>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Schema tab</div>
+      <ul>
+        <li>Two entities: Product, Organization</li>
+        <li>Product's offers renders as a group row ("2 items") with each Offer indented below it as its own group</li>
+        <li>
+          The two offers list different fields (the second has no price) — the table shows exactly what's present,
+          nothing flagged
+        </li>
+        <li>No badges anywhere; no red badge on the Schema sidebar tab</li>
+        <li>Summary bar: 2 types</li>
+      </ul>
+    </aside>
+    <a class="back" href="/">&larr; all test pages</a>
+    <main>
+      <div class="card">
+        Variant Tee — a multi-variant product whose offers come through as an array of Offer objects.
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Single @graph block holding several entities</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+      .card {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 16px;
+      }
+    </style>
+
+    <!-- One block, @graph with three entities (the shape SEO apps like Yoast emit) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "Acme",
+            "url": "https://acme.example",
+            "logo": "https://acme.example/logo.png",
+            "sameAs": ["https://twitter.com/acme"]
+          },
+          { "@type": "WebSite", "name": "Acme", "url": "https://acme.example" },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://acme.example/" },
+              { "@type": "ListItem", "position": 2, "name": "Catalog", "item": "https://acme.example/catalog" }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Schema tab</div>
+      <ul>
+        <li>Three entities surface from one @graph block: Organization, WebSite, BreadcrumbList</li>
+        <li>
+          BreadcrumbList's itemListElement renders as a group row ("2 items") with each ListItem indented below it
+        </li>
+        <li>No badges anywhere; no red badge on the Schema sidebar tab</li>
+        <li>Summary bar: 3 types</li>
+      </ul>
+    </aside>
+    <a class="back" href="/">&larr; all test pages</a>
+    <main>
+      <div class="card">
+        All structured data lives in a single @graph array, which the tab flattens into separate rows.
+      </div>
+    </main>
+  </body>
+</html>
