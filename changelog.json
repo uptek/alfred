@@ -1,5 +1,31 @@
 [
   {
+    "version": "2026.06.20",
+    "date": "2026-06-20",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Schema Analyzer"
+      },
+      {
+        "type": "paragraph",
+        "content": "A new Schema tab analyzes the JSON-LD structured data on your website — the markup Google reads for rich results — laid out as clean, readable tables."
+      },
+      {
+        "type": "image",
+        "content": "https://bucket.alfred.uptek.com/alfred-seo-schema.jpg",
+        "alt": "The new Schema tab showing structured data as readable tables"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Entities bundled in a single @graph block are split out into separate, named types.",
+          "Copy any single type's JSON with one click, or copy and export everything at once."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.06.17",
     "date": "2026-06-17",
     "changes": [

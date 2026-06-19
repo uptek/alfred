@@ -273,6 +273,43 @@ export default defineContentScript({
       }
 
       /**
+       * Extracts every JSON-LD block (`<script type="application/ld+json">`) in
+       * DOM order. Each block's text is captured verbatim and parsed once to
+       * record whether it is well-formed; the popup re-parses and pretty-prints
+       * from the raw text.
+       * @returns {RawSchemaBlock[]}
+       */
+      if (request.action === 'get_schema') {
+        // Match on the MIME essence so a type with parameters
+        // (e.g. "application/ld+json; charset=utf-8") still counts. The
+        // substring selector narrows the candidates; the filter confirms.
+        const ldJsonEssence = (el: HTMLScriptElement) =>
+          (el.getAttribute('type') ?? '').split(';')[0]!.trim().toLowerCase() === 'application/ld+json';
+        const scripts = Array.from(document.querySelectorAll<HTMLScriptElement>('script[type*="ld+json" i]')).filter(
+          ldJsonEssence
+        );
+        const blocks = scripts.map((el, i) => {
+          // Full text, never capped: clipping a large valid schema makes it
+          // parse as malformed and corrupts Copy/Export.
+          const raw = el.textContent ?? '';
+          let parseError: string | null = null;
+          try {
+            JSON.parse(raw);
+          } catch (err) {
+            parseError = (err as Error).message;
+          }
+          return {
+            index: i,
+            raw,
+            parseError,
+            placement: document.head?.contains(el) ? ('head' as const) : ('body' as const)
+          };
+        });
+        sendResponse(blocks);
+        return false;
+      }
+
+      /**
        * Extracts all anchor links from the page in DOM order. Each anchor is
        * stamped with its index so scroll_to_link can find it even if the DOM
        * mutates afterwards (lazy menus, carousels).

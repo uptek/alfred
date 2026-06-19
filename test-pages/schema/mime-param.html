@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>JSON-LD with a MIME parameter on the type attribute</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+      .card {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 16px;
+      }
+    </style>
+
+    <!-- type carries a charset parameter; the tab matches on the MIME essence,
+         so this block is still collected. -->
+    <script type="application/ld+json; charset=utf-8">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Charset Coffee",
+        "url": "https://charset-coffee.example"
+      }
+    </script>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Schema tab</div>
+      <ul>
+        <li>One entity: Organization (despite the "; charset=utf-8" on the script type)</li>
+        <li>Summary bar: 1 type</li>
+      </ul>
+    </aside>
+    <a class="back" href="/">&larr; all test pages</a>
+    <main>
+      <div class="card">
+        The JSON-LD script declares <code>type="application/ld+json; charset=utf-8"</code> and is still detected.
+      </div>
+    </main>
+  </body>
+</html>

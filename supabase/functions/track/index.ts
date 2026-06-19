@@ -62,13 +62,25 @@ const VALID_ACTIONS = [
   'links_export',
   'links_copy',
   'links_sort',
+  'links_toggle_hidden',
   'assets_view',
   'assets_filter',
   'assets_export',
   'assets_copy',
   'assets_view_source',
   'assets_expand_inline',
-  'assets_sort'
+  'assets_sort',
+  'images_view',
+  'images_filter',
+  'images_highlight',
+  'images_scroll_to',
+  'images_export',
+  'images_copy',
+  'images_sort',
+  'images_open',
+  'schema_view',
+  'schema_copy',
+  'schema_export'
 ];
 
 serve(async (req) => {
