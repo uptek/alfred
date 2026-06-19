@@ -67,6 +67,21 @@ describe('analyzeSchema — extraction & flattening', () => {
     expect(entities.map((e) => e.type)).toEqual(['Organization', 'Product']);
   });
 
+  it('expands a @graph wrapper nested inside a top-level array', () => {
+    const arr = [
+      {
+        '@context': 'https://schema.org',
+        '@graph': [
+          { '@type': 'Organization', name: 'Acme' },
+          { '@type': 'WebSite', name: 'Acme' }
+        ]
+      }
+    ];
+    const { entities } = analyzeSchema([block(arr)]);
+    expect(entities.map((e) => e.type)).toEqual(['Organization', 'WebSite']);
+    expect(entities[0]!.data['@context']).toBe('https://schema.org');
+  });
+
   it('keeps the parsed node available for the code-block view', () => {
     const { entities } = analyzeSchema([block(product)]);
     expect(entities[0]!.data.name).toBe('Classic Tee');
