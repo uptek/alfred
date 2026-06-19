@@ -46,6 +46,21 @@ describe('analyzeSchema — extraction & flattening', () => {
     expect(entities.every((e) => e.blockIndex === 3)).toBe(true);
   });
 
+  it('copies the wrapper @context onto each @graph member that lacks one (so a single entity is valid standalone JSON-LD)', () => {
+    const graph = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'Organization', name: 'Acme' },
+        { '@context': 'http://schema.org', '@type': 'WebSite', name: 'Acme' }
+      ]
+    };
+    const { entities } = analyzeSchema([block(graph)]);
+    // member without its own @context inherits the wrapper's
+    expect(entities[0]!.data['@context']).toBe('https://schema.org');
+    // member that declares its own @context keeps it untouched
+    expect(entities[1]!.data['@context']).toBe('http://schema.org');
+  });
+
   it('flattens a top-level JSON array into separate entities', () => {
     const arr = [{ '@type': 'Organization', name: 'Acme', url: 'https://acme.com' }, product];
     const { entities } = analyzeSchema([block(arr)]);

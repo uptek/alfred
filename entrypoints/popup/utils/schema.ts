@@ -28,11 +28,23 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-/** Collects the root nodes from one parsed block (object, array, or @graph). */
+/**
+ * Collects the root nodes from one parsed block (object, array, or @graph).
+ * When splitting a @graph, the wrapper's @context is copied onto each member
+ * that lacks its own, so a single entity stays valid standalone JSON-LD when
+ * copied or exported (validators reject a node with no @context).
+ */
 function rootsOf(parsed: unknown): Record<string, unknown>[] {
   if (Array.isArray(parsed)) return parsed.filter(isObject);
   if (isObject(parsed)) {
-    if (Array.isArray(parsed['@graph'])) return parsed['@graph'].filter(isObject);
+    if (Array.isArray(parsed['@graph'])) {
+      const context = parsed['@context'];
+      return parsed['@graph'].filter(isObject).map((node) => {
+        if (context === undefined || node['@context'] !== undefined) return node;
+        // Fresh object per member; @context first so copied JSON-LD reads naturally.
+        return Object.assign({ '@context': context }, node);
+      });
+    }
     return [parsed];
   }
   return [];
