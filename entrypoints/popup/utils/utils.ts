@@ -1,4 +1,4 @@
-import type { StoreInfo, Theme, RawHeading, RawLink, RawAsset, RawImage } from './types';
+import type { StoreInfo, Theme, RawHeading, RawLink, RawAsset, RawImage, RawSchemaBlock } from './types';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
 
 /**
@@ -89,6 +89,23 @@ export const getAssets = async (): Promise<RawAsset[]> => {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
       const response = await browser.tabs.sendMessage(tab.id, { action: 'get_assets' });
+      return Array.isArray(response) ? response : [];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Extracts all JSON-LD structured-data blocks from the active tab via content script.
+ * @returns {Promise<RawSchemaBlock[]>} Blocks in DOM order, or empty array on failure.
+ */
+export const getSchema = async (): Promise<RawSchemaBlock[]> => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      const response = await browser.tabs.sendMessage(tab.id, { action: 'get_schema' });
       return Array.isArray(response) ? response : [];
     }
     return [];

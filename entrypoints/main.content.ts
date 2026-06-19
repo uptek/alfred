@@ -273,6 +273,37 @@ export default defineContentScript({
       }
 
       /**
+       * Extracts every JSON-LD block (`<script type="application/ld+json">`) in
+       * DOM order. Each block's text is captured verbatim (capped) and parsed
+       * once only to record whether it is well-formed; the popup re-parses,
+       * validates, and pretty-prints from the raw text.
+       * @returns {RawSchemaBlock[]}
+       */
+      if (request.action === 'get_schema') {
+        const MAX_SCHEMA_INLINE = 50000; // cap raw JSON per block (~50KB)
+        const scripts = Array.from(
+          document.querySelectorAll<HTMLScriptElement>('script[type="application/ld+json" i]')
+        );
+        const blocks = scripts.map((el, i) => {
+          const raw = (el.textContent ?? '').slice(0, MAX_SCHEMA_INLINE);
+          let parseError: string | null = null;
+          try {
+            JSON.parse(raw);
+          } catch (err) {
+            parseError = (err as Error).message;
+          }
+          return {
+            index: i,
+            raw,
+            parseError,
+            placement: document.head?.contains(el) ? ('head' as const) : ('body' as const)
+          };
+        });
+        sendResponse(blocks);
+        return false;
+      }
+
+      /**
        * Extracts all anchor links from the page in DOM order. Each anchor is
        * stamped with its index so scroll_to_link can find it even if the DOM
        * mutates afterwards (lazy menus, carousels).

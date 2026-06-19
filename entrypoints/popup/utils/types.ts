@@ -55,6 +55,29 @@ export interface RawAsset {
   renderBlocking: boolean; // blocks first render (head, synchronous)
 }
 
+// One <script type="application/ld+json"> block, captured verbatim. The content
+// script attempts JSON.parse only to record whether it is well-formed; the raw
+// text is always sent so the popup can re-parse, pretty-print, and copy it.
+export interface RawSchemaBlock {
+  index: number; // position among ld+json scripts in DOM order (stable key)
+  raw: string; // original JSON text, capped (MAX_SCHEMA_INLINE)
+  parseError: string | null; // JSON.parse message; non-null => malformed block
+  placement: 'head' | 'body';
+}
+
+// One structured-data node lifted from a block (top-level, array element, or
+// @graph member), carrying its parsed data for the code-block view.
+export interface SchemaEntity {
+  type: string; // '@type' localName, e.g. 'Product'; 'Unknown' when absent
+  blockIndex: number; // which RawSchemaBlock it came from
+  data: Record<string, unknown>; // the parsed node, pretty-printed as JSON
+}
+
+export interface SchemaAnalysis {
+  entities: SchemaEntity[];
+  invalidBlocks: { blockIndex: number; error: string }[]; // malformed JSON blocks
+}
+
 export type HeadingIssueType = 'missing-h1' | 'multiple-h1' | 'skipped-level' | 'empty' | 'h1-not-first';
 
 export interface HeadingIssue {

@@ -77,7 +77,10 @@ export type AnalyticsAction =
   | 'images_export'
   | 'images_copy'
   | 'images_sort'
-  | 'images_open';
+  | 'images_open'
+  | 'schema_view'
+  | 'schema_copy'
+  | 'schema_export';
 
 // Time savings per action (in seconds)
 const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
@@ -160,7 +163,10 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
   images_export: 60,
   images_copy: 60,
   images_sort: 25,
-  images_open: 5
+  images_open: 5,
+  schema_view: 60,
+  schema_copy: 60,
+  schema_export: 60
 };
 
 // --- Usage Stats (local tracking) ---
@@ -260,7 +266,10 @@ const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   images_export: 'SEO',
   images_copy: 'SEO',
   images_sort: 'SEO',
-  images_open: 'SEO'
+  images_open: 'SEO',
+  schema_view: 'SEO',
+  schema_copy: 'SEO',
+  schema_export: 'SEO'
 };
 
 /** Local usage stats persisted in `local:usage_stats`.
