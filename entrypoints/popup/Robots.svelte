@@ -6,9 +6,9 @@
 </script>
 
 <script lang="ts">
-  import type { RobotsResponse } from './types';
-  import type { AiBot, LintFinding } from './robots';
-  import { AI_BOTS, analyzeRobots, isAllowed } from './robots';
+  import type { RobotsResponse } from './utils/types';
+  import type { AiBot, LintFinding } from './utils/robots';
+  import { AI_BOTS, analyzeRobots, isAllowed } from './utils/robots';
   import { trackAction } from '@/utils/analytics';
   import { tick, untrack } from 'svelte';
 

@@ -2,7 +2,7 @@
   import { getTheme, getHeadings, getLinks, getAssets, getImages, getSchema, getRobots } from './utils/utils';
   import { analyzeHeadings } from './utils/headings';
   import { analyzeImages } from './utils/images';
-  import { analyzeRobots } from './robots';
+  import { analyzeRobots } from './utils/robots';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';

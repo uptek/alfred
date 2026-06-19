@@ -6,7 +6,7 @@ import {
   looksLikeHtml,
   parseRobots,
   SHOPIFY_DEFAULT_RULES
-} from './robots';
+} from '../utils/robots';
 
 describe('looksLikeHtml', () => {
   it('detects SPA fallback HTML served at /robots.txt', () => {

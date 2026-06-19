@@ -41,7 +41,8 @@ in page chrome, referer-based robots.txt fixtures).
 
 - Unit tests use Bun's built-in test runner: `bun test` (no package.json script
   needed)
-- Test files sit next to the code they cover with a `.test.ts` suffix and are
+- Test files live in a `tests/` subfolder beside the code they cover (e.g.
+  `entrypoints/popup/tests/`, `utils/tests/`) with a `.test.ts` suffix, and are
   excluded from `tsconfig.json`
 - Analytics events must exist in both `utils/analytics-actions.ts`
   (`ANALYTICS_ACTIONS`, the source of truth) and `VALID_ACTIONS` in
