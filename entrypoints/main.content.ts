@@ -281,8 +281,13 @@ export default defineContentScript({
        */
       if (request.action === 'get_schema') {
         const MAX_SCHEMA_INLINE = 50000; // cap raw JSON per block (~50KB)
-        const scripts = Array.from(
-          document.querySelectorAll<HTMLScriptElement>('script[type="application/ld+json" i]')
+        // Match on the MIME essence so a type with parameters
+        // (e.g. "application/ld+json; charset=utf-8") still counts. The
+        // substring selector narrows the candidates; the filter confirms.
+        const ldJsonEssence = (el: HTMLScriptElement) =>
+          (el.getAttribute('type') ?? '').split(';')[0]!.trim().toLowerCase() === 'application/ld+json';
+        const scripts = Array.from(document.querySelectorAll<HTMLScriptElement>('script[type*="ld+json" i]')).filter(
+          ldJsonEssence
         );
         const blocks = scripts.map((el, i) => {
           const raw = (el.textContent ?? '').slice(0, MAX_SCHEMA_INLINE);
