@@ -67,6 +67,13 @@ describe('analyzeSchema — extraction & flattening', () => {
     expect(entities.map((e) => e.type)).toEqual(['Organization', 'Product']);
   });
 
+  it('expands a @graph whose value is a single node object (not an array)', () => {
+    const graph = { '@context': 'https://schema.org', '@graph': { '@type': 'Product', name: 'Solo' } };
+    const { entities } = analyzeSchema([block(graph)]);
+    expect(entities.map((e) => e.type)).toEqual(['Product']);
+    expect(entities[0]!.data['@context']).toBe('https://schema.org');
+  });
+
   it('expands a @graph wrapper nested inside a top-level array', () => {
     const arr = [
       {

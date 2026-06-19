@@ -35,9 +35,12 @@ function isObject(v: unknown): v is Record<string, unknown> {
  * @context).
  */
 function rootsFromNode(node: Record<string, unknown>): Record<string, unknown>[] {
-  if (!Array.isArray(node['@graph'])) return [node];
+  const graph = node['@graph'];
+  // @graph may be a node object or an array of node objects (JSON-LD 1.1).
+  const members = Array.isArray(graph) ? graph : isObject(graph) ? [graph] : null;
+  if (!members) return [node];
   const context = node['@context'];
-  return node['@graph']
+  return members
     .filter(isObject)
     .map((member) =>
       context === undefined || member['@context'] !== undefined
