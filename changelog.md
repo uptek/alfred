@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.06.20
+@ 2026-06-20
+
+### Schema Analyzer
+A new Schema tab analyzes the JSON-LD structured data on your website — the markup Google reads for rich results — laid out as clean, readable tables.
+
+![The new Schema tab showing structured data as readable tables](https://bucket.alfred.uptek.com/alfred-seo-schema.jpg)
+- Entities bundled in a single @graph block are split out into separate, named types.
+- Copy any single type's JSON with one click, or copy and export everything at once.
+
 ## 2026.06.17
 @ 2026-06-17
 A new General setting lets you stop the changelog from opening in a new tab every time Alfred updates. It stays on by default, so nothing changes unless you turn it off.
