@@ -1,6 +1,19 @@
 import type { RawHeading, HeadingIssue } from './types';
+import { queryActiveTab, sendToActiveTab } from './messaging';
 import type { TextSourceElement } from './dom-text';
 import { accessibleText } from './dom-text';
+
+/**
+ * Extracts all H1-H6 headings from the active tab via content script.
+ * @returns {Promise<RawHeading[]>} Array of headings in DOM order, or empty array on failure.
+ */
+export const getHeadings = (): Promise<RawHeading[]> => queryActiveTab<RawHeading[]>('get_headings', []);
+
+/**
+ * Scrolls the active tab to a heading by its DOM index and briefly highlights it.
+ * @param {number} index - Zero-based index of the heading in DOM order.
+ */
+export const scrollToHeading = (index: number): Promise<void> => sendToActiveTab('scroll_to_heading', { index });
 
 /**
  * Analyzes heading structure and returns SEO/accessibility issues.

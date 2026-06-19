@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { getTheme, getHeadings, getLinks, getAssets, getImages, getSchema, getRobots } from './utils/utils';
-  import { analyzeHeadings } from './utils/headings';
-  import { analyzeImages } from './utils/images';
-  import { analyzeRobots } from './utils/robots';
+  import { getTheme } from './utils/theme';
+  import { getHeadings, analyzeHeadings } from './utils/headings';
+  import { getLinks } from './utils/links';
+  import { getAssets } from './utils/assets';
+  import { getImages, analyzeImages } from './utils/images';
+  import { getSchema } from './utils/schema';
+  import { getRobots, analyzeRobots } from './utils/robots';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { RawHeading, HeadingIssue } from './utils/types';
-  import { scrollToHeading } from './utils/utils';
+  import { scrollToHeading } from './utils/headings';
   import { trackAction } from '@/utils/analytics';
   import { untrack } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';

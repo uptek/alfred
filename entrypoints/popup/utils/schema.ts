@@ -1,4 +1,11 @@
 import type { RawSchemaBlock, SchemaAnalysis, SchemaEntity } from './types';
+import { queryActiveTab } from './messaging';
+
+/**
+ * Extracts all JSON-LD structured-data blocks from the active tab via content script.
+ * @returns {Promise<RawSchemaBlock[]>} Blocks in DOM order, or empty array on failure.
+ */
+export const getSchema = (): Promise<RawSchemaBlock[]> => queryActiveTab<RawSchemaBlock[]>('get_schema', []);
 
 /** Strip a schema.org URL/prefix to its bare type name ('.../Product' → 'Product'). */
 function localName(type: string): string {

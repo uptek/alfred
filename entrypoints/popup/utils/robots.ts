@@ -1,5 +1,21 @@
 // robots.txt parsing, RFC 9309 matching, linting, and Shopify default
-// detection. Pure module (no browser APIs) so it can be tested with `bun test`.
+// detection. The parsing/matching/lint logic is pure (no browser APIs) so it
+// can be tested with `bun test`; `getRobots` is the lone content-script wrapper.
+import type { RobotsResponse } from './types';
+import { queryActiveTab } from './messaging';
+
+/**
+ * Fetches the site's robots.txt via the content script. The fetch runs in the
+ * page context, reusing its HTTP cache, warm connection, and cookies — fast and
+ * reliable where an extension-origin fetch can hang on proxies or bot protection.
+ * @returns {Promise<RobotsResponse | null>} Raw file + HTTP metadata, or null when the tab is unreachable.
+ */
+export const getRobots = (): Promise<RobotsResponse | null> =>
+  queryActiveTab<RobotsResponse | null>(
+    'get_robots',
+    null,
+    (r) => !!r && typeof (r as { status?: unknown }).status === 'number'
+  );
 
 export interface RobotsRule {
   type: 'allow' | 'disallow';

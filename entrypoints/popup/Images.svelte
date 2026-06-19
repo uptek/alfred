@@ -1,11 +1,10 @@
 <script lang="ts">
   import type { RawImage, ImageStatus } from './utils/types';
   import type { AltState } from './utils/images';
-  import { altState, fileLabel, imageStatus } from './utils/images';
+  import { altState, fileLabel, imageStatus, highlightImages, scrollToImage } from './utils/images';
   import { csvField, formatSize } from './utils/format';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
-  import { highlightImages, scrollToImage } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy, onMount } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
