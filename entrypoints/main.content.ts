@@ -280,7 +280,6 @@ export default defineContentScript({
        * @returns {RawSchemaBlock[]}
        */
       if (request.action === 'get_schema') {
-        const MAX_SCHEMA_INLINE = 50000; // cap raw JSON per block (~50KB)
         // Match on the MIME essence so a type with parameters
         // (e.g. "application/ld+json; charset=utf-8") still counts. The
         // substring selector narrows the candidates; the filter confirms.
@@ -290,7 +289,10 @@ export default defineContentScript({
           ldJsonEssence
         );
         const blocks = scripts.map((el, i) => {
-          const raw = (el.textContent ?? '').slice(0, MAX_SCHEMA_INLINE);
+          // Capture the full block: truncating would make a large-but-valid
+          // schema (e.g. a Product with many variant offers) parse as malformed
+          // and ship a broken payload to Copy/Export.
+          const raw = el.textContent ?? '';
           let parseError: string | null = null;
           try {
             JSON.parse(raw);
