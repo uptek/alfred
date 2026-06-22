@@ -139,16 +139,19 @@
     }
 
     const permissions = preset.permissions ?? [];
-    setTimeout(() => {
-      permissions.forEach((permission, index) => {
-        setTimeout(() => {
-          adapter.checkPermission(permission.id);
-        }, index * 50);
-      });
+    const permissionsApplied = new Promise<void>((resolve) => {
       setTimeout(() => {
-        adapter.expandCheckedSections();
-      }, permissions.length * 50 + 50);
-    }, 100);
+        permissions.forEach((permission, index) => {
+          setTimeout(() => {
+            adapter.checkPermission(permission.id);
+          }, index * 50);
+        });
+        setTimeout(() => {
+          adapter.expandCheckedSections();
+          resolve();
+        }, permissions.length * 50 + 50);
+      }, 100);
+    });
 
     if (preset.customMessage !== '') {
       adapter.setMessage(preset.customMessage ?? '');
@@ -158,15 +161,19 @@
       window.scrollTo({ top: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight), behavior: 'smooth' });
     }, 100 + permissions.length * 50 + 400);
 
-    // Optionally submit once the page actually enables the Request access button.
-    // That happens only after the store URL validates and the checked permissions
-    // register, so wait for the real enabled state instead of guessing with a timer.
+    // Optionally submit once every permission is applied AND the page enables the
+    // Request access button. The page enables the button as soon as the store URL
+    // validates and a single permission registers, so waiting on the enabled state
+    // alone fires submit mid-fill, dropping the permissions still queued behind it.
+    // Gate on the full apply schedule first, then wait for the real enabled state.
     if (autoSubmit) {
-      void adapter.waitForSubmitEnabled().then((ready) => {
-        if (ready && adapter.submit()) {
-          sendTrackEvent('preset_auto_submit', { permissions_count: permissions.length, source });
-        }
-      });
+      void permissionsApplied
+        .then(() => adapter.waitForSubmitEnabled())
+        .then((ready) => {
+          if (ready && adapter.submit()) {
+            sendTrackEvent('preset_auto_submit', { permissions_count: permissions.length, source });
+          }
+        });
     }
 
     const updatedPreset = await savePreset({ ...preset, lastUsed: Date.now() });

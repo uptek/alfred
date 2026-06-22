@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.06.22
+@ 2026-06-22
+Fixed auto-submitting preset hotlinks sending the access request before every permission was added. The request now waits until all of the preset's permissions are applied, so collaborators get access to exactly what the preset specifies.
+
+
 ## 2026.06.20
 @ 2026-06-20
 
