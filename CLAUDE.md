@@ -20,6 +20,11 @@ This project uses WXT - a modern framework for building browser extensions.
   or `createShadowRootUi` from WXT
 - Options page settings use a module-level Svelte store
   (`entrypoints/options/stores/settings.svelte.ts`)
+- Popup per-tab view state uses a module-level Svelte store
+  (`entrypoints/popup/stores/tabState.svelte.ts`) backed by
+  `chrome.storage.session`, keyed by tab id and stamped with the page URL. App
+  and tab components hydrate from it on open and push snapshots back; it busts on
+  navigation and is cleared on tab close via `tabs.onRemoved` in the background
 - Options page uses Shopify Polaris web components (custom elements, not Svelte
   components) with polyfill helpers in `utils/polaris.polyfill.ts`
 
