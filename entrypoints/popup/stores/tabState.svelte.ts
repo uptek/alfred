@@ -40,6 +40,16 @@ function scheduleSave() {
 }
 
 /**
+ * Writes the snapshot immediately, cancelling any pending debounce. Use right
+ * after a high-value, low-frequency change (e.g. a completed scan) so it can't be
+ * lost in the debounce window if the popup closes a moment later.
+ */
+function flushNow() {
+  if (saveTimer !== null) clearTimeout(saveTimer);
+  flush();
+}
+
+/**
  * Binds the store to a tab and loads any saved state for it. Restores only when
  * the stored blob matches this URL and schema version; otherwise starts empty.
  * Must be awaited before reading restoredActiveSection or getSection.
@@ -49,6 +59,11 @@ function scheduleSave() {
 async function hydrate(id: number, url: string): Promise<void> {
   tabId = id;
   pageUrl = url;
+  // Start clean so a second hydrate or a reused popup context (e.g. side panel)
+  // can't carry a prior tab/URL's state forward.
+  sectionData = {};
+  activeSection = null;
+  restoredActiveSection = null;
   // Best-effort flush when the popup is dismissed, so the final state isn't lost
   // inside the debounce window (e.g. clicking a link right after a scan).
   if (!pagehideBound && typeof window !== 'undefined') {
@@ -105,6 +120,7 @@ export function getTabState() {
     getSection,
     saveSection,
     setActiveSection,
+    flushNow,
     get restoredActiveSection() {
       return restoredActiveSection;
     }

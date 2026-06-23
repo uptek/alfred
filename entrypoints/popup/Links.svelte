@@ -73,12 +73,16 @@
   let checkTotal = $state(0);
   let checkRun = 0; // bumped to cancel an in-flight sweep (unmount or re-run)
 
+  // Serialize the status map only when it actually changes, so high-frequency
+  // filter/search edits below don't re-spread the whole map every keystroke.
+  const statusEntries = $derived([...statuses]);
+
   // Mirror the persisted slice into the per-tab cache whenever it changes (the
   // store debounces the write), so the scan, filters, and sort survive the popup
   // closing and reopening on the same page.
   $effect(() => {
     tabState.saveSection('links', {
-      statuses: [...statuses],
+      statuses: statusEntries,
       typeFilter,
       followFilter,
       anchorFilter,
@@ -90,6 +94,12 @@
       sortKey,
       sortDir
     });
+  });
+
+  // A finished scan is the costly result worth keeping; persist it immediately
+  // (not on the debounce) so closing the popup right after can't drop it.
+  $effect(() => {
+    if (!checking) tabState.flushNow();
   });
 
   // A new page (links prop reassigned) invalidates prior results: cancel any

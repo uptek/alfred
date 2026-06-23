@@ -1,6 +1,7 @@
 import { storage } from '#imports';
 import { registerShortcuts } from './shortcuts';
 import { checkLinkStatus } from './linkStatus';
+import { keyFor } from '@/entrypoints/popup/stores/tabState';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
@@ -117,11 +118,11 @@ export default defineBackground(() => {
     return false;
   });
 
-  // The popup persists per-tab view state (open section, link-status scan) under
-  // session:popupTabState:<tabId>. Drop it the moment the tab closes so the state
-  // dies with the tab and session storage doesn't accumulate orphaned records.
+  // The popup persists per-tab view state (open section, link-status scan) keyed
+  // by tab id. Drop it the moment the tab closes so the state dies with the tab
+  // and session storage doesn't accumulate orphaned records.
   browser.tabs.onRemoved.addListener((tabId) => {
-    storage.removeItem(`session:popupTabState:${tabId}`).catch(() => {});
+    storage.removeItem(keyFor(tabId)).catch(() => {});
   });
 
   browser.runtime.onInstalled.addListener(async (details) => {

@@ -59,6 +59,10 @@
   let searchInput = $state<HTMLInputElement | null>(null);
   let expanded = $state<Set<number>>(new Set(restored?.expanded ?? []));
 
+  // Serialize the expanded set only when it actually changes, so high-frequency
+  // search/filter edits below don't re-spread it every keystroke.
+  const expandedArr = $derived([...expanded]);
+
   // Mirror the persisted slice into the per-tab cache on change (the store
   // debounces the write), so filters, sort, search, and expanded rows survive the
   // popup closing and reopening on the same page.
@@ -72,7 +76,7 @@
       sourceFilter,
       loadFilter,
       flagFilter,
-      expanded: [...expanded]
+      expanded: expandedArr
     });
   });
 
