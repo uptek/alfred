@@ -5,6 +5,7 @@
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
+  import { getTabState } from './stores/tabState.svelte';
 
   let { schema, domain }: { schema: RawSchemaBlock[]; domain: string | null } = $props();
 
@@ -12,7 +13,20 @@
 
   const analysis = $derived(analyzeSchema(schema));
 
-  let overrides = $state<Map<number, boolean>>(new Map());
+  interface SchemaPersisted {
+    overrides: [number, boolean][];
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<SchemaPersisted>('schema');
+
+  // Per-block open/closed overrides; persisted so expanded entities survive the
+  // popup closing and reopening on the same page.
+  let overrides = $state<Map<number, boolean>>(new Map(restored?.overrides ?? []));
+
+  $effect(() => {
+    tabState.saveSection('schema', { overrides: [...overrides] });
+  });
   function isOpen(i: number): boolean {
     return overrides.get(i) ?? i === 0;
   }

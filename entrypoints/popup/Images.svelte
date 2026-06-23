@@ -7,7 +7,8 @@
   import type { SummaryItem } from './SummaryBar.svelte';
   import { highlightImages, scrollToImage } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
-  import { untrack, onDestroy } from 'svelte';
+  import { untrack, onDestroy, onMount } from 'svelte';
+  import { getTabState } from './stores/tabState.svelte';
 
   let { images, domain }: { images: RawImage[]; domain: string | null } = $props();
 
@@ -36,23 +37,64 @@
     });
   });
 
-  let altFilter = $state('all');
-  let formatFilter = $state('all');
-  let loadingFilter = $state('all');
-  let statusFilter = $state('all');
-  let flagFilter = $state('all');
-  let search = $state('');
-  let searchOpen = $state(false);
+  type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
+
+  interface ImagesPersisted {
+    altFilter: string;
+    formatFilter: string;
+    loadingFilter: string;
+    statusFilter: string;
+    flagFilter: string;
+    search: string;
+    searchOpen: boolean;
+    highlightOn: boolean;
+    sortKey: SortKey;
+    sortDir: 'asc' | 'desc';
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<ImagesPersisted>('images');
+
+  let altFilter = $state(restored?.altFilter ?? 'all');
+  let formatFilter = $state(restored?.formatFilter ?? 'all');
+  let loadingFilter = $state(restored?.loadingFilter ?? 'all');
+  let statusFilter = $state(restored?.statusFilter ?? 'all');
+  let flagFilter = $state(restored?.flagFilter ?? 'all');
+  let search = $state(restored?.search ?? '');
+  let searchOpen = $state(restored?.searchOpen ?? false);
   let openMenu = $state<'alt' | 'format' | 'loading' | 'status' | 'flag' | 'export' | null>(null);
 
-  type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
-  let sortKey = $state<SortKey>('index');
-  let sortDir = $state<'asc' | 'desc'>('asc');
+  let sortKey = $state<SortKey>(restored?.sortKey ?? 'index');
+  let sortDir = $state<'asc' | 'desc'>(restored?.sortDir ?? 'asc');
 
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
-  let highlightOn = $state(false);
+  let highlightOn = $state(restored?.highlightOn ?? false);
   let searchInput = $state<HTMLInputElement | null>(null);
+
+  // onDestroy strips the on-page outlines when the popup closes, so re-apply them
+  // if the restored state had highlighting on.
+  onMount(() => {
+    if (highlightOn) highlightImages(true);
+  });
+
+  // Mirror the persisted slice into the per-tab cache on change (the store
+  // debounces the write), so filters, sort, search, and highlight survive the
+  // popup closing and reopening on the same page.
+  $effect(() => {
+    tabState.saveSection('images', {
+      altFilter,
+      formatFilter,
+      loadingFilter,
+      statusFilter,
+      flagFilter,
+      search,
+      searchOpen,
+      highlightOn,
+      sortKey,
+      sortDir
+    });
+  });
 
   function toggleSearch() {
     searchOpen = !searchOpen;

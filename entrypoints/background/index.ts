@@ -117,6 +117,13 @@ export default defineBackground(() => {
     return false;
   });
 
+  // The popup persists per-tab view state (open section, link-status scan) under
+  // session:popupTabState:<tabId>. Drop it the moment the tab closes so the state
+  // dies with the tab and session storage doesn't accumulate orphaned records.
+  browser.tabs.onRemoved.addListener((tabId) => {
+    storage.removeItem(`session:popupTabState:${tabId}`).catch(() => {});
+  });
+
   browser.runtime.onInstalled.addListener(async (details) => {
     // Prefetch themes cache on install and update
     refreshThemesCacheIfNeeded();

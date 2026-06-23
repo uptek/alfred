@@ -6,8 +6,9 @@
   import type { SummaryItem } from './SummaryBar.svelte';
   import { highlightLinks, scrollToLink, checkLinkStatus } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
-  import { untrack, onDestroy } from 'svelte';
+  import { untrack, onDestroy, onMount } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
+  import { getTabState } from './stores/tabState.svelte';
 
   let { links, domain }: { links: RawLink[]; domain: string | null } = $props();
 
@@ -22,30 +23,74 @@
     });
   });
 
-  let typeFilter = $state('all');
-  let followFilter = $state('all');
-  let anchorFilter = $state('all');
-  let statusFilter = $state('all');
-  let showHidden = $state(true);
-  let search = $state('');
-  let searchOpen = $state(false);
+  type SortKey = 'index' | 'url' | 'follow' | 'type' | 'status';
+
+  interface LinksPersisted {
+    statuses: [string, LinkStatusResult][];
+    typeFilter: string;
+    followFilter: string;
+    anchorFilter: string;
+    statusFilter: string;
+    showHidden: boolean;
+    search: string;
+    searchOpen: boolean;
+    highlightOn: boolean;
+    sortKey: SortKey;
+    sortDir: 'asc' | 'desc';
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<LinksPersisted>('links');
+
+  let typeFilter = $state(restored?.typeFilter ?? 'all');
+  let followFilter = $state(restored?.followFilter ?? 'all');
+  let anchorFilter = $state(restored?.anchorFilter ?? 'all');
+  let statusFilter = $state(restored?.statusFilter ?? 'all');
+  let showHidden = $state(restored?.showHidden ?? true);
+  let search = $state(restored?.search ?? '');
+  let searchOpen = $state(restored?.searchOpen ?? false);
   let openMenu = $state<'type' | 'follow' | 'anchor' | 'status' | 'export' | null>(null);
 
-  type SortKey = 'index' | 'url' | 'follow' | 'type' | 'status';
-  let sortKey = $state<SortKey>('index');
-  let sortDir = $state<'asc' | 'desc'>('asc');
+  let sortKey = $state<SortKey>(restored?.sortKey ?? 'index');
+  let sortDir = $state<'asc' | 'desc'>(restored?.sortDir ?? 'asc');
 
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
-  let highlightOn = $state(false);
+  let highlightOn = $state(restored?.highlightOn ?? false);
   let searchInput = $state<HTMLInputElement | null>(null);
 
+  // onDestroy strips the on-page outlines when the popup closes, so re-apply them
+  // if the restored state had highlighting on.
+  onMount(() => {
+    if (highlightOn) highlightLinks(true);
+  });
+
   // On-demand HTTP status, keyed by href so duplicate links share one result.
-  const statuses = new SvelteMap<string, LinkStatusResult>();
+  // Seeded from the per-tab cache so a prior scan survives reopening the popup.
+  const statuses = new SvelteMap<string, LinkStatusResult>(restored?.statuses ?? []);
   let checking = $state(false);
   let checkDone = $state(0);
   let checkTotal = $state(0);
   let checkRun = 0; // bumped to cancel an in-flight sweep (unmount or re-run)
+
+  // Mirror the persisted slice into the per-tab cache whenever it changes (the
+  // store debounces the write), so the scan, filters, and sort survive the popup
+  // closing and reopening on the same page.
+  $effect(() => {
+    tabState.saveSection('links', {
+      statuses: [...statuses],
+      typeFilter,
+      followFilter,
+      anchorFilter,
+      statusFilter,
+      showHidden,
+      search,
+      searchOpen,
+      highlightOn,
+      sortKey,
+      sortDir
+    });
+  });
 
   // A new page (links prop reassigned) invalidates prior results: cancel any
   // in-flight sweep and clear the map so stale statuses can't color new rows.

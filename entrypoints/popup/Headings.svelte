@@ -3,6 +3,7 @@
   import { scrollToHeading } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack } from 'svelte';
+  import { getTabState } from './stores/tabState.svelte';
 
   let { headings, issues }: { headings: RawHeading[]; issues: HeadingIssue[] } = $props();
 
@@ -15,7 +16,18 @@
     });
   });
 
-  let showHidden = $state(true);
+  interface HeadingsPersisted {
+    showHidden: boolean;
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<HeadingsPersisted>('headings');
+
+  let showHidden = $state(restored?.showHidden ?? true);
+
+  $effect(() => {
+    tabState.saveSection('headings', { showHidden });
+  });
 
   const hiddenCount = $derived(headings.filter(h => h.isHidden).length);
 

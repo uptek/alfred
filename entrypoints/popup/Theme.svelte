@@ -3,13 +3,25 @@
   import CopyIcon from './CopyIcon.svelte';
   import Tooltip from './Tooltip.svelte';
   import { untrack } from 'svelte';
+  import { getTabState } from './stores/tabState.svelte';
   import type { StoreInfo } from './utils/types';
 
   let { storeInfo }: { storeInfo: StoreInfo } = $props();
 
+  interface ThemePersisted {
+    disablePreviewBar: boolean;
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<ThemePersisted>('theme');
+
   let copying = $state(false);
-  let disablePreviewBar = $state(false);
+  let disablePreviewBar = $state(restored?.disablePreviewBar ?? false);
   let tracked = false;
+
+  $effect(() => {
+    tabState.saveSection('theme', { disablePreviewBar });
+  });
 
   $effect(() => {
     if (tracked) return;

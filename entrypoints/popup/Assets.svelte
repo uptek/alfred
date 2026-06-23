@@ -7,6 +7,7 @@
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
+  import { getTabState } from './stores/tabState.svelte';
 
   let { assets, domain }: { assets: RawAsset[]; domain: string | null } = $props();
 
@@ -27,20 +28,53 @@
   });
 
   type SortKey = 'index' | 'src' | 'size' | 'time' | 'type' | 'load';
-  let sortKey = $state<SortKey>('index');
-  let sortDir = $state<'asc' | 'desc'>('asc');
 
-  let search = $state('');
-  let searchOpen = $state(false);
+  interface AssetsPersisted {
+    sortKey: SortKey;
+    sortDir: 'asc' | 'desc';
+    search: string;
+    searchOpen: boolean;
+    typeFilter: string;
+    sourceFilter: string;
+    loadFilter: string;
+    flagFilter: string;
+    expanded: number[];
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<AssetsPersisted>('assets');
+
+  let sortKey = $state<SortKey>(restored?.sortKey ?? 'index');
+  let sortDir = $state<'asc' | 'desc'>(restored?.sortDir ?? 'asc');
+
+  let search = $state(restored?.search ?? '');
+  let searchOpen = $state(restored?.searchOpen ?? false);
   let openMenu = $state<'type' | 'source' | 'load' | 'flag' | 'export' | null>(null);
-  let typeFilter = $state('all');
-  let sourceFilter = $state('all');
-  let loadFilter = $state('all');
-  let flagFilter = $state('all');
+  let typeFilter = $state(restored?.typeFilter ?? 'all');
+  let sourceFilter = $state(restored?.sourceFilter ?? 'all');
+  let loadFilter = $state(restored?.loadFilter ?? 'all');
+  let flagFilter = $state(restored?.flagFilter ?? 'all');
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
   let searchInput = $state<HTMLInputElement | null>(null);
-  let expanded = $state<Set<number>>(new Set());
+  let expanded = $state<Set<number>>(new Set(restored?.expanded ?? []));
+
+  // Mirror the persisted slice into the per-tab cache on change (the store
+  // debounces the write), so filters, sort, search, and expanded rows survive the
+  // popup closing and reopening on the same page.
+  $effect(() => {
+    tabState.saveSection('assets', {
+      sortKey,
+      sortDir,
+      search,
+      searchOpen,
+      typeFilter,
+      sourceFilter,
+      loadFilter,
+      flagFilter,
+      expanded: [...expanded]
+    });
+  });
 
   function toggleSearch() {
     searchOpen = !searchOpen;
