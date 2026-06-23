@@ -101,7 +101,7 @@
             {hiddenCount}
           </button>
         {/if}
-        <button class="copy-btn" onclick={handleCopy} title="Copy headings to clipboard">
+        <button class="copy-btn" onclick={handleCopy} aria-label="Copy headings to clipboard" title="Copy headings to clipboard">
           {#if copyState === 'copied'}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="copy-btn__icon"><polyline points="20 6 9 17 4 12"/></svg>
           {:else}

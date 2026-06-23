@@ -47,6 +47,19 @@
   let checkTotal = $state(0);
   let checkRun = 0; // bumped to cancel an in-flight sweep (unmount or re-run)
 
+  // A new page (links prop reassigned) invalidates prior results: cancel any
+  // in-flight sweep and clear the map so stale statuses can't color new rows.
+  let trackedLinks = links;
+  $effect(() => {
+    if (links === trackedLinks) return;
+    trackedLinks = links;
+    checkRun++;
+    checking = false;
+    checkDone = 0;
+    checkTotal = 0;
+    statuses.clear();
+  });
+
   // HEAD-first checks minimise side effects, but auto-firing every link could
   // still hit side-effecting GET endpoints, so this stays an explicit action.
   async function checkStatuses() {
@@ -59,14 +72,32 @@
     checkDone = 0;
     trackAction('links_check_status', { count: urls.length });
 
+    // Batch results into the SvelteMap on a timer rather than per-result: the
+    // stats/summary/sorted deriveds each scan all links, so writing once per
+    // result is O(n^2) on large pages. Flushing periodically caps recomputes.
+    const pending: Array<[string, LinkStatusResult]> = [];
+    let done = 0;
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+    const flush = () => {
+      flushTimer = null;
+      if (run !== checkRun) return;
+      for (const [url, res] of pending) statuses.set(url, res);
+      pending.length = 0;
+      checkDone = done;
+    };
+    const scheduleFlush = () => {
+      if (flushTimer === null) flushTimer = setTimeout(flush, 150);
+    };
+
     let next = 0;
     const worker = async () => {
       while (next < urls.length && run === checkRun) {
         const url = urls[next++];
         const res = await checkLinkStatus(url);
         if (run !== checkRun) return;
-        statuses.set(url, res);
-        checkDone++;
+        pending.push([url, res]);
+        done++;
+        scheduleFlush();
         // Most links share one origin, so back-to-back bursts trip rate limits.
         // Space requests out with jitter; correctness matters more than speed here.
         if (next < urls.length) await new Promise((r) => setTimeout(r, 180 + Math.random() * 160));
@@ -76,6 +107,8 @@
     // to avoid 429s on Cloudflare-fronted stores while still finishing quickly.
     const pool = Math.min(4, urls.length);
     await Promise.all(Array.from({ length: pool }, worker));
+    if (flushTimer !== null) clearTimeout(flushTimer);
+    flush();
     if (run === checkRun) checking = false;
   }
 
@@ -446,14 +479,14 @@
               {stats.hidden}
             </button>
           {/if}
-          <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} title="Highlight links on page">
+          <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} aria-label="Highlight links on page" title="Highlight links on page">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
           </button>
           <button class="toolbar-btn" class:toolbar-btn--active={searchOpen} onclick={toggleSearch} title="Search links">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           </button>
           <div class="export menu">
-            <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} title="Download links">
+            <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} aria-label="Download links" title="Download links">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
             {#if openMenu === 'export'}
@@ -514,6 +547,7 @@
         </thead>
         <tbody>
           {#each sorted as link, i (link.index)}
+            {@const status = statuses.get(link.href)}
             <tr class="row" class:row--hidden={link.isHidden} onclick={(e) => handleRowClick(e, link.index)} title={link.isHidden ? 'Hidden via CSS' : 'Click to scroll to this link'}>
               <td class="td td--num">{i + 1}</td>
               <td class="td td--url">
@@ -558,9 +592,8 @@
               </td>
               <td class="td td--type">{kindLabel(link.kind)}</td>
               <td class="td td--status">
-                {#if statuses.get(link.href)}
-                  {@const st = statuses.get(link.href)!}
-                  <span class="status-pill status-pill--{st.bucket}" title={statusTitle(st)}>{statusLabel(st)}</span>
+                {#if status}
+                  <span class="status-pill status-pill--{status.bucket}" title={statusTitle(status)}>{statusLabel(status)}</span>
                 {/if}
               </td>
             </tr>
@@ -667,7 +700,7 @@
   .th--follow { width: 76px; }
   .th--type { width: 76px; }
   /* Combined selectors beat the .th:last-child / .td:last-child gutter so the
-     Check column keeps a balanced inset around its centered button and pill. */
+     Status column keeps a balanced inset around its centered button and pill. */
   .th.th--status, .td.td--status { width: 104px; padding-left: 8px; padding-right: 10px; text-align: center; }
   .th__count { font-weight: 500; color: var(--text-muted); letter-spacing: 0; text-transform: none; }
 

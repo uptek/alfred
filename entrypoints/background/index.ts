@@ -107,7 +107,9 @@ export default defineBackground(() => {
   // keeps checks alive after the popup closes and uses host permissions to read
   // cross-origin status codes. Returning true keeps the channel open for the
   // async sendResponse.
-  browser.runtime.onMessage.addListener((message: { action?: string; url?: string }, _sender, sendResponse) => {
+  browser.runtime.onMessage.addListener((message: { action?: string; url?: string }, sender, sendResponse) => {
+    // Only honor requests from the extension's own contexts (popup/content scripts).
+    if (sender.id !== browser.runtime.id) return false;
     if (message.action === 'check_link_status' && typeof message.url === 'string') {
       checkLinkStatus(message.url).then(sendResponse);
       return true;
