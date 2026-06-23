@@ -32,7 +32,9 @@ async function fetchProbe(url: string, method: 'HEAD' | 'GET'): Promise<Response
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    return await fetch(url, { method, redirect: 'manual', signal: controller.signal });
+    // credentials:'include' sends each target its own cookies, so login-gated
+    // links report their real status to the signed-in user instead of 401/403.
+    return await fetch(url, { method, redirect: 'manual', credentials: 'include', signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }

@@ -64,7 +64,17 @@
   // still hit side-effecting GET endpoints, so this stays an explicit action.
   async function checkStatuses() {
     if (checking) return;
-    const urls = [...new Set(links.filter(l => l.kind === 'internal' || l.kind === 'external').map(l => l.href))];
+    // Fragments are never sent in HTTP requests, so /page#a and /page#b hit the
+    // same resource. Probe each target once and fan the result to every variant.
+    const variantsByTarget = new Map<string, string[]>();
+    for (const l of links) {
+      if (l.kind !== 'internal' && l.kind !== 'external') continue;
+      const target = l.href.split('#')[0]!;
+      const variants = variantsByTarget.get(target);
+      if (variants) variants.push(l.href);
+      else variantsByTarget.set(target, [l.href]);
+    }
+    const urls = [...variantsByTarget.keys()];
     if (urls.length === 0) return;
     const run = ++checkRun;
     checking = true;
@@ -95,7 +105,7 @@
         const url = urls[next++];
         const res = await checkLinkStatus(url);
         if (run !== checkRun) return;
-        pending.push([url, res]);
+        for (const href of variantsByTarget.get(url)!) pending.push([href, res]);
         done++;
         scheduleFlush();
         // Most links share one origin, so back-to-back bursts trip rate limits.
