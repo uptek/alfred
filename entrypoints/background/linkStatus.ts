@@ -6,7 +6,7 @@ const DEFAULT_RETRY_WAIT_MS = 2000;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-function bucketFor(status: number): LinkStatusBucket {
+export function bucketFor(status: number): LinkStatusBucket {
   if (status >= 200 && status < 300) return 'ok';
   if (status >= 300 && status < 400) return 'redirect';
   if (status >= 400 && status < 500) return 'client-error';
@@ -16,7 +16,7 @@ function bucketFor(status: number): LinkStatusBucket {
 
 // Honour a 429/503 Retry-After (seconds or HTTP date), capped so one slow link
 // can't stall the whole sweep.
-function retryAfterMs(res: Response): number {
+export function retryAfterMs(res: Response): number {
   const raw = res.headers.get('retry-after');
   if (!raw) return DEFAULT_RETRY_WAIT_MS;
   const secs = Number(raw);
