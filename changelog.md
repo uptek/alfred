@@ -1,14 +1,20 @@
 # Changelog
 
-## 2026.06.23
-@ 2026-06-23
+## 2026.06.24
+@ 2026-06-24
 
 ### Link Status Checker
 The Links tab can now tell you whether each link actually works. Press the check button in the new Status column and Alfred checks every link, reporting whether it's live (2xx), redirecting (3xx), broken (4xx/5xx), or unreachable.
 
 - Filter to just the failing links to track down broken links fast.
 - Sort by status to bring the worst offenders to the top.
-- Checks are paced and back off automatically on busy sites, so they stay reliable.
+
+### The Popup Remembers Where You Left Off
+Run a link or image check, set up filters, sort a column, or expand a section, then close the popup to click something on the page. Reopen it on the same page and everything is right where you left it, including the tab you had open.
+
+- Link and image status results, filters, sorting, search, and highlights are all restored.
+- Every browser tab keeps its own state, so different pages don't bleed into each other.
+- State clears automatically when you navigate to a new page or close the tab.
 
 ## 2026.06.22
 @ 2026-06-22
