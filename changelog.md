@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.06.23
+@ 2026-06-23
+
+### Link Status Checker
+The Links tab can now tell you whether each link actually works. Press the check button in the new Status column and Alfred checks every link, reporting whether it's live (2xx), redirecting (3xx), broken (4xx/5xx), or unreachable.
+
+- Filter to just the failing links to track down broken links fast.
+- Sort by status to bring the worst offenders to the top.
+- Checks are paced and back off automatically on busy sites, so they stay reliable.
+
 ## 2026.06.22
 @ 2026-06-22
 Fixed auto-submitting preset hotlinks sending the access request before every permission was added. The request now waits until all of the preset's permissions are applied, so collaborators get access to exactly what the preset specifies.

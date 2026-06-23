@@ -1,5 +1,27 @@
 [
   {
+    "version": "2026.06.23",
+    "date": "2026-06-23",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Link Status Checker"
+      },
+      {
+        "type": "paragraph",
+        "content": "The Links tab can now tell you whether each link actually works. Press the check button in the new Status column and Alfred checks every link, reporting whether it's live (2xx), redirecting (3xx), broken (4xx/5xx), or unreachable."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Filter to just the failing links to track down broken links fast.",
+          "Sort by status to bring the worst offenders to the top.",
+          "Checks are paced and back off automatically on busy sites, so they stay reliable."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.06.22",
     "date": "2026-06-22",
     "changes": [
