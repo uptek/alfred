@@ -43,6 +43,13 @@ test-pages/
 - Folders named `static/` or `fixtures/` hold supporting files and are not
   listed in the index (no `.html` inside them).
 
+## HTTP status fixtures
+
+The Links tab's status checker needs endpoints that return arbitrary status
+codes. `GET /status/<n>` responds with HTTP status `<n>` (e.g. `/status/404`,
+`/status/500`). For 3xx codes it sets a `Location` header (`?to=<url>`, or `/`
+by default) so the popup's `redirect: 'manual'` probe sees a real redirect.
+
 ## robots.txt scenarios
 
 `/robots.txt` is origin-wide, so one static file can't cover multiple cases.
