@@ -26,7 +26,7 @@ For a step-by-step checklist of the current branch's changes, see
 test-pages/
   server.ts        tiny node:http static server (run with bun)
   headings/        one page per heading-analysis scenario (positive + negative)
-  links/           link extraction scenarios
+  links/           link extraction and status-check scenarios
   images/          image extraction/audit scenarios (+ static/ fixtures)
   assets/          script/stylesheet scenarios (+ static/ js & css fixtures)
   theme/           fake Shopify storefront (sets window.Shopify + window.__st)
