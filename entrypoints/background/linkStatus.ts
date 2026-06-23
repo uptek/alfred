@@ -32,9 +32,20 @@ async function fetchProbe(url: string, method: 'HEAD' | 'GET'): Promise<Response
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    // credentials:'include' sends each target its own cookies, so login-gated
-    // links report their real status to the signed-in user instead of 401/403.
-    return await fetch(url, { method, redirect: 'manual', credentials: 'include', signal: controller.signal });
+    // cache:'no-store' stops a stale cached 200 from masking a link that now
+    // 404s. credentials:'include' sends each target its own cookies so login-
+    // gated links report their real status to the signed-in user.
+    const res = await fetch(url, {
+      method,
+      redirect: 'manual',
+      cache: 'no-store',
+      credentials: 'include',
+      signal: controller.signal
+    });
+    // Only status/headers are needed; release the body so a large GET fallback
+    // doesn't keep buffering and tie up the connection during a sweep.
+    res.body?.cancel().catch(() => {});
+    return res;
   } finally {
     clearTimeout(timer);
   }
@@ -46,7 +57,9 @@ async function probeOnce(url: string): Promise<{ result: LinkStatusResult; retry
     if (res.type === 'opaqueredirect') {
       return { result: { status: 0, bucket: 'redirect' } };
     }
-    if (res.status === 405 || res.status === 501) {
+    // Some servers/WAFs reject HEAD with 403/404 (or 405/501) even when a real
+    // GET works, so confirm those failures with GET before trusting them.
+    if (res.status === 403 || res.status === 404 || res.status === 405 || res.status === 501) {
       res = await fetchProbe(url, 'GET');
       if (res.type === 'opaqueredirect') {
         return { result: { status: 0, bucket: 'redirect' } };
