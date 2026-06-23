@@ -58,6 +58,9 @@
     checkDone = 0;
     checkTotal = 0;
     statuses.clear();
+    // The Status facet hides once results are gone, so a lingering status filter
+    // would silently empty the table with no visible control to undo it.
+    statusFilter = 'all';
   });
 
   // HEAD-first checks minimise side effects, but auto-firing every link could
@@ -211,9 +214,10 @@
   // Worst-first when ascending, so a status sort surfaces problems. Unchecked
   // and non-http links (no result) sort to the end.
   const STATUS_RANK: Record<LinkStatusResult['bucket'], number> = { error: 0, 'server-error': 1, 'client-error': 2, redirect: 3, ok: 4 };
+  const UNSCANNED_RANK = 5;
   const statusRank = (l: RawLink) => {
     const b = statuses.get(l.href)?.bucket;
-    return b ? STATUS_RANK[b] : 5;
+    return b ? STATUS_RANK[b] : UNSCANNED_RANK;
   };
 
   // Summary of the current view, mirroring the Assets and Images tabs.
@@ -251,7 +255,13 @@
         case 'url': cmp = a.href.localeCompare(b.href); break;
         case 'follow': cmp = followRank(a) - followRank(b); break;
         case 'type': cmp = KIND_RANK[a.kind] - KIND_RANK[b.kind]; break;
-        case 'status': cmp = statusRank(a) - statusRank(b); break;
+        case 'status': {
+          const ra = statusRank(a), rb = statusRank(b);
+          // Unscanned / non-http rows have no status: keep them last in both directions.
+          if ((ra === UNSCANNED_RANK) !== (rb === UNSCANNED_RANK)) return ra === UNSCANNED_RANK ? 1 : -1;
+          cmp = ra - rb;
+          break;
+        }
         default: cmp = a.index - b.index;
       }
       if (cmp !== 0) return cmp * dir;
