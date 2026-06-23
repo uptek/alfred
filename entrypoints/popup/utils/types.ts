@@ -34,8 +34,6 @@ export type LinkStatusBucket =
 export interface LinkStatusResult {
   status: number; // numeric HTTP code, 0 when unknown (redirect/error)
   bucket: LinkStatusBucket;
-  redirected: boolean;
-  finalUrl?: string; // resolved URL after following redirects (when known)
 }
 
 export type AssetKind = 'script' | 'style';

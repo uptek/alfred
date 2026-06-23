@@ -19,9 +19,9 @@ import { lookupThemeStoreEntry } from './themeStoreLookup';
 export const checkLinkStatus = async (url: string): Promise<LinkStatusResult> => {
   try {
     const res = await browser.runtime.sendMessage({ action: 'check_link_status', url });
-    return res ?? { status: 0, bucket: 'error', redirected: false };
+    return res ?? { status: 0, bucket: 'error' };
   } catch {
-    return { status: 0, bucket: 'error', redirected: false };
+    return { status: 0, bucket: 'error' };
   }
 };
 

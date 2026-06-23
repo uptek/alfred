@@ -26,32 +26,35 @@ export function retryAfterMs(res: Response): number {
   return DEFAULT_RETRY_WAIT_MS;
 }
 
-async function probeOnce(url: string): Promise<{ result: LinkStatusResult; retryAfter?: number }> {
+// Each probe gets its own timeout budget so a slow HEAD can't starve the GET
+// fallback (which would falsely report a healthy link as unreachable).
+async function fetchProbe(url: string, method: 'HEAD' | 'GET'): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    let res = await fetch(url, { method: 'HEAD', redirect: 'manual', signal: controller.signal });
+    return await fetch(url, { method, redirect: 'manual', signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function probeOnce(url: string): Promise<{ result: LinkStatusResult; retryAfter?: number }> {
+  try {
+    let res = await fetchProbe(url, 'HEAD');
     if (res.type === 'opaqueredirect') {
-      return { result: { status: 0, bucket: 'redirect', redirected: true } };
+      return { result: { status: 0, bucket: 'redirect' } };
     }
     if (res.status === 405 || res.status === 501) {
-      res = await fetch(url, { method: 'GET', redirect: 'manual', signal: controller.signal });
+      res = await fetchProbe(url, 'GET');
       if (res.type === 'opaqueredirect') {
-        return { result: { status: 0, bucket: 'redirect', redirected: true } };
+        return { result: { status: 0, bucket: 'redirect' } };
       }
     }
-    const result: LinkStatusResult = {
-      status: res.status,
-      bucket: bucketFor(res.status),
-      redirected: res.redirected,
-      ...(res.url ? { finalUrl: res.url } : {})
-    };
+    const result: LinkStatusResult = { status: res.status, bucket: bucketFor(res.status) };
     if (res.status === 429 || res.status === 503) return { result, retryAfter: retryAfterMs(res) };
     return { result };
   } catch {
-    return { result: { status: 0, bucket: 'error', redirected: false } };
-  } finally {
-    clearTimeout(timer);
+    return { result: { status: 0, bucket: 'error' } };
   }
 }
 
