@@ -1,5 +1,29 @@
-import type { StoreInfo, Theme, RawHeading, RawLink, RawAsset, RawImage, RawSchemaBlock } from './types';
+import type {
+  StoreInfo,
+  Theme,
+  RawHeading,
+  RawLink,
+  RawAsset,
+  RawImage,
+  RawSchemaBlock,
+  LinkStatusResult
+} from './types';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
+
+/**
+ * Asks the background service worker to resolve a link's HTTP status. The check
+ * runs there so it survives the popup closing and can read cross-origin codes.
+ * @param {string} url - Absolute http(s) URL to check.
+ * @returns {Promise<LinkStatusResult>} Status bucket; 'error' if unreachable.
+ */
+export const checkLinkStatus = async (url: string): Promise<LinkStatusResult> => {
+  try {
+    const res = await browser.runtime.sendMessage({ action: 'check_link_status', url });
+    return res ?? { status: 0, bucket: 'error', redirected: false };
+  } catch {
+    return { status: 0, bucket: 'error', redirected: false };
+  }
+};
 
 /**
  * Extracts all H1-H6 headings from the active tab via content script.

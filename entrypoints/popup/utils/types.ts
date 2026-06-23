@@ -21,6 +21,23 @@ export interface RawLink {
   isBrokenAnchor: boolean; // same-page #fragment with no matching id/name on the page
 }
 
+// Outcome of an on-demand HTTP status check for a link's href. Buckets exist
+// because fetch cannot read a redirect's exact code (manual redirects come back
+// opaque), and network/blocked failures carry no status at all.
+export type LinkStatusBucket =
+  | 'ok' // 2xx
+  | 'redirect' // 3xx (exact code unknowable via fetch)
+  | 'client-error' // 4xx
+  | 'server-error' // 5xx
+  | 'error'; // network failure, blocked, or timeout
+
+export interface LinkStatusResult {
+  status: number; // numeric HTTP code, 0 when unknown (redirect/error)
+  bucket: LinkStatusBucket;
+  redirected: boolean;
+  finalUrl?: string; // resolved URL after following redirects (when known)
+}
+
 export type AssetKind = 'script' | 'style';
 export type AssetLoad = 'async' | 'defer' | 'blocking' | 'inline';
 export type AssetPlacement = 'head' | 'body' | 'footer';

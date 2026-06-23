@@ -1,12 +1,13 @@
 <script lang="ts">
-  import type { LinkKind, RawLink } from './utils/types';
+  import type { LinkKind, RawLink, LinkStatusResult } from './utils/types';
   import { followRank, isDofollow } from './utils/links';
   import { csvField } from './utils/format';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
-  import { highlightLinks, scrollToLink } from './utils/utils';
+  import { highlightLinks, scrollToLink, checkLinkStatus } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
+  import { SvelteMap } from 'svelte/reactivity';
 
   let { links, domain }: { links: RawLink[]; domain: string | null } = $props();
 
@@ -24,12 +25,13 @@
   let typeFilter = $state('all');
   let followFilter = $state('all');
   let anchorFilter = $state('all');
+  let statusFilter = $state('all');
   let showHidden = $state(true);
   let search = $state('');
   let searchOpen = $state(false);
-  let openMenu = $state<'type' | 'follow' | 'anchor' | 'export' | null>(null);
+  let openMenu = $state<'type' | 'follow' | 'anchor' | 'status' | 'export' | null>(null);
 
-  type SortKey = 'index' | 'url' | 'follow' | 'type';
+  type SortKey = 'index' | 'url' | 'follow' | 'type' | 'status';
   let sortKey = $state<SortKey>('index');
   let sortDir = $state<'asc' | 'desc'>('asc');
 
@@ -37,6 +39,61 @@
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
   let highlightOn = $state(false);
   let searchInput = $state<HTMLInputElement | null>(null);
+
+  // On-demand HTTP status, keyed by href so duplicate links share one result.
+  const statuses = new SvelteMap<string, LinkStatusResult>();
+  let checking = $state(false);
+  let checkDone = $state(0);
+  let checkTotal = $state(0);
+  let checkRun = 0; // bumped to cancel an in-flight sweep (unmount or re-run)
+
+  // HEAD-first checks minimise side effects, but auto-firing every link could
+  // still hit side-effecting GET endpoints, so this stays an explicit action.
+  async function checkStatuses() {
+    if (checking) return;
+    const urls = [...new Set(links.filter(l => l.kind === 'internal' || l.kind === 'external').map(l => l.href))];
+    if (urls.length === 0) return;
+    const run = ++checkRun;
+    checking = true;
+    checkTotal = urls.length;
+    checkDone = 0;
+    trackAction('links_check_status', { count: urls.length });
+
+    let next = 0;
+    const worker = async () => {
+      while (next < urls.length && run === checkRun) {
+        const url = urls[next++];
+        const res = await checkLinkStatus(url);
+        if (run !== checkRun) return;
+        statuses.set(url, res);
+        checkDone++;
+        // Most links share one origin, so back-to-back bursts trip rate limits.
+        // Space requests out with jitter; correctness matters more than speed here.
+        if (next < urls.length) await new Promise((r) => setTimeout(r, 180 + Math.random() * 160));
+      }
+    };
+    // Low concurrency on purpose: 4 connections to a single host is polite enough
+    // to avoid 429s on Cloudflare-fronted stores while still finishing quickly.
+    const pool = Math.min(4, urls.length);
+    await Promise.all(Array.from({ length: pool }, worker));
+    if (run === checkRun) checking = false;
+  }
+
+  function statusLabel(s: LinkStatusResult): string {
+    if (s.bucket === 'redirect') return s.status > 0 ? String(s.status) : '3xx';
+    if (s.bucket === 'error') return 'err';
+    return String(s.status);
+  }
+
+  function statusTitle(s: LinkStatusResult): string {
+    switch (s.bucket) {
+      case 'ok': return `HTTP ${s.status} OK`;
+      case 'redirect': return 'Redirects (3xx) — exact code is not exposed to extensions';
+      case 'client-error': return `HTTP ${s.status} — client error`;
+      case 'server-error': return `HTTP ${s.status} — server error`;
+      default: return 'Unreachable, blocked, or timed out (may differ for a real visitor)';
+    }
+  }
 
   function toggleSearch() {
     searchOpen = !searchOpen;
@@ -56,6 +113,7 @@
   const stats = $derived.by(() => {
     let internal = 0, external = 0, other = 0, dofollow = 0, nofollow = 0, sponsored = 0, ugc = 0,
       image = 0, text = 0, none = 0, hidden = 0;
+    let statusOk = 0, statusRedirect = 0, statusFailing = 0;
     const counts: Record<string, number> = {};
     for (const l of links) {
       if (l.kind === 'internal') internal++; else if (l.kind === 'external') external++; else other++;
@@ -67,8 +125,14 @@
       if (l.text !== '') text++; else none++;
       if (l.isHidden) hidden++;
       counts[l.href] = (counts[l.href] ?? 0) + 1;
+      const st = statuses.get(l.href);
+      if (st) {
+        if (st.bucket === 'ok') statusOk++;
+        else if (st.bucket === 'redirect') statusRedirect++;
+        else statusFailing++;
+      }
     }
-    return { total: links.length, internal, external, other, dofollow, nofollow, sponsored, ugc, image, text, none, hidden, hrefCounts: counts };
+    return { total: links.length, internal, external, other, dofollow, nofollow, sponsored, ugc, image, text, none, hidden, statusOk, statusRedirect, statusFailing, hrefCounts: counts };
   });
 
   // Lowercased searchable text per link, built once per list (not per keystroke).
@@ -87,6 +151,12 @@
       if (anchorFilter === 'text' && link.text === '') return false;
       if (anchorFilter === 'image' && !link.isImage) return false;
       if (anchorFilter === 'none' && link.text !== '') return false;
+      if (statusFilter !== 'all') {
+        const bucket = statuses.get(link.href)?.bucket;
+        if (statusFilter === 'failing') {
+          if (bucket !== 'client-error' && bucket !== 'server-error' && bucket !== 'error') return false;
+        } else if (bucket !== statusFilter) return false;
+      }
       if (!showHidden && link.isHidden) return false;
       if (q && !(haystacks.get(link.index) ?? '').includes(q)) return false;
       return true;
@@ -95,14 +165,28 @@
 
   const KIND_RANK: Record<LinkKind, number> = { internal: 0, external: 1, mailto: 2, tel: 3, other: 4 };
 
+  // Worst-first when ascending, so a status sort surfaces problems. Unchecked
+  // and non-http links (no result) sort to the end.
+  const STATUS_RANK: Record<LinkStatusResult['bucket'], number> = { error: 0, 'server-error': 1, 'client-error': 2, redirect: 3, ok: 4 };
+  const statusRank = (l: RawLink) => {
+    const b = statuses.get(l.href)?.bucket;
+    return b ? STATUS_RANK[b] : 5;
+  };
+
   // Summary of the current view, mirroring the Assets and Images tabs.
   const summaryItems = $derived.by(() => {
     let external = 0, nofollowish = 0, insecure = 0, broken = 0;
+    let httpRedirect = 0, httpDead = 0;
     for (const l of filtered) {
       if (l.kind === 'external') external++;
       if (!isDofollow(l)) nofollowish++;
       if (l.isInsecure) insecure++;
       if (l.isBrokenAnchor) broken++;
+      const st = statuses.get(l.href);
+      if (st) {
+        if (st.bucket === 'redirect') httpRedirect++;
+        else if (st.bucket === 'client-error' || st.bucket === 'server-error' || st.bucket === 'error') httpDead++;
+      }
     }
     const items: SummaryItem[] = [
       { text: `${filtered.length} ${filtered.length === 1 ? 'link' : 'links'}` },
@@ -111,6 +195,8 @@
     if (nofollowish > 0) items.push({ text: `${nofollowish} nofollow`, title: 'Links carrying nofollow, sponsored, or ugc hints' });
     if (insecure > 0) items.push({ text: `${insecure} insecure http`, tone: 'warn' });
     if (broken > 0) items.push({ text: `${broken} broken #`, tone: 'err' });
+    if (httpRedirect > 0) items.push({ text: `${httpRedirect} redirect`, tone: 'warn', title: 'Links that respond with a 3xx redirect' });
+    if (httpDead > 0) items.push({ text: `${httpDead} failing`, tone: 'err', title: 'Links returning 4xx/5xx or unreachable (advisory)' });
     return items;
   });
 
@@ -122,6 +208,7 @@
         case 'url': cmp = a.href.localeCompare(b.href); break;
         case 'follow': cmp = followRank(a) - followRank(b); break;
         case 'type': cmp = KIND_RANK[a.kind] - KIND_RANK[b.kind]; break;
+        case 'status': cmp = statusRank(a) - statusRank(b); break;
         default: cmp = a.index - b.index;
       }
       if (cmp !== 0) return cmp * dir;
@@ -180,6 +267,7 @@
   onDestroy(() => {
     if (highlightOn) highlightLinks(false);
     if (copyResetTimer) clearTimeout(copyResetTimer);
+    checkRun++; // stop any in-flight status sweep
   });
 
   function handleRowClick(e: MouseEvent, index: number) {
@@ -266,17 +354,28 @@
     { value: 'image', label: 'Image', count: stats.image },
     { value: 'none', label: 'None', count: stats.none },
   ]);
+  // The Status facet only appears once a check has run, so its counts reflect
+  // resolved links rather than dangling zeros.
+  const hasChecked = $derived(statuses.size > 0);
+  const statusOptions = $derived([
+    { value: 'all', label: 'All', count: stats.statusOk + stats.statusRedirect + stats.statusFailing },
+    { value: 'ok', label: 'OK', count: stats.statusOk },
+    { value: 'redirect', label: 'Redirect', count: stats.statusRedirect },
+    { value: 'failing', label: 'Failing', count: stats.statusFailing },
+  ]);
 
-  const anyFilterActive = $derived(typeFilter !== 'all' || followFilter !== 'all' || anchorFilter !== 'all' || !showHidden || search.length > 0);
+  const anyFilterActive = $derived(typeFilter !== 'all' || followFilter !== 'all' || anchorFilter !== 'all' || statusFilter !== 'all' || !showHidden || search.length > 0);
 
   function setType(v: string) { typeFilter = v; openMenu = null; trackAction('links_filter', { facet: 'type', value: v }); }
   function setFollow(v: string) { followFilter = v; openMenu = null; trackAction('links_filter', { facet: 'follow', value: v }); }
   function setAnchor(v: string) { anchorFilter = v; openMenu = null; trackAction('links_filter', { facet: 'anchor', value: v }); }
+  function setStatus(v: string) { statusFilter = v; openMenu = null; trackAction('links_filter', { facet: 'status', value: v }); }
 
   function resetFilters() {
     typeFilter = 'all';
     followFilter = 'all';
     anchorFilter = 'all';
+    statusFilter = 'all';
     showHidden = true;
     search = '';
     searchOpen = false;
@@ -294,7 +393,7 @@
   </div>
 {:else}
   <div class="links-tab">
-    {#snippet facet(name: string, key: 'type' | 'follow' | 'anchor', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
+    {#snippet facet(name: string, key: 'type' | 'follow' | 'anchor' | 'status', options: { value: string; label: string; count: number }[], selected: string, onSelect: (v: string) => void)}
       <div class="dropdown menu">
         <button class="dropdown__trigger" class:dropdown__trigger--active={selected !== 'all'} onclick={() => { openMenu = openMenu === key ? null : key; }}>
           {selected === 'all' ? name : (options.find(o => o.value === selected)?.label ?? name)}
@@ -331,6 +430,9 @@
           {@render facet('Type', 'type', typeOptions, typeFilter, setType)}
           {@render facet('Follow', 'follow', followOptions, followFilter, setFollow)}
           {@render facet('Anchor', 'anchor', anchorOptions, anchorFilter, setAnchor)}
+          {#if hasChecked}
+            {@render facet('Status', 'status', statusOptions, statusFilter, setStatus)}
+          {/if}
           {#if anyFilterActive}
             <button class="reset-btn" onclick={resetFilters} title="Reset all filters">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -345,8 +447,7 @@
             </button>
           {/if}
           <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} title="Highlight links on page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Highlight
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
           </button>
           <button class="toolbar-btn" class:toolbar-btn--active={searchOpen} onclick={toggleSearch} title="Search links">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -354,8 +455,6 @@
           <div class="export menu">
             <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} title="Download links">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__chevron"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             {#if openMenu === 'export'}
               <div class="export__menu">
@@ -403,6 +502,14 @@
             <th class="th th--url"><button class="th-btn" class:th-btn--active={sortKey === 'url'} onclick={() => toggleSort('url')} title="Sort by URL">Target URL{@render sortIcon('url')}</button> <span class="th__count">({filtered.length}/{stats.total})</span></th>
             <th class="th th--follow"><button class="th-btn" class:th-btn--active={sortKey === 'follow'} onclick={() => toggleSort('follow')} title="Sort by dofollow">Dofollow{@render sortIcon('follow')}</button></th>
             <th class="th th--type"><button class="th-btn" class:th-btn--active={sortKey === 'type'} onclick={() => toggleSort('type')} title="Sort by type">Type{@render sortIcon('type')}</button></th>
+            <th class="th th--status">
+              <span class="check-head">
+                <button class="th-btn" class:th-btn--active={sortKey === 'status'} onclick={() => toggleSort('status')} title="Sort by status">Status{@render sortIcon('status')}</button>
+                <button class="check-action" onclick={checkStatuses} disabled={checking} aria-label="Check link status" title={checking ? `Checking ${checkDone}/${checkTotal}…` : hasChecked ? 'Re-check link status' : 'Check link status (HEAD request, advisory)'}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class:spin={checking}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+                </button>
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -450,6 +557,12 @@
                 {/if}
               </td>
               <td class="td td--type">{kindLabel(link.kind)}</td>
+              <td class="td td--status">
+                {#if statuses.get(link.href)}
+                  {@const st = statuses.get(link.href)!}
+                  <span class="status-pill status-pill--{st.bucket}" title={statusTitle(st)}>{statusLabel(st)}</span>
+                {/if}
+              </td>
             </tr>
           {/each}
         </tbody>
@@ -499,7 +612,6 @@
   .export__trigger { white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
   .export__trigger:hover { border-color: var(--border-hover); color: var(--text-secondary); }
   .export__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; }
-  .export__chevron { width: 10px; height: 10px; stroke-width: 2; opacity: 0.6; }
   .export__menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-pop); z-index: 10; min-width: 150px; padding: 4px; }
   .export__item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 10px; border: none; background: none; font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 5px; transition: background 0.1s; }
   .export__item:hover { background: var(--bg-hover); }
@@ -513,6 +625,15 @@
   .toolbar-btn--active { background: var(--btn-bg); color: var(--btn-text); border-color: var(--btn-bg); }
   .toolbar-btn--active:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); color: var(--btn-text); }
   .toolbar-btn svg { width: 13px; height: 13px; stroke-width: 1.8; flex-shrink: 0; }
+  .spin { animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Status column header: icon-only check trigger sits after the sortable label */
+  .check-head { display: inline-flex; align-items: center; gap: 6px; }
+  .check-action { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 1px solid var(--border-strong); background: var(--bg); border-radius: 5px; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+  .check-action:hover:not(:disabled) { border-color: var(--border-hover); color: var(--accent); }
+  .check-action:disabled { cursor: default; }
+  .check-action svg { width: 12px; height: 12px; stroke-width: 1.9; flex-shrink: 0; }
 
   /* Reset filters */
   .dropdown__trigger, .toolbar-btn, .export__trigger, .reset-btn { box-sizing: border-box; }
@@ -545,6 +666,9 @@
   .th--num { width: 30px; padding-right: 0; }
   .th--follow { width: 76px; }
   .th--type { width: 76px; }
+  /* Combined selectors beat the .th:last-child / .td:last-child gutter so the
+     Check column keeps a balanced inset around its centered button and pill. */
+  .th.th--status, .td.td--status { width: 104px; padding-left: 8px; padding-right: 10px; text-align: center; }
   .th__count { font-weight: 500; color: var(--text-muted); letter-spacing: 0; text-transform: none; }
 
   .th-btn { display: inline-flex; align-items: center; gap: 2px; padding: 0; border: none; background: none; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; transition: color 0.12s; }
@@ -570,6 +694,13 @@
   .flag--amber { background: var(--warning-bg); color: var(--warning); }
   .flag--red { background: var(--error-bg); color: var(--error-strong); }
   .hidden-icon { flex-shrink: 0; width: 13px; height: 13px; stroke-width: 1.8; color: var(--text-muted); }
+
+  /* HTTP status pill — monospace digits, color-coded by bucket */
+  .status-pill { flex-shrink: 0; font-family: 'SF Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 8px; line-height: 16px; }
+  .status-pill--ok { background: var(--success-bg); color: var(--success-strong); }
+  .status-pill--redirect { background: var(--warning-bg); color: var(--warning); }
+  .status-pill--client-error, .status-pill--server-error { background: var(--error-bg); color: var(--error-strong); }
+  .status-pill--error { background: var(--bg-hover); color: var(--text-muted); }
 
   .anchor-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
   .img-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--accent-tint); color: var(--accent); }

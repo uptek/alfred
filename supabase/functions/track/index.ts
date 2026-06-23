@@ -63,6 +63,7 @@ const VALID_ACTIONS = [
   'links_copy',
   'links_sort',
   'links_toggle_hidden',
+  'links_check_status',
   'assets_view',
   'assets_filter',
   'assets_export',

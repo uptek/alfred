@@ -11,6 +11,9 @@
  *                    same-origin fetch from /robots/<scenario>.html carries that
  *                    page as referer: 'missing' → 404, 'server-error' → 500,
  *                    anything else → robots/fixtures/<scenario>.robots.txt.
+ * - GET /status/<n>  responds with HTTP status <n>, for the Links status-check
+ *                    fixtures. 3xx codes carry a Location (?to=… or /) so the
+ *                    popup's redirect:'manual' probe sees a real redirect.
  * - everything else  static files from this directory
  */
 import { createServer } from 'node:http';
@@ -105,6 +108,16 @@ const server = createServer(async (req, res) => {
       const { status, type, body } = await robotsResponse(req.headers.referer);
       res.writeHead(status, { 'content-type': type });
       res.end(body);
+      return;
+    }
+
+    const statusMatch = url.pathname.match(/^\/status\/(\d{3})$/);
+    if (statusMatch) {
+      const code = Number(statusMatch[1]);
+      const headers: Record<string, string> = { 'content-type': 'text/plain; charset=utf-8' };
+      if (code >= 300 && code < 400) headers['location'] = url.searchParams.get('to') ?? '/';
+      res.writeHead(code, headers);
+      res.end(`status ${code}`);
       return;
     }
 

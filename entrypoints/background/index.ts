@@ -1,5 +1,6 @@
 import { storage } from '#imports';
 import { registerShortcuts } from './shortcuts';
+import { checkLinkStatus } from './linkStatus';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
@@ -100,6 +101,18 @@ export default defineBackground(() => {
         console.error('Failed to track action:', error);
       }
     }
+  });
+
+  // Resolve link HTTP statuses for the popup. Fetching here (not in the popup)
+  // keeps checks alive after the popup closes and uses host permissions to read
+  // cross-origin status codes. Returning true keeps the channel open for the
+  // async sendResponse.
+  browser.runtime.onMessage.addListener((message: { action?: string; url?: string }, _sender, sendResponse) => {
+    if (message.action === 'check_link_status' && typeof message.url === 'string') {
+      checkLinkStatus(message.url).then(sendResponse);
+      return true;
+    }
+    return false;
   });
 
   browser.runtime.onInstalled.addListener(async (details) => {
