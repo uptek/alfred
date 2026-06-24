@@ -395,29 +395,35 @@
   }
 
   function exportCsv() {
-    const header = 'URL,Anchor Text,Type,Dofollow,Rel,Is Image,Is Hidden,Insecure HTTP,Broken Anchor';
-    const rows = links.map(l =>
-      [l.href, l.text, l.kind, isDofollow(l), l.rel, l.isImage, l.isHidden, l.isInsecure, l.isBrokenAnchor]
+    const header = 'URL,Anchor Text,Type,Dofollow,Rel,Is Image,Is Hidden,Insecure HTTP,Broken Anchor,Status Code,Status';
+    const rows = links.map(l => {
+      const st = statuses.get(l.href);
+      return [l.href, l.text, l.kind, isDofollow(l), l.rel, l.isImage, l.isHidden, l.isInsecure, l.isBrokenAnchor, st && st.status > 0 ? st.status : '', st?.bucket ?? '']
         .map(csvField)
-        .join(',')
-    );
+        .join(',');
+    });
     downloadFile([header, ...rows].join('\n'), `alfred-links-${siteSlug}.csv`, 'text/csv');
     trackAction('links_export', { format: 'csv', link_count: links.length });
     openMenu = null;
   }
 
   function exportJson() {
-    const data = links.map(l => ({
-      url: l.href,
-      anchorText: l.text,
-      type: l.kind,
-      dofollow: isDofollow(l),
-      rel: l.rel,
-      isImage: l.isImage,
-      isHidden: l.isHidden,
-      isInsecure: l.isInsecure,
-      isBrokenAnchor: l.isBrokenAnchor,
-    }));
+    const data = links.map(l => {
+      const st = statuses.get(l.href);
+      return {
+        url: l.href,
+        anchorText: l.text,
+        type: l.kind,
+        dofollow: isDofollow(l),
+        rel: l.rel,
+        isImage: l.isImage,
+        isHidden: l.isHidden,
+        isInsecure: l.isInsecure,
+        isBrokenAnchor: l.isBrokenAnchor,
+        statusCode: st && st.status > 0 ? st.status : null,
+        status: st?.bucket ?? null,
+      };
+    });
     downloadFile(JSON.stringify(data, null, 2), `alfred-links-${siteSlug}.json`, 'application/json');
     trackAction('links_export', { format: 'json', link_count: links.length });
     openMenu = null;
