@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Status column: 2xx / 3xx / 4xx / 5xx / rate-limit / unreachable</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      main li {
+        margin-bottom: 6px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Links tab, Status column</div>
+      <ul>
+        <li>
+          9 links total (the 8 below plus the "← all test pages" nav link, which also resolves 200). Status is opt-in:
+          click the check button in the "Status" column header to run it.
+        </li>
+        <li>
+          The sweep is throttled (4 at a time, jittered) and takes a few seconds; the 429 row adds a ~2s backoff before
+          resolving. Pills fill in live as each link resolves.
+        </li>
+        <li>Green <b>200</b>: rows 1, 2, and the nav link</li>
+        <li>Amber redirect <b>3xx</b>: rows 3 (301) and 4 (308) — the exact code is not exposed to extensions</li>
+        <li>Red <b>404</b> (row 5) and red <b>500</b> (row 6)</li>
+        <li>
+          Red <b>429</b> (row 7): the background backs off once, then reports the still-rate-limited code rather than
+          hiding it
+        </li>
+        <li>Grey <b>err</b> (row 8): external <code>.invalid</code> host that never resolves</li>
+        <li>
+          Duplicate <code>/status/200</code> (rows 1–2) is fetched once and shares the result; a ×2 dup badge shows
+        </li>
+        <li>
+          A "Status" filter facet appears after the sweep: OK ×3, Redirect ×2, Failing ×4 (404, 500, 429, unreachable).
+          "Failing" isolates the broken set.
+        </li>
+        <li>Sorting by the "Status" header surfaces worst-first: err → 500 → 404/429 → redirects → 200</li>
+        <li>Summary bar gains "2 redirect" (amber) and "4 failing" (red); 0 insecure (localhost is loopback)</li>
+      </ul>
+    </aside>
+    <main id="top">
+      <ul>
+        <li><a href="/status/200">1. 200 OK</a></li>
+        <li><a href="/status/200">2. 200 OK again (duplicate href, checked once)</a></li>
+        <li><a href="/status/301?to=/links/mixed.html">3. 301 redirect (to a real page)</a></li>
+        <li><a href="/status/308?to=/links/mixed.html">4. 308 permanent redirect</a></li>
+        <li><a href="/status/404">5. 404 Not Found</a></li>
+        <li><a href="/status/500">6. 500 Internal Server Error</a></li>
+        <li><a href="/status/429">7. 429 Too Many Requests (exercises backoff)</a></li>
+        <li><a href="https://nonexistent.invalid/">8. Unreachable external host (DNS failure → err)</a></li>
+      </ul>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

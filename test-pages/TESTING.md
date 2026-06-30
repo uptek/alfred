@@ -9,7 +9,7 @@ Work top to bottom; every step says which page to open and what to look for.
 
 1. Run the automated suite first. It covers the analyzers, link
    classification, asset classification, and image classification logic
-   (154 tests):
+   (212 tests):
 
    ```sh
    bun test

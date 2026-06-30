@@ -11,9 +11,11 @@
   import Schema from './Schema.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
+  import { getTabState, type PopupSection } from './stores/tabState.svelte';
   import type { StoreInfo, RawHeading, RawLink, RawAsset, RawImage, RawSchemaBlock } from './utils/types';
 
-  type TabId = 'theme' | 'headings' | 'links' | 'assets' | 'images' | 'schema' | 'settings';
+  type TabId = PopupSection;
+  const tabState = getTabState();
   // Future tabs: 'apps' | 'products' | 'overview' | 'hreflangs' | 'social' | 'robots' | 'sitemaps'
 
   interface Tab {
@@ -68,13 +70,15 @@
 
   $effect(() => {
     const fetchData = async () => {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
       const [storeData, headingsData, linksData, assetsData, imagesData, schemaData] = await Promise.all([
         getTheme(),
         getHeadings(),
         getLinks(),
         getAssets(),
         getImages(),
-        getSchema()
+        getSchema(),
+        tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
       ]);
       trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
       storeInfo = storeData;
@@ -83,12 +87,20 @@
       rawAssets = assetsData;
       rawImages = imagesData;
       rawSchema = schemaData;
-      if (!storeData?.isShopify) {
+      // A restored section wins; otherwise non-Shopify pages skip the Theme tab.
+      if (tabState.restoredActiveSection) {
+        activeTab = tabState.restoredActiveSection;
+      } else if (!storeData?.isShopify) {
         activeTab = 'headings';
       }
       loading = false;
     };
     fetchData();
+  });
+
+  // Persist the open section per tab once the initial restore has settled.
+  $effect(() => {
+    if (!loading) tabState.setActiveSection(activeTab);
   });
 </script>
 

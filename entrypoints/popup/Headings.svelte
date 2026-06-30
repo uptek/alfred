@@ -3,6 +3,7 @@
   import { scrollToHeading } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack } from 'svelte';
+  import { getTabState } from './stores/tabState.svelte';
 
   let { headings, issues }: { headings: RawHeading[]; issues: HeadingIssue[] } = $props();
 
@@ -15,7 +16,18 @@
     });
   });
 
-  let showHidden = $state(true);
+  interface HeadingsPersisted {
+    showHidden: boolean;
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<HeadingsPersisted>('headings');
+
+  let showHidden = $state(restored?.showHidden ?? true);
+
+  $effect(() => {
+    tabState.saveSection('headings', { showHidden });
+  });
 
   const hiddenCount = $derived(headings.filter(h => h.isHidden).length);
 
@@ -101,13 +113,12 @@
             {hiddenCount}
           </button>
         {/if}
-        <button class="copy-btn" onclick={handleCopy} title="Copy headings to clipboard">
+        <button class="copy-btn" onclick={handleCopy} aria-label="Copy headings to clipboard" title="Copy headings to clipboard">
           {#if copyState === 'copied'}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="copy-btn__icon"><polyline points="20 6 9 17 4 12"/></svg>
           {:else}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="copy-btn__icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           {/if}
-          Copy
         </button>
       </div>
     </div>

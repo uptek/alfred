@@ -5,6 +5,7 @@
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy } from 'svelte';
+  import { getTabState } from './stores/tabState.svelte';
 
   let { schema, domain }: { schema: RawSchemaBlock[]; domain: string | null } = $props();
 
@@ -12,7 +13,20 @@
 
   const analysis = $derived(analyzeSchema(schema));
 
-  let overrides = $state<Map<number, boolean>>(new Map());
+  interface SchemaPersisted {
+    overrides: [number, boolean][];
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<SchemaPersisted>('schema');
+
+  // Per-block open/closed overrides; persisted so expanded entities survive the
+  // popup closing and reopening on the same page.
+  let overrides = $state<Map<number, boolean>>(new Map(restored?.overrides ?? []));
+
+  $effect(() => {
+    tabState.saveSection('schema', { overrides: [...overrides] });
+  });
   function isOpen(i: number): boolean {
     return overrides.get(i) ?? i === 0;
   }
@@ -147,13 +161,15 @@
     <div class="toolbar">
       <span class="toolbar__hint">JSON-LD structured data</span>
       <div class="toolbar__actions">
-        <button class="toolbar-btn" onclick={copyAll} title="Copy all JSON-LD">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-          {copied ? 'Copied!' : 'Copy'}
+        <button class="toolbar-btn" onclick={copyAll} aria-label="Copy all JSON-LD" title={copied ? 'Copied!' : 'Copy all JSON-LD'}>
+          {#if copied}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          {:else}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          {/if}
         </button>
-        <button class="toolbar-btn" onclick={exportJson} title="Download JSON-LD">
+        <button class="toolbar-btn" onclick={exportJson} aria-label="Download JSON-LD" title="Download JSON-LD">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export
         </button>
       </div>
     </div>

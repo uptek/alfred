@@ -1,5 +1,7 @@
 import { storage } from '#imports';
 import { registerShortcuts } from './shortcuts';
+import { checkLinkStatus } from './linkStatus';
+import { keyFor } from '@/entrypoints/popup/stores/tabState';
 import { trackAction, type AnalyticsAction } from '@/utils/analytics';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
@@ -100,6 +102,27 @@ export default defineBackground(() => {
         console.error('Failed to track action:', error);
       }
     }
+  });
+
+  // Resolve link HTTP statuses for the popup. Fetching here (not in the popup)
+  // keeps checks alive after the popup closes and uses host permissions to read
+  // cross-origin status codes. Returning true keeps the channel open for the
+  // async sendResponse.
+  browser.runtime.onMessage.addListener((message: { action?: string; url?: string }, sender, sendResponse) => {
+    // Only honor requests from the extension's own contexts (popup/content scripts).
+    if (sender.id !== browser.runtime.id) return false;
+    if (message.action === 'check_link_status' && typeof message.url === 'string') {
+      checkLinkStatus(message.url).then(sendResponse);
+      return true;
+    }
+    return false;
+  });
+
+  // The popup persists per-tab view state (open section, link-status scan) keyed
+  // by tab id. Drop it the moment the tab closes so the state dies with the tab
+  // and session storage doesn't accumulate orphaned records.
+  browser.tabs.onRemoved.addListener((tabId) => {
+    storage.removeItem(keyFor(tabId)).catch(() => {});
   });
 
   browser.runtime.onInstalled.addListener(async (details) => {

@@ -26,7 +26,7 @@ For a step-by-step checklist of the current branch's changes, see
 test-pages/
   server.ts        tiny node:http static server (run with bun)
   headings/        one page per heading-analysis scenario (positive + negative)
-  links/           link extraction scenarios
+  links/           link extraction and status-check scenarios
   images/          image extraction/audit scenarios (+ static/ fixtures)
   assets/          script/stylesheet scenarios (+ static/ js & css fixtures)
   theme/           fake Shopify storefront (sets window.Shopify + window.__st)
@@ -42,6 +42,13 @@ test-pages/
   the `← all test pages` nav link count in Assets/Links totals.
 - Folders named `static/` or `fixtures/` hold supporting files and are not
   listed in the index (no `.html` inside them).
+
+## HTTP status fixtures
+
+The Links tab's status checker needs endpoints that return arbitrary status
+codes. `GET /status/<n>` responds with HTTP status `<n>` (e.g. `/status/404`,
+`/status/500`). For 3xx codes it sets a `Location` header (`?to=<url>`, or `/`
+by default) so the popup's `redirect: 'manual'` probe sees a real redirect.
 
 ## robots.txt scenarios
 

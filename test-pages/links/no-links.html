@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Empty state: a page with no anchors at all</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font: inherit;
+        font-size: 13px;
+        background: none;
+        border: none;
+        color: #5c6ac4;
+        cursor: pointer;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Links tab</div>
+      <ul>
+        <li>Empty state: link icon plus "No links found on this page" — no toolbar, table, or summary bar</li>
+        <li>
+          This page deliberately has zero <code>&lt;a href&gt;</code> elements, so the back nav is a button, not a link
+          (an anchor would make the count 1 and defeat the empty state)
+        </li>
+      </ul>
+    </aside>
+    <main>
+      <p>This page contains text content but no anchors, to exercise the Links tab's empty state.</p>
+    </main>
+    <button class="back" onclick="location.href = '/'">← all test pages</button>
+  </body>
+</html>

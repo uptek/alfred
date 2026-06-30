@@ -7,7 +7,8 @@
   import type { SummaryItem } from './SummaryBar.svelte';
   import { highlightImages, scrollToImage } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
-  import { untrack, onDestroy } from 'svelte';
+  import { untrack, onDestroy, onMount } from 'svelte';
+  import { getTabState } from './stores/tabState.svelte';
 
   let { images, domain }: { images: RawImage[]; domain: string | null } = $props();
 
@@ -36,23 +37,64 @@
     });
   });
 
-  let altFilter = $state('all');
-  let formatFilter = $state('all');
-  let loadingFilter = $state('all');
-  let statusFilter = $state('all');
-  let flagFilter = $state('all');
-  let search = $state('');
-  let searchOpen = $state(false);
+  type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
+
+  interface ImagesPersisted {
+    altFilter: string;
+    formatFilter: string;
+    loadingFilter: string;
+    statusFilter: string;
+    flagFilter: string;
+    search: string;
+    searchOpen: boolean;
+    highlightOn: boolean;
+    sortKey: SortKey;
+    sortDir: 'asc' | 'desc';
+  }
+
+  const tabState = getTabState();
+  const restored = tabState.getSection<ImagesPersisted>('images');
+
+  let altFilter = $state(restored?.altFilter ?? 'all');
+  let formatFilter = $state(restored?.formatFilter ?? 'all');
+  let loadingFilter = $state(restored?.loadingFilter ?? 'all');
+  let statusFilter = $state(restored?.statusFilter ?? 'all');
+  let flagFilter = $state(restored?.flagFilter ?? 'all');
+  let search = $state(restored?.search ?? '');
+  let searchOpen = $state(restored?.searchOpen ?? false);
   let openMenu = $state<'alt' | 'format' | 'loading' | 'status' | 'flag' | 'export' | null>(null);
 
-  type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
-  let sortKey = $state<SortKey>('index');
-  let sortDir = $state<'asc' | 'desc'>('asc');
+  let sortKey = $state<SortKey>(restored?.sortKey ?? 'index');
+  let sortDir = $state<'asc' | 'desc'>(restored?.sortDir ?? 'asc');
 
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
-  let highlightOn = $state(false);
+  let highlightOn = $state(restored?.highlightOn ?? false);
   let searchInput = $state<HTMLInputElement | null>(null);
+
+  // onDestroy strips the on-page outlines when the popup closes, so re-apply them
+  // if the restored state had highlighting on.
+  onMount(() => {
+    if (highlightOn) highlightImages(true);
+  });
+
+  // Mirror the persisted slice into the per-tab cache on change (the store
+  // debounces the write), so filters, sort, search, and highlight survive the
+  // popup closing and reopening on the same page.
+  $effect(() => {
+    tabState.saveSection('images', {
+      altFilter,
+      formatFilter,
+      loadingFilter,
+      statusFilter,
+      flagFilter,
+      search,
+      searchOpen,
+      highlightOn,
+      sortKey,
+      sortDir
+    });
+  });
 
   function toggleSearch() {
     searchOpen = !searchOpen;
@@ -358,18 +400,15 @@
           {/if}
         </div>
         <div class="toolbar__actions">
-          <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} title="Highlight images on page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Highlight
+          <button class="toolbar-btn" class:toolbar-btn--active={highlightOn} onclick={toggleHighlight} aria-label="Highlight images on page" title="Highlight images on page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
           </button>
           <button class="toolbar-btn" class:toolbar-btn--active={searchOpen} onclick={toggleSearch} title="Search images">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           </button>
           <div class="export menu">
-            <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} title="Download images">
+            <button class="export__trigger" onclick={() => { openMenu = openMenu === 'export' ? null : 'export'; }} aria-label="Download images" title="Download images">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__chevron"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             {#if openMenu === 'export'}
               <div class="export__menu">
@@ -532,7 +571,6 @@
   .export__trigger { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
   .export__trigger:hover { border-color: var(--border-hover); color: var(--text-secondary); }
   .export__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; }
-  .export__chevron { width: 10px; height: 10px; stroke-width: 2; opacity: 0.6; }
   .export__menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-pop); z-index: 10; min-width: 150px; padding: 4px; }
   .export__item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 10px; border: none; background: none; font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 5px; transition: background 0.1s; }
   .export__item:hover { background: var(--bg-hover); }

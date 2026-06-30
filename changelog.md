@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026.06.24
+@ 2026-06-24
+
+### Link Status Checker
+The Links tab can now tell you whether each link actually works. Press the check button in the new Status column and Alfred checks every link, reporting whether it's live (2xx), redirecting (3xx), broken (4xx/5xx), or unreachable.
+
+- Filter to just the failing links to track down broken links fast.
+- Sort by status to bring the worst offenders to the top.
+
+### The Popup Remembers Where You Left Off
+Run a link or image check, set up filters, sort a column, or expand a section, then close the popup to click something on the page. Reopen it on the same page and everything is right where you left it, including the tab you had open.
+
+- Link and image status results, filters, sorting, search, and highlights are all restored.
+- Every browser tab keeps its own state, so different pages don't bleed into each other.
+- State clears automatically when you navigate to a new page or close the tab.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-links-status.mp4"></video>
+
 ## 2026.06.22
 @ 2026-06-22
 Fixed auto-submitting preset hotlinks sending the access request before every permission was added. The request now waits until all of the preset's permissions are applied, so collaborators get access to exactly what the preset specifies.
