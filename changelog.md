@@ -12,6 +12,8 @@ New Robots.txt tab in the popup fetches and analyzes any site's robots.txt — n
 - Syntax-highlighted source with line numbers, click-to-jump from any finding, line wrapping, and one-click copy or open.
 - Friendly explanations for edge cases: missing robots.txt (404), server errors, and files that accidentally serve HTML.
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-robots-txt.mp4"></video>
+
 ## 2026.06.24
 @ 2026-06-24
 
@@ -28,11 +30,12 @@ Run a link or image check, set up filters, sort a column, or expand a section, t
 - Every browser tab keeps its own state, so different pages don't bleed into each other.
 - State clears automatically when you navigate to a new page or close the tab.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-links-status.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-links-status.mp4"></video>
 
 ## 2026.06.22
 @ 2026-06-22
 Fixed auto-submitting preset hotlinks sending the access request before every permission was added. The request now waits until all of the preset's permissions are applied, so collaborators get access to exactly what the preset specifies.
+
 
 ## 2026.06.20
 @ 2026-06-20

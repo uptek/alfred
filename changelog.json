@@ -20,6 +20,10 @@
           "Syntax-highlighted source with line numbers, click-to-jump from any finding, line wrapping, and one-click copy or open.",
           "Friendly explanations for edge cases: missing robots.txt (404), server errors, and files that accidentally serve HTML."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-robots-txt.mp4"
       }
     ]
   },
