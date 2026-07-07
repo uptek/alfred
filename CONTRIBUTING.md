@@ -70,11 +70,25 @@ bun run typecheck
 
 Please run `bun run lint` and `bun run format` before submitting a PR.
 
+## Testing
+
+Unit tests use Bun's built-in test runner:
+
+```bash
+bun test
+```
+
+Test files live next to the code they cover with a `.test.ts` suffix (e.g.
+`entrypoints/popup/robots.test.ts`) and are excluded from `tsconfig.json`. If
+you add or rename an analytics event in `utils/analytics-actions.ts`, update
+`VALID_ACTIONS` in `supabase/functions/track/index.ts` too — a parity test
+fails `bun test` when the two lists drift.
+
 ## Submitting Changes
 
 1. Fork the repo and create a branch from `main`
 2. Make your changes
-3. Run `bun run lint` and `bun run format`
+3. Run `bun run lint`, `bun run format`, and `bun test`
 4. Commit using [Conventional Commits](https://www.conventionalcommits.org/):
    `feat: add new feature` / `fix: resolve bug` / `chore: update deps`
 5. Open a pull request against `main`

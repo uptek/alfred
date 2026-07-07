@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Common robots.txt mistakes — misspelled, retired and misplaced directives</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Robots tab</div>
+      <ul>
+        <li>HTTP 200; this page's URL is still crawlable</li>
+        <li>Several issues detected, each linked to its exact line:</li>
+        <li><code>Disallow: /early</code> appears before any User-agent — flagged as an error (crawlers ignore it)</li>
+        <li><code>Dissallow</code> flagged as a misspelling of <code>Disallow</code></li>
+        <li><code>Noindex</code> flagged as unsupported / retired (Sept 2019)</li>
+        <li><code>Crawl-delay</code> noted as ignored by Google</li>
+        <li><code>example.com/full-path</code> flagged — path must start with <code>/</code></li>
+        <li>No Sitemap line — informational nudge</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        While this page is open, <code>/robots.txt</code> returns a file riddled with the common mistakes the analyzer
+        should catch.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

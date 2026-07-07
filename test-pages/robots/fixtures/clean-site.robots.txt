@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Allow: /account/login
+
+User-agent: AdsBot-Google
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+Sitemap: https://example.com/sitemap-products.xml

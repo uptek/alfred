@@ -1,5 +1,12 @@
-import type { AssetKind, AssetLoad, AssetPlacement, AssetSubtype } from './types';
+import type { AssetKind, AssetLoad, AssetPlacement, AssetSubtype, RawAsset } from './types';
+import { queryActiveTab } from './messaging';
 import { normalizeHost } from './links';
+
+/**
+ * Extracts all scripts and stylesheets from the active tab via content script.
+ * @returns {Promise<RawAsset[]>} Array of assets in DOM order, or empty array on failure.
+ */
+export const getAssets = (): Promise<RawAsset[]> => queryActiveTab<RawAsset[]>('get_assets', []);
 
 /** How a script's type attribute classifies it; only classic and module ever execute or fetch. */
 export type ScriptSubtype = 'classic' | 'module' | 'importmap' | 'speculationrules' | 'json' | 'ld+json' | 'data';

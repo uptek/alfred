@@ -1,7 +1,11 @@
 <script lang="ts">
-  import { getTheme, getHeadings, getLinks, getAssets, getImages, getSchema } from './utils/utils';
-  import { analyzeHeadings } from './utils/headings';
-  import { analyzeImages } from './utils/images';
+  import { getTheme } from './utils/theme';
+  import { getHeadings, analyzeHeadings } from './utils/headings';
+  import { getLinks } from './utils/links';
+  import { getAssets } from './utils/assets';
+  import { getImages, analyzeImages } from './utils/images';
+  import { getSchema } from './utils/schema';
+  import { getRobots, analyzeRobots } from './utils/robots';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
@@ -9,14 +13,15 @@
   import Assets from './Assets.svelte';
   import Images from './Images.svelte';
   import Schema from './Schema.svelte';
+  import Robots from './Robots.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
   import { getTabState, type PopupSection } from './stores/tabState.svelte';
-  import type { StoreInfo, RawHeading, RawLink, RawAsset, RawImage, RawSchemaBlock } from './utils/types';
+  import type { StoreInfo, RawHeading, RawLink, RawAsset, RawImage, RawSchemaBlock, RobotsResponse } from './utils/types';
 
   type TabId = PopupSection;
   const tabState = getTabState();
-  // Future tabs: 'apps' | 'products' | 'overview' | 'hreflangs' | 'social' | 'robots' | 'sitemaps'
+  // Future tabs: 'apps' | 'products' | 'overview' | 'hreflangs' | 'social' | 'sitemaps'
 
   interface Tab {
     id: TabId;
@@ -40,10 +45,15 @@
   let rawAssets = $state<RawAsset[]>([]);
   let rawImages = $state<RawImage[]>([]);
   let rawSchema = $state<RawSchemaBlock[]>([]);
+  let rawRobots = $state<RobotsResponse | null>(null);
+  let robotsLoading = $state(true);
   let loading = $state(true);
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
   const imageIssueCount = $derived(analyzeImages(rawImages));
+  const robotsErrorCount = $derived(
+    analyzeRobots(rawRobots, storeInfo?.isShopify ?? false, storeInfo?.page_url ?? null).errorCount
+  );
 
   const seoTabs = $derived<Tab[]>([
     {
@@ -61,14 +71,26 @@
       icon: 'images',
       ...(imageIssueCount > 0 ? { badge: { count: imageIssueCount, color: 'red' as const } } : {})
     },
+    {
+      id: 'robots' as TabId,
+      label: 'Robots.txt',
+      icon: 'robots',
+      ...(robotsErrorCount > 0 ? { badge: { count: robotsErrorCount, color: 'red' as const } } : {})
+    },
     // { id: 'hreflangs', label: 'Hreflangs', icon: 'hreflangs' },
     { id: 'schema' as TabId, label: 'Schema', icon: 'schema' },
     // { id: 'social', label: 'Social', icon: 'social' },
-    // { id: 'robots', label: 'Robots.txt', icon: 'robots' },
     // { id: 'sitemaps', label: 'Sitemaps', icon: 'sitemaps' },
   ]);
 
   $effect(() => {
+    // Robots.txt is a real network fetch (slow origins take seconds, timeout
+    // is 8s) — never gate first paint on it. The tab and badge fill in
+    // reactively when it lands.
+    getRobots().then((robotsData) => {
+      rawRobots = robotsData;
+      robotsLoading = false;
+    });
     const fetchData = async () => {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
       const [storeData, headingsData, linksData, assetsData, imagesData, schemaData] = await Promise.all([
@@ -119,6 +141,8 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
   {:else if icon === 'schema'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+  {:else if icon === 'robots'}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4M8 5l4 4 4-4"/></svg>
   <!-- Future tab icons (uncomment as tabs are enabled)
   {:else if icon === 'apps'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -130,8 +154,6 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
   {:else if icon === 'social'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-  {:else if icon === 'robots'}
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4M8 5l4 4 4-4"/></svg>
   {:else if icon === 'sitemaps'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
   -->
@@ -230,6 +252,8 @@
           <Images images={rawImages} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'schema'}
           <Schema schema={rawSchema} domain={storeInfo?.domain ?? null} />
+        {:else if activeTab === 'robots'}
+          <Robots robots={rawRobots} loading={robotsLoading} pageUrl={storeInfo?.page_url ?? null} isShopify={storeInfo?.isShopify ?? false} />
         {:else if activeTab === 'settings'}
           <div class="content__pad">
             <Settings storeInfo={storeInfo ?? { isShopify: false, shopDomain: null, domain: null, page_url: null, theme: null }} />

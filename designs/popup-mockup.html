@@ -1264,6 +1264,315 @@
           transition-duration: 0.001ms !important;
         }
       }
+      /* ── Robots tab ── */
+      .rbt-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        font-family: ui-monospace, monospace;
+        color: #565d6b;
+        background: #eceef2;
+        padding: 2px 8px;
+        border-radius: 20px;
+      }
+
+      .rbt-status-pill .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #15783f;
+      }
+
+      .rbt-ai-strip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        margin-top: 14px;
+        padding: 9px 14px;
+        background: #fff;
+        border: 1px solid #ebebeb;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: inherit;
+        text-align: left;
+        transition: border-color 0.12s;
+      }
+
+      .rbt-ai-strip:hover {
+        border-color: #ddd;
+      }
+
+      .rbt-ai-strip-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #444;
+      }
+
+      .rbt-ai-strip-sum {
+        font-size: 12px;
+        color: #666c77;
+      }
+
+      .rbt-ai-strip-chev {
+        width: 14px;
+        height: 14px;
+        margin-left: auto;
+        color: #666c77;
+        stroke-width: 2;
+        transition: transform 0.15s;
+      }
+
+      .rbt-ai-strip.open .rbt-ai-strip-chev {
+        transform: rotate(180deg);
+      }
+
+      .rbt-bot--mini {
+        font-size: 10.5px;
+        padding: 2px 7px;
+      }
+
+      #rbt-ai-matrix {
+        padding: 4px 2px 0;
+      }
+
+      .rbt-ai-row {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8f8f8;
+      }
+
+      .rbt-ai-row:last-child {
+        border-bottom: none;
+      }
+
+      .rbt-ai-label {
+        width: 92px;
+        flex-shrink: 0;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #666c77;
+      }
+
+      .rbt-ai-label small {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 500;
+        color: #9aa0aa;
+        margin-top: 1px;
+      }
+
+      .rbt-ai-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        flex: 1;
+      }
+
+      .rbt-bot {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11.5px;
+        font-weight: 500;
+        font-family: ui-monospace, monospace;
+        padding: 3px 9px;
+        border-radius: 20px;
+        border: 1px solid #ebebeb;
+        background: #fff;
+        color: #565d6b;
+        cursor: pointer;
+      }
+
+      .rbt-bot .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .rbt-bot--ok .dot {
+        background: #2fa86a;
+      }
+
+      .rbt-bot--blocked {
+        background: #fdf3f2;
+        border-color: #f6dedd;
+        color: #b03e39;
+      }
+
+      .rbt-bot--blocked .dot {
+        background: #c5342e;
+      }
+
+      .rbt-issue {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8f8f8;
+        font-size: 12.5px;
+        color: #444;
+      }
+
+      .rbt-issue:last-child {
+        border-bottom: none;
+      }
+
+      .rbt-issue .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .rbt-issue--error .dot {
+        background: #c5342e;
+      }
+
+      .rbt-issue--warning .dot {
+        background: #e8a13c;
+      }
+
+      .rbt-issue--info .dot {
+        background: #8b93a3;
+      }
+
+      .rbt-issue-msg {
+        flex: 1;
+      }
+
+      .rbt-issue-msg code {
+        font-family: ui-monospace, monospace;
+        font-size: 11.5px;
+        background: #f4f4f6;
+        padding: 1px 5px;
+        border-radius: 4px;
+        color: #333;
+      }
+
+      .rbt-line-btn {
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        font-weight: 600;
+        color: #4f57c4;
+        background: #eef0fb;
+        border: none;
+        border-radius: 5px;
+        padding: 2px 7px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .rbt-line-btn:hover {
+        background: #e2e5f7;
+      }
+
+      .rbt-src {
+        background: #fafafa;
+        border: 1px solid #f0f0f0;
+        border-radius: 10px;
+        font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+        font-size: 12px;
+        line-height: 1.75;
+        color: #555;
+        max-height: 320px;
+        overflow: auto;
+        padding: 10px 0;
+      }
+
+      .rbt-line {
+        display: flex;
+        gap: 12px;
+        padding: 0 14px;
+        white-space: pre;
+        transition: background 0.3s;
+      }
+
+      .rbt-ln {
+        width: 22px;
+        flex-shrink: 0;
+        text-align: right;
+        color: #c2c6cd;
+        user-select: none;
+        font-size: 11px;
+        line-height: inherit;
+      }
+
+      .rbt-line--added {
+        background: #f2faf5;
+        box-shadow: inset 2px 0 0 #2fa86a;
+      }
+
+      .rbt-line--flash {
+        background: #fdf6d8;
+      }
+
+      .rbt-wrap-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: normal;
+        text-transform: none;
+        color: #666c77;
+        background: #fff;
+        border: 1px solid #ebebeb;
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.12s;
+      }
+
+      .rbt-wrap-btn:hover {
+        border-color: #ddd;
+        color: #444;
+      }
+
+      .rbt-wrap-btn.active {
+        background: #1d1d20;
+        color: #fff;
+        border-color: #1d1d20;
+      }
+
+      .rbt-wrap-btn svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 1.8;
+      }
+
+      .rbt-src.wrap .rbt-line {
+        white-space: pre-wrap;
+      }
+
+      .rbt-src.wrap .rbt-line > span:last-child {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .rbt-c {
+        color: #9aa0aa;
+      }
+
+      .rbt-d {
+        color: #1d1d20;
+        font-weight: 600;
+      }
+
+      .rbt-src a {
+        color: #4f57c4;
+        text-decoration: none;
+      }
+
+      .rbt-src a:hover {
+        text-decoration: underline;
+      }
     </style>
   </head>
 
@@ -4151,9 +4460,13 @@
           <!-- ROBOTS.TXT -->
           <div class="tab-content" id="tab-robots" role="tabpanel" aria-label="Robots.txt">
             <div class="content-pad">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px">
                 <div>
-                  <div style="font-size: 15px; font-weight: 600; color: #222">robots.txt</div>
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <div style="font-size: 15px; font-weight: 600; color: #222">robots.txt</div>
+                    <span class="rbt-status-pill"><span class="dot"></span>200 · 1.2 KB</span>
+                    <span class="pill pill-purple" style="font-size: 10.5px">Customized</span>
+                  </div>
                   <a
                     href="#"
                     style="font-size: 12px; color: #4f57c4; text-decoration: none; font-family: ui-monospace, monospace"
@@ -4184,49 +4497,219 @@
                   </button>
                 </div>
               </div>
-              <pre
-                style="
-                  background: #fafafa;
-                  border: 1px solid #f0f0f0;
-                  border-radius: 8px;
-                  padding: 14px 16px;
-                  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
-                  font-size: 12px;
-                  line-height: 1.7;
-                  color: #555;
-                  overflow-x: auto;
-                  white-space: pre-wrap;
-                  word-break: break-all;
-                  max-height: 340px;
-                  overflow-y: auto;
-                "><span style="color:#666c77"># we use Shopify's default robots.txt</span>
-<span style="color:#222;font-weight:600">User-agent: *</span>
-Disallow: /admin
-Disallow: /cart
-Disallow: /orders
-Disallow: /checkouts/
-Disallow: /checkout
-Disallow: /*/checkouts
-Disallow: /carts
-Disallow: /account
-Disallow: /collections/*sort_by*
-Disallow: /*/collections/*sort_by*
-Disallow: /collections/*+*
-Disallow: /*/collections/*+*
-Disallow: /collections/*%2B*
-Disallow: /*/collections/*%2B*
-Disallow: /collections/*%2b*
-Disallow: /*/collections/*%2b*
-Disallow: /*/countdown
-Disallow: /discount/*
-Disallow: /*/discount/*
-Disallow: /policies/
-Disallow: /*/policies/
-Disallow: /search
-Disallow: /*/search
-Disallow: /apple-app-site-association
 
-<span style="color:#222;font-weight:600">Sitemap:</span> <a href="#" style="color:#4f57c4;text-decoration:none">https://theme-dawn-demo.myshopify.com/sitemap.xml</a></pre>
+              <div class="section-heading" style="padding-top: 0">Issues</div>
+              <div>
+                <div class="rbt-issue rbt-issue--warning">
+                  <span class="dot"></span>
+                  <span class="rbt-issue-msg"
+                    ><code>Noindex</code> is not supported by Google and is ignored (retired Sept 2019)</span
+                  >
+                  <button class="rbt-line-btn" onclick="rbtGo(20)">L20</button>
+                </div>
+                <div class="rbt-issue rbt-issue--info">
+                  <span class="dot"></span>
+                  <span class="rbt-issue-msg"
+                    ><code>Crawl-delay</code> is ignored by Google — honored by Bing and Yandex only</span
+                  >
+                  <button class="rbt-line-btn" onclick="rbtGo(34)">L34</button>
+                </div>
+                <div class="rbt-issue rbt-issue--info">
+                  <span class="dot"></span>
+                  <span class="rbt-issue-msg"
+                    >Differs from the default Shopify robots.txt — 11 lines added (highlighted below)</span
+                  >
+                </div>
+              </div>
+
+              <button class="rbt-ai-strip" id="rbt-ai-strip" aria-expanded="false" onclick="rbtAi()">
+                <span class="rbt-ai-strip-label">AI Crawlers</span>
+                <span class="rbt-ai-strip-sum">2 of 13 blocked</span>
+                <span class="rbt-bot rbt-bot--blocked rbt-bot--mini"><span class="dot"></span>GPTBot</span>
+                <span class="rbt-bot rbt-bot--blocked rbt-bot--mini"><span class="dot"></span>CCBot</span>
+                <svg
+                  class="rbt-ai-strip-chev"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div id="rbt-ai-matrix" hidden>
+                <div class="rbt-ai-row">
+                  <div class="rbt-ai-label">Training<small>2 of 7 blocked</small></div>
+                  <div class="rbt-ai-chips">
+                    <button class="rbt-bot rbt-bot--blocked" onclick="rbtGo(28)">
+                      <span class="dot"></span>GPTBot
+                    </button>
+                    <button class="rbt-bot rbt-bot--blocked" onclick="rbtGo(31)"><span class="dot"></span>CCBot</button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)"><span class="dot"></span>ClaudeBot</button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)">
+                      <span class="dot"></span>Google-Extended
+                    </button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)">
+                      <span class="dot"></span>Applebot-Extended
+                    </button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)"><span class="dot"></span>Bytespider</button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)">
+                      <span class="dot"></span>Meta-ExternalAgent
+                    </button>
+                  </div>
+                </div>
+                <div class="rbt-ai-row">
+                  <div class="rbt-ai-label">AI Search<small>all allowed</small></div>
+                  <div class="rbt-ai-chips">
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)">
+                      <span class="dot"></span>OAI-SearchBot
+                    </button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)">
+                      <span class="dot"></span>PerplexityBot
+                    </button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)">
+                      <span class="dot"></span>Claude-SearchBot
+                    </button>
+                  </div>
+                </div>
+                <div class="rbt-ai-row">
+                  <div class="rbt-ai-label">User Fetch<small>all allowed</small></div>
+                  <div class="rbt-ai-chips">
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)">
+                      <span class="dot"></span>ChatGPT-User
+                    </button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)"><span class="dot"></span>Claude-User</button>
+                    <button class="rbt-bot rbt-bot--ok" onclick="rbtGo(5)">
+                      <span class="dot"></span>Perplexity-User
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-heading" style="display: flex; align-items: center; justify-content: space-between">
+                Source
+                <button class="rbt-wrap-btn" id="rbt-wrap-btn" title="Wrap long lines" onclick="rbtWrap()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path d="M3 6h18M3 12h13a3 3 0 010 6h-4" />
+                    <path d="M14 16l-2 2 2 2" />
+                    <path d="M3 18h6" />
+                  </svg>
+                  Wrap
+                </button>
+              </div>
+              <div class="rbt-src" id="rbt-src">
+                <div class="rbt-line" id="rbt-l1">
+                  <span class="rbt-ln">1</span
+                  ><span class="rbt-c"
+                    ># Shopify storefront. Public product, collection, page, blog, policy, cart, and localized HTML is
+                    crawlable.</span
+                  >
+                </div>
+                <div class="rbt-line" id="rbt-l2">
+                  <span class="rbt-ln">2</span
+                  ><span class="rbt-c"># Agent instructions: https://theme-dawn-demo.myshopify.com/agents.md</span>
+                </div>
+                <div class="rbt-line" id="rbt-l3"><span class="rbt-ln">3</span><span> </span></div>
+                <div class="rbt-line" id="rbt-l4">
+                  <span class="rbt-ln">4</span><span><span class="rbt-d">User-agent:</span> *</span>
+                </div>
+                <div class="rbt-line" id="rbt-l5">
+                  <span class="rbt-ln">5</span><span><span class="rbt-d">Allow:</span> /</span>
+                </div>
+                <div class="rbt-line" id="rbt-l6">
+                  <span class="rbt-ln">6</span><span><span class="rbt-d">Disallow:</span> /admin</span>
+                </div>
+                <div class="rbt-line" id="rbt-l7">
+                  <span class="rbt-ln">7</span><span><span class="rbt-d">Disallow:</span> /cart/</span>
+                </div>
+                <div class="rbt-line" id="rbt-l8">
+                  <span class="rbt-ln">8</span><span><span class="rbt-d">Disallow:</span> /checkout</span>
+                </div>
+                <div class="rbt-line" id="rbt-l9">
+                  <span class="rbt-ln">9</span><span><span class="rbt-d">Disallow:</span> /checkouts/</span>
+                </div>
+                <div class="rbt-line" id="rbt-l10">
+                  <span class="rbt-ln">10</span><span><span class="rbt-d">Disallow:</span> /orders</span>
+                </div>
+                <div class="rbt-line" id="rbt-l11">
+                  <span class="rbt-ln">11</span><span><span class="rbt-d">Disallow:</span> /account</span>
+                </div>
+                <div class="rbt-line" id="rbt-l12">
+                  <span class="rbt-ln">12</span><span><span class="rbt-d">Disallow:</span> /services</span>
+                </div>
+                <div class="rbt-line" id="rbt-l13">
+                  <span class="rbt-ln">13</span><span><span class="rbt-d">Disallow:</span> /collections/*sort_by*</span>
+                </div>
+                <div class="rbt-line" id="rbt-l14">
+                  <span class="rbt-ln">14</span><span><span class="rbt-d">Disallow:</span> /collections/*+*</span>
+                </div>
+                <div class="rbt-line" id="rbt-l15">
+                  <span class="rbt-ln">15</span><span><span class="rbt-d">Disallow:</span> /collections/*%2B*</span>
+                </div>
+                <div class="rbt-line" id="rbt-l16">
+                  <span class="rbt-ln">16</span><span><span class="rbt-d">Disallow:</span> /*?*oseid=*</span>
+                </div>
+                <div class="rbt-line" id="rbt-l17">
+                  <span class="rbt-ln">17</span><span><span class="rbt-d">Disallow:</span> /*?*preview_theme_id=*</span>
+                </div>
+                <div class="rbt-line rbt-line--added" id="rbt-l18">
+                  <span class="rbt-ln">18</span><span><span class="rbt-d">Disallow:</span> /collections/all</span>
+                </div>
+                <div class="rbt-line rbt-line--added" id="rbt-l19">
+                  <span class="rbt-ln">19</span><span><span class="rbt-d">Disallow:</span> /pages/coming-soon</span>
+                </div>
+                <div class="rbt-line rbt-line--added" id="rbt-l20">
+                  <span class="rbt-ln">20</span><span><span class="rbt-d">Noindex:</span> /pages/old-sale</span>
+                </div>
+                <div class="rbt-line" id="rbt-l21"><span class="rbt-ln">21</span><span> </span></div>
+                <div class="rbt-line" id="rbt-l22">
+                  <span class="rbt-ln">22</span><span><span class="rbt-d">User-agent:</span> adsbot-google</span>
+                </div>
+                <div class="rbt-line" id="rbt-l23">
+                  <span class="rbt-ln">23</span><span><span class="rbt-d">Allow:</span> /products/</span>
+                </div>
+                <div class="rbt-line" id="rbt-l24">
+                  <span class="rbt-ln">24</span><span><span class="rbt-d">Disallow:</span> /checkout</span>
+                </div>
+                <div class="rbt-line" id="rbt-l25">
+                  <span class="rbt-ln">25</span><span><span class="rbt-d">Disallow:</span> /checkouts/</span>
+                </div>
+                <div class="rbt-line" id="rbt-l26"><span class="rbt-ln">26</span><span> </span></div>
+                <div class="rbt-line rbt-line--added" id="rbt-l27">
+                  <span class="rbt-ln">27</span><span><span class="rbt-d">User-agent:</span> GPTBot</span>
+                </div>
+                <div class="rbt-line rbt-line--added" id="rbt-l28">
+                  <span class="rbt-ln">28</span><span><span class="rbt-d">Disallow:</span> /</span>
+                </div>
+                <div class="rbt-line" id="rbt-l29"><span class="rbt-ln">29</span><span> </span></div>
+                <div class="rbt-line rbt-line--added" id="rbt-l30">
+                  <span class="rbt-ln">30</span><span><span class="rbt-d">User-agent:</span> CCBot</span>
+                </div>
+                <div class="rbt-line rbt-line--added" id="rbt-l31">
+                  <span class="rbt-ln">31</span><span><span class="rbt-d">Disallow:</span> /</span>
+                </div>
+                <div class="rbt-line" id="rbt-l32"><span class="rbt-ln">32</span><span> </span></div>
+                <div class="rbt-line rbt-line--added" id="rbt-l33">
+                  <span class="rbt-ln">33</span><span><span class="rbt-d">User-agent:</span> AhrefsBot</span>
+                </div>
+                <div class="rbt-line rbt-line--added" id="rbt-l34">
+                  <span class="rbt-ln">34</span><span><span class="rbt-d">Crawl-delay:</span> 10</span>
+                </div>
+                <div class="rbt-line" id="rbt-l35"><span class="rbt-ln">35</span><span> </span></div>
+                <div class="rbt-line" id="rbt-l36">
+                  <span class="rbt-ln">36</span
+                  ><span
+                    ><span class="rbt-d">Sitemap:</span>
+                    <a href="#">https://theme-dawn-demo.myshopify.com/sitemap.xml</a></span
+                  >
+                </div>
+              </div>
             </div>
           </div>
 
@@ -4346,6 +4829,26 @@ Disallow: /apple-app-site-association
       }
       function cs() {
         document.querySelectorAll('.stars svg').forEach((s) => s.classList.remove('h'));
+      }
+      function rbtWrap() {
+        document.getElementById('rbt-src').classList.toggle('wrap');
+        document.getElementById('rbt-wrap-btn').classList.toggle('active');
+      }
+      function rbtAi() {
+        const matrix = document.getElementById('rbt-ai-matrix');
+        const strip = document.getElementById('rbt-ai-strip');
+        const open = matrix.hasAttribute('hidden');
+        matrix.toggleAttribute('hidden', !open);
+        strip.setAttribute('aria-expanded', String(open));
+        strip.classList.toggle('open', open);
+        strip.querySelectorAll('.rbt-bot--mini').forEach((c) => (c.style.display = open ? 'none' : ''));
+      }
+      function rbtGo(n) {
+        const line = document.getElementById(`rbt-l${n}`);
+        if (!line) return;
+        line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        line.classList.add('rbt-line--flash');
+        setTimeout(() => line.classList.remove('rbt-line--flash'), 1600);
       }
     </script>
   </body>

@@ -1,6 +1,40 @@
-import type { LinkKind } from './types';
+import type { LinkKind, RawLink, LinkStatusResult } from './types';
+import { queryActiveTab, sendToActiveTab } from './messaging';
 import type { TextSourceElement } from './dom-text';
 import { accessibleText } from './dom-text';
+
+/**
+ * Extracts all anchor links from the active tab via content script.
+ * @returns {Promise<RawLink[]>} Array of links in DOM order, or empty array on failure.
+ */
+export const getLinks = (): Promise<RawLink[]> => queryActiveTab<RawLink[]>('get_links', []);
+
+/**
+ * Toggles colored dashed outlines on all links in the active tab (green=internal, purple=external, red=nofollow).
+ * @param {boolean} enabled - Whether to apply or remove highlights.
+ */
+export const highlightLinks = (enabled: boolean): Promise<void> => sendToActiveTab('highlight_links', { enabled });
+
+/**
+ * Scrolls the active tab to a link by its zero-based DOM index and briefly highlights it.
+ * @param {number} index - Zero-based index of the link among all `a[href]` elements.
+ */
+export const scrollToLink = (index: number): Promise<void> => sendToActiveTab('scroll_to_link', { index });
+
+/**
+ * Asks the background service worker to resolve a link's HTTP status. The check
+ * runs there so it survives the popup closing and can read cross-origin codes.
+ * @param {string} url - Absolute http(s) URL to check.
+ * @returns {Promise<LinkStatusResult>} Status bucket; 'error' if unreachable.
+ */
+export const checkLinkStatus = async (url: string): Promise<LinkStatusResult> => {
+  try {
+    const res = await browser.runtime.sendMessage({ action: 'check_link_status', url });
+    return res ?? { status: 0, bucket: 'error' };
+  } catch {
+    return { status: 0, bucket: 'error' };
+  }
+};
 
 /** Collapses runs of whitespace (newlines/tabs from multi-line markup) into single spaces. */
 const collapse = (text: string): string => text.replace(/\s+/g, ' ').trim();

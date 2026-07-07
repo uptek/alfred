@@ -6,170 +6,12 @@ const SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9icmppcmRucW9pYWlsaGJzbm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA0NzAyMzQsImV4cCI6MjA2NjA0NjIzNH0.i0cWjFKNk8HDZQsVkCn83fTKFROiNzvPf_sTP5xQwAM';
 const TRACK_ENDPOINT = `${SUPABASE_URL}/functions/v1/track`;
 
-// Valid action types
-export type AnalyticsAction =
-  | 'open_in_admin'
-  | 'open_in_customizer'
-  | 'copy_product_json'
-  | 'copy_cart_json'
-  | 'copy_theme_preview_url'
-  | 'clear_cart'
-  | 'save_preset'
-  | 'apply_preset'
-  | 'preset_auto_submit'
-  | 'request_access_context_menu'
-  | 'appstore_partner_table_view'
-  | 'appstore_partner_table_sort'
-  | 'appstore_partner_table_export'
-  | 'open_section_in_code_editor'
-  | 'disable_theme_inspector'
-  | 'resize_theme_customizer'
-  | 'toggle_admin_sidebar'
-  | 'detect_theme'
-  | 'autofill_storefront_password'
-  | 'open_image_in_admin'
-  | 'exit_theme_preview'
-  | 'theme_list_copy_id'
-  | 'theme_list_copy_preview_url'
-  | 'cartograph_open'
-  | 'cartograph_add_item'
-  | 'cartograph_update_quantity'
-  | 'cartograph_remove_item'
-  | 'cartograph_clear'
-  | 'cartograph_apply_discount'
-  | 'cartograph_update_note'
-  | 'cartograph_calculate_shipping'
-  | 'cartograph_update_properties'
-  | 'cartograph_switch_variant'
-  | 'cartograph_update_attributes'
-  | 'cartograph_remove_discount'
-  | 'cartograph_inspect_json'
-  | 'permission_search'
-  | 'expand_all_permissions'
-  | 'collapse_all_permissions'
-  | 'popup_open'
-  | 'review_nudge_show'
-  | 'review_nudge_click'
-  | 'review_nudge_dismiss'
-  | 'headings_view'
-  | 'headings_scroll_to'
-  | 'headings_copy'
-  | 'headings_toggle_hidden'
-  | 'links_view'
-  | 'links_filter'
-  | 'links_highlight'
-  | 'links_scroll_to'
-  | 'links_export'
-  | 'links_copy'
-  | 'links_sort'
-  | 'links_toggle_hidden'
-  | 'links_check_status'
-  | 'assets_view'
-  | 'assets_filter'
-  | 'assets_export'
-  | 'assets_copy'
-  | 'assets_view_source'
-  | 'assets_expand_inline'
-  | 'assets_sort'
-  | 'images_view'
-  | 'images_filter'
-  | 'images_highlight'
-  | 'images_scroll_to'
-  | 'images_export'
-  | 'images_copy'
-  | 'images_sort'
-  | 'images_open'
-  | 'schema_view'
-  | 'schema_copy'
-  | 'schema_export';
-
-// Time savings per action (in seconds)
-const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string, unknown>) => number)> = {
-  open_in_admin: (metadata) => {
-    if (metadata?.page_type === 'homepage') return 10;
-    if (['product', 'page', 'article'].includes(metadata?.page_type as string)) return 45;
-    return 25;
-  },
-  open_in_customizer: (metadata) => {
-    if (metadata?.page_type === 'homepage') return 20;
-    if (['product', 'page', 'article'].includes(metadata?.page_type as string)) return 45;
-    return 30;
-  },
-  copy_product_json: 30,
-  copy_cart_json: 30,
-  copy_theme_preview_url: 40,
-  clear_cart: 30,
-  save_preset: 0,
-  apply_preset: (metadata) => {
-    return 45 + (metadata?.has_custom_message ? 20 : 0);
-  },
-  preset_auto_submit: 20,
-  request_access_context_menu: 30,
-  appstore_partner_table_view: (metadata) => Number(metadata?.app_count ?? 0) * 5,
-  appstore_partner_table_sort: (metadata) => Number(metadata?.app_count ?? 0) * 2,
-  appstore_partner_table_export: (metadata) => Number(metadata?.app_count ?? 0) * 10 + 30,
-  open_section_in_code_editor: 30,
-  disable_theme_inspector: 3,
-  resize_theme_customizer: 3,
-  toggle_admin_sidebar: 0,
-  detect_theme: 30,
-  autofill_storefront_password: 10,
-  open_image_in_admin: 15,
-  exit_theme_preview: 20,
-  theme_list_copy_id: 10,
-  theme_list_copy_preview_url: 10,
-  cartograph_open: 0,
-  cartograph_add_item: 60,
-  cartograph_update_quantity: 15,
-  cartograph_remove_item: 15,
-  cartograph_clear: 30,
-  cartograph_apply_discount: 20,
-  cartograph_update_note: 15,
-  cartograph_calculate_shipping: 60,
-  cartograph_update_properties: 60,
-  cartograph_switch_variant: 120,
-  cartograph_update_attributes: 60,
-  cartograph_remove_discount: 15,
-  cartograph_inspect_json: 45,
-  permission_search: 20,
-  expand_all_permissions: 10,
-  collapse_all_permissions: 10,
-  popup_open: 0,
-  review_nudge_show: 0,
-  review_nudge_click: 0,
-  review_nudge_dismiss: 0,
-  headings_view: 60,
-  headings_scroll_to: 5,
-  headings_copy: 30,
-  headings_toggle_hidden: 5,
-  links_view: 60,
-  links_filter: 25,
-  links_highlight: 10,
-  links_scroll_to: 5,
-  links_export: 60,
-  links_copy: 60,
-  links_sort: 25,
-  links_toggle_hidden: 5,
-  links_check_status: (metadata) => Number(metadata?.count ?? 0) * 5 + 15,
-  assets_view: 60,
-  assets_filter: 25,
-  assets_export: 60,
-  assets_copy: 60,
-  assets_view_source: 5,
-  assets_expand_inline: 5,
-  assets_sort: 60,
-  images_view: 60,
-  images_filter: 25,
-  images_highlight: 10,
-  images_scroll_to: 5,
-  images_export: 60,
-  images_copy: 60,
-  images_sort: 25,
-  images_open: 5,
-  schema_view: 60,
-  schema_copy: 60,
-  schema_export: 60
-};
+// Action catalog — names, per-action time-saved, categories, and stats config
+// live in analytics-actions.ts; analytics-actions.test.ts keeps the Supabase
+// track function's allowlist in sync.
+export type { AnalyticsAction } from './analytics-actions';
+import type { AnalyticsAction } from './analytics-actions';
+import { TIME_SAVINGS, EXCLUDED_FROM_STATS, COOLDOWN_MS, ACTION_CATEGORIES } from './analytics-actions';
 
 // --- Usage Stats (local tracking) ---
 //
@@ -180,100 +22,6 @@ const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<string,
 
 /** Number of tracked actions before the Insights Card becomes visible. */
 const MILESTONE_THRESHOLD = 3;
-
-/** Actions that are tracked to Supabase but excluded from local usage stats.
- *  - review_nudge_* events: prevent the Insights Card from inflating its own counters
- *  - detect_theme: fires on every popup open, would trivially reach the milestone */
-const EXCLUDED_FROM_STATS = new Set<AnalyticsAction>([
-  'popup_open',
-  'review_nudge_show',
-  'review_nudge_click',
-  'review_nudge_dismiss'
-]);
-
-const COOLDOWN_MS: Partial<Record<AnalyticsAction, number>> = {
-  detect_theme: 5 * 60 * 1000
-};
-
-/** Maps every analytics action to a human-readable category for the
- *  "most used" stat in the Insights Card. Exhaustive — TypeScript will
- *  error if a new AnalyticsAction is added without a category entry. */
-const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
-  open_in_admin: 'Admin Nav',
-  open_in_customizer: 'Admin Nav',
-  open_image_in_admin: 'Admin Nav',
-  open_section_in_code_editor: 'Admin Nav',
-  toggle_admin_sidebar: 'Admin Nav',
-  copy_product_json: 'Copy Data',
-  copy_cart_json: 'Copy Data',
-  copy_theme_preview_url: 'Copy Data',
-  theme_list_copy_id: 'Copy Data',
-  theme_list_copy_preview_url: 'Copy Data',
-  detect_theme: 'Theme Detection',
-  exit_theme_preview: 'Theme Detection',
-  disable_theme_inspector: 'Theme Detection',
-  cartograph_open: 'Cartograph',
-  cartograph_add_item: 'Cartograph',
-  cartograph_update_quantity: 'Cartograph',
-  cartograph_remove_item: 'Cartograph',
-  cartograph_clear: 'Cartograph',
-  cartograph_apply_discount: 'Cartograph',
-  cartograph_remove_discount: 'Cartograph',
-  cartograph_update_note: 'Cartograph',
-  cartograph_calculate_shipping: 'Cartograph',
-  cartograph_update_properties: 'Cartograph',
-  cartograph_switch_variant: 'Cartograph',
-  cartograph_update_attributes: 'Cartograph',
-  cartograph_inspect_json: 'Cartograph',
-  resize_theme_customizer: 'Customizer',
-  save_preset: 'Presets',
-  apply_preset: 'Presets',
-  preset_auto_submit: 'Presets',
-  request_access_context_menu: 'Presets',
-  permission_search: 'Presets',
-  expand_all_permissions: 'Presets',
-  collapse_all_permissions: 'Presets',
-  appstore_partner_table_view: 'App Store',
-  appstore_partner_table_sort: 'App Store',
-  appstore_partner_table_export: 'App Store',
-  clear_cart: 'Storefront',
-  autofill_storefront_password: 'Storefront',
-  popup_open: 'Activation',
-  review_nudge_show: 'Insights',
-  review_nudge_click: 'Insights',
-  review_nudge_dismiss: 'Insights',
-  headings_view: 'SEO',
-  headings_scroll_to: 'SEO',
-  headings_copy: 'SEO',
-  headings_toggle_hidden: 'SEO',
-  links_view: 'SEO',
-  links_filter: 'SEO',
-  links_highlight: 'SEO',
-  links_scroll_to: 'SEO',
-  links_export: 'SEO',
-  links_copy: 'SEO',
-  links_sort: 'SEO',
-  links_toggle_hidden: 'SEO',
-  links_check_status: 'SEO',
-  assets_view: 'SEO',
-  assets_filter: 'SEO',
-  assets_export: 'SEO',
-  assets_copy: 'SEO',
-  assets_view_source: 'SEO',
-  assets_expand_inline: 'SEO',
-  assets_sort: 'SEO',
-  images_view: 'SEO',
-  images_filter: 'SEO',
-  images_highlight: 'SEO',
-  images_scroll_to: 'SEO',
-  images_export: 'SEO',
-  images_copy: 'SEO',
-  images_sort: 'SEO',
-  images_open: 'SEO',
-  schema_view: 'SEO',
-  schema_copy: 'SEO',
-  schema_export: 'SEO'
-};
 
 /** Local usage stats persisted in `local:usage_stats`.
  *  `installedAt` is set on the first tracked action, not the extension install date.
@@ -310,8 +58,10 @@ function defaultUsageStats(): UsageStats {
  * @returns Estimated seconds saved
  */
 export function getTimeSaved(action: AnalyticsAction, metadata?: Record<string, unknown>): number {
+  // `?? 0` guards unregistered actions: .svelte call sites bypass tsc, and an
+  // undefined here would NaN-poison the accumulated totalTimeSaved forever.
   const config = TIME_SAVINGS[action];
-  return typeof config === 'function' ? config(metadata) : config;
+  return (typeof config === 'function' ? config(metadata) : config) ?? 0;
 }
 
 /**
@@ -473,9 +223,11 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       return;
     }
 
-    // Send to Supabase (fire and forget)
+    // Send to Supabase (fire and forget). keepalive lets the request survive
+    // the popup closing mid-flight (e.g. actions that open a new tab).
     fetch(TRACK_ENDPOINT, {
       method: 'POST',
+      keepalive: true,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`

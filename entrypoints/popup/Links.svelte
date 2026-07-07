@@ -1,10 +1,9 @@
 <script lang="ts">
   import type { LinkKind, RawLink, LinkStatusResult } from './utils/types';
-  import { followRank, isDofollow } from './utils/links';
+  import { followRank, isDofollow, highlightLinks, scrollToLink, checkLinkStatus } from './utils/links';
   import { csvField } from './utils/format';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
-  import { highlightLinks, scrollToLink, checkLinkStatus } from './utils/utils';
   import { trackAction } from '@/utils/analytics';
   import { untrack, onDestroy, onMount } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';

@@ -37,6 +37,18 @@ in a blue panel. The index is auto-generated; adding a scenario is just adding
 an `.html` file. See `test-pages/README.md` for conventions (no heading tags
 in page chrome, referer-based robots.txt fixtures).
 
+## Testing
+
+- Unit tests use Bun's built-in test runner: `bun test` (no package.json script
+  needed)
+- Test files live in a `tests/` subfolder beside the code they cover (e.g.
+  `entrypoints/popup/tests/`, `utils/tests/`) with a `.test.ts` suffix, and are
+  excluded from `tsconfig.json`
+- Analytics events must exist in both `utils/analytics-actions.ts`
+  (`ANALYTICS_ACTIONS`, the source of truth) and `VALID_ACTIONS` in
+  `supabase/functions/track/index.ts`; a parity test fails `bun test` when the
+  two lists drift
+
 ## Version Bumping & Changelog
 
 When bumping the version or updating the changelog, use the `/version-bump`

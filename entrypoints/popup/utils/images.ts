@@ -1,4 +1,23 @@
 import type { ImageSource, ImageStatus, RawImage } from './types';
+import { queryActiveTab, sendToActiveTab } from './messaging';
+
+/**
+ * Extracts all images (img/picture/background) from the active tab via content script.
+ * @returns {Promise<RawImage[]>} Array of images in collectImageEls() order, or empty on failure.
+ */
+export const getImages = (): Promise<RawImage[]> => queryActiveTab<RawImage[]>('get_images', []);
+
+/**
+ * Toggles colored dashed outlines on all images in the active tab (green=ok, amber=missing alt, red=broken).
+ * @param {boolean} enabled - Whether to apply or remove highlights.
+ */
+export const highlightImages = (enabled: boolean): Promise<void> => sendToActiveTab('highlight_images', { enabled });
+
+/**
+ * Scrolls the active tab to an image by its collectImageEls() index and briefly highlights it.
+ * @param {number} index - Zero-based index in collectImageEls() order.
+ */
+export const scrollToImage = (index: number): Promise<void> => sendToActiveTab('scroll_to_image', { index });
 
 /** What the alt attribute says about an image; only 'missing' is an accessibility/SEO failure. */
 export type AltState = 'present' | 'decorative' | 'missing';

@@ -81,7 +81,13 @@ const VALID_ACTIONS = [
   'images_open',
   'schema_view',
   'schema_copy',
-  'schema_export'
+  'schema_export',
+  'robots_view',
+  'robots_goto_line',
+  'robots_copy',
+  'robots_open',
+  'robots_ai_toggle',
+  'robots_wrap_toggle'
 ];
 
 serve(async (req) => {

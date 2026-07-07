@@ -1,0 +1,9 @@
+Disallow: /early
+
+User-agent: *
+Dissallow: /typo
+Disallow: /admin
+Noindex: /retired
+Crawl-delay: 10
+Disallow: example.com/full-path
+Allow: /public
