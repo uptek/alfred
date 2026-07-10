@@ -14,6 +14,8 @@ App comparison is back on the Shopify App Store. Collect apps while you browse a
 - Share a comparison with a link, copy it as Markdown, or download it as CSV or JSON. Shared links open for anyone with Alfred installed.
 - Turn it off anytime under App Store settings.
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-compare-apps.mp4"></video>
+
 ## 2026.07.06
 @ 2026-07-06
 
@@ -26,7 +28,7 @@ New Robots.txt tab in the popup fetches and analyzes any site's robots.txt — n
 - Syntax-highlighted source with line numbers, click-to-jump from any finding, line wrapping, and one-click copy or open.
 - Friendly explanations for edge cases: missing robots.txt (404), server errors, and files that accidentally serve HTML.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-robots-txt.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-robots-txt.mp4"></video>
 
 ## 2026.06.24
 @ 2026-06-24

@@ -22,6 +22,10 @@
           "Share a comparison with a link, copy it as Markdown, or download it as CSV or JSON. Shared links open for anyone with Alfred installed.",
           "Turn it off anytime under App Store settings."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-compare-apps.mp4"
       }
     ]
   },
