@@ -63,6 +63,7 @@ declare interface AlfredSettings {
   appStore?: {
     searchIndexing?: boolean;
     enhancedPartnerPages?: boolean;
+    compareApps?: boolean;
   };
   collaboratorAccess?: {
     presets?: boolean;
@@ -75,6 +76,66 @@ declare interface AlfredSettings {
     warnBeforeClosingCodeEditor?: boolean;
     themeListUtils?: boolean;
   };
+}
+
+declare interface AppListingPlan {
+  name?: string | undefined;
+  price?: string | undefined;
+  features: string[];
+}
+
+declare interface AppListingLink {
+  label: string;
+  url: string;
+}
+
+declare interface AppListingDataAccessItem {
+  name: string;
+  details?: string | undefined;
+}
+
+declare interface AppListingDataAccess {
+  group: string;
+  summary?: string | undefined;
+  items: AppListingDataAccessItem[];
+}
+
+declare interface AppListingRatingCount {
+  stars: number;
+  count: string;
+  percent: number;
+}
+
+declare interface AppListing {
+  handle: string;
+  url: string;
+  name?: string | undefined;
+  tagline?: string | undefined;
+  iconUrl?: string | undefined;
+  developerName?: string | undefined;
+  developerUrl?: string | undefined;
+  rating?: number | undefined;
+  reviewCount?: number | undefined;
+  builtForShopify: boolean;
+  pricingSummary?: string | undefined;
+  plans: AppListingPlan[];
+  hasFreePlan: boolean;
+  hasFreeTrial: boolean;
+  worksWith: string[];
+  launchDate?: string | undefined;
+  languages?: string | undefined;
+  categories: string[];
+  screenshots: string[];
+  ratingDistribution: AppListingRatingCount[];
+  freeTrialDays?: number | undefined;
+  links: AppListingLink[];
+  dataAccess: AppListingDataAccess[];
+}
+
+declare interface CompareTrayItem {
+  handle: string;
+  name: string;
+  iconUrl?: string | undefined;
 }
 
 declare interface SettingItem {

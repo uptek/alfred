@@ -1,0 +1,21 @@
+/* Manifest CSS is injected before first paint, so this hides the native 404
+   content during the gap before the content script (document_idle) takes
+   over. The script adds .alfred-compare-ready to <html> once it has mounted
+   the comparison or decided to leave the native page alone. The delayed
+   animation is a failsafe: if the script never runs, the page reveals
+   itself after 4s instead of staying blank. */
+@keyframes alfred-compare-reveal {
+  to {
+    visibility: visible;
+  }
+}
+
+main {
+  visibility: hidden;
+  animation: alfred-compare-reveal 0s 4s forwards;
+}
+
+html.alfred-compare-ready main {
+  visibility: visible;
+  animation: none;
+}

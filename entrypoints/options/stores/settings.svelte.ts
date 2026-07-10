@@ -31,7 +31,8 @@ const defaultSettings: AlfredSettings = {
   },
   appStore: {
     searchIndexing: true,
-    enhancedPartnerPages: true
+    enhancedPartnerPages: true,
+    compareApps: true
   },
   collaboratorAccess: {
     presets: true,
