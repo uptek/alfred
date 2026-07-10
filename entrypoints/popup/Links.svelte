@@ -158,6 +158,7 @@
 
     let next = 0;
     const worker = async () => {
+      // eslint-disable-next-line no-unmodified-loop-condition
       while (next < urls.length && run === checkRun) {
         const url = urls[next++];
         const res = await checkLinkStatus(url);
