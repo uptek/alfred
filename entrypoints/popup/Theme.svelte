@@ -487,9 +487,9 @@
 
   /* Toggle block */
   .toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  .toggle__track { width: 28px; height: 16px; background: var(--bg-hover); border-radius: 8px; position: relative; transition: background 0.2s; cursor: pointer; flex-shrink: 0; }
+  .toggle__track { width: 28px; height: 16px; background: var(--border); border-radius: 8px; position: relative; transition: background 0.2s; cursor: pointer; flex-shrink: 0; }
   .toggle__track.on { background: var(--accent); }
-  .toggle__knob { width: 12px; height: 12px; background: var(--bg); border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.15s; box-shadow: var(--shadow-knob); }
+  .toggle__knob { width: 12px; height: 12px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.15s; box-shadow: var(--shadow-knob); }
   .toggle__track.on .toggle__knob { transform: translateX(12px); }
   .toggle__text { font-size: 11.5px; color: var(--text-muted); font-weight: 450; }
 

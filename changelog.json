@@ -1,5 +1,27 @@
 [
   {
+    "version": "2026.07.14",
+    "date": "2026-07-14",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Dark Mode"
+      },
+      {
+        "type": "paragraph",
+        "content": "The popup now has a dark mode, so it no longer glares white when your browser is set to dark."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Follows your system light/dark preference automatically.",
+          "Prefer to lock it? Pick System, Light, or Dark under the popup's Settings tab.",
+          "Every tab is tuned for dark: Theme inspector, Links, Images, Schema, Robots, and Settings all stay readable."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.07.10",
     "date": "2026-07-10",
     "changes": [
