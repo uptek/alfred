@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.07.14
+@ 2026-07-14
+
+### Dark Mode
+The popup now has a dark mode, so it no longer glares white when your browser is set to dark.
+
+- Follows your system light/dark preference automatically.
+- Prefer to lock it? Pick System, Light, or Dark under the popup's Settings tab.
+- Every tab is tuned for dark: Theme inspector, Links, Images, Schema, Robots, and Settings all stay readable.
+
 ## 2026.07.10
 @ 2026-07-10
 
@@ -14,7 +24,7 @@ App comparison is back on the Shopify App Store. Collect apps while you browse a
 - Share a comparison with a link, copy it as Markdown, or download it as CSV or JSON. Shared links open for anyone with Alfred installed.
 - Turn it off anytime under App Store settings.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-compare-apps.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-compare-apps.mp4"></video>
 
 ## 2026.07.06
 @ 2026-07-06
