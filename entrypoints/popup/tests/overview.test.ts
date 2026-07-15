@@ -1,13 +1,18 @@
 import { describe, expect, test } from 'bun:test';
 import {
-  parseDirectives,
+  parseDirectives as pd,
   hasNoindex,
   hasNosnippet,
   normalizeUrl,
   canonicalInfo,
-  coreFindings
+  coreFindings,
+  directiveFindings,
+  technicalFindings,
+  rawVsRenderedFindings,
+  robotsTxtAllows,
+  computeIndexability
 } from '../utils/overview';
-import type { RawOverview, OverviewNetwork } from '../utils/types';
+import type { RawOverview, OverviewNetwork, RobotsResponse, ShopifyContext } from '../utils/types';
 
 export const baseRaw = (over: Partial<RawOverview> = {}): RawOverview => ({
   url: 'https://shop.example.com/products/widget',
@@ -50,7 +55,7 @@ const codes = (findings: { code: string }[]) => findings.map((f) => f.code);
 
 describe('parseDirectives', () => {
   test('splits comma-separated meta robots into named directives', () => {
-    const ds = parseDirectives(baseRaw({ robotsMeta: ['noindex, nofollow'] }), null);
+    const ds = pd(baseRaw({ robotsMeta: ['noindex, nofollow'] }), null);
     expect(ds).toEqual([
       { name: 'noindex', value: null, source: 'meta' },
       { name: 'nofollow', value: null, source: 'meta' }
@@ -58,10 +63,7 @@ describe('parseDirectives', () => {
   });
 
   test('captures values, including colons inside unavailable_after dates', () => {
-    const ds = parseDirectives(
-      baseRaw({ robotsMeta: ['max-snippet:20, unavailable_after: 2026-12-01T00:00:00Z'] }),
-      null
-    );
+    const ds = pd(baseRaw({ robotsMeta: ['max-snippet:20, unavailable_after: 2026-12-01T00:00:00Z'] }), null);
     expect(ds).toEqual([
       { name: 'max-snippet', value: '20', source: 'meta' },
       { name: 'unavailable_after', value: '2026-12-01T00:00:00Z', source: 'meta' }
@@ -69,19 +71,19 @@ describe('parseDirectives', () => {
   });
 
   test('reads googlebot meta and X-Robots-Tag header sources', () => {
-    const ds = parseDirectives(baseRaw({ googlebotMeta: ['noindex'] }), baseNetwork({ xRobotsTag: 'noarchive' }));
+    const ds = pd(baseRaw({ googlebotMeta: ['noindex'] }), baseNetwork({ xRobotsTag: 'noarchive' }));
     expect(ds).toContainEqual({ name: 'noindex', value: null, source: 'googlebot' });
     expect(ds).toContainEqual({ name: 'noarchive', value: null, source: 'header' });
   });
 
   test('unwraps bot-scoped X-Robots-Tag form "googlebot: noindex"', () => {
-    const ds = parseDirectives(baseRaw(), baseNetwork({ xRobotsTag: 'googlebot: noindex, nofollow' }));
+    const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'googlebot: noindex, nofollow' }));
     expect(ds).toContainEqual({ name: 'noindex', value: null, source: 'header' });
     expect(ds).toContainEqual({ name: 'nofollow', value: null, source: 'header' });
   });
 
   test('returns empty for null inputs', () => {
-    expect(parseDirectives(null, null)).toEqual([]);
+    expect(pd(null, null)).toEqual([]);
   });
 });
 
@@ -224,5 +226,180 @@ describe('coreFindings', () => {
     const elsewhereRaw = baseRaw({ url: 'https://shop.example.com/products/widget?variant=1' });
     const elsewhere = coreFindings(elsewhereRaw, canonicalInfo(elsewhereRaw));
     expect(elsewhere.find((f) => f.code === 'canonical-elsewhere')?.severity).toBe('info');
+  });
+});
+
+const baseShopify = (over: Partial<ShopifyContext> = {}): ShopifyContext => ({
+  isShopify: true,
+  pageType: 'product',
+  resourceId: '123',
+  shop: 'example.myshopify.com',
+  locale: 'en',
+  currency: 'USD',
+  country: 'US',
+  marketRoot: '/',
+  themeRole: 'main',
+  designMode: false,
+  ...over
+});
+
+const robotsResponse = (content: string): RobotsResponse => ({
+  ok: true,
+  status: 200,
+  content,
+  finalUrl: 'https://shop.example.com/robots.txt',
+  size: content.length,
+  truncated: false
+});
+
+describe('directiveFindings', () => {
+  test('noindex is error; nofollow and nosnippet are warnings', () => {
+    const f = directiveFindings(pd(baseRaw({ robotsMeta: ['noindex, nofollow, nosnippet'] }), null));
+    expect(f.find((x) => x.code === 'noindex')?.severity).toBe('error');
+    expect(f.find((x) => x.code === 'nofollow')?.severity).toBe('warning');
+    expect(f.find((x) => x.code === 'nosnippet')?.severity).toBe('warning');
+    expect(f.find((x) => x.code === 'nosnippet')?.message).toContain('AI Overviews');
+  });
+
+  test('unavailable_after warns with the date; noai is info', () => {
+    const f = directiveFindings(pd(baseRaw({ robotsMeta: ['unavailable_after: 2026-12-01, noai'] }), null));
+    expect(f.find((x) => x.code === 'unavailable-after')?.message).toContain('2026-12-01');
+    expect(f.find((x) => x.code === 'noai')?.severity).toBe('info');
+  });
+
+  test('meta and header disagreement on noindex is flagged', () => {
+    const f = directiveFindings(pd(baseRaw(), baseNetwork({ xRobotsTag: 'noindex' })));
+    expect(f.map((x) => x.code)).toContain('robots-conflict');
+  });
+
+  test('clean directives produce nothing', () => {
+    expect(directiveFindings(pd(baseRaw(), baseNetwork()))).toEqual([]);
+  });
+});
+
+describe('technicalFindings', () => {
+  test('clean page produces nothing', () => {
+    expect(technicalFindings(baseRaw(), baseNetwork(), baseShopify())).toEqual([]);
+  });
+
+  test('missing viewport is error; user-scalable=no is warning', () => {
+    expect(codes(technicalFindings(baseRaw({ viewport: null }), null, null))).toContain('viewport-missing');
+    expect(
+      codes(technicalFindings(baseRaw({ viewport: 'width=device-width, user-scalable=no' }), null, null))
+    ).toContain('viewport-no-zoom');
+  });
+
+  test('missing lang and locale mismatch warn', () => {
+    expect(codes(technicalFindings(baseRaw({ lang: '' }), null, null))).toContain('lang-missing');
+    expect(codes(technicalFindings(baseRaw({ lang: 'de' }), null, baseShopify({ locale: 'en' })))).toContain(
+      'lang-locale-mismatch'
+    );
+    expect(codes(technicalFindings(baseRaw({ lang: 'en-GB' }), null, baseShopify({ locale: 'en' })))).not.toContain(
+      'lang-locale-mismatch'
+    );
+  });
+
+  test('non-UTF8 charset and missing favicon warn', () => {
+    expect(codes(technicalFindings(baseRaw({ charset: 'ISO-8859-1' }), null, null))).toContain('charset');
+    expect(codes(technicalFindings(baseRaw({ faviconHref: null }), null, null))).toContain('favicon-missing');
+  });
+
+  test('word count bands: <100 warning, <300 info, 300+ nothing', () => {
+    const thin = technicalFindings(baseRaw({ wordCount: 42 }), null, null);
+    expect(thin.find((f) => f.code === 'thin-content')?.severity).toBe('warning');
+    const light = technicalFindings(baseRaw({ wordCount: 200 }), null, null);
+    expect(light.find((f) => f.code === 'thin-content')?.severity).toBe('info');
+    expect(codes(technicalFindings(baseRaw({ wordCount: 500 }), null, null))).not.toContain('thin-content');
+  });
+
+  test('llms.txt presence is info; inverted dates are info', () => {
+    expect(codes(technicalFindings(baseRaw(), baseNetwork({ llmsTxt: true }), null))).toContain('llms-txt');
+    expect(
+      codes(
+        technicalFindings(
+          baseRaw({ publishedTime: '2026-05-01T00:00:00Z', modifiedTime: '2026-01-01T00:00:00Z' }),
+          null,
+          null
+        )
+      )
+    ).toContain('dates-inverted');
+  });
+});
+
+describe('rawVsRenderedFindings', () => {
+  test('identical raw and rendered produce nothing', () => {
+    expect(rawVsRenderedFindings(baseRaw(), baseNetwork())).toEqual([]);
+  });
+
+  test('JS-modified title/description are info; canonical/robots are warnings', () => {
+    const f = rawVsRenderedFindings(
+      baseRaw({ robotsMeta: ['noindex'] }),
+      baseNetwork({
+        rawTitle: 'Original server title for the widget page',
+        rawDescription: 'B'.repeat(120),
+        rawCanonical: 'https://shop.example.com/products/other',
+        rawRobotsMeta: null
+      })
+    );
+    expect(f.find((x) => x.code === 'title-js-modified')?.severity).toBe('info');
+    expect(f.find((x) => x.code === 'description-js-modified')?.severity).toBe('info');
+    expect(f.find((x) => x.code === 'canonical-js-modified')?.severity).toBe('warning');
+    expect(f.find((x) => x.code === 'robots-js-modified')?.severity).toBe('warning');
+  });
+
+  test('skips comparison when the refetch failed or was non-200', () => {
+    expect(rawVsRenderedFindings(baseRaw(), baseNetwork({ ok: false, status: 0 }))).toEqual([]);
+    expect(rawVsRenderedFindings(baseRaw(), baseNetwork({ status: 403, rawTitle: 'Blocked' }))).toEqual([]);
+  });
+});
+
+describe('robotsTxtAllows', () => {
+  test('null when robots.txt missing, non-2xx, or HTML', () => {
+    expect(robotsTxtAllows(null, 'https://a.com/x')).toBe(null);
+    expect(robotsTxtAllows({ ...robotsResponse(''), status: 404 }, 'https://a.com/x')).toBe(null);
+    expect(robotsTxtAllows(robotsResponse('<!doctype html><html></html>'), 'https://a.com/x')).toBe(null);
+  });
+
+  test('applies Googlebot matching to the page path', () => {
+    const robots = robotsResponse('User-agent: *\nDisallow: /private/');
+    expect(robotsTxtAllows(robots, 'https://a.com/private/page')).toBe(false);
+    expect(robotsTxtAllows(robots, 'https://a.com/public')).toBe(true);
+  });
+});
+
+describe('computeIndexability', () => {
+  const cleanDs = pd(baseRaw(), null);
+
+  test('indexable for a clean 200 page', () => {
+    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), true);
+    expect(v.status).toBe('indexable');
+  });
+
+  test('non-2xx status wins', () => {
+    const v = computeIndexability(baseRaw({ navStatus: 404 }), null, cleanDs, canonicalInfo(baseRaw()), true);
+    expect(v.status).toBe('not-indexable');
+    expect(v.reasons[0]).toContain('404');
+  });
+
+  test('noindex wins over canonical', () => {
+    const ds = pd(baseRaw({ robotsMeta: ['noindex'] }), null);
+    const v = computeIndexability(baseRaw(), baseNetwork(), ds, { kind: 'elsewhere', href: 'x' }, true);
+    expect(v.status).toBe('not-indexable');
+    expect(v.reasons[0]).toContain('noindex');
+  });
+
+  test('robots.txt block reports not-indexable with URL-only caveat', () => {
+    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), false);
+    expect(v.status).toBe('not-indexable');
+    expect(v.reasons[0]).toContain('robots.txt');
+  });
+
+  test('canonical elsewhere yields canonicalized', () => {
+    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, { kind: 'elsewhere', href: 'x' }, true);
+    expect(v.status).toBe('canonicalized');
+  });
+
+  test('unknown when raw data missing', () => {
+    expect(computeIndexability(null, null, [], { kind: 'missing', href: null }, null).status).toBe('unknown');
   });
 });
