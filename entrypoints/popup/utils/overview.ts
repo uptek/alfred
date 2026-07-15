@@ -231,21 +231,21 @@ export function directiveFindings(ds: RobotsDirective[]): OverviewFinding[] {
     findings.push({
       severity: 'error',
       code: 'noindex',
-      message: `noindex ${src.source === 'header' ? 'in X-Robots-Tag header' : 'in meta robots'} — page is excluded from search`
+      message: `noindex ${src.source === 'header' ? 'in X-Robots-Tag header' : 'in meta robots'}: page is excluded from search`
     });
   }
   if (hasNofollow(ds)) {
     findings.push({
       severity: 'warning',
       code: 'nofollow',
-      message: 'nofollow — links on this page pass no signals'
+      message: 'nofollow: links on this page pass no signals'
     });
   }
   if (hasNosnippet(ds)) {
     findings.push({
       severity: 'warning',
       code: 'nosnippet',
-      message: 'nosnippet — no text snippet in results, and content is excluded from Google AI Overviews'
+      message: 'nosnippet: no text snippet in results, and content is excluded from Google AI Overviews'
     });
   }
   const unavailable = ds.find((d) => d.name === 'unavailable_after');
@@ -253,15 +253,15 @@ export function directiveFindings(ds: RobotsDirective[]): OverviewFinding[] {
     findings.push({
       severity: 'warning',
       code: 'unavailable-after',
-      message: `unavailable_after: ${unavailable.value} — Google drops this page from results after that date`
+      message: `unavailable_after: ${unavailable.value}; Google drops this page from results after that date`
     });
   }
   const infoDirectives: [string, string][] = [
-    ['noarchive', 'noarchive — no cached copy is stored'],
-    ['noimageindex', 'noimageindex — images on this page are not indexed'],
-    ['notranslate', 'notranslate — no translation offered in results'],
-    ['noai', 'noai — AI-training opt-out signal present (non-standard, inconsistently honored)'],
-    ['noimageai', 'noimageai — image AI-training opt-out signal present (non-standard)']
+    ['noarchive', 'noarchive: no cached copy is stored'],
+    ['noimageindex', 'noimageindex: images on this page are not indexed'],
+    ['notranslate', 'notranslate: no translation offered in results'],
+    ['noai', 'noai: AI-training opt-out signal present (non-standard, inconsistently honored)'],
+    ['noimageai', 'noimageai: image AI-training opt-out signal present (non-standard)']
   ];
   for (const [name, message] of infoDirectives) {
     if (ds.some((d) => d.name === name)) findings.push({ severity: 'info', code: name, message });
@@ -270,19 +270,21 @@ export function directiveFindings(ds: RobotsDirective[]): OverviewFinding[] {
     findings.push({
       severity: 'info',
       code: 'max-image-preview-none',
-      message: 'max-image-preview:none — no image previews in results or Discover'
+      message: 'max-image-preview:none: no image previews in results or Discover'
     });
   }
   const metaSide = ds.filter((d) => d.source !== 'header');
   const headerSide = ds.filter((d) => d.source === 'header');
   const metaHasNoindex = hasNoindex(metaSide);
   const headerHasNoindex = hasNoindex(headerSide);
-  // Flag conflict when one side has noindex but the other doesn't; header-only noindex is easy to miss.
-  if ((metaSide.length > 0 || headerSide.length > 0) && metaHasNoindex !== headerHasNoindex) {
+  // Only a genuine conflict when both channels carry directives and disagree on noindex;
+  // header-only or meta-only noindex is not a conflict (the noindex finding above already
+  // attributes the source).
+  if (metaSide.length > 0 && headerSide.length > 0 && metaHasNoindex !== headerHasNoindex) {
     findings.push({
       severity: 'warning',
       code: 'robots-conflict',
-      message: 'Meta robots and X-Robots-Tag disagree on noindex — Google applies the most restrictive'
+      message: 'Meta robots and X-Robots-Tag disagree on noindex: Google applies the most restrictive'
     });
   }
   return findings;
@@ -300,20 +302,20 @@ export function technicalFindings(
     findings.push({
       severity: 'error',
       code: 'viewport-missing',
-      message: 'No viewport meta tag — page fails mobile usability'
+      message: 'No viewport meta tag: page fails mobile usability'
     });
   } else if (/user-scalable\s*=\s*(no|0)/i.test(raw.viewport) || /maximum-scale\s*=\s*1(\.0*)?\b/i.test(raw.viewport)) {
     findings.push({
       severity: 'warning',
       code: 'viewport-no-zoom',
-      message: 'Viewport blocks pinch-zoom — an accessibility failure'
+      message: 'Viewport blocks pinch-zoom: an accessibility failure'
     });
   }
   if (!raw.lang) {
     findings.push({
       severity: 'warning',
       code: 'lang-missing',
-      message: 'No lang attribute on <html> — hurts accessibility and language targeting'
+      message: 'No lang attribute on <html>: hurts accessibility and language targeting'
     });
   } else if (shopify?.locale) {
     const pageLang = raw.lang.toLowerCase().split('-')[0];
@@ -330,34 +332,34 @@ export function technicalFindings(
     findings.push({
       severity: 'warning',
       code: 'charset',
-      message: `Document charset is ${raw.charset} — UTF-8 is the modern default`
+      message: `Document charset is ${raw.charset}; UTF-8 is the modern default`
     });
   }
   if (!raw.faviconHref) {
     findings.push({
       severity: 'warning',
       code: 'favicon-missing',
-      message: 'No favicon link — Google shows favicons on every result'
+      message: 'No favicon link: Google shows favicons on every result'
     });
   }
   if (raw.wordCount < 100) {
     findings.push({
       severity: 'warning',
       code: 'thin-content',
-      message: `Only ${raw.wordCount} visible words — very thin content`
+      message: `Only ${raw.wordCount} visible words: very thin content`
     });
   } else if (raw.wordCount < 300) {
     findings.push({
       severity: 'info',
       code: 'thin-content',
-      message: `${raw.wordCount} visible words — on the thin side for a standard page`
+      message: `${raw.wordCount} visible words: on the thin side for a standard page`
     });
   }
   if (network?.llmsTxt) {
     findings.push({
       severity: 'info',
       code: 'llms-txt',
-      message: 'Site publishes /llms.txt — an AI-crawler content guide'
+      message: 'Site publishes /llms.txt: an AI-crawler content guide'
     });
   }
   if (raw.publishedTime && raw.modifiedTime) {
@@ -434,7 +436,7 @@ export function rawVsRenderedFindings(raw: RawOverview | null, network: Overview
       findings.push({
         severity: 'warning',
         code: 'canonical-js-modified',
-        message: 'Canonical differs between raw HTML and the rendered page — crawlers may read either'
+        message: 'Canonical differs between raw HTML and the rendered page; crawlers may read either'
       });
     }
   }
@@ -450,7 +452,7 @@ export function rawVsRenderedFindings(raw: RawOverview | null, network: Overview
 
 /**
  * Whether robots.txt lets Googlebot crawl the page. Null when there is no
- * usable robots.txt (missing, non-2xx, or an HTML error page) — treated as
+ * usable robots.txt (missing, non-2xx, or an HTML error page): treated as
  * fully allowed but not reported as a positive signal.
  */
 export function robotsTxtAllows(robots: RobotsResponse | null, url: string): boolean | null {

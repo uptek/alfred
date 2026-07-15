@@ -268,8 +268,14 @@ describe('directiveFindings', () => {
   });
 
   test('meta and header disagreement on noindex is flagged', () => {
-    const f = directiveFindings(pd(baseRaw(), baseNetwork({ xRobotsTag: 'noindex' })));
+    const f = directiveFindings(pd(baseRaw({ robotsMeta: ['index, follow'] }), baseNetwork({ xRobotsTag: 'noindex' })));
     expect(f.map((x) => x.code)).toContain('robots-conflict');
+  });
+
+  test('header-only noindex is not a conflict', () => {
+    const f = directiveFindings(pd(baseRaw(), baseNetwork({ xRobotsTag: 'noindex' })));
+    expect(f.map((x) => x.code)).not.toContain('robots-conflict');
+    expect(f.map((x) => x.code)).toContain('noindex');
   });
 
   test('clean directives produce nothing', () => {
