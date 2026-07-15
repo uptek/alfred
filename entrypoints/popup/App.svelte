@@ -6,6 +6,7 @@
   import { getImages, analyzeImages } from './utils/images';
   import { getSchema } from './utils/schema';
   import { getRobots, analyzeRobots } from './utils/robots';
+  import { getOverview, getOverviewNetwork, getShopifyContext, analyzeOverview } from './utils/overview';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
@@ -14,14 +15,26 @@
   import Images from './Images.svelte';
   import Schema from './Schema.svelte';
   import Robots from './Robots.svelte';
+  import Overview from './Overview.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
   import { getTabState, type PopupSection } from './stores/tabState.svelte';
-  import type { StoreInfo, RawHeading, RawLink, RawAsset, RawImage, RawSchemaBlock, RobotsResponse } from './utils/types';
+  import type {
+    StoreInfo,
+    RawHeading,
+    RawLink,
+    RawAsset,
+    RawImage,
+    RawSchemaBlock,
+    RobotsResponse,
+    RawOverview,
+    OverviewNetwork,
+    ShopifyContext
+  } from './utils/types';
 
   type TabId = PopupSection;
   const tabState = getTabState();
-  // Future tabs: 'apps' | 'products' | 'overview' | 'hreflangs' | 'social' | 'sitemaps'
+  // Future tabs: 'apps' | 'products' | 'hreflangs' | 'social' | 'sitemaps'
 
   interface Tab {
     id: TabId;
@@ -47,6 +60,10 @@
   let rawSchema = $state<RawSchemaBlock[]>([]);
   let rawRobots = $state<RobotsResponse | null>(null);
   let robotsLoading = $state(true);
+  let rawOverview = $state<RawOverview | null>(null);
+  let overviewNetwork = $state<OverviewNetwork | null>(null);
+  let shopifyContext = $state<ShopifyContext | null>(null);
+  let overviewNetworkLoading = $state(true);
   let loading = $state(true);
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
@@ -54,15 +71,23 @@
   const robotsErrorCount = $derived(
     analyzeRobots(rawRobots, storeInfo?.isShopify ?? false, storeInfo?.page_url ?? null).errorCount
   );
+  const overviewAnalysis = $derived(
+    analyzeOverview(rawOverview, overviewNetwork, shopifyContext, rawRobots, rawSchema)
+  );
 
   const seoTabs = $derived<Tab[]>([
+    {
+      id: 'overview' as TabId,
+      label: 'Overview',
+      icon: 'overview',
+      ...(overviewAnalysis.errorCount > 0 ? { badge: { count: overviewAnalysis.errorCount, color: 'red' as const } } : {})
+    },
     {
       id: 'headings' as TabId,
       label: 'Headings',
       icon: 'headings',
       ...(headingIssues.length > 0 ? { badge: { count: headingIssues.length, color: 'red' as const } } : {})
     },
-    // { id: 'overview', label: 'Overview', icon: 'overview' },
     { id: 'links' as TabId, label: 'Links', icon: 'links' },
     { id: 'assets' as TabId, label: 'Assets', icon: 'assets' },
     {
@@ -91,17 +116,24 @@
       rawRobots = robotsData;
       robotsLoading = false;
     });
+    getOverviewNetwork().then((networkData) => {
+      overviewNetwork = networkData;
+      overviewNetworkLoading = false;
+    });
     const fetchData = async () => {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      const [storeData, headingsData, linksData, assetsData, imagesData, schemaData] = await Promise.all([
-        getTheme(),
-        getHeadings(),
-        getLinks(),
-        getAssets(),
-        getImages(),
-        getSchema(),
-        tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
-      ]);
+      const [storeData, headingsData, linksData, assetsData, imagesData, schemaData, overviewData, contextData] =
+        await Promise.all([
+          getTheme(),
+          getHeadings(),
+          getLinks(),
+          getAssets(),
+          getImages(),
+          getSchema(),
+          getOverview(),
+          getShopifyContext(),
+          tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
+        ]);
       trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
       storeInfo = storeData;
       rawHeadings = headingsData;
@@ -109,11 +141,13 @@
       rawAssets = assetsData;
       rawImages = imagesData;
       rawSchema = schemaData;
-      // A restored section wins; otherwise non-Shopify pages skip the Theme tab.
+      rawOverview = overviewData;
+      shopifyContext = contextData;
+      // A restored section wins; otherwise non-Shopify pages land on Overview.
       if (tabState.restoredActiveSection) {
         activeTab = tabState.restoredActiveSection;
       } else if (!storeData?.isShopify) {
-        activeTab = 'headings';
+        activeTab = 'overview';
       }
       loading = false;
     };
@@ -143,13 +177,13 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
   {:else if icon === 'robots'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4M8 5l4 4 4-4"/></svg>
+  {:else if icon === 'overview'}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
   <!-- Future tab icons (uncomment as tabs are enabled)
   {:else if icon === 'apps'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
   {:else if icon === 'products'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg>
-  {:else if icon === 'overview'}
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
   {:else if icon === 'hreflangs'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
   {:else if icon === 'social'}
@@ -242,6 +276,17 @@
               <p>Navigate to a Shopify store to see theme details</p>
             </div>
           {/if}
+        {:else if activeTab === 'overview'}
+          <Overview
+            raw={rawOverview}
+            network={overviewNetwork}
+            networkLoading={overviewNetworkLoading}
+            shopify={shopifyContext}
+            analysis={overviewAnalysis}
+            links={rawLinks}
+            headings={rawHeadings}
+            imageCount={rawImages.length}
+          />
         {:else if activeTab === 'headings'}
           <Headings headings={rawHeadings} issues={headingIssues} />
         {:else if activeTab === 'links'}
