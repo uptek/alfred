@@ -4,6 +4,7 @@ import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
 import { headingText } from './popup/utils/headings';
 import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/utils/links';
+import { looksLikeHtml } from './popup/utils/robots';
 import {
   isExternalAssetUrl,
   isRenderBlockingScript,
@@ -608,6 +609,108 @@ export default defineContentScript({
           .catch(() => {
             sendResponse({ ok: false, status: 0, content: '', finalUrl: '', size: 0, truncated: false });
           });
+        return true;
+      }
+
+      /**
+       * Extracts everything the Overview tab reads from the live DOM: head
+       * meta, canonical links, document facts, visible word count, and the
+       * navigation HTTP status.
+       * @returns {import('./popup/utils/types').RawOverview}
+       */
+      if (request.action === 'get_overview') {
+        const metaContents = (name: string): string[] =>
+          Array.from(document.querySelectorAll<HTMLMetaElement>(`meta[name="${name}" i]`)).map(
+            (m) => m.getAttribute('content') ?? ''
+          );
+        const propContent = (prop: string): string | null =>
+          document.querySelector<HTMLMetaElement>(`meta[property="${prop}" i]`)?.getAttribute('content') ?? null;
+        const canonicals = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="canonical" i]')).map(
+          (el) => ({
+            raw: el.getAttribute('href') ?? '',
+            resolved: el.href,
+            inHead: document.head?.contains(el) ?? false
+          })
+        );
+        const favicon = document.querySelector<HTMLLinkElement>('link[rel~="icon" i]');
+        // innerText respects CSS visibility, so hidden text doesn't inflate the count.
+        const textRoot = document.querySelector<HTMLElement>('main') ?? document.body;
+        const wordCount = textRoot ? textRoot.innerText.trim().split(/\s+/).filter(Boolean).length : 0;
+        let navStatus = 0;
+        try {
+          const nav = performance.getEntriesByType('navigation')[0] as
+            | (PerformanceNavigationTiming & { responseStatus?: number })
+            | undefined;
+          navStatus = nav?.responseStatus ?? 0;
+        } catch {
+          // Navigation Timing unavailable; status stays unknown
+        }
+        sendResponse({
+          url: location.href,
+          titles: Array.from(document.querySelectorAll('title')).map((t) => t.textContent?.trim() ?? ''),
+          descriptions: metaContents('description'),
+          robotsMeta: metaContents('robots'),
+          googlebotMeta: metaContents('googlebot'),
+          canonicals,
+          viewport: document.querySelector<HTMLMetaElement>('meta[name="viewport" i]')?.getAttribute('content') ?? null,
+          charset: document.characterSet,
+          lang: document.documentElement.lang,
+          faviconHref: favicon?.href ?? null,
+          ogSiteName: propContent('og:site_name'),
+          publishedTime: propContent('article:published_time'),
+          modifiedTime: propContent('article:modified_time'),
+          wordCount,
+          navStatus
+        });
+        return false;
+      }
+
+      /**
+       * Network-level overview data: re-fetches the current URL from the page
+       * context (rides its cache/cookies) for the HTTP status, X-Robots-Tag
+       * header, and raw pre-JavaScript head tags, plus an /llms.txt probe.
+       * @returns {import('./popup/utils/types').OverviewNetwork}
+       */
+      if (request.action === 'get_overview_network') {
+        const MAX_HTML_BYTES = 1024 * 1024;
+        const pageFetch = fetch(location.href, { signal: AbortSignal.timeout(8000) })
+          .then(async (res) => {
+            const base = {
+              ok: true,
+              status: res.status,
+              xRobotsTag: res.headers.get('x-robots-tag'),
+              rawTitle: null as string | null,
+              rawDescription: null as string | null,
+              rawCanonical: null as string | null,
+              rawRobotsMeta: null as string | null
+            };
+            try {
+              const html = (await res.text()).slice(0, MAX_HTML_BYTES);
+              const doc = new DOMParser().parseFromString(html, 'text/html');
+              base.rawTitle = doc.querySelector('title')?.textContent?.trim() ?? null;
+              base.rawDescription = doc.querySelector('meta[name="description" i]')?.getAttribute('content') ?? null;
+              base.rawCanonical = doc.querySelector('link[rel="canonical" i]')?.getAttribute('href') ?? null;
+              base.rawRobotsMeta = doc.querySelector('meta[name="robots" i]')?.getAttribute('content') ?? null;
+            } catch {
+              // Body unreadable; the header-level data is still useful
+            }
+            return base;
+          })
+          .catch(() => ({
+            ok: false,
+            status: 0,
+            xRobotsTag: null,
+            rawTitle: null,
+            rawDescription: null,
+            rawCanonical: null,
+            rawRobotsMeta: null
+          }));
+        // SPA fallbacks serve HTML at any path with a 200, so a status check
+        // alone would false-positive; require the body to not look like HTML.
+        const llmsFetch = fetch(`${location.origin}/llms.txt`, { signal: AbortSignal.timeout(8000) })
+          .then(async (res) => res.ok && !looksLikeHtml((await res.text()).slice(0, 4096)))
+          .catch(() => false);
+        Promise.all([pageFetch, llmsFetch]).then(([page, llmsTxt]) => sendResponse({ ...page, llmsTxt }));
         return true;
       }
 
