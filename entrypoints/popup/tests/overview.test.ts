@@ -183,6 +183,13 @@ describe('coreFindings', () => {
     expect(codes(coreFindings(raw, canonicalInfo(raw)))).toContain('title-multiple');
   });
 
+  test('ignores an empty title tag alongside a real one', () => {
+    const raw = baseRaw({ titles: ['One title that is long enough here', ''] });
+    const found = codes(coreFindings(raw, canonicalInfo(raw)));
+    expect(found).not.toContain('title-multiple');
+    expect(found).not.toContain('title-missing');
+  });
+
   test('flags missing/short/long description', () => {
     expect(codes(coreFindings(baseRaw({ descriptions: [] }), canonicalInfo(baseRaw())))).toContain(
       'description-missing'

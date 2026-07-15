@@ -119,11 +119,11 @@ export function coreFindings(raw: RawOverview | null, canonical: CanonicalInfo):
   if (titles.length === 0) {
     findings.push({ severity: 'error', code: 'title-missing', message: 'Page has no <title> tag' });
   } else {
-    if (raw.titles.length > 1) {
+    if (titles.length > 1) {
       findings.push({
         severity: 'error',
         code: 'title-multiple',
-        message: `${raw.titles.length} <title> tags found; search engines may pick either one`
+        message: `${titles.length} <title> tags found; search engines may pick either one`
       });
     }
     const len = titles[0]!.length;
@@ -147,7 +147,7 @@ export function coreFindings(raw: RawOverview | null, canonical: CanonicalInfo):
     findings.push({
       severity: 'error',
       code: 'description-missing',
-      message: 'No meta description, Google will compose its own snippet'
+      message: 'No meta description; Google will compose its own snippet'
     });
   } else {
     if (raw.descriptions.length > 1) {
@@ -181,7 +181,7 @@ export function coreFindings(raw: RawOverview | null, canonical: CanonicalInfo):
       findings.push({
         severity: 'error',
         code: 'canonical-multiple',
-        message: 'Multiple conflicting canonical tags, Google ignores all of them'
+        message: 'Multiple conflicting canonical tags; Google ignores all of them'
       });
       break;
     case 'cross-domain':
