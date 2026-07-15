@@ -603,6 +603,13 @@ describe('socialProfiles', () => {
 });
 
 describe('coverage: edge cases', () => {
+  test('X-Robots-Tag scoped to other bots does not affect the verdict', () => {
+    const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'otherbot: noindex' }));
+    expect(ds).toEqual([]);
+    const scoped = pd(baseRaw(), baseNetwork({ xRobotsTag: 'googlebot: noindex' }));
+    expect(scoped).toContainEqual({ name: 'noindex', value: null, source: 'header' });
+  });
+
   test('whitespace-only title is treated as missing, matching description handling', () => {
     const raw = baseRaw({ titles: ['   '] });
     expect(codes(coreFindings(raw, canonicalInfo(raw)))).toContain('title-missing');

@@ -688,7 +688,7 @@ export default defineContentScript({
           );
         const propContent = (prop: string): string | null =>
           document.querySelector<HTMLMetaElement>(`meta[property="${prop}" i]`)?.getAttribute('content') ?? null;
-        const canonicals = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="canonical" i]')).map(
+        const canonicals = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="canonical" i]')).map(
           (el) => ({
             raw: el.getAttribute('href') ?? '',
             resolved: el.href,
@@ -710,7 +710,11 @@ export default defineContentScript({
         }
         sendResponse({
           url: location.href,
-          titles: Array.from(document.querySelectorAll('title')).map((t) => t.textContent?.trim() ?? ''),
+          titles: Array.from(document.querySelectorAll('title'))
+            // Inline SVG icons carry accessibility <title> elements; only HTML
+            // titles are document titles.
+            .filter((t) => t.namespaceURI === 'http://www.w3.org/1999/xhtml')
+            .map((t) => t.textContent?.trim() ?? ''),
           descriptions: metaContents('description'),
           robotsMeta: metaContents('robots'),
           googlebotMeta: metaContents('googlebot'),
@@ -752,7 +756,7 @@ export default defineContentScript({
               const doc = new DOMParser().parseFromString(html, 'text/html');
               base.rawTitle = doc.querySelector('title')?.textContent?.trim() ?? null;
               base.rawDescription = doc.querySelector('meta[name="description" i]')?.getAttribute('content') ?? null;
-              base.rawCanonical = doc.querySelector('link[rel="canonical" i]')?.getAttribute('href') ?? null;
+              base.rawCanonical = doc.querySelector('link[rel~="canonical" i]')?.getAttribute('href') ?? null;
               base.rawRobotsMeta = doc.querySelector('meta[name="robots" i]')?.getAttribute('content') ?? null;
             } catch {
               // Body unreadable; the header-level data is still useful

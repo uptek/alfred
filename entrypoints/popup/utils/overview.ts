@@ -59,8 +59,10 @@ export function parseDirectives(raw: RawOverview | null, network: OverviewNetwor
       const value = colon === -1 ? null : token.slice(colon + 1).trim();
       if (!name) continue;
       // X-Robots-Tag may scope directives to one bot: "googlebot: noindex".
+      // Only Googlebot's scope affects the Google indexability verdict;
+      // directives scoped to other bots are dropped.
       if (source === 'header' && value !== null && !KNOWN_DIRECTIVES.has(name)) {
-        push(value, source);
+        if (name === 'googlebot') push(value, source);
         continue;
       }
       out.push({ name, value, source });
