@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thin content page: word count finding must fire</title>
+    <meta
+      name="description"
+      content="A page with a clean head but a very short body, so the only finding should be thin content under one hundred words while everything else stays clean." />
+    <link rel="canonical" href="http://localhost:4242/overview/thin-content.html" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Overview tab</div>
+      <ul>
+        <li>Verdict: Indexable (green), everything else clean</li>
+        <li>Word Count row shows a low number with a yellow Thin pill</li>
+        <li>Finding: thin content (warning, under 100 words)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        This page is short on purpose. It has a clean head, a self-referencing canonical, a viewport tag, a favicon, and
+        a proper lang attribute, but the body below is nearly empty. There is nothing else to read here beyond this
+        single short paragraph, which keeps the visible word count for the analyzer well under one hundred words so the
+        thin-content warning is guaranteed to fire on this fixture.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
