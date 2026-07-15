@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   parseDirectives as pd,
   hasNoindex,
+  hasNofollow,
   hasNosnippet,
   normalizeUrl,
   canonicalInfo,
@@ -598,6 +599,42 @@ describe('socialProfiles', () => {
         mkLink('https://x.com/intent/tweet?text=hi')
       ])
     ).toEqual([]);
+  });
+});
+
+describe('coverage: edge cases', () => {
+  test('hasNofollow matches nofollow and none', () => {
+    expect(hasNofollow([{ name: 'none', value: null, source: 'meta' }])).toBe(true);
+    expect(hasNofollow([{ name: 'nofollow', value: null, source: 'header' }])).toBe(true);
+    expect(hasNofollow([{ name: 'noindex', value: null, source: 'meta' }])).toBe(false);
+  });
+
+  test('normalizeUrl falls back to the raw input when it cannot be parsed', () => {
+    expect(normalizeUrl('not a url')).toBe('not a url');
+  });
+
+  test('canonicalInfo treats an unparseable canonical target as multiple', () => {
+    const raw = baseRaw({
+      canonicals: [{ raw: 'not a url', resolved: 'not a url', inHead: true }]
+    });
+    expect(canonicalInfo(raw).kind).toBe('multiple');
+  });
+
+  test('technicalFindings: empty-string charset is not flagged, maximum-scale=1 blocks zoom', () => {
+    expect(codes(technicalFindings(baseRaw({ charset: '' }), null, null))).not.toContain('charset');
+    expect(
+      codes(technicalFindings(baseRaw({ viewport: 'width=device-width, maximum-scale=1' }), null, null))
+    ).toContain('viewport-no-zoom');
+  });
+
+  test('detectPageType: /search maps to searchresults, an unparseable URL yields null', () => {
+    expect(detectPageType('https://a.com/search', null)).toBe('searchresults');
+    expect(detectPageType('not a url', null)).toBe(null);
+  });
+
+  test('schemaDates finds a dateModified with no datePublished present', () => {
+    const block = mkSchema(JSON.stringify({ '@type': 'Article', dateModified: '2026-04-01' }));
+    expect(schemaDates([block])).toEqual({ published: null, modified: '2026-04-01' });
   });
 });
 
