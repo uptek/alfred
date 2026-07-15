@@ -603,6 +603,11 @@ describe('socialProfiles', () => {
 });
 
 describe('coverage: edge cases', () => {
+  test('whitespace-only title is treated as missing, matching description handling', () => {
+    const raw = baseRaw({ titles: ['   '] });
+    expect(codes(coreFindings(raw, canonicalInfo(raw)))).toContain('title-missing');
+  });
+
   test('hasNofollow matches nofollow and none', () => {
     expect(hasNofollow([{ name: 'none', value: null, source: 'meta' }])).toBe(true);
     expect(hasNofollow([{ name: 'nofollow', value: null, source: 'header' }])).toBe(true);

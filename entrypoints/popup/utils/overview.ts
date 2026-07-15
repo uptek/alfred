@@ -122,7 +122,7 @@ export function canonicalInfo(raw: RawOverview | null): CanonicalInfo {
 export function coreFindings(raw: RawOverview | null, canonical: CanonicalInfo): OverviewFinding[] {
   if (!raw) return [];
   const findings: OverviewFinding[] = [];
-  const titles = raw.titles.filter((t) => t.length > 0);
+  const titles = raw.titles.filter((t) => t.trim().length > 0);
   if (titles.length === 0) {
     findings.push({ severity: 'error', code: 'title-missing', message: 'Page has no <title> tag' });
   } else {

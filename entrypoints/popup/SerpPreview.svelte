@@ -1,5 +1,6 @@
 <script lang="ts">
   import { titleWidthPx, TITLE_MAX_PX } from './utils/text-width';
+  import { DESC_MAX } from './utils/overview';
 
   let {
     title,
@@ -15,20 +16,20 @@
     siteName: string | null;
   } = $props();
 
-  const DESC_MAX_CHARS = 160;
-
   const titleWidth = $derived(Math.round(titleWidthPx(title)));
 
   const displayTitle = $derived.by(() => {
     if (!title) return '(no title)';
     if (titleWidth <= TITLE_MAX_PX) return title;
-    let cut = title;
+    // The 600px cutoff lands near 60 characters, so a 200-char start bounds the
+    // per-character measurement loop even for pathologically long titles.
+    let cut = title.slice(0, 200);
     while (cut.length > 0 && titleWidthPx(cut.trimEnd() + ' ...') > TITLE_MAX_PX) cut = cut.slice(0, -1);
     return cut.trimEnd() + ' ...';
   });
 
   const displayDescription = $derived.by(() =>
-    description.length > DESC_MAX_CHARS ? description.slice(0, DESC_MAX_CHARS - 3).trimEnd() + ' ...' : description
+    description.length > DESC_MAX ? description.slice(0, DESC_MAX - 3).trimEnd() + ' ...' : description
   );
 
   const parsed = $derived.by(() => {
