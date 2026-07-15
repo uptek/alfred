@@ -178,3 +178,99 @@ export interface RawImage {
   broken: boolean; // loaded <img> with naturalWidth === 0
   oversized: boolean; // ships >4x the pixels its rendered box needs at the device DPR
 }
+
+export interface RawCanonical {
+  raw: string; // href attribute as written (detects relative canonicals)
+  resolved: string; // absolute URL after browser resolution
+  inHead: boolean;
+}
+
+export interface RawOverview {
+  url: string; // location.href
+  titles: string[]; // textContent of every <title>, DOM order
+  descriptions: string[]; // content of every meta[name="description"]
+  robotsMeta: string[]; // content of every meta[name="robots"]
+  googlebotMeta: string[]; // content of every meta[name="googlebot"]
+  canonicals: RawCanonical[];
+  viewport: string | null;
+  charset: string; // document.characterSet
+  lang: string; // documentElement.lang ('' when absent)
+  faviconHref: string | null; // first icon link, resolved
+  ogSiteName: string | null;
+  publishedTime: string | null; // meta[property="article:published_time"]
+  modifiedTime: string | null;
+  wordCount: number; // visible words in <main> (fallback <body>)
+  navStatus: number; // PerformanceNavigationTiming.responseStatus; 0 unknown
+}
+
+// Result of re-fetching the current URL from page context: HTTP-level data
+// plus head tags parsed from the raw (pre-JavaScript) HTML.
+export interface OverviewNetwork {
+  ok: boolean; // fetch reached the server
+  status: number; // HTTP status; 0 on network error
+  xRobotsTag: string | null;
+  rawTitle: string | null;
+  rawDescription: string | null;
+  rawCanonical: string | null; // href attribute as written in raw HTML
+  rawRobotsMeta: string | null;
+  llmsTxt: boolean; // /llms.txt exists and is plain text
+}
+
+// Main-world Shopify globals snapshot (window.Shopify + ShopifyAnalytics.meta).
+export interface ShopifyContext {
+  isShopify: boolean;
+  pageType: string | null; // ShopifyAnalytics.meta.page.pageType
+  resourceId: string | null;
+  shop: string | null; // permanent *.myshopify.com domain
+  locale: string | null;
+  currency: string | null;
+  country: string | null;
+  marketRoot: string | null; // Shopify.routes.root, e.g. '/fr/'
+  themeRole: string | null; // 'main' on the live theme
+  designMode: boolean; // true inside the theme editor
+}
+
+export interface RobotsDirective {
+  name: string; // lowercased, e.g. 'noindex', 'max-snippet'
+  value: string | null; // e.g. '0' for max-snippet:0
+  source: 'meta' | 'googlebot' | 'header';
+}
+
+export type CanonicalStateKind = 'self' | 'elsewhere' | 'cross-domain' | 'missing' | 'multiple';
+
+export interface CanonicalInfo {
+  kind: CanonicalStateKind;
+  href: string | null; // first canonical, resolved
+}
+
+export type IndexabilityStatus = 'indexable' | 'not-indexable' | 'canonicalized' | 'unknown';
+
+export interface IndexabilityVerdict {
+  status: IndexabilityStatus;
+  reasons: string[];
+}
+
+export type OverviewSeverity = 'error' | 'warning' | 'info';
+
+export interface OverviewFinding {
+  severity: OverviewSeverity;
+  code: string; // stable kebab-case id, e.g. 'title-long'
+  message: string;
+}
+
+export interface SocialProfile {
+  network: string; // display name, e.g. 'Facebook'
+  url: string;
+}
+
+export interface OverviewAnalysis {
+  indexability: IndexabilityVerdict;
+  findings: OverviewFinding[];
+  errorCount: number; // error-severity findings (sidebar badge)
+  title: { text: string | null; length: number };
+  description: { text: string | null; length: number };
+  canonical: CanonicalInfo;
+  directives: RobotsDirective[];
+  pageType: string | null; // Shopify page type, URL-derived fallback
+  dates: { published: string | null; modified: string | null };
+}
