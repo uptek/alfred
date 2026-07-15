@@ -9,9 +9,14 @@ import type {
   OverviewFinding,
   IndexabilityVerdict,
   RobotsResponse,
-  ShopifyContext
+  ShopifyContext,
+  RawSchemaBlock,
+  RawLink,
+  SocialProfile,
+  OverviewAnalysis
 } from './types';
 import { parseRobots, isAllowed, looksLikeHtml } from './robots';
+import { queryActiveTab } from './messaging';
 
 export const TITLE_MIN = 30;
 export const TITLE_MAX = 60;
@@ -505,3 +510,295 @@ export function computeIndexability(
     reasons: [`HTTP ${status || 200}, crawlable, no noindex, canonical OK`]
   };
 }
+
+/**
+ * Shopify page type: ShopifyAnalytics value when present, else URL patterns
+ * (with Markets locale prefixes like /fr or /en-ca stripped first).
+ */
+export function detectPageType(url: string, shopifyPageType: string | null): string | null {
+  if (shopifyPageType) return shopifyPageType;
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return null;
+  }
+  path = path.replace(/^\/[a-z]{2}(-[a-zA-Z]{2})?(?=\/|$)/, '') || '/';
+  if (path === '/') return 'home';
+  if (/^\/collections\/[^/]+\/products\//.test(path) || path.startsWith('/products/')) return 'product';
+  if (path === '/collections' || path === '/collections/') return 'list-collections';
+  if (path.startsWith('/collections/')) return 'collection';
+  if (/^\/blogs\/[^/]+\/./.test(path)) return 'article';
+  if (path.startsWith('/blogs/')) return 'blog';
+  if (path.startsWith('/pages/')) return 'page';
+  if (path === '/cart') return 'cart';
+  if (path === '/search') return 'searchresults';
+  if (path === '/password') return 'password';
+  return null;
+}
+
+/** Shopify-storefront-specific checks; empty on non-Shopify pages. */
+export function shopifyFindings(
+  raw: RawOverview | null,
+  shopify: ShopifyContext | null,
+  canonical: CanonicalInfo
+): OverviewFinding[] {
+  if (!raw || !shopify?.isShopify) return [];
+  const findings: OverviewFinding[] = [];
+  let url: URL;
+  try {
+    url = new URL(raw.url);
+  } catch {
+    return [];
+  }
+  const params = url.searchParams;
+
+  if (shopify.pageType === 'password' || url.pathname === '/password') {
+    findings.push({
+      severity: 'error',
+      code: 'password-page',
+      message: 'Store is password-protected; nothing on it can be crawled or indexed'
+    });
+  }
+
+  const isPreview =
+    params.has('preview_theme_id') ||
+    shopify.designMode ||
+    url.hostname.endsWith('.shopifypreview.com') ||
+    (shopify.themeRole !== null && shopify.themeRole !== 'main');
+  if (isPreview) {
+    findings.push({
+      severity: 'warning',
+      code: 'preview-mode',
+      message: 'Viewing a theme preview, not the live theme; SEO data may not match production'
+    });
+  }
+
+  if (url.hostname.endsWith('.myshopify.com')) {
+    findings.push({
+      severity: 'warning',
+      code: 'myshopify-domain',
+      message: 'Browsing the permanent .myshopify.com domain; a primary custom domain should 301 away from here'
+    });
+  }
+
+  if (/^\/([a-z]{2}(-[a-zA-Z]{2})?\/)?collections\/[^/]+\/products\//.test(url.pathname)) {
+    let canonicalIsBareProduct = false;
+    if (canonical.href) {
+      try {
+        const canonicalPath = new URL(canonical.href).pathname;
+        canonicalIsBareProduct = /\/products\/[^/]+/.test(canonicalPath) && !canonicalPath.includes('/collections/');
+      } catch {
+        canonicalIsBareProduct = false;
+      }
+    }
+    if (canonicalIsBareProduct) {
+      findings.push({
+        severity: 'info',
+        code: 'nested-product-path',
+        message: 'Collection-scoped product URL; canonical correctly points to the bare /products/ URL'
+      });
+    } else {
+      findings.push({
+        severity: 'warning',
+        code: 'nested-product-canonical',
+        message: 'Collection-scoped product URL without a canonical to the bare /products/ URL; duplicate-content risk'
+      });
+    }
+  }
+
+  if (params.has('variant') && canonical.href?.includes('variant=')) {
+    findings.push({
+      severity: 'warning',
+      code: 'variant-canonical',
+      message: 'Canonical keeps the ?variant= parameter; variant URLs should canonicalize to the base product'
+    });
+  }
+
+  const pageNumber = parseInt(params.get('page') ?? '', 10);
+  if (pageNumber > 1 && canonical.href) {
+    let canonicalPage: string | null = null;
+    try {
+      canonicalPage = new URL(canonical.href).searchParams.get('page');
+    } catch {
+      canonicalPage = null;
+    }
+    if (canonicalPage !== String(pageNumber)) {
+      findings.push({
+        severity: 'warning',
+        code: 'pagination-canonical',
+        message: `Page ${pageNumber} canonicalizes to ${canonicalPage === null ? 'page 1' : `page ${canonicalPage}`}; Google recommends paginated pages self-canonicalize`
+      });
+    }
+  }
+
+  const hasFilterParams = [...params.keys()].some(
+    (k) => k.startsWith('filter.') || k === 'sort_by' || k.startsWith('pf_')
+  );
+  const isTagPath = /^\/collections\/[^/]+\/[^/]+$/.test(url.pathname) && !url.pathname.includes('/products/');
+  if ((hasFilterParams || isTagPath) && detectPageType(raw.url, shopify.pageType) === 'collection') {
+    findings.push({
+      severity: 'info',
+      code: 'filtered-collection',
+      message: 'Filtered/sorted collection view; Shopify canonicalizes these to the base collection'
+    });
+  }
+
+  return findings;
+}
+
+/** First datePublished/dateModified found anywhere in the JSON-LD blocks. */
+export function schemaDates(schema: RawSchemaBlock[]): { published: string | null; modified: string | null } {
+  let published: string | null = null;
+  let modified: string | null = null;
+  const visit = (node: unknown): void => {
+    if (published && modified) return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    if (!node || typeof node !== 'object') return;
+    const obj = node as Record<string, unknown>;
+    if (!published && typeof obj.datePublished === 'string') published = obj.datePublished;
+    if (!modified && typeof obj.dateModified === 'string') modified = obj.dateModified;
+    for (const value of Object.values(obj)) visit(value);
+  };
+  for (const block of schema) {
+    if (block.parseError) continue;
+    try {
+      visit(JSON.parse(block.raw));
+    } catch {
+      // parseError should have caught this; skip defensively
+    }
+  }
+  return { published, modified };
+}
+
+const SOCIAL_HOSTS: [RegExp, string][] = [
+  [/(^|\.)facebook\.com$/, 'Facebook'],
+  [/(^|\.)instagram\.com$/, 'Instagram'],
+  [/(^|\.)(twitter|x)\.com$/, 'X (Twitter)'],
+  [/(^|\.)youtube\.com$/, 'YouTube'],
+  [/(^|\.)tiktok\.com$/, 'TikTok'],
+  [/(^|\.)pinterest\.[a-z.]+$/, 'Pinterest'],
+  [/(^|\.)linkedin\.com$/, 'LinkedIn'],
+  [/(^|\.)threads\.(net|com)$/, 'Threads']
+];
+
+// Share/intent endpoints are outbound actions, not profiles.
+const SHARE_PATH = /^\/(sharer|share|intent|shareArticle|pin\/create)/i;
+
+/** Social profile links found on the page, first hit per network. */
+export function socialProfiles(links: RawLink[]): SocialProfile[] {
+  const found = new Map<string, string>();
+  for (const link of links) {
+    let host: string;
+    let path: string;
+    try {
+      const u = new URL(link.href);
+      host = u.hostname.toLowerCase();
+      path = u.pathname;
+    } catch {
+      continue;
+    }
+    if (path.length <= 1 || SHARE_PATH.test(path)) continue;
+    for (const [pattern, network] of SOCIAL_HOSTS) {
+      if (pattern.test(host) && !found.has(network)) found.set(network, link.href);
+    }
+  }
+  return [...found].map(([network, url]) => ({ network, url }));
+}
+
+const SEVERITY_ORDER: Record<OverviewFinding['severity'], number> = { error: 0, warning: 1, info: 2 };
+
+/** Single entry point: combines every source into the tab's analysis. */
+export function analyzeOverview(
+  raw: RawOverview | null,
+  network: OverviewNetwork | null,
+  shopify: ShopifyContext | null,
+  robots: RobotsResponse | null,
+  schema: RawSchemaBlock[]
+): OverviewAnalysis {
+  const directives = parseDirectives(raw, network);
+  const canonical = canonicalInfo(raw);
+  const robotsAllowed = raw ? robotsTxtAllows(robots, raw.url) : null;
+  const indexability = computeIndexability(raw, network, directives, canonical, robotsAllowed);
+
+  const findings: OverviewFinding[] = [
+    ...coreFindings(raw, canonical),
+    ...directiveFindings(directives),
+    ...technicalFindings(raw, network, shopify),
+    ...rawVsRenderedFindings(raw, network),
+    ...shopifyFindings(raw, shopify, canonical)
+  ];
+
+  if (raw) {
+    const status = raw.navStatus || (network?.ok ? network.status : 0);
+    if (status && (status < 200 || status >= 300)) {
+      findings.push({ severity: 'error', code: 'http-status', message: `Page returned HTTP ${status}` });
+    }
+    if (robotsAllowed === false) {
+      findings.push({
+        severity: 'warning',
+        code: 'robots-blocked',
+        message: 'robots.txt blocks Googlebot from crawling this page'
+      });
+      if (hasNoindex(directives)) {
+        findings.push({
+          severity: 'warning',
+          code: 'robots-noindex-conflict',
+          message:
+            'Blocked by robots.txt AND noindex; Google never crawls the page, so it never sees the noindex; the URL can stay indexed'
+        });
+      }
+    }
+    if (hasNoindex(directives) && (canonical.kind === 'elsewhere' || canonical.kind === 'cross-domain')) {
+      findings.push({
+        severity: 'warning',
+        code: 'noindex-canonical-conflict',
+        message: 'noindex combined with a canonical to another URL sends contradictory signals'
+      });
+    }
+  }
+
+  findings.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+
+  const fallbackDates = schemaDates(schema);
+  const titleText = raw?.titles.find((t) => t.length > 0) ?? null;
+  const descriptionText = raw?.descriptions.find((d) => d.trim().length > 0) ?? null;
+
+  return {
+    indexability,
+    findings,
+    errorCount: findings.filter((f) => f.severity === 'error').length,
+    title: { text: titleText, length: titleText?.length ?? 0 },
+    description: { text: descriptionText, length: descriptionText?.length ?? 0 },
+    canonical,
+    directives,
+    pageType: raw ? detectPageType(raw.url, shopify?.pageType ?? null) : null,
+    dates: {
+      published: raw?.publishedTime ?? fallbackDates.published,
+      modified: raw?.modifiedTime ?? fallbackDates.modified
+    }
+  };
+}
+
+/** Fetches the DOM-extracted overview snapshot from the active tab. */
+export const getOverview = (): Promise<RawOverview | null> =>
+  queryActiveTab<RawOverview | null>('get_overview', null, (r) => !!r && typeof (r as RawOverview).url === 'string');
+
+/** Fetches the network-level overview data (status, headers, raw HTML head). */
+export const getOverviewNetwork = (): Promise<OverviewNetwork | null> =>
+  queryActiveTab<OverviewNetwork | null>(
+    'get_overview_network',
+    null,
+    (r) => !!r && typeof (r as OverviewNetwork).status === 'number'
+  );
+
+/** Fetches the main-world Shopify globals snapshot. */
+export const getShopifyContext = (): Promise<ShopifyContext | null> =>
+  queryActiveTab<ShopifyContext | null>(
+    'get_shopify_context',
+    null,
+    (r) => !!r && typeof (r as ShopifyContext).isShopify === 'boolean'
+  );

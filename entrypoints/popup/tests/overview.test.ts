@@ -10,9 +10,21 @@ import {
   technicalFindings,
   rawVsRenderedFindings,
   robotsTxtAllows,
-  computeIndexability
+  computeIndexability,
+  detectPageType,
+  shopifyFindings,
+  schemaDates,
+  socialProfiles,
+  analyzeOverview
 } from '../utils/overview';
-import type { RawOverview, OverviewNetwork, RobotsResponse, ShopifyContext } from '../utils/types';
+import type {
+  RawOverview,
+  OverviewNetwork,
+  RobotsResponse,
+  ShopifyContext,
+  RawLink,
+  RawSchemaBlock
+} from '../utils/types';
 
 export const baseRaw = (over: Partial<RawOverview> = {}): RawOverview => ({
   url: 'https://shop.example.com/products/widget',
@@ -407,5 +419,228 @@ describe('computeIndexability', () => {
 
   test('unknown when raw data missing', () => {
     expect(computeIndexability(null, null, [], { kind: 'missing', href: null }, null).status).toBe('unknown');
+  });
+});
+
+const mkLink = (href: string): RawLink => ({
+  index: 0,
+  href,
+  text: '',
+  rel: '',
+  kind: 'external',
+  isNofollow: false,
+  isSponsored: false,
+  isUgc: false,
+  isImage: false,
+  isHidden: false,
+  isInsecure: false,
+  isBrokenAnchor: false
+});
+
+const mkSchema = (raw: string): RawSchemaBlock => ({ index: 0, raw, parseError: null, placement: 'head' });
+
+describe('detectPageType', () => {
+  test('prefers the ShopifyAnalytics page type', () => {
+    expect(detectPageType('https://a.com/whatever', 'collection')).toBe('collection');
+  });
+
+  test('falls back to URL patterns, including Markets locale prefixes', () => {
+    expect(detectPageType('https://a.com/', null)).toBe('home');
+    expect(detectPageType('https://a.com/products/x', null)).toBe('product');
+    expect(detectPageType('https://a.com/collections/all/products/x', null)).toBe('product');
+    expect(detectPageType('https://a.com/collections/sale', null)).toBe('collection');
+    expect(detectPageType('https://a.com/blogs/news/hello-world', null)).toBe('article');
+    expect(detectPageType('https://a.com/pages/about', null)).toBe('page');
+    expect(detectPageType('https://a.com/cart', null)).toBe('cart');
+    expect(detectPageType('https://a.com/password', null)).toBe('password');
+    expect(detectPageType('https://a.com/fr/products/x', null)).toBe('product');
+    expect(detectPageType('https://a.com/en-ca/', null)).toBe('home');
+  });
+});
+
+describe('shopifyFindings', () => {
+  test('empty for non-Shopify pages', () => {
+    expect(shopifyFindings(baseRaw(), null, canonicalInfo(baseRaw()))).toEqual([]);
+    expect(shopifyFindings(baseRaw(), baseShopify({ isShopify: false }), canonicalInfo(baseRaw()))).toEqual([]);
+  });
+
+  test('password page is an error', () => {
+    const raw = baseRaw({ url: 'https://shop.example.com/password' });
+    const f = shopifyFindings(raw, baseShopify({ pageType: 'password' }), canonicalInfo(raw));
+    expect(f.find((x) => x.code === 'password-page')?.severity).toBe('error');
+  });
+
+  test('preview mode warns for preview_theme_id, non-main role, and design mode', () => {
+    const previewUrl = baseRaw({ url: 'https://shop.example.com/?preview_theme_id=99' });
+    expect(codes(shopifyFindings(previewUrl, baseShopify(), canonicalInfo(previewUrl)))).toContain('preview-mode');
+    expect(
+      codes(shopifyFindings(baseRaw(), baseShopify({ themeRole: 'unpublished' }), canonicalInfo(baseRaw())))
+    ).toContain('preview-mode');
+    expect(codes(shopifyFindings(baseRaw(), baseShopify({ designMode: true }), canonicalInfo(baseRaw())))).toContain(
+      'preview-mode'
+    );
+  });
+
+  test('warns when browsing on the myshopify.com domain', () => {
+    const raw = baseRaw({
+      url: 'https://example.myshopify.com/products/widget',
+      canonicals: [{ raw: '/products/widget', resolved: 'https://example.myshopify.com/products/widget', inHead: true }]
+    });
+    expect(codes(shopifyFindings(raw, baseShopify(), canonicalInfo(raw)))).toContain('myshopify-domain');
+  });
+
+  test('collection-scoped product URL: info when canonical is bare, warning otherwise', () => {
+    const good = baseRaw({
+      url: 'https://shop.example.com/collections/sale/products/widget',
+      canonicals: [{ raw: '/products/widget', resolved: 'https://shop.example.com/products/widget', inHead: true }]
+    });
+    expect(
+      shopifyFindings(good, baseShopify(), canonicalInfo(good)).find((f) => f.code === 'nested-product-path')?.severity
+    ).toBe('info');
+    const bad = baseRaw({
+      url: 'https://shop.example.com/collections/sale/products/widget',
+      canonicals: [
+        {
+          raw: '/collections/sale/products/widget',
+          resolved: 'https://shop.example.com/collections/sale/products/widget',
+          inHead: true
+        }
+      ]
+    });
+    expect(codes(shopifyFindings(bad, baseShopify(), canonicalInfo(bad)))).toContain('nested-product-canonical');
+  });
+
+  test('warns when canonical keeps the variant parameter', () => {
+    const raw = baseRaw({
+      url: 'https://shop.example.com/products/widget?variant=42',
+      canonicals: [
+        {
+          raw: '/products/widget?variant=42',
+          resolved: 'https://shop.example.com/products/widget?variant=42',
+          inHead: true
+        }
+      ]
+    });
+    expect(codes(shopifyFindings(raw, baseShopify(), canonicalInfo(raw)))).toContain('variant-canonical');
+  });
+
+  test('warns when page 2+ canonicalizes back to page 1', () => {
+    const raw = baseRaw({
+      url: 'https://shop.example.com/collections/sale?page=3',
+      canonicals: [{ raw: '/collections/sale', resolved: 'https://shop.example.com/collections/sale', inHead: true }]
+    });
+    expect(codes(shopifyFindings(raw, baseShopify({ pageType: 'collection' }), canonicalInfo(raw)))).toContain(
+      'pagination-canonical'
+    );
+    const selfCanonical = baseRaw({
+      url: 'https://shop.example.com/collections/sale?page=3',
+      canonicals: [
+        { raw: '/collections/sale?page=3', resolved: 'https://shop.example.com/collections/sale?page=3', inHead: true }
+      ]
+    });
+    expect(
+      codes(shopifyFindings(selfCanonical, baseShopify({ pageType: 'collection' }), canonicalInfo(selfCanonical)))
+    ).not.toContain('pagination-canonical');
+  });
+
+  test('filtered collection views are info', () => {
+    const raw = baseRaw({ url: 'https://shop.example.com/collections/sale?filter.v.price.gte=10' });
+    expect(codes(shopifyFindings(raw, baseShopify({ pageType: 'collection' }), canonicalInfo(raw)))).toContain(
+      'filtered-collection'
+    );
+  });
+});
+
+describe('schemaDates', () => {
+  test('finds dates nested inside @graph', () => {
+    const block = mkSchema(
+      JSON.stringify({
+        '@graph': [{ '@type': 'Article', datePublished: '2026-01-01', dateModified: '2026-02-01' }]
+      })
+    );
+    expect(schemaDates([block])).toEqual({ published: '2026-01-01', modified: '2026-02-01' });
+  });
+
+  test('returns nulls when absent and skips malformed blocks', () => {
+    expect(schemaDates([])).toEqual({ published: null, modified: null });
+    expect(schemaDates([{ index: 0, raw: '{bad', parseError: 'x', placement: 'head' }])).toEqual({
+      published: null,
+      modified: null
+    });
+  });
+});
+
+describe('socialProfiles', () => {
+  test('detects profile links and dedupes per network', () => {
+    const profiles = socialProfiles([
+      mkLink('https://www.facebook.com/example'),
+      mkLink('https://facebook.com/example-two'),
+      mkLink('https://www.instagram.com/example/'),
+      mkLink('https://x.com/example'),
+      mkLink('https://www.youtube.com/@example'),
+      mkLink('https://www.tiktok.com/@example')
+    ]);
+    expect(profiles.map((p) => p.network)).toEqual(['Facebook', 'Instagram', 'X (Twitter)', 'YouTube', 'TikTok']);
+  });
+
+  test('ignores bare domains and share/intent links', () => {
+    expect(
+      socialProfiles([
+        mkLink('https://www.facebook.com/'),
+        mkLink('https://www.facebook.com/sharer/sharer.php?u=x'),
+        mkLink('https://x.com/intent/tweet?text=hi')
+      ])
+    ).toEqual([]);
+  });
+});
+
+describe('analyzeOverview', () => {
+  test('assembles a clean analysis with zero errors', () => {
+    const analysis = analyzeOverview(
+      baseRaw(),
+      baseNetwork(),
+      baseShopify(),
+      robotsResponse('User-agent: *\nAllow: /'),
+      []
+    );
+    expect(analysis.indexability.status).toBe('indexable');
+    expect(analysis.errorCount).toBe(0);
+    expect(analysis.pageType).toBe('product');
+    expect(analysis.title.length).toBeGreaterThan(0);
+  });
+
+  test('counts error findings and sorts findings by severity', () => {
+    const raw = baseRaw({ titles: [], descriptions: [], robotsMeta: ['noindex'], canonicals: [] });
+    const analysis = analyzeOverview(raw, null, null, null, []);
+    expect(analysis.errorCount).toBe(3); // title-missing, description-missing, noindex
+    const severities = analysis.findings.map((f) => f.severity);
+    expect(severities.indexOf('info')).toBeGreaterThan(severities.lastIndexOf('error'));
+  });
+
+  test('flags the noindex + robots-block and noindex + canonical conflicts', () => {
+    const blockedNoindex = analyzeOverview(
+      baseRaw({ url: 'https://shop.example.com/private/x', robotsMeta: ['noindex'], canonicals: [] }),
+      null,
+      null,
+      robotsResponse('User-agent: *\nDisallow: /private/'),
+      []
+    );
+    expect(codes(blockedNoindex.findings)).toContain('robots-noindex-conflict');
+
+    const noindexCanonical = analyzeOverview(
+      baseRaw({ url: 'https://shop.example.com/products/widget?variant=1', robotsMeta: ['noindex'] }),
+      null,
+      null,
+      null,
+      []
+    );
+    expect(codes(noindexCanonical.findings)).toContain('noindex-canonical-conflict');
+  });
+
+  test('falls back to schema dates when article meta is absent', () => {
+    const analysis = analyzeOverview(baseRaw(), null, null, null, [
+      mkSchema(JSON.stringify({ '@type': 'Article', datePublished: '2026-03-01' }))
+    ]);
+    expect(analysis.dates.published).toBe('2026-03-01');
   });
 });
