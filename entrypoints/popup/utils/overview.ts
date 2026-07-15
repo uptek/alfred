@@ -104,8 +104,15 @@ export function canonicalInfo(raw: RawOverview | null): CanonicalInfo {
   } catch {
     return { kind: 'multiple', href: first.resolved };
   }
-  const pageHost = new URL(raw.url).hostname;
-  if (targetHost !== pageHost) return { kind: 'cross-domain', href: first.resolved };
+  // A malformed page URL means host comparison is impossible; fall through to
+  // the string comparison below, which normalizeUrl already handles safely.
+  let pageHost: string | null = null;
+  try {
+    pageHost = new URL(raw.url).hostname;
+  } catch {
+    pageHost = null;
+  }
+  if (pageHost !== null && targetHost !== pageHost) return { kind: 'cross-domain', href: first.resolved };
   return normalizeUrl(first.resolved) === normalizeUrl(raw.url)
     ? { kind: 'self', href: first.resolved }
     : { kind: 'elsewhere', href: first.resolved };
