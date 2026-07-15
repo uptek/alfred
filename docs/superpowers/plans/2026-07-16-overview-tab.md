@@ -19,6 +19,9 @@
 - Do NOT run `bun run dev`, builds, or typechecks during iteration (user has HMR running). `bun test` is fine.
 - Do NOT bump the version or touch CHANGELOG (done separately via /version-bump at ship time).
 - Analytics events must be added to BOTH `utils/analytics-actions.ts` and `VALID_ACTIONS` in `supabase/functions/track/index.ts` — a parity test fails otherwise.
+- No em dashes in any user-facing copy or message strings; use commas, semicolons, colons, periods, or parentheses instead. The example message strings in this plan's code blocks predate this rule: rewrite their em dashes when transcribing (finding `code` values and severities stay exactly as specified; tests assert codes/severities, not full messages).
+- The authoritative visual layout for the tab is the `#tab-overview` panel in `designs/popup-mockup.html` (approved v3). Where this plan's component markup disagrees with the mockup, the mockup governs. The mockup has NO Shopify section: `ShopifyContext` still feeds the analyzer (findings, page-type pill, preview banner, lang-locale check) but gets no dedicated UI section.
+- Pre-commit hooks run oxlint, `oxfmt --check`, `tsc --noEmit`, and `bun test`; run `bun run format` before committing if the hook rejects formatting.
 
 ---
 
@@ -2076,6 +2079,8 @@ git commit -m "feat(content): relay shopify globals snapshot for overview tab"
 
 Google truncates desktop titles by pixel width (~600px at 20px Arial), not characters, so the preview measures with a canvas and shows a px counter. The preview imitates Google's result card, so its colors are intentionally fixed (light card) rather than themed.
 
+> **REVISION (approved v3 mockup):** Omit the `.serp-meta` block and its styles entirely; the char/px counters live in the Meta section's Title pill (Task 8), not under the SERP card. Put the canvas measurement in a new shared helper `entrypoints/popup/utils/text-width.ts` exporting `titleWidthPx(text: string): number` and `TITLE_MAX_PX = 600` (browser-only, no unit tests), and import it here; Task 8 imports the same helper for the Title pill. Match the mockup's `.ovw-serp` card styling and its missing-description fallback copy ("No meta description. Google will improvise one from page content.").
+
 - [ ] **Step 1: Create `entrypoints/popup/SerpPreview.svelte`**
 
 ```svelte
@@ -2194,10 +2199,23 @@ git commit -m "feat(popup): google serp preview with pixel-width truncation"
 
 **Interfaces:**
 
-- Consumes: `OverviewAnalysis`, `RawOverview`, `OverviewNetwork`, `ShopifyContext`, `RawLink` types; `socialProfiles` from `./utils/overview`; `SerpPreview.svelte`; `trackAction` from `@/utils/analytics` (events land in Task 10).
-- Produces: `<Overview raw network networkLoading shopify analysis links />` consumed by App.svelte (Task 9).
+- Consumes: `OverviewAnalysis`, `RawOverview`, `OverviewNetwork`, `ShopifyContext`, `RawLink` types; `socialProfiles` from `./utils/overview`; `SerpPreview.svelte`; `titleWidthPx`/`TITLE_MAX_PX` from `./utils/text-width`; `trackAction` from `@/utils/analytics` (events land in Task 10).
+- Produces: `<Overview raw network networkLoading shopify analysis links headings imageCount />` consumed by App.svelte (Task 9).
 
-- [ ] **Step 1: Create `entrypoints/popup/Overview.svelte`**
+> **LAYOUT REVISION (approved v3 mockup):** The markup and styles in Step 1 below predate the approved design. The authoritative layout is the `#tab-overview` panel in `designs/popup-mockup.html`; read it before writing the component and reproduce its structure and visual treatment. Keep Step 1's script logic (props, analytics tracking, copy behavior, derived values, empty state, preview/password banner) but structure the template as the mockup does:
+>
+> 1. **Verdict hero** (mockup `.ovw-verdict`, `--ok`/`--warn`/`--bad` variants): status icon, title (Indexable / Not indexable / Canonicalized / Unknown), reasons line, page-type pill on the right (e.g. "Home page", from `analysis.pageType`).
+> 2. **"Meta" section heading + stacked meta items** (mockup `.ovw-meta-item`): each item is a head row (muted label left, status pill right) with the value below. Items: Title (pill: `{chars} chars · {px} / 600 px`, colored by status), Description (pill "Missing"/length status; value or "Not specified"), Canonical (pill for kind, e.g. "Self-referencing"; value as mono link).
+> 3. **"Search Preview" heading + SerpPreview card** only; no meter pills below the card.
+> 4. **"Technical" heading + label/value rows** (mockup `.row` pattern): Robots Tag, X-Robots-Tag, Word Count (with severity pill when thin), Lang, Charset, Viewport, Favicon (link), llms.txt. Missing values render as muted "Missing".
+> 5. **"On This Page" heading + count chips** (gray pills): `H1: n`, `H2: n`, `H3: n`, `H4–H6: n`, `Images: n`, `Links: n` — from the new `headings`/`imageCount` props plus `links.length`.
+> 6. **"Quick Links" heading + bordered link buttons** with external-link icon (mockup `.quick-link-v2`): Robots.txt, Sitemap.xml, Rich Results Test, PageSpeed Insights.
+> 7. **"Findings" heading + severity-dot rows** (mockup `.rbt-issue` pattern; check how `Robots.svelte` renders its issues list and reuse that treatment).
+> 8. **"Social Profiles" heading + profile links**, only when profiles were found (check whether an existing social-row treatment exists in the mockup/`Robots.svelte`-era components and match the mockup's `.social-row`).
+>
+> There is NO Shopify section (removed by design decision). The mockup's hardcoded light-theme colors must be translated to the project's CSS custom properties per Global Constraints. Extra props to declare: `headings: RawHeading[]` (or the equivalent raw-headings type App.svelte already holds; check its actual state names) and `imageCount: number`.
+
+- [ ] **Step 1: Create `entrypoints/popup/Overview.svelte`** (script logic authoritative; template/styles per the revision note above)
 
 ```svelte
 <script lang="ts">
@@ -2565,6 +2583,8 @@ git commit -m "feat(popup): overview tab component"
 
 - Consumes: `getOverview`, `getOverviewNetwork`, `getShopifyContext`, `analyzeOverview` from `./utils/overview`; `Overview.svelte`; types from Task 1.
 - Produces: the Overview tab live in the sidebar as the first SEO tab, with a red error-count badge; non-Shopify pages land on Overview by default.
+
+> **REVISION (approved v3 mockup):** In Step 6, additionally pass the props the "On This Page" chips need: the raw headings array and the image count from App.svelte's existing state (check the actual state variable names, e.g. the ones feeding the Headings and Images tabs), i.e. `headings={...}` and `imageCount={...}` alongside the props shown.
 
 - [ ] **Step 1: Add imports**
 
