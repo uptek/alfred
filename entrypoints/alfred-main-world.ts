@@ -53,6 +53,23 @@ export default defineUnlistedScript(() => {
             );
           }
         }
+
+        if (data?.type === 'alfred:request_shopify_context') {
+          const requestId = data.requestId;
+          if (requestId) {
+            const context = (window as unknown as WindowWithAlfred).Alfred.getShopifyContext();
+            const serializedContext = JSON.parse(JSON.stringify(context)) as typeof context;
+
+            window.postMessage(
+              {
+                type: 'alfred:shopify_context_response',
+                requestId,
+                data: serializedContext
+              },
+              '*'
+            );
+          }
+        }
       });
     },
 
@@ -85,6 +102,56 @@ export default defineUnlistedScript(() => {
         isShopify: true,
         theme: shopify?.theme ?? null,
         shop: shopify?.shop ?? null
+      };
+    },
+
+    /**
+     * Snapshot of the Shopify globals the Overview tab reads. All fields are
+     * defensive: themes and headless setups omit pieces of window.Shopify.
+     */
+    getShopifyContext: () => {
+      const win = window as unknown as WindowWithAlfred;
+      const shopify = win.Shopify as
+        | {
+            shop?: string;
+            locale?: string;
+            country?: string;
+            designMode?: boolean;
+            currency?: { active?: string };
+            routes?: { root?: string };
+            theme?: { role?: string };
+          }
+        | undefined;
+      const analyticsPage = (
+        window as unknown as {
+          ShopifyAnalytics?: { meta?: { page?: { pageType?: string; resourceId?: number | string } } };
+        }
+      ).ShopifyAnalytics?.meta?.page;
+      if (!shopify) {
+        return {
+          isShopify: false,
+          pageType: null,
+          resourceId: null,
+          shop: null,
+          locale: null,
+          currency: null,
+          country: null,
+          marketRoot: null,
+          themeRole: null,
+          designMode: false
+        };
+      }
+      return {
+        isShopify: true,
+        pageType: analyticsPage?.pageType ?? null,
+        resourceId: analyticsPage?.resourceId != null ? String(analyticsPage.resourceId) : null,
+        shop: shopify.shop ?? null,
+        locale: shopify.locale ?? null,
+        currency: shopify.currency?.active ?? null,
+        country: shopify.country ?? null,
+        marketRoot: shopify.routes?.root ?? null,
+        themeRole: shopify.theme?.role ?? null,
+        designMode: !!shopify.designMode
       };
     },
 

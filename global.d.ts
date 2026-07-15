@@ -175,6 +175,18 @@ declare interface WindowWithAlfred {
       theme: unknown;
       shop: unknown;
     };
+    getShopifyContext: () => {
+      isShopify: boolean;
+      pageType: string | null;
+      resourceId: string | null;
+      shop: string | null;
+      locale: string | null;
+      currency: string | null;
+      country: string | null;
+      marketRoot: string | null;
+      themeRole: string | null;
+      designMode: boolean;
+    };
     getShopName: () => string;
     writeToClipboard: (text: string) => Promise<boolean>;
     openInAdmin: () => boolean;

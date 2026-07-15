@@ -179,6 +179,15 @@ export default defineContentScript({
           })
         );
       }
+
+      if (event.data?.type === 'alfred:shopify_context_response') {
+        const { requestId, data } = event.data;
+        window.dispatchEvent(
+          new CustomEvent(`alfred:shopify_context_response_${requestId}`, {
+            detail: data
+          })
+        );
+      }
     });
 
     /**
@@ -256,6 +265,60 @@ export default defineContentScript({
         );
 
         // Return true to indicate async response
+        return true;
+      }
+
+      /**
+       * Relays the Shopify-globals snapshot request to the main world and
+       * returns the data the Overview tab reads.
+       * @returns {import('./popup/utils/types').ShopifyContext}
+       */
+      if (request.action === 'get_shopify_context') {
+        const emptyContext = {
+          isShopify: false,
+          pageType: null,
+          resourceId: null,
+          shop: null,
+          locale: null,
+          currency: null,
+          country: null,
+          marketRoot: null,
+          themeRole: null,
+          designMode: false
+        };
+
+        const requestId = Date.now() + '_' + Math.random();
+
+        let responseHandled = false;
+
+        const handleContextResponse = (event: Event) => {
+          if (responseHandled) return;
+          responseHandled = true;
+
+          window.removeEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
+          clearTimeout(contextTimeoutId);
+
+          sendResponse((event as CustomEvent<unknown>).detail ?? emptyContext);
+        };
+
+        const contextTimeoutId = setTimeout(() => {
+          if (responseHandled) return;
+          responseHandled = true;
+
+          window.removeEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
+          sendResponse(emptyContext);
+        }, 200);
+
+        window.addEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
+
+        window.postMessage(
+          {
+            type: 'alfred:request_shopify_context',
+            requestId: requestId
+          },
+          '*'
+        );
+
         return true;
       }
 
