@@ -284,8 +284,6 @@
             shopify={shopifyContext}
             analysis={overviewAnalysis}
             links={rawLinks}
-            headings={rawHeadings}
-            imageCount={rawImages.length}
           />
         {:else if activeTab === 'headings'}
           <Headings headings={rawHeadings} issues={headingIssues} />

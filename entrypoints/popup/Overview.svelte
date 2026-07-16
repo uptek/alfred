@@ -4,7 +4,6 @@
     OverviewAnalysis,
     OverviewNetwork,
     OverviewFinding,
-    RawHeading,
     RawLink,
     RawOverview,
     ShopifyContext
@@ -21,9 +20,7 @@
     networkLoading,
     shopify,
     analysis,
-    links,
-    headings,
-    imageCount
+    links
   }: {
     raw: RawOverview | null;
     network: OverviewNetwork | null;
@@ -31,8 +28,6 @@
     shopify: ShopifyContext | null;
     analysis: OverviewAnalysis;
     links: RawLink[];
-    headings: RawHeading[];
-    imageCount: number;
   } = $props();
 
   let tracked = false;
@@ -123,9 +118,6 @@
     `${d.name}${d.value !== null ? `:${d.value}` : ''}`;
   const metaDirectives = $derived(analysis.directives.filter((d) => d.source !== 'header'));
   const robotsTagText = $derived(metaDirectives.map(directiveLabel).join(', '));
-
-  const headingCount = (lo: number, hi: number) =>
-    headings.filter((h) => h.level >= lo && h.level <= hi).length;
 
   // Lint messages mark code with backticks; odd-indexed parts render as <code>.
   const messageParts = (message: string): { text: string; code: boolean }[] =>
@@ -317,17 +309,6 @@
       {/if}
     </div>
 
-    <!-- On This Page -->
-    <div class="section-heading">On This Page</div>
-    <div class="ovw-chips">
-      <span class="pill pill-gray">H1: {headingCount(1, 1)}</span>
-      <span class="pill pill-gray">H2: {headingCount(2, 2)}</span>
-      <span class="pill pill-gray">H3: {headingCount(3, 3)}</span>
-      <span class="pill pill-gray">H4–H6: {headingCount(4, 6)}</span>
-      <span class="pill pill-gray">Images: {imageCount}</span>
-      <span class="pill pill-gray">Links: {links.length}</span>
-    </div>
-
     <!-- Quick Links -->
     <div class="section-heading">Quick Links</div>
     <div class="quick-links-v2">
@@ -420,10 +401,10 @@
   .ovw-verdict {
     display: flex;
     align-items: center;
-    gap: 13px;
-    padding: 15px 18px;
-    border-radius: 12px;
-    margin-bottom: 20px;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    margin-bottom: 16px;
   }
   .ovw-verdict--ok {
     background: var(--success-bg);
@@ -442,8 +423,8 @@
     border: 1px solid var(--border);
   }
   .ovw-verdict-icon {
-    width: 34px;
-    height: 34px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -464,15 +445,15 @@
     background: var(--text-muted);
   }
   .ovw-verdict-icon svg {
-    width: 18px;
-    height: 18px;
-    stroke-width: 2.4;
+    width: 12px;
+    height: 12px;
+    stroke-width: 2.6;
   }
   .ovw-verdict-body {
     min-width: 0;
   }
   .ovw-verdict-title {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--text);
@@ -487,9 +468,9 @@
     color: var(--error-strong);
   }
   .ovw-verdict-sub {
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--text-muted);
-    margin-top: 1px;
+    margin-top: 0;
   }
   .ovw-verdict-pending {
     font-style: italic;
@@ -657,14 +638,6 @@
   .missing {
     color: var(--error-strong);
     font-weight: 500;
-  }
-
-  /* Chips */
-  .ovw-chips {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    padding: 4px 0 2px;
   }
 
   /* Quick links */
