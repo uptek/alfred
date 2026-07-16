@@ -63,6 +63,8 @@
     analysis.findings.find((f) => f.code === 'preview-mode' || f.code === 'password-page')
   );
   const listedFindings = $derived(analysis.findings.filter((f) => f !== previewFinding));
+  // Findings list is hidden for now; flip to bring it back.
+  const showFindings = false;
 
   const verdictLabel: Record<IndexabilityStatus, string> = {
     indexable: 'Indexable',
@@ -307,38 +309,6 @@
       </span>
     </div>
     <div class="row">
-      <span class="row-label">Lang</span>
-      {#if raw.lang}
-        <span class="row-value">{raw.lang}</span>
-      {:else}
-        <span class="row-value muted">Missing</span>
-      {/if}
-    </div>
-    <div class="row">
-      <span class="row-label">Charset</span>
-      {#if raw.charset}
-        <span class="row-value">{raw.charset}</span>
-      {:else}
-        <span class="row-value muted">Missing</span>
-      {/if}
-    </div>
-    <div class="row">
-      <span class="row-label">Viewport</span>
-      {#if raw.viewport}
-        <span class="row-value">{raw.viewport}</span>
-      {:else}
-        <span class="row-value muted">Missing</span>
-      {/if}
-    </div>
-    <div class="row">
-      <span class="row-label">Favicon</span>
-      {#if raw.faviconHref}
-        <span class="row-value"><a href={raw.faviconHref} target="_blank" rel="noopener">{raw.faviconHref}</a></span>
-      {:else}
-        <span class="row-value muted">Missing</span>
-      {/if}
-    </div>
-    <div class="row">
       <span class="row-label">llms.txt</span>
       {#if network?.llmsTxt}
         <span class="row-value"><span class="pill pill-green">Present</span></span>
@@ -381,8 +351,8 @@
       </button>
     </div>
 
-    <!-- Findings -->
-    {#if listedFindings.length > 0}
+    <!-- Findings (hidden for now, kept for a future toggle) -->
+    {#if showFindings && listedFindings.length > 0}
       <div class="section-heading">Findings</div>
       {#each listedFindings as finding}
         <div class="rbt-issue rbt-issue--{severityVariant[finding.severity]}">
@@ -531,12 +501,14 @@
 
   /* Section heading */
   .section-heading {
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-label);
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
     padding: 22px 0 10px;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 6px;
   }
 
   /* Meta items */
