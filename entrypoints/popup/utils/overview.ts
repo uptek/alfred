@@ -95,7 +95,9 @@ export function normalizeUrl(input: string): string {
 }
 
 export function canonicalInfo(raw: RawOverview | null): CanonicalInfo {
-  const canonicals = raw?.canonicals ?? [];
+  // Google only honors canonicals in <head>; body canonicals still get a
+  // canonical-in-body warning but must not drive the canonical state.
+  const canonicals = (raw?.canonicals ?? []).filter((c) => c.inHead);
   if (!raw || canonicals.length === 0) return { kind: 'missing', href: null };
   const distinct = new Set(canonicals.map((c) => normalizeUrl(c.resolved)));
   const first = canonicals[0]!;
@@ -731,7 +733,6 @@ export function analyzeOverview(
   const directives = parseDirectives(raw, network);
   const canonical = canonicalInfo(raw);
   const robotsAllowed = raw ? robotsTxtAllows(robots, raw.url) : null;
-  const indexability = computeIndexability(raw, network, directives, canonical, robotsAllowed);
 
   const findings: OverviewFinding[] = [
     ...coreFindings(raw, canonical),
@@ -771,6 +772,12 @@ export function analyzeOverview(
   }
 
   findings.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+
+  // A password-protected store hides every page from crawlers regardless of
+  // the page's own status, directives, or canonical.
+  const indexability: IndexabilityVerdict = findings.some((f) => f.code === 'password-page')
+    ? { status: 'not-indexable', reasons: ['Store is password-protected; Google cannot crawl any page'] }
+    : computeIndexability(raw, network, directives, canonical, robotsAllowed);
 
   const fallbackDates = schemaDates(schema);
   const titleText = raw?.titles.find((t) => t.length > 0) ?? null;

@@ -686,6 +686,11 @@ export default defineContentScript({
           Array.from(document.querySelectorAll<HTMLMetaElement>(`meta[name="${name}" i]`)).map(
             (m) => m.getAttribute('content') ?? ''
           );
+        // Crawlers ignore meta descriptions outside <head>.
+        const headMetaContents = (name: string): string[] =>
+          Array.from(document.head?.querySelectorAll<HTMLMetaElement>(`meta[name="${name}" i]`) ?? []).map(
+            (m) => m.getAttribute('content') ?? ''
+          );
         const propContent = (prop: string): string | null =>
           document.querySelector<HTMLMetaElement>(`meta[property="${prop}" i]`)?.getAttribute('content') ?? null;
         const canonicals = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="canonical" i]')).map(
@@ -715,7 +720,7 @@ export default defineContentScript({
             // titles are document titles.
             .filter((t) => t.namespaceURI === 'http://www.w3.org/1999/xhtml')
             .map((t) => t.textContent?.trim() ?? ''),
-          descriptions: metaContents('description'),
+          descriptions: headMetaContents('description'),
           robotsMeta: metaContents('robots'),
           googlebotMeta: metaContents('googlebot'),
           canonicals,

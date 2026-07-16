@@ -162,6 +162,21 @@ describe('canonicalInfo', () => {
     });
     expect(canonicalInfo(raw).kind).toBe('self');
   });
+
+  test('body canonicals never drive the canonical state', () => {
+    const bodyOnly = baseRaw({
+      canonicals: [{ raw: '/other', resolved: 'https://shop.example.com/other', inHead: false }]
+    });
+    expect(canonicalInfo(bodyOnly).kind).toBe('missing');
+
+    const headWinsOverConflictingBody = baseRaw({
+      canonicals: [
+        { raw: '/products/widget', resolved: 'https://shop.example.com/products/widget', inHead: true },
+        { raw: '/other', resolved: 'https://shop.example.com/other', inHead: false }
+      ]
+    });
+    expect(canonicalInfo(headWinsOverConflictingBody).kind).toBe('self');
+  });
 });
 
 describe('coreFindings', () => {
@@ -691,6 +706,13 @@ describe('analyzeOverview', () => {
       []
     );
     expect(codes(noindexCanonical.findings)).toContain('noindex-canonical-conflict');
+  });
+
+  test('password-protected store overrides an otherwise indexable verdict', () => {
+    const raw = baseRaw({ url: 'https://shop.example.com/password', canonicals: [] });
+    const analysis = analyzeOverview(raw, baseNetwork(), baseShopify({ pageType: 'password' }), null, []);
+    expect(analysis.indexability.status).toBe('not-indexable');
+    expect(codes(analysis.findings)).toContain('password-page');
   });
 
   test('falls back to schema dates when article meta is absent', () => {
