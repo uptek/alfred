@@ -109,7 +109,9 @@ const VALID_ACTIONS = [
   'sitemaps_copy',
   'sitemaps_copy_urls',
   'sitemaps_export',
-  'sitemaps_search'
+  'sitemaps_search',
+  'edit_history_expand',
+  'edit_history_view'
 ];
 
 serve(async (req) => {
