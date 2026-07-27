@@ -89,7 +89,9 @@ export const ANALYTICS_ACTIONS = [
   'robots_copy',
   'robots_open',
   'robots_ai_toggle',
-  'robots_wrap_toggle'
+  'robots_wrap_toggle',
+  'edit_history_expand',
+  'edit_history_view'
 ] as const;
 
 export type AnalyticsAction = (typeof ANALYTICS_ACTIONS)[number];
@@ -191,7 +193,9 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   robots_copy: 30,
   robots_open: 5,
   robots_ai_toggle: 5,
-  robots_wrap_toggle: 0
+  robots_wrap_toggle: 0,
+  edit_history_expand: 0,
+  edit_history_view: 30
 };
 
 /** Actions that are tracked to Supabase but excluded from local usage stats.
@@ -217,6 +221,8 @@ export const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   open_image_in_admin: 'Admin Nav',
   open_section_in_code_editor: 'Admin Nav',
   toggle_admin_sidebar: 'Admin Nav',
+  edit_history_expand: 'Admin Nav',
+  edit_history_view: 'Admin Nav',
   copy_product_json: 'Copy Data',
   copy_cart_json: 'Copy Data',
   copy_theme_preview_url: 'Copy Data',

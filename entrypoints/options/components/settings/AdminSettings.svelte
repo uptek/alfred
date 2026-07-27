@@ -13,7 +13,8 @@
   const settingsItems: SettingItem[] = [
     { key: 'collapsibleSidebar', label: 'Collapsible sidebar', details: 'Adds a toggle button to collapse/expand the Shopify admin navigation sidebar' },
     { key: 'warnBeforeClosingCodeEditor', label: 'Warn before closing code editor', details: 'Show a confirmation dialog before closing the theme code editor page' },
-    { key: 'themeListUtils', label: 'Theme list utilities', details: 'Adds copy buttons for Theme ID and Preview URL to each theme on the themes list page' }
+    { key: 'themeListUtils', label: 'Theme list utilities', details: 'Adds copy buttons for Theme ID and Preview URL to each theme on the themes list page' },
+    { key: 'editHistory', label: 'Activity log', details: 'Shows a collapsible activity log at the top of the product and page admin sidebar' }
   ];
 
   function handleChange(key: string, e: Event) {

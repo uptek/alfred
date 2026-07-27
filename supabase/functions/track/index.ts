@@ -93,7 +93,9 @@ const VALID_ACTIONS = [
   'robots_copy',
   'robots_open',
   'robots_ai_toggle',
-  'robots_wrap_toggle'
+  'robots_wrap_toggle',
+  'edit_history_expand',
+  'edit_history_view'
 ];
 
 serve(async (req) => {
