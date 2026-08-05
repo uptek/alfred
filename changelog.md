@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026.08.06
+@ 2026-08-06
+
+### Overview Tab
+A new Overview tab gives you the page's SEO health at a glance, and it's now the first tab you see.
+
+- Indexability verdict up top: HTTP status, noindex, robots.txt, and canonical checked in one call.
+- Google search preview that truncates the title by pixel width, just like real results.
+- Title, description, and canonical with status pills, plus one-click copy.
+- Technical checks: robots directives, X-Robots-Tag, word count, and llms.txt.
+- Issues surface through the verdict banner and status pills, with a red badge counting errors.
+- Quick links to robots.txt, sitemap.xml, Rich Results Test, and PageSpeed Insights.
+- Social profiles detected on the page, and Shopify-aware checks like .myshopify.com and variant canonicals.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-overview-tab.mp4"></video>
+
 ## 2026.07.14
 @ 2026-07-14
 

@@ -55,7 +55,7 @@ const handleCopyClick = (e: Event) => {
   btn.setAttribute('icon', 'check');
   setTimeout(() => btn.setAttribute('icon', 'clipboard'), 1200);
   if (action) {
-    sendTrackEvent(action as import('~/utils/analytics').AnalyticsAction);
+    sendTrackEvent(action as import('~/utils/analytics-actions').AnalyticsAction);
   }
 };
 

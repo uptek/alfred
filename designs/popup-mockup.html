@@ -1573,6 +1573,196 @@
       .rbt-src a:hover {
         text-decoration: underline;
       }
+
+      /* ── Overview tab ── */
+      .ovw-verdict {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 15px 18px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+      }
+
+      .ovw-verdict--ok {
+        background: #f2faf5;
+        border: 1px solid #dcefe3;
+      }
+
+      .ovw-verdict--warn {
+        background: #fdf8ec;
+        border: 1px solid #f3e6c8;
+      }
+
+      .ovw-verdict--bad {
+        background: #fdf3f2;
+        border: 1px solid #f6dedd;
+      }
+
+      .ovw-verdict-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #fff;
+      }
+
+      .ovw-verdict--ok .ovw-verdict-icon {
+        background: #2fa86a;
+      }
+
+      .ovw-verdict--warn .ovw-verdict-icon {
+        background: #e8a13c;
+      }
+
+      .ovw-verdict--bad .ovw-verdict-icon {
+        background: #c5342e;
+      }
+
+      .ovw-verdict-icon svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 2.4;
+      }
+
+      .ovw-verdict-title {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: #15783f;
+      }
+
+      .ovw-verdict--warn .ovw-verdict-title {
+        color: #9c4a08;
+      }
+
+      .ovw-verdict--bad .ovw-verdict-title {
+        color: #b03e39;
+      }
+
+      .ovw-verdict-sub {
+        font-size: 12px;
+        color: #666c77;
+        margin-top: 1px;
+      }
+
+      /* Google-imitation card: intentionally fixed light, matching real SERP */
+      .ovw-serp {
+        background: #fff;
+        border: 1px solid #f0f0f0;
+        border-radius: 10px;
+        padding: 14px 16px 16px;
+      }
+
+      .ovw-serp-site {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .ovw-serp-favicon {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #f1f3f4;
+        border: 1px solid #ececec;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+
+      .ovw-serp-name {
+        font-size: 12.5px;
+        color: #202124;
+        font-family: arial, sans-serif;
+      }
+
+      .ovw-serp-url {
+        font-size: 11.5px;
+        color: #4d5156;
+        font-family: arial, sans-serif;
+      }
+
+      .ovw-serp-title {
+        font-size: 17px;
+        line-height: 1.3;
+        color: #1a0dab;
+        font-family: arial, sans-serif;
+        margin-top: 9px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .ovw-serp-desc {
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: #4d5156;
+        font-family: arial, sans-serif;
+        margin-top: 3px;
+      }
+
+      .ovw-serp-desc .missing {
+        font-style: italic;
+        color: #9aa0aa;
+        font-weight: 400;
+      }
+
+      .ovw-meta-item {
+        padding: 11px 0;
+        border-bottom: 1px solid #f8f8f8;
+      }
+
+      .ovw-meta-item:last-child {
+        border-bottom: none;
+      }
+
+      .ovw-meta-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .ovw-meta-label {
+        font-size: 13.5px;
+        font-weight: 500;
+        color: #666c77;
+      }
+
+      .ovw-meta-head .pill {
+        margin-left: auto;
+      }
+
+      .ovw-meta-value {
+        font-size: 13.5px;
+        font-weight: 500;
+        line-height: 1.5;
+        color: #222;
+        margin-top: 4px;
+        overflow-wrap: anywhere;
+      }
+
+      .ovw-meta-value a {
+        color: #4f57c4;
+        text-decoration: none;
+        font-family: ui-monospace, monospace;
+        font-size: 12.5px;
+      }
+
+      .ovw-meta-value a:hover {
+        text-decoration: underline;
+      }
+
+      .ovw-chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        padding: 4px 0 2px;
+      }
     </style>
   </head>
 
@@ -1735,7 +1925,7 @@
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" /></svg
-              >Overview<span class="badge badge-red" aria-label="2 issues">2</span>
+              >Overview<span class="badge badge-red" aria-label="1 issue">1</span>
             </button>
             <button
               class="tab"
@@ -2229,48 +2419,188 @@
           <!-- OVERVIEW -->
           <div class="tab-content" id="tab-overview" role="tabpanel" aria-label="Overview">
             <div class="content-pad">
-              <div class="section-heading">Core Meta</div>
-              <div class="row">
-                <span class="row-label">Title</span
-                ><span class="row-value">theme-dawn-demo <span class="pill pill-red">23/60</span></span>
+              <div class="ovw-verdict ovw-verdict--ok">
+                <div class="ovw-verdict-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="ovw-verdict-title">Indexable</div>
+                  <div class="ovw-verdict-sub">
+                    HTTP 200 · No noindex · Allowed by robots.txt · Canonical self-referencing
+                  </div>
+                </div>
+                <span class="pill pill-gray" style="margin-left: auto">Home page</span>
               </div>
-              <div class="row">
-                <span class="row-label">Description</span
-                ><span class="row-value"
-                  ><span class="missing">Not specified</span> <span class="pill pill-red">0/160</span></span
-                >
+
+              <div class="section-heading">Meta</div>
+              <div class="ovw-meta-item">
+                <div class="ovw-meta-head">
+                  <span class="ovw-meta-label">Title</span>
+                  <span class="pill pill-yellow">15 chars · 138 / 600 px</span>
+                </div>
+                <div class="ovw-meta-value">theme-dawn-demo</div>
               </div>
-              <div class="row">
-                <span class="row-label">URL</span
-                ><span class="row-value"
-                  ><a href="#">theme-dawn-demo.myshopify.com/</a> <span class="pill pill-green">Indexable</span></span
-                >
+              <div class="ovw-meta-item">
+                <div class="ovw-meta-head">
+                  <span class="ovw-meta-label">Description</span>
+                  <span class="pill pill-red">Missing</span>
+                </div>
+                <div class="ovw-meta-value"><span class="missing">Not specified</span></div>
               </div>
-              <div class="row">
-                <span class="row-label">Canonical</span
-                ><span class="row-value"
-                  ><a href="#">theme-dawn-demo.myshopify.com/</a> <span class="pill pill-green">Self-ref</span></span
-                >
+              <div class="ovw-meta-item">
+                <div class="ovw-meta-head">
+                  <span class="ovw-meta-label">Canonical</span>
+                  <span class="pill pill-green">Self-referencing</span>
+                </div>
+                <div class="ovw-meta-value"><a href="#">https://theme-dawn-demo.myshopify.com/</a></div>
+              </div>
+
+              <div class="section-heading">Search Preview</div>
+              <div class="ovw-serp">
+                <div class="ovw-serp-site">
+                  <div class="ovw-serp-favicon" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#5f6368"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      style="width: 13px; height: 13px">
+                      <circle cx="12" cy="12" r="10" />
+                      <path
+                        d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="ovw-serp-name">theme-dawn-demo</div>
+                    <div class="ovw-serp-url">https://theme-dawn-demo.myshopify.com</div>
+                  </div>
+                </div>
+                <div class="ovw-serp-title">theme-dawn-demo</div>
+                <div class="ovw-serp-desc">
+                  <span class="missing">No meta description. Google will improvise one from page content.</span>
+                </div>
               </div>
 
               <div class="section-heading">Technical</div>
               <div class="row">
-                <span class="row-label">Meta Robots</span><span class="row-value muted">Not specified</span>
+                <span class="row-label">Robots Tag</span>
+                <span class="row-value muted">Missing</span>
               </div>
               <div class="row">
-                <span class="row-label">Favicon</span
-                ><span class="row-value"><a href="#">.../dawn-favicon.png</a></span>
+                <span class="row-label">X-Robots-Tag</span>
+                <span class="row-value muted">Missing</span>
               </div>
               <div class="row">
-                <span class="row-label">Keywords</span><span class="row-value muted">Not specified</span>
+                <span class="row-label">Word Count</span>
+                <span class="row-value"><span class="pill pill-yellow">Thin</span>287</span>
               </div>
               <div class="row">
-                <span class="row-label">Publisher</span><span class="row-value muted">Not specified</span>
+                <span class="row-label">Lang</span>
+                <span class="row-value">en</span>
               </div>
-              <div class="row"><span class="row-label">Lang</span><span class="row-value">en</span></div>
-              <div class="row"><span class="row-label">Word Count</span><span class="row-value">1,029</span></div>
+              <div class="row">
+                <span class="row-label">Charset</span>
+                <span class="row-value">UTF-8</span>
+              </div>
+              <div class="row">
+                <span class="row-label">Viewport</span>
+                <span class="row-value">width=device-width, initial-scale=1</span>
+              </div>
+              <div class="row">
+                <span class="row-label">Favicon</span>
+                <span class="row-value"><a href="#">.../dawn-favicon.png</a></span>
+              </div>
+              <div class="row">
+                <span class="row-label">llms.txt</span>
+                <span class="row-value muted">Missing</span>
+              </div>
 
-              <div class="section-heading">Social Media</div>
+              <div class="section-heading">On This Page</div>
+              <div class="ovw-chips">
+                <span class="pill pill-gray">H1: 1</span>
+                <span class="pill pill-gray">H2: 10</span>
+                <span class="pill pill-gray">H3: 22</span>
+                <span class="pill pill-gray">H4–H6: 0</span>
+                <span class="pill pill-gray">Images: 24</span>
+                <span class="pill pill-gray">Links: 108</span>
+              </div>
+
+              <div class="section-heading">Quick Links</div>
+              <div class="quick-links-v2">
+                <a class="quick-link-v2" href="#" target="_blank">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                  </svg>
+                  Robots.txt
+                </a>
+                <a class="quick-link-v2" href="#" target="_blank">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                  </svg>
+                  Sitemap.xml
+                </a>
+                <a class="quick-link-v2" href="#" target="_blank">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                  </svg>
+                  Rich Results Test
+                </a>
+                <a class="quick-link-v2" href="#" target="_blank">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                  </svg>
+                  PageSpeed Insights
+                </a>
+              </div>
+
+              <div class="section-heading">Findings</div>
+              <div class="rbt-issue rbt-issue--error">
+                <span class="dot" aria-hidden="true"></span>
+                <span class="rbt-issue-msg">Meta description is missing; Google will improvise a snippet</span>
+              </div>
+              <div class="rbt-issue rbt-issue--warning">
+                <span class="dot" aria-hidden="true"></span>
+                <span class="rbt-issue-msg">Title is only 15 characters (aim for 30–60)</span>
+              </div>
+              <div class="rbt-issue rbt-issue--warning">
+                <span class="dot" aria-hidden="true"></span>
+                <span class="rbt-issue-msg"
+                  >Page is served on the <code>.myshopify.com</code> domain, not a custom domain</span
+                >
+              </div>
+              <div class="rbt-issue rbt-issue--info">
+                <span class="dot" aria-hidden="true"></span>
+                <span class="rbt-issue-msg">Word count is low (287); thin pages rank poorly</span>
+              </div>
+
+              <div class="section-heading">Social Profiles</div>
               <div class="social-row">
                 <a href="#" class="social-link"
                   ><svg viewBox="0 0 24 24" fill="currentColor">

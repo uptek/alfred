@@ -100,9 +100,10 @@
 </script>
 
 <div class="lookup">
-  <label class="lookup-label">Product URL or Handle</label>
+  <label class="lookup-label" for="cg-product-lookup">Product URL or Handle</label>
   <div class="lookup-row">
     <input
+      id="cg-product-lookup"
       class="lookup-input"
       type="text"
       placeholder="https://store.myshopify.com/products/example or just 'example'"
@@ -146,7 +147,7 @@
     </div>
 
     <div class="variants">
-      <label class="variants-label">Select Variant</label>
+      <span class="variants-label">Select Variant</span>
       <div class="variant-list">
         {#each product.variants as variant (variant.id)}
           <button
@@ -174,15 +175,15 @@
   <div class="config">
     <div class="config-row config-row-inline">
       <div class="config-field">
-        <label class="config-label">Quantity</label>
+        <span class="config-label">Quantity</span>
         <QuantityInput bind:value={quantity} min={1} max={99} />
       </div>
 
       {#if selectedVariant && selectedVariant.selling_plan_allocations.length > 0}
         {@const allocatedPlanIds = new Set(selectedVariant.selling_plan_allocations.map(a => a.selling_plan_id))}
         <div class="config-field config-field-grow">
-          <label class="config-label">Selling Plan</label>
-          <select class="config-select" bind:value={selectedSellingPlan}>
+          <label class="config-label" for="cg-selling-plan">Selling Plan</label>
+          <select id="cg-selling-plan" class="config-select" bind:value={selectedSellingPlan}>
             {#if !selectedVariant.requires_selling_plan}
               <option value={null}>One-time purchase</option>
             {/if}
@@ -205,7 +206,7 @@
     </div>
 
     <div class="config-row config-row-half">
-      <label class="config-label">Line Item Properties</label>
+      <span class="config-label">Line Item Properties</span>
       <KeyValueEditor
         bind:entries={properties}
         keyPlaceholder="Property name"

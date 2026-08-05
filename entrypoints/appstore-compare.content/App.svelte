@@ -15,6 +15,7 @@
 
   let { handles }: { handles: string[] } = $props();
 
+  // svelte-ignore state_referenced_locally
   let columns = $state.raw<Column[]>(handles.map((handle) => ({ handle, status: 'loading' })));
 
   const loadedListings = $derived(
@@ -150,6 +151,7 @@
     }
   }
 
+  // svelte-ignore state_referenced_locally
   sendTrackEvent('compare_view', { app_count: handles.length, page_url: window.location.href });
 
   // Fetch all listings in parallel but reveal them in a single paint:

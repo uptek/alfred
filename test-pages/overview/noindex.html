@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Noindex page: verdict must read Not indexable</title>
+    <meta
+      name="description"
+      content="This page carries a meta robots noindex, nofollow directive, so the Overview verdict must flip to Not indexable and the sidebar badge must count the error." />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="http://localhost:4242/overview/noindex.html" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Overview tab</div>
+      <ul>
+        <li>Verdict: Not indexable (red), reason mentions noindex in the meta robots tag</li>
+        <li>Robots Tag row reads "noindex, nofollow"</li>
+        <li>Findings: noindex (error), nofollow (warning)</li>
+        <li>Sidebar Overview badge shows at least 1</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        This page intentionally exceeds three hundred visible words so the thin-content check stays quiet even though
+        the verdict itself should already read Not indexable. The quick brown fox jumps over the lazy dog while the
+        overview analyzer counts every visible word on the page, ignoring hidden text and script contents entirely.
+        Repetition pads the count: analysis, verdict, canonical, description, robots, viewport, charset, favicon,
+        language, snippet, preview, pixel, width, truncation, indexable, crawlable, directive, header, canonicalized,
+        and finding.
+      </p>
+      <p>
+        The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox
+        jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy
+        dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown
+        fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the
+        lazy dog.
+      </p>
+      <p>
+        More filler continues here so that the total visible word count comfortably clears the three hundred word
+        threshold used by the analyzer. Words words words words words words words words words words words words words
+        words words words words words words words words words words words words words words words words words words
+        words words words words words words words words words words words words words words words words words words
+        words words words words words words words words words words words words words words words words words words
+        words words.
+      </p>
+      <p>
+        Final paragraph of padding to be safe: content content content content content content content content content
+        content content content content content content content content content content content content content content
+        content content content content content content content content content content content content content.
+      </p>
+      <p>
+        Padding words padding words padding words padding words padding words padding words padding words padding words.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
