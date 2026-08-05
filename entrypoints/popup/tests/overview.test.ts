@@ -427,6 +427,19 @@ describe('computeIndexability', () => {
     expect(v.status).toBe('indexable');
   });
 
+  test('robots.txt server error yields unknown, not crawlable', () => {
+    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), null, true);
+    expect(v.status).toBe('unknown');
+    expect(v.reasons[0]).toContain('server error');
+  });
+
+  test('missing canonical is not called OK in the reason', () => {
+    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, { kind: 'missing', href: null }, true);
+    expect(v.status).toBe('indexable');
+    expect(v.reasons[0]).not.toContain('canonical OK');
+    expect(v.reasons[0]).toContain('no canonical');
+  });
+
   test('non-HTTP pages are unknown, not indexable', () => {
     const v = computeIndexability(
       baseRaw({ url: 'file:///Users/x/page.html', navStatus: 0 }),
@@ -789,6 +802,13 @@ describe('analyzeOverview', () => {
     expect(analysis.errorCount).toBe(0);
     expect(analysis.pageType).toBe('product');
     expect(analysis.title.length).toBeGreaterThan(0);
+  });
+
+  test('robots.txt 5xx makes the verdict unknown; 404 stays indexable', () => {
+    const err = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 503 }, []);
+    expect(err.indexability.status).toBe('unknown');
+    const notFound = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 404 }, []);
+    expect(notFound.indexability.status).toBe('indexable');
   });
 
   test('counts error findings and sorts findings by severity', () => {

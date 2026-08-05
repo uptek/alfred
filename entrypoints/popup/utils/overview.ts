@@ -497,7 +497,8 @@ export function computeIndexability(
   network: OverviewNetwork | null,
   directives: RobotsDirective[],
   canonical: CanonicalInfo,
-  robotsAllowed: boolean | null
+  robotsAllowed: boolean | null,
+  robotsError = false
 ): IndexabilityVerdict {
   if (!raw) return { status: 'unknown', reasons: ['Page data unavailable'] };
   if (!/^https?:$/.test(urlProtocol(raw.url))) {
@@ -523,9 +524,22 @@ export function computeIndexability(
   if (canonical.kind === 'elsewhere' || canonical.kind === 'cross-domain') {
     return { status: 'canonicalized', reasons: [`Canonical points to ${canonical.href}`] };
   }
-  // 'multiple' still indexes (Google ignores conflicting canonicals), but the
-  // reason must not claim the canonical is OK.
-  const canonicalNote = canonical.kind === 'multiple' ? 'conflicting canonicals ignored' : 'canonical OK';
+  // A robots.txt that errors server-side makes Google pause crawling; the
+  // page may stay indexed from cache, but claiming "crawlable" would be wrong.
+  if (robotsError) {
+    return {
+      status: 'unknown',
+      reasons: ['robots.txt returned a server error; Google may pause crawling this site']
+    };
+  }
+  // 'multiple' still indexes (Google ignores conflicting canonicals) and
+  // 'missing' is fine too, but the reason must not claim a canonical is OK.
+  const canonicalNote =
+    canonical.kind === 'multiple'
+      ? 'conflicting canonicals ignored'
+      : canonical.kind === 'missing'
+        ? 'no canonical'
+        : 'canonical OK';
   return {
     status: 'indexable',
     reasons: [
@@ -788,6 +802,9 @@ export function analyzeOverview(
   const directives = parseDirectives(raw, network);
   const canonical = canonicalInfo(raw);
   const robotsAllowed = raw ? robotsTxtAllows(robots, raw.url) : null;
+  // A 404 robots.txt legitimately means "allow all"; a 5xx or network failure
+  // does not — Google pauses crawling while robots.txt errors persist.
+  const robotsError = !!robots && (!robots.ok || robots.status >= 500);
 
   const findings: OverviewFinding[] = [
     ...coreFindings(raw, canonical),
@@ -832,7 +849,7 @@ export function analyzeOverview(
   // the page's own status, directives, or canonical.
   const indexability: IndexabilityVerdict = findings.some((f) => f.code === 'password-page')
     ? { status: 'not-indexable', reasons: ['Store is password-protected; Google cannot crawl any page'] }
-    : computeIndexability(raw, network, directives, canonical, robotsAllowed);
+    : computeIndexability(raw, network, directives, canonical, robotsAllowed, robotsError);
 
   const fallbackDates = schemaDates(schema);
   const titleText = raw?.titles.find((t) => t.length > 0) ?? null;
