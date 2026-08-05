@@ -428,7 +428,7 @@ describe('computeIndexability', () => {
   });
 
   test('robots.txt server error yields unknown, not crawlable', () => {
-    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), null, true);
+    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), null, 'server');
     expect(v.status).toBe('unknown');
     expect(v.reasons[0]).toContain('server error');
   });
@@ -809,6 +809,24 @@ describe('analyzeOverview', () => {
     expect(err.indexability.status).toBe('unknown');
     const notFound = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 404 }, []);
     expect(notFound.indexability.status).toBe('indexable');
+  });
+
+  test('robots.txt 429 is treated as a server error', () => {
+    const analysis = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 429 }, []);
+    expect(analysis.indexability.status).toBe('unknown');
+    expect(analysis.indexability.reasons[0]).toContain('server error');
+  });
+
+  test('robots.txt network failure reads as unfetchable, not a server error', () => {
+    const analysis = analyzeOverview(
+      baseRaw(),
+      baseNetwork(),
+      null,
+      { ...robotsResponse(''), ok: false, status: 0 },
+      []
+    );
+    expect(analysis.indexability.status).toBe('unknown');
+    expect(analysis.indexability.reasons[0]).toContain('could not be fetched');
   });
 
   test('counts error findings and sorts findings by severity', () => {

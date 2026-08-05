@@ -498,7 +498,7 @@ export function computeIndexability(
   directives: RobotsDirective[],
   canonical: CanonicalInfo,
   robotsAllowed: boolean | null,
-  robotsError = false
+  robotsError: 'server' | 'unreachable' | false = false
 ): IndexabilityVerdict {
   if (!raw) return { status: 'unknown', reasons: ['Page data unavailable'] };
   if (!/^https?:$/.test(urlProtocol(raw.url))) {
@@ -529,7 +529,11 @@ export function computeIndexability(
   if (robotsError) {
     return {
       status: 'unknown',
-      reasons: ['robots.txt returned a server error; Google may pause crawling this site']
+      reasons: [
+        robotsError === 'server'
+          ? 'robots.txt returned a server error; Google may pause crawling this site'
+          : 'robots.txt could not be fetched; Google may pause crawling this site'
+      ]
     };
   }
   // 'multiple' still indexes (Google ignores conflicting canonicals) and
@@ -802,9 +806,15 @@ export function analyzeOverview(
   const directives = parseDirectives(raw, network);
   const canonical = canonicalInfo(raw);
   const robotsAllowed = raw ? robotsTxtAllows(robots, raw.url) : null;
-  // A 404 robots.txt legitimately means "allow all"; a 5xx or network failure
-  // does not — Google pauses crawling while robots.txt errors persist.
-  const robotsError = !!robots && (!robots.ok || robots.status >= 500);
+  // A 404 robots.txt legitimately means "allow all"; a 5xx/429 or network
+  // failure does not — Google pauses crawling while robots.txt errors persist.
+  const robotsError: 'server' | 'unreachable' | false = !robots
+    ? false
+    : !robots.ok
+      ? 'unreachable'
+      : robots.status >= 500 || robots.status === 429
+        ? 'server'
+        : false;
 
   const findings: OverviewFinding[] = [
     ...coreFindings(raw, canonical),
