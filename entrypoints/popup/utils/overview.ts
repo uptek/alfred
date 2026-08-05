@@ -648,11 +648,35 @@ export function shopifyFindings(
   );
   const isTagPath = /^\/collections\/[^/]+\/[^/]+$/.test(url.pathname) && !url.pathname.includes('/products/');
   if ((hasFilterParams || isTagPath) && detectPageType(raw.url, shopify.pageType) === 'collection') {
-    findings.push({
-      severity: 'info',
-      code: 'filtered-collection',
-      message: 'Filtered/sorted collection view; Shopify canonicalizes these to the base collection'
-    });
+    // Stock themes canonicalize to the base collection, but a customized theme
+    // can self-canonicalize the filtered URL; check before reassuring.
+    let canonicalKeepsState = false;
+    if (canonical.href) {
+      try {
+        const c = new URL(canonical.href, raw.url);
+        canonicalKeepsState =
+          [...c.searchParams.keys()].some(
+            (k) => k.startsWith('filter.') || k === 'sort_by' || k.startsWith('pf_')
+          ) ||
+          (isTagPath && c.pathname === url.pathname);
+      } catch {
+        // Unparseable canonical is reported by canonicalInfo
+      }
+    }
+    if (canonicalKeepsState) {
+      findings.push({
+        severity: 'warning',
+        code: 'filtered-collection-canonical',
+        message:
+          'Filtered/sorted collection view canonicalizes to itself instead of the base collection; risks duplicate content in the index'
+      });
+    } else {
+      findings.push({
+        severity: 'info',
+        code: 'filtered-collection',
+        message: 'Filtered/sorted collection view; Shopify canonicalizes these to the base collection'
+      });
+    }
   }
 
   return findings;
@@ -722,6 +746,11 @@ export function socialProfiles(links: RawLink[]): SocialProfile[] {
 
 const SEVERITY_ORDER: Record<OverviewFinding['severity'], number> = { error: 0, warning: 1, info: 2 };
 
+// With the findings list hidden, the sidebar badge must only count errors the
+// Overview surfaces elsewhere (verdict hero, meta pills, banner) — otherwise
+// users see a count with no visible explanation.
+const UNSURFACED_ERROR_CODES = new Set(['title-multiple', 'viewport-missing']);
+
 /** Single entry point: combines every source into the tab's analysis. */
 export function analyzeOverview(
   raw: RawOverview | null,
@@ -786,7 +815,7 @@ export function analyzeOverview(
   return {
     indexability,
     findings,
-    errorCount: findings.filter((f) => f.severity === 'error').length,
+    errorCount: findings.filter((f) => f.severity === 'error' && !UNSURFACED_ERROR_CODES.has(f.code)).length,
     title: { text: titleText, length: titleText?.length ?? 0 },
     description: { text: descriptionText, length: descriptionText?.length ?? 0 },
     canonical,

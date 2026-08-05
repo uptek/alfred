@@ -572,6 +572,41 @@ describe('shopifyFindings', () => {
       'filtered-collection'
     );
   });
+
+  test('filtered collection canonical preserving filter state is a warning', () => {
+    const raw = baseRaw({
+      url: 'https://shop.example.com/collections/sale?filter.v.price.gte=10',
+      canonicals: [
+        {
+          raw: '/collections/sale?filter.v.price.gte=10',
+          resolved: 'https://shop.example.com/collections/sale?filter.v.price.gte=10',
+          inHead: true
+        }
+      ]
+    });
+    const found = codes(shopifyFindings(raw, baseShopify({ pageType: 'collection' }), canonicalInfo(raw)));
+    expect(found).toContain('filtered-collection-canonical');
+    expect(found).not.toContain('filtered-collection');
+  });
+
+  test('tag path canonicalizing to itself is a warning, to the base collection is info', () => {
+    const tagSelf = baseRaw({
+      url: 'https://shop.example.com/collections/sale/red',
+      canonicals: [
+        { raw: '/collections/sale/red', resolved: 'https://shop.example.com/collections/sale/red', inHead: true }
+      ]
+    });
+    expect(codes(shopifyFindings(tagSelf, baseShopify({ pageType: 'collection' }), canonicalInfo(tagSelf)))).toContain(
+      'filtered-collection-canonical'
+    );
+    const tagBase = baseRaw({
+      url: 'https://shop.example.com/collections/sale/red',
+      canonicals: [{ raw: '/collections/sale', resolved: 'https://shop.example.com/collections/sale', inHead: true }]
+    });
+    expect(codes(shopifyFindings(tagBase, baseShopify({ pageType: 'collection' }), canonicalInfo(tagBase)))).toContain(
+      'filtered-collection'
+    );
+  });
 });
 
 describe('schemaDates', () => {
@@ -686,6 +721,15 @@ describe('analyzeOverview', () => {
     expect(analysis.errorCount).toBe(3); // title-missing, description-missing, noindex
     const severities = analysis.findings.map((f) => f.severity);
     expect(severities.indexOf('info')).toBeGreaterThan(severities.lastIndexOf('error'));
+  });
+
+  test('errors with no visible UI representation are excluded from errorCount', () => {
+    const raw = baseRaw({ titles: ['One', 'Two'], viewport: null });
+    const analysis = analyzeOverview(raw, null, null, null, []);
+    const errorCodes = analysis.findings.filter((f) => f.severity === 'error').map((f) => f.code);
+    expect(errorCodes).toContain('title-multiple');
+    expect(errorCodes).toContain('viewport-missing');
+    expect(analysis.errorCount).toBe(0);
   });
 
   test('flags the noindex + robots-block and noindex + canonical conflicts', () => {
