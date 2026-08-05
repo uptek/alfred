@@ -677,9 +677,7 @@ export function shopifyFindings(
       try {
         const c = new URL(canonical.href, raw.url);
         canonicalKeepsState =
-          [...c.searchParams.keys()].some(
-            (k) => k.startsWith('filter.') || k === 'sort_by' || k.startsWith('pf_')
-          ) ||
+          [...c.searchParams.keys()].some((k) => k.startsWith('filter.') || k === 'sort_by' || k.startsWith('pf_')) ||
           (isTagPath && c.pathname === url.pathname);
       } catch {
         // Unparseable canonical is reported by canonicalInfo

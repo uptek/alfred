@@ -428,20 +428,38 @@ describe('computeIndexability', () => {
   });
 
   test('non-HTTP pages are unknown, not indexable', () => {
-    const v = computeIndexability(baseRaw({ url: 'file:///Users/x/page.html', navStatus: 0 }), null, cleanDs, { kind: 'missing', href: null }, null);
+    const v = computeIndexability(
+      baseRaw({ url: 'file:///Users/x/page.html', navStatus: 0 }),
+      null,
+      cleanDs,
+      { kind: 'missing', href: null },
+      null
+    );
     expect(v.status).toBe('unknown');
     expect(v.reasons[0]).toContain('Not an HTTP(S) page');
   });
 
   test('conflicting canonicals stay indexable but are not called OK', () => {
-    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, { kind: 'multiple', href: 'https://a.com/x' }, true);
+    const v = computeIndexability(
+      baseRaw(),
+      baseNetwork(),
+      cleanDs,
+      { kind: 'multiple', href: 'https://a.com/x' },
+      true
+    );
     expect(v.status).toBe('indexable');
     expect(v.reasons[0]).not.toContain('canonical OK');
     expect(v.reasons[0]).toContain('conflicting canonicals');
   });
 
   test('unknown status stays indexable but does not claim HTTP 200', () => {
-    const v = computeIndexability(baseRaw({ navStatus: 0 }), baseNetwork({ ok: false, status: 0 }), cleanDs, canonicalInfo(baseRaw()), true);
+    const v = computeIndexability(
+      baseRaw({ navStatus: 0 }),
+      baseNetwork({ ok: false, status: 0 }),
+      cleanDs,
+      canonicalInfo(baseRaw()),
+      true
+    );
     expect(v.status).toBe('indexable');
     expect(v.reasons[0]).not.toContain('HTTP 200');
     expect(v.reasons[0]).toContain('status unavailable');
