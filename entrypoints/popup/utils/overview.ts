@@ -500,6 +500,9 @@ export function computeIndexability(
   robotsAllowed: boolean | null
 ): IndexabilityVerdict {
   if (!raw) return { status: 'unknown', reasons: ['Page data unavailable'] };
+  if (!/^https?:$/.test(urlProtocol(raw.url))) {
+    return { status: 'unknown', reasons: ['Not an HTTP(S) page; search engines cannot crawl it'] };
+  }
   const status = raw.navStatus || (network?.ok ? network.status : 0);
   if (status && (status < 200 || status >= 300)) {
     return { status: 'not-indexable', reasons: [`Page returned HTTP ${status}`] };
@@ -520,10 +523,25 @@ export function computeIndexability(
   if (canonical.kind === 'elsewhere' || canonical.kind === 'cross-domain') {
     return { status: 'canonicalized', reasons: [`Canonical points to ${canonical.href}`] };
   }
+  // 'multiple' still indexes (Google ignores conflicting canonicals), but the
+  // reason must not claim the canonical is OK.
+  const canonicalNote = canonical.kind === 'multiple' ? 'conflicting canonicals ignored' : 'canonical OK';
   return {
     status: 'indexable',
-    reasons: [status ? `HTTP ${status}, crawlable, no noindex, canonical OK` : 'Crawlable, no noindex, canonical OK (HTTP status unavailable)']
+    reasons: [
+      status
+        ? `HTTP ${status}, crawlable, no noindex, ${canonicalNote}`
+        : `Crawlable, no noindex, ${canonicalNote} (HTTP status unavailable)`
+    ]
   };
+}
+
+function urlProtocol(input: string): string {
+  try {
+    return new URL(input).protocol;
+  } catch {
+    return '';
+  }
 }
 
 /**
@@ -719,7 +737,7 @@ const SOCIAL_HOSTS: [RegExp, string][] = [
   [/(^|\.)(twitter|x)\.com$/, 'X (Twitter)'],
   [/(^|\.)youtube\.com$/, 'YouTube'],
   [/(^|\.)tiktok\.com$/, 'TikTok'],
-  [/(^|\.)pinterest\.[a-z.]+$/, 'Pinterest'],
+  [/(^|\.)pinterest\.(com|ca|fr|de|es|it|pt|ie|at|ch|se|dk|nz|jp|kr|com\.au|com\.mx|co\.uk|co\.kr)$/, 'Pinterest'],
   [/(^|\.)linkedin\.com$/, 'LinkedIn'],
   [/(^|\.)threads\.(net|com)$/, 'Threads']
 ];
