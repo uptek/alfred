@@ -60,6 +60,7 @@ const VALID_ACTIONS = [
   'overview_view',
   'overview_copy',
   'overview_quick_link',
+  'overview_social_profile',
   'headings_view',
   'headings_scroll_to',
   'headings_copy',

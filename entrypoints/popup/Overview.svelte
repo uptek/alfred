@@ -207,7 +207,7 @@
       <div class="ovw-meta-head">
         <span class="ovw-meta-label">Title</span>
         {#if analysis.title.text}
-          <span class="pill pill-{titleTone}">{analysis.title.length} chars · {titlePx} / {TITLE_MAX_PX} px</span>
+          <span class="pill pill-{titleTone}">{analysis.title.length} / {TITLE_MAX} chars · {titlePx} / {TITLE_MAX_PX} px</span>
         {:else}
           <span class="pill pill-red">Missing</span>
         {/if}
@@ -231,7 +231,7 @@
       <div class="ovw-meta-head">
         <span class="ovw-meta-label">Description</span>
         {#if analysis.description.text}
-          <span class="pill pill-{descTone}">{analysis.description.length} chars</span>
+          <span class="pill pill-{descTone}">{analysis.description.length} / {DESC_MAX} chars</span>
         {:else}
           <span class="pill pill-red">Missing</span>
         {/if}
@@ -274,6 +274,7 @@
       favicon={raw.faviconHref}
       siteName={raw.ogSiteName}
     />
+    <div class="serp-note">Based on the page's meta tags. Google often rewrites titles and descriptions, so the live result may differ.</div>
 
     <!-- Technical -->
     <div class="section-heading">Technical</div>
@@ -301,7 +302,10 @@
       </span>
     </div>
     <div class="row">
-      <span class="row-label">llms.txt</span>
+      <button class="row-label row-label-link" onclick={() => quickLink('llms-txt', `${origin}/llms.txt`)}>
+        llms.txt
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
+      </button>
       {#if network?.llmsTxt}
         <span class="row-value"><span class="pill pill-green">Present</span></span>
       {:else}
@@ -352,7 +356,13 @@
       <div class="section-heading">Social Profiles</div>
       <div class="social-row">
         {#each profiles as profile}
-          <a class="social-link" href={profile.url} target="_blank" rel="noopener">
+          <a
+            class="social-link"
+            href={profile.url}
+            target="_blank"
+            rel="noopener"
+            onclick={() => trackAction('overview_social_profile', { network: profile.network })}
+          >
             {#if SOCIAL_ICONS[profile.network]}
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={SOCIAL_ICONS[profile.network]} /></svg>
             {:else}
@@ -575,6 +585,12 @@
     color: var(--text-muted);
     font-weight: 400;
   }
+  .serp-note {
+    margin-top: 7px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
   .row-value a {
     color: var(--accent);
     text-decoration: none;
@@ -633,6 +649,24 @@
   .pill-gray {
     background: var(--bg-inset);
     color: var(--text-secondary);
+  }
+  .row-label-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .row-label-link svg {
+    width: 12px;
+    height: 12px;
+  }
+  .row-label-link:hover {
+    color: var(--text);
+    text-decoration: underline;
   }
 
   .missing {
