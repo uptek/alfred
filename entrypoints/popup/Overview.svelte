@@ -591,19 +591,6 @@
     line-height: 1.5;
     color: var(--text-muted);
   }
-  .row-value a {
-    color: var(--accent);
-    text-decoration: none;
-    font-size: 12.5px;
-    font-family: ui-monospace, monospace;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .row-value a:hover {
-    text-decoration: underline;
-  }
-
   /* Copy button */
   .copy-btn {
     background: none;

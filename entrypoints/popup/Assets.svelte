@@ -434,7 +434,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="search__icon"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input class="search__input" type="text" placeholder="Filter by URL or type..." bind:value={search} bind:this={searchInput} />
           {#if search}
-            <button class="search__clear" onclick={() => { search = ''; searchInput?.focus(); }}>
+            <button class="search__clear" aria-label="Clear filter" onclick={() => { search = ''; searchInput?.focus(); }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
           {/if}

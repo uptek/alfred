@@ -563,11 +563,6 @@
     background: var(--cs-bg-hover);
   }
 
-  .content p {
-    margin: 0;
-    color: var(--cs-text-muted);
-  }
-
   .state-container {
     flex: 1;
     display: flex;

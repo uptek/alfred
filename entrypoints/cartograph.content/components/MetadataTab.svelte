@@ -18,6 +18,7 @@
     onRemoveDiscount: () => Promise<void>;
   } = $props();
 
+  // svelte-ignore state_referenced_locally
   let noteValue = $state(cart.note || '');
   let discountCode = $state('');
 
@@ -30,8 +31,11 @@
     return JSON.stringify(entriesToRecord(entries));
   }
 
+  // svelte-ignore state_referenced_locally
   let attributeEntries = $state<Array<{ key: string; value: string }>>(attributesToEntries(cart.attributes));
+  // svelte-ignore state_referenced_locally
   let lastSyncedNote = $state(cart.note || '');
+  // svelte-ignore state_referenced_locally
   let lastSyncedAttributes = $state(serializeEntries(attributesToEntries(cart.attributes)));
 
   const entriesToAttributes = entriesToRecord;

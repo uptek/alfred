@@ -163,7 +163,7 @@ export default defineContentScript({
           metadata?: Record<string, unknown>;
         }>
       ).detail;
-      sendTrackEvent(action as import('@/utils/analytics').AnalyticsAction, metadata);
+      sendTrackEvent(action as import('@/utils/analytics-actions').AnalyticsAction, metadata);
     });
 
     // Listen for postMessage responses from main world

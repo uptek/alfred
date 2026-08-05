@@ -22,6 +22,10 @@
           "Quick links to robots.txt, sitemap.xml, Rich Results Test, and PageSpeed Insights.",
           "Social profiles detected on the page, and Shopify-aware checks like .myshopify.com and variant canonicals."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-overview-tab.mp4"
       }
     ]
   },

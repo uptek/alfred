@@ -4,6 +4,20 @@ import tailwindcss from '@tailwindcss/vite';
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ['@wxt-dev/auto-icons', '@wxt-dev/module-svelte'],
+  svelte: {
+    vite: {
+      onwarn(warning, handler) {
+        // Polaris web components (<s-button> etc.) are interactive custom
+        // elements; Svelte's a11y checks can't know that and flag every
+        // click handler.
+        if (warning.code.startsWith('a11y_') && /<s-[a-z-]+>/.test(warning.message)) return;
+        // Theme.svelte keeps styles for sections that stay commented out
+        // until their data sources exist (reviews, versions, perf, features).
+        if (warning.code === 'css_unused_selector' && warning.filename?.endsWith('popup/Theme.svelte')) return;
+        handler?.(warning);
+      }
+    }
+  },
   manifest: {
     name: 'Alfred - Shopify Theme Detector',
     description:

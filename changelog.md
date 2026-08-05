@@ -14,6 +14,8 @@ A new Overview tab gives you the page's SEO health at a glance, and it's now the
 - Quick links to robots.txt, sitemap.xml, Rich Results Test, and PageSpeed Insights.
 - Social profiles detected on the page, and Shopify-aware checks like .myshopify.com and variant canonicals.
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-overview-tab.mp4"></video>
+
 ## 2026.07.14
 @ 2026-07-14
 

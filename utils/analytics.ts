@@ -9,7 +9,6 @@ const TRACK_ENDPOINT = `${SUPABASE_URL}/functions/v1/track`;
 // Action catalog — names, per-action time-saved, categories, and stats config
 // live in analytics-actions.ts; analytics-actions.test.ts keeps the Supabase
 // track function's allowlist in sync.
-export type { AnalyticsAction } from './analytics-actions';
 import type { AnalyticsAction } from './analytics-actions';
 import { TIME_SAVINGS, EXCLUDED_FROM_STATS, COOLDOWN_MS, ACTION_CATEGORIES } from './analytics-actions';
 

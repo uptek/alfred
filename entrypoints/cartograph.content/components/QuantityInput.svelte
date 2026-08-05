@@ -50,7 +50,7 @@
 </script>
 
 <div class="qty">
-  <button class="qty-btn" disabled={disabled || value <= min} onclick={decrement}>
+  <button class="qty-btn" aria-label="Decrease quantity" disabled={disabled || value <= min} onclick={decrement}>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
   </button>
   <input
@@ -63,7 +63,7 @@
     {min}
     {max}
   />
-  <button class="qty-btn" disabled={disabled || value >= max} onclick={increment}>
+  <button class="qty-btn" aria-label="Increase quantity" disabled={disabled || value >= max} onclick={increment}>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
   </button>
 </div>
