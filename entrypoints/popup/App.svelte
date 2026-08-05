@@ -6,7 +6,7 @@
   import { getImages, analyzeImages } from './utils/images';
   import { getSchema } from './utils/schema';
   import { getRobots, analyzeRobots } from './utils/robots';
-  import { getOverview, getOverviewNetwork, getShopifyContext, analyzeOverview } from './utils/overview';
+  import { getOverview, getOverviewNetwork, getLlmsTxt, getShopifyContext, analyzeOverview } from './utils/overview';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
@@ -64,6 +64,7 @@
   let overviewNetwork = $state<OverviewNetwork | null>(null);
   let shopifyContext = $state<ShopifyContext | null>(null);
   let overviewNetworkLoading = $state(true);
+  let llmsTxt = $state<boolean | null>(null);
   let loading = $state(true);
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
@@ -72,7 +73,7 @@
     analyzeRobots(rawRobots, storeInfo?.isShopify ?? false, storeInfo?.page_url ?? null).errorCount
   );
   const overviewAnalysis = $derived(
-    analyzeOverview(rawOverview, overviewNetwork, shopifyContext, rawRobots, rawSchema)
+    analyzeOverview(rawOverview, overviewNetwork, shopifyContext, rawRobots, rawSchema, llmsTxt)
   );
 
   const seoTabs = $derived<Tab[]>([
@@ -119,6 +120,9 @@
     getOverviewNetwork().then((networkData) => {
       overviewNetwork = networkData;
       overviewNetworkLoading = false;
+    });
+    getLlmsTxt().then((result) => {
+      llmsTxt = result;
     });
     const fetchData = async () => {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -281,6 +285,7 @@
             raw={rawOverview}
             network={overviewNetwork}
             networkLoading={overviewNetworkLoading}
+            {llmsTxt}
             shopify={shopifyContext}
             analysis={overviewAnalysis}
             links={rawLinks}

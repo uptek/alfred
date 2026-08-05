@@ -740,7 +740,7 @@ export default defineContentScript({
       /**
        * Network-level overview data: re-fetches the current URL from the page
        * context (rides its cache/cookies) for the HTTP status, X-Robots-Tag
-       * header, and raw pre-JavaScript head tags, plus an /llms.txt probe.
+       * header, and raw pre-JavaScript head tags.
        * @returns {import('./popup/utils/types').OverviewNetwork}
        */
       if (request.action === 'get_overview_network') {
@@ -777,12 +777,21 @@ export default defineContentScript({
             rawCanonical: null,
             rawRobotsMeta: null
           }));
+        pageFetch.then((page) => sendResponse(page));
+        return true;
+      }
+
+      /**
+       * Probes /llms.txt separately so a slow probe never delays the page's
+       * header-level data (status, X-Robots-Tag) reaching the popup.
+       */
+      if (request.action === 'get_llms_txt') {
         // SPA fallbacks serve HTML at any path with a 200, so a status check
         // alone would false-positive; require the body to not look like HTML.
-        const llmsFetch = fetch(`${location.origin}/llms.txt`, { signal: AbortSignal.timeout(8000) })
+        fetch(`${location.origin}/llms.txt`, { signal: AbortSignal.timeout(8000) })
           .then(async (res) => res.ok && !looksLikeHtml((await res.text()).slice(0, 4096)))
-          .catch(() => false);
-        Promise.all([pageFetch, llmsFetch]).then(([page, llmsTxt]) => sendResponse({ ...page, llmsTxt }));
+          .catch(() => false)
+          .then((llmsTxt) => sendResponse(llmsTxt));
         return true;
       }
 

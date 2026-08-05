@@ -60,7 +60,6 @@ export const baseNetwork = (over: Partial<OverviewNetwork> = {}): OverviewNetwor
   rawDescription: 'A'.repeat(120),
   rawCanonical: 'https://shop.example.com/products/widget',
   rawRobotsMeta: null,
-  llmsTxt: false,
   ...over
 });
 
@@ -93,6 +92,18 @@ describe('parseDirectives', () => {
     const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'googlebot: noindex, nofollow' }));
     expect(ds).toContainEqual({ name: 'noindex', value: null, source: 'header' });
     expect(ds).toContainEqual({ name: 'nofollow', value: null, source: 'header' });
+  });
+
+  test('drops the whole comma-separated list scoped to another bot', () => {
+    const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'otherbot: index, noindex' }));
+    expect(ds).toEqual([]);
+  });
+
+  test('a new bot scope resets a prior scope mid-header', () => {
+    const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'otherbot: noindex, googlebot: nofollow, noarchive' }));
+    expect(ds).toContainEqual({ name: 'nofollow', value: null, source: 'header' });
+    expect(ds).toContainEqual({ name: 'noarchive', value: null, source: 'header' });
+    expect(ds).not.toContainEqual({ name: 'noindex', value: null, source: 'header' });
   });
 
   test('returns empty for null inputs', () => {
@@ -320,7 +331,7 @@ describe('directiveFindings', () => {
 
 describe('technicalFindings', () => {
   test('clean page produces nothing', () => {
-    expect(technicalFindings(baseRaw(), baseNetwork(), baseShopify())).toEqual([]);
+    expect(technicalFindings(baseRaw(), false, baseShopify())).toEqual([]);
   });
 
   test('missing viewport is error; user-scalable=no is warning', () => {
@@ -354,7 +365,7 @@ describe('technicalFindings', () => {
   });
 
   test('llms.txt presence is info; inverted dates are info', () => {
-    expect(codes(technicalFindings(baseRaw(), baseNetwork({ llmsTxt: true }), null))).toContain('llms-txt');
+    expect(codes(technicalFindings(baseRaw(), true, null))).toContain('llms-txt');
     expect(
       codes(
         technicalFindings(
@@ -414,6 +425,13 @@ describe('computeIndexability', () => {
   test('indexable for a clean 200 page', () => {
     const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), true);
     expect(v.status).toBe('indexable');
+  });
+
+  test('unknown status stays indexable but does not claim HTTP 200', () => {
+    const v = computeIndexability(baseRaw({ navStatus: 0 }), baseNetwork({ ok: false, status: 0 }), cleanDs, canonicalInfo(baseRaw()), true);
+    expect(v.status).toBe('indexable');
+    expect(v.reasons[0]).not.toContain('HTTP 200');
+    expect(v.reasons[0]).toContain('status unavailable');
   });
 
   test('non-2xx status wins', () => {
@@ -647,6 +665,21 @@ describe('socialProfiles', () => {
         mkLink('https://www.facebook.com/'),
         mkLink('https://www.facebook.com/sharer/sharer.php?u=x'),
         mkLink('https://x.com/intent/tweet?text=hi')
+      ])
+    ).toEqual([]);
+  });
+
+  test('ignores content and media routes on social hosts', () => {
+    expect(
+      socialProfiles([
+        mkLink('https://www.youtube.com/watch?v=abc123'),
+        mkLink('https://www.youtube.com/shorts/abc123'),
+        mkLink('https://www.facebook.com/somepage/posts/12345'),
+        mkLink('https://www.linkedin.com/pulse/some-article'),
+        mkLink('https://x.com/someuser/status/12345'),
+        mkLink('https://www.instagram.com/p/abc123/'),
+        mkLink('https://www.tiktok.com/@someuser/video/12345'),
+        mkLink('https://www.pinterest.com/pin/12345/')
       ])
     ).toEqual([]);
   });

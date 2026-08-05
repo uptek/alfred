@@ -51,20 +51,24 @@ const KNOWN_DIRECTIVES = new Set([
 export function parseDirectives(raw: RawOverview | null, network: OverviewNetwork | null): RobotsDirective[] {
   const out: RobotsDirective[] = [];
   const push = (content: string, source: RobotsDirective['source']) => {
+    // X-Robots-Tag may scope a whole comma-separated directive list to one
+    // bot ("otherbot: index, noindex") — the scope persists across commas.
+    // Only global and Googlebot-scoped directives affect the Google verdict.
+    let scopedToOtherBot = false;
     for (const part of content.split(',')) {
-      const token = part.trim();
+      let token = part.trim();
       if (!token) continue;
-      const colon = token.indexOf(':');
-      const name = (colon === -1 ? token : token.slice(0, colon)).trim().toLowerCase();
-      const value = colon === -1 ? null : token.slice(colon + 1).trim();
-      if (!name) continue;
-      // X-Robots-Tag may scope directives to one bot: "googlebot: noindex".
-      // Only Googlebot's scope affects the Google indexability verdict;
-      // directives scoped to other bots are dropped.
-      if (source === 'header' && value !== null && !KNOWN_DIRECTIVES.has(name)) {
-        if (name === 'googlebot') push(value, source);
-        continue;
+      let colon = token.indexOf(':');
+      let name = (colon === -1 ? token : token.slice(0, colon)).trim().toLowerCase();
+      if (source === 'header' && colon !== -1 && !KNOWN_DIRECTIVES.has(name)) {
+        scopedToOtherBot = name !== 'googlebot';
+        token = token.slice(colon + 1).trim();
+        if (!token) continue;
+        colon = token.indexOf(':');
+        name = (colon === -1 ? token : token.slice(0, colon)).trim().toLowerCase();
       }
+      if (!name || scopedToOtherBot) continue;
+      const value = colon === -1 ? null : token.slice(colon + 1).trim();
       out.push({ name, value, source });
     }
   };
@@ -309,7 +313,7 @@ export function directiveFindings(ds: RobotsDirective[]): OverviewFinding[] {
 /** Viewport, lang, charset, favicon, word count, llms.txt, and date findings. */
 export function technicalFindings(
   raw: RawOverview | null,
-  network: OverviewNetwork | null,
+  llmsTxt: boolean | null,
   shopify: ShopifyContext | null
 ): OverviewFinding[] {
   if (!raw) return [];
@@ -371,7 +375,7 @@ export function technicalFindings(
       message: `${raw.wordCount} visible words: on the thin side for a standard page`
     });
   }
-  if (network?.llmsTxt) {
+  if (llmsTxt) {
     findings.push({
       severity: 'info',
       code: 'llms-txt',
@@ -518,7 +522,7 @@ export function computeIndexability(
   }
   return {
     status: 'indexable',
-    reasons: [`HTTP ${status || 200}, crawlable, no noindex, canonical OK`]
+    reasons: [status ? `HTTP ${status}, crawlable, no noindex, canonical OK` : 'Crawlable, no noindex, canonical OK (HTTP status unavailable)']
   };
 }
 
@@ -723,6 +727,11 @@ const SOCIAL_HOSTS: [RegExp, string][] = [
 // Share/intent endpoints are outbound actions, not profiles.
 const SHARE_PATH = /^\/(sharer|share|intent|shareArticle|pin\/create)/i;
 
+// Content/media routes on social hosts (a video, post, or article) — linking
+// to one doesn't make it the site's profile.
+const CONTENT_PATH =
+  /^\/(watch|shorts|embed|playlist|live|hashtag|results|feed|events?|groups|marketplace|reels?|stories|explore|discover|search|pulse|learning|jobs|business|help|legal|p|pin|ideas)([/?]|$)|\/(status|posts|videos?|photos?|reels?|stories|story)\//i;
+
 /** Social profile links found on the page, first hit per network. */
 export function socialProfiles(links: RawLink[]): SocialProfile[] {
   const found = new Map<string, string>();
@@ -736,7 +745,7 @@ export function socialProfiles(links: RawLink[]): SocialProfile[] {
     } catch {
       continue;
     }
-    if (path.length <= 1 || SHARE_PATH.test(path)) continue;
+    if (path.length <= 1 || SHARE_PATH.test(path) || CONTENT_PATH.test(path)) continue;
     for (const [pattern, network] of SOCIAL_HOSTS) {
       if (pattern.test(host) && !found.has(network)) found.set(network, link.href);
     }
@@ -757,7 +766,8 @@ export function analyzeOverview(
   network: OverviewNetwork | null,
   shopify: ShopifyContext | null,
   robots: RobotsResponse | null,
-  schema: RawSchemaBlock[]
+  schema: RawSchemaBlock[],
+  llmsTxt: boolean | null = null
 ): OverviewAnalysis {
   const directives = parseDirectives(raw, network);
   const canonical = canonicalInfo(raw);
@@ -766,7 +776,7 @@ export function analyzeOverview(
   const findings: OverviewFinding[] = [
     ...coreFindings(raw, canonical),
     ...directiveFindings(directives),
-    ...technicalFindings(raw, network, shopify),
+    ...technicalFindings(raw, llmsTxt, shopify),
     ...rawVsRenderedFindings(raw, network),
     ...shopifyFindings(raw, shopify, canonical)
   ];
@@ -839,6 +849,10 @@ export const getOverviewNetwork = (): Promise<OverviewNetwork | null> =>
     null,
     (r) => !!r && typeof (r as OverviewNetwork).status === 'number'
   );
+
+/** Probes /llms.txt; separate from getOverviewNetwork so a slow probe never delays header data. */
+export const getLlmsTxt = (): Promise<boolean | null> =>
+  queryActiveTab<boolean | null>('get_llms_txt', null, (r) => typeof r === 'boolean');
 
 /** Fetches the main-world Shopify globals snapshot. */
 export const getShopifyContext = (): Promise<ShopifyContext | null> =>

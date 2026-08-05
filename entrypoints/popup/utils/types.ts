@@ -213,7 +213,6 @@ export interface OverviewNetwork {
   rawDescription: string | null;
   rawCanonical: string | null; // href attribute as written in raw HTML
   rawRobotsMeta: string | null;
-  llmsTxt: boolean; // /llms.txt exists and is plain text
 }
 
 // Main-world Shopify globals snapshot (window.Shopify + ShopifyAnalytics.meta).

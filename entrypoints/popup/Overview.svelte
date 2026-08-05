@@ -18,6 +18,7 @@
     raw,
     network,
     networkLoading,
+    llmsTxt,
     shopify,
     analysis,
     links
@@ -25,6 +26,7 @@
     raw: RawOverview | null;
     network: OverviewNetwork | null;
     networkLoading: boolean;
+    llmsTxt: boolean | null;
     shopify: ShopifyContext | null;
     analysis: OverviewAnalysis;
     links: RawLink[];
@@ -306,10 +308,10 @@
         llms.txt
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
       </button>
-      {#if network?.llmsTxt}
+      {#if llmsTxt}
         <span class="row-value"><span class="pill pill-green">Present</span></span>
       {:else}
-        <span class="row-value muted">{networkLoading ? 'Checking' : 'Missing'}</span>
+        <span class="row-value muted">{llmsTxt === null ? 'Checking' : 'Missing'}</span>
       {/if}
     </div>
 
