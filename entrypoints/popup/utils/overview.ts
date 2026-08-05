@@ -497,7 +497,8 @@ export function computeIndexability(
   network: OverviewNetwork | null,
   directives: RobotsDirective[],
   canonical: CanonicalInfo,
-  robotsAllowed: boolean | null
+  robotsAllowed: boolean | null,
+  robotsError: 'server' | 'unreachable' | false = false
 ): IndexabilityVerdict {
   if (!raw) return { status: 'unknown', reasons: ['Page data unavailable'] };
   if (!/^https?:$/.test(urlProtocol(raw.url))) {
@@ -520,12 +521,30 @@ export function computeIndexability(
       reasons: ['Blocked by robots.txt; Google cannot crawl this page (the bare URL may still be indexed)']
     };
   }
+  // A robots.txt that errors makes Google pause crawling site-wide, so no
+  // crawl-dependent verdict (canonicalized or indexable) can be claimed. The
+  // hard negatives above hold regardless of crawling.
+  if (robotsError) {
+    return {
+      status: 'unknown',
+      reasons: [
+        robotsError === 'server'
+          ? 'robots.txt returned a server error; Google may pause crawling this site'
+          : 'robots.txt could not be fetched; Google may pause crawling this site'
+      ]
+    };
+  }
   if (canonical.kind === 'elsewhere' || canonical.kind === 'cross-domain') {
     return { status: 'canonicalized', reasons: [`Canonical points to ${canonical.href}`] };
   }
-  // 'multiple' still indexes (Google ignores conflicting canonicals), but the
-  // reason must not claim the canonical is OK.
-  const canonicalNote = canonical.kind === 'multiple' ? 'conflicting canonicals ignored' : 'canonical OK';
+  // 'multiple' still indexes (Google ignores conflicting canonicals) and
+  // 'missing' is fine too, but the reason must not claim a canonical is OK.
+  const canonicalNote =
+    canonical.kind === 'multiple'
+      ? 'conflicting canonicals ignored'
+      : canonical.kind === 'missing'
+        ? 'no canonical'
+        : 'canonical OK';
   return {
     status: 'indexable',
     reasons: [
@@ -788,6 +807,15 @@ export function analyzeOverview(
   const directives = parseDirectives(raw, network);
   const canonical = canonicalInfo(raw);
   const robotsAllowed = raw ? robotsTxtAllows(robots, raw.url) : null;
+  // A 404 robots.txt legitimately means "allow all"; a 5xx/429 or network
+  // failure does not — Google pauses crawling while robots.txt errors persist.
+  const robotsError: 'server' | 'unreachable' | false = !robots
+    ? false
+    : !robots.ok
+      ? 'unreachable'
+      : robots.status >= 500 || robots.status === 429
+        ? 'server'
+        : false;
 
   const findings: OverviewFinding[] = [
     ...coreFindings(raw, canonical),
@@ -832,7 +860,7 @@ export function analyzeOverview(
   // the page's own status, directives, or canonical.
   const indexability: IndexabilityVerdict = findings.some((f) => f.code === 'password-page')
     ? { status: 'not-indexable', reasons: ['Store is password-protected; Google cannot crawl any page'] }
-    : computeIndexability(raw, network, directives, canonical, robotsAllowed);
+    : computeIndexability(raw, network, directives, canonical, robotsAllowed, robotsError);
 
   const fallbackDates = schemaDates(schema);
   const titleText = raw?.titles.find((t) => t.length > 0) ?? null;
