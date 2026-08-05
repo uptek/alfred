@@ -1,7 +1,7 @@
 # Changelog
 
-## 2026.07.16
-@ 2026-07-16
+## 2026.08.06
+@ 2026-08-06
 
 ### Overview Tab
 A new Overview tab gives you the page's SEO health at a glance, and it's now the first tab you see.
