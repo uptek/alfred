@@ -9,8 +9,8 @@ A new Overview tab gives you the page's SEO health at a glance, and it's now the
 - Indexability verdict up top: HTTP status, noindex, robots.txt, and canonical checked in one call.
 - Google search preview that truncates the title by pixel width, just like real results.
 - Title, description, and canonical with status pills, plus one-click copy.
-- Technical checks: robots directives, X-Robots-Tag, word count, lang, charset, viewport, favicon, and llms.txt.
-- Findings list that explains every issue in plain language, with a red badge counting errors.
+- Technical checks: robots directives, X-Robots-Tag, word count, and llms.txt.
+- Issues surface through the verdict banner and status pills, with a red badge counting errors.
 - Quick links to robots.txt, sitemap.xml, Rich Results Test, and PageSpeed Insights.
 - Social profiles detected on the page, and Shopify-aware checks like .myshopify.com and variant canonicals.
 
