@@ -521,11 +521,9 @@ export function computeIndexability(
       reasons: ['Blocked by robots.txt; Google cannot crawl this page (the bare URL may still be indexed)']
     };
   }
-  if (canonical.kind === 'elsewhere' || canonical.kind === 'cross-domain') {
-    return { status: 'canonicalized', reasons: [`Canonical points to ${canonical.href}`] };
-  }
-  // A robots.txt that errors server-side makes Google pause crawling; the
-  // page may stay indexed from cache, but claiming "crawlable" would be wrong.
+  // A robots.txt that errors makes Google pause crawling site-wide, so no
+  // crawl-dependent verdict (canonicalized or indexable) can be claimed. The
+  // hard negatives above hold regardless of crawling.
   if (robotsError) {
     return {
       status: 'unknown',
@@ -535,6 +533,9 @@ export function computeIndexability(
           : 'robots.txt could not be fetched; Google may pause crawling this site'
       ]
     };
+  }
+  if (canonical.kind === 'elsewhere' || canonical.kind === 'cross-domain') {
+    return { status: 'canonicalized', reasons: [`Canonical points to ${canonical.href}`] };
   }
   // 'multiple' still indexes (Google ignores conflicting canonicals) and
   // 'missing' is fine too, but the reason must not claim a canonical is OK.

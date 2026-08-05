@@ -817,6 +817,12 @@ describe('analyzeOverview', () => {
     expect(analysis.indexability.reasons[0]).toContain('server error');
   });
 
+  test('robots.txt error outranks a canonicalized verdict', () => {
+    const raw = baseRaw({ url: 'https://shop.example.com/products/widget?variant=123' });
+    const analysis = analyzeOverview(raw, baseNetwork(), null, { ...robotsResponse(''), status: 503 }, []);
+    expect(analysis.indexability.status).toBe('unknown');
+  });
+
   test('robots.txt network failure reads as unfetchable, not a server error', () => {
     const analysis = analyzeOverview(
       baseRaw(),
