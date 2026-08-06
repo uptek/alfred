@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Double-encoded HTML entities in og:title/og:description — literal &amp;amp; renders on platforms</title>
+    <meta name="description" content="Source double-encodes entities so the DOM value still contains literal markup." />
+    <meta property="og:title" content="Mugs &amp;amp; More" />
+    <meta
+      property="og:description"
+      content="Hand-thrown stoneware &amp;amp; matte glaze &amp;#8211; small batch, made to order." />
+    <meta property="og:image" content="http://localhost:4242/social/static/og-1200x630.png" />
+    <meta property="og:url" content="http://localhost:4242/social/entities.html" />
+    <meta property="og:type" content="product" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>Warning: "HTML entities render literally on platforms (double-encoded source)"</li>
+        <li>og:title DOM value reads "Mugs &amp;amp; More"; og:description contains "&amp;amp;" and "&amp;#8211;"</li>
+        <li>Previews show the literal entity text, not a re-decoded ampersand or en dash</li>
+        <li>No errors; tag rows otherwise green</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        The source encodes the ampersand entity itself (&amp;amp; instead of &amp;), so a single round of HTML parsing
+        leaves the DOM-visible attribute value still containing literal entity text. Platforms read the DOM value as-is
+        and render it unchanged, which is exactly the mistake this fixture surfaces.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

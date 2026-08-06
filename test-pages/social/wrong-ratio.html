@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Square 600×600 og:image with summary_large_image — aspect-ratio warnings and visible cropping</title>
+    <meta name="description" content="Big enough image, wrong shape for landscape cards." />
+    <meta property="og:title" content="Aurora Ceramic Mug — Handmade Stoneware" />
+    <meta property="og:description" content="A hand-thrown stoneware mug with a matte aurora glaze." />
+    <meta property="og:image" content="http://localhost:4242/social/static/og-600x600.png" />
+    <meta property="og:url" content="http://localhost:4242/social/wrong-ratio.html" />
+    <meta property="og:type" content="product" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>Image probe reports 600×600; dimensions clear the minimums so no size error</li>
+        <li>Warning-level ratio issue on platforms expecting ~1.91:1 landscape (Facebook, X large card, LinkedIn)</li>
+        <li>Previews visibly crop the green square to each platform's landscape frame — the crop is the point</li>
+        <li>No errors; sidebar Social badge stays hidden (badge counts errors only)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        The image is large enough but square, while twitter:card requests a large landscape card. Platforms will
+        center-crop it; the previews should show exactly what gets cut off.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

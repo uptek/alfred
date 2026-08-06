@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>OG tags present but no og:image — image-missing error per platform</title>
+    <meta name="description" content="Text tags only; the share image is missing." />
+    <meta property="og:title" content="Aurora Ceramic Mug — Handmade Stoneware" />
+    <meta property="og:description" content="A hand-thrown stoneware mug with a matte aurora glaze." />
+    <meta property="og:url" content="http://localhost:4242/social/missing-image.html" />
+    <meta property="og:type" content="product" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>og:image row: Missing (red pill); error-level issue on every platform</li>
+        <li>Previews render each platform's imageless fallback (text-only card)</li>
+        <li>twitter:card is summary_large_image with no image → error or warning noting the mismatch</li>
+        <li>og:title / og:description rows still green</li>
+        <li>Sidebar Social badge counts at least 1 error</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        This page carries complete text-level Open Graph tags but no og:image and no twitter:image, while still
+        declaring twitter:card summary_large_image. Shares will render as bare text cards.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

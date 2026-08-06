@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>og:image served over http:// via 127.0.0.1 — insecure-image warning, no og:image:secure_url</title>
+    <meta
+      name="description"
+      content="Otherwise valid tag set; the image URL is plain http:// on a non-localhost host." />
+    <meta property="og:title" content="Aurora Ceramic Mug — Handmade Stoneware" />
+    <meta property="og:description" content="A hand-thrown stoneware mug with a matte aurora glaze." />
+    <meta property="og:image" content="http://127.0.0.1:4242/social/static/og-1200x630.png" />
+    <meta property="og:url" content="http://127.0.0.1:4242/social/insecure-image.html" />
+    <meta property="og:type" content="product" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>Warning: "og:image is http:// with no og:image:secure_url — platforms may refuse it"</li>
+        <li>No errors; the image still loads and previews render normally</li>
+        <li>Sidebar Social badge hidden (warnings don't count toward the badge)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        The page is loaded from 127.0.0.1 rather than localhost so the tab's http-insecure rule fires: localhost is
+        exempted as a dev fixture escape hatch, but 127.0.0.1 is not, even though both resolve to this same test server.
+        The og:image tag is otherwise a complete, correctly sized 1200×630 asset, and there is no og:image:secure_url
+        tag to satisfy platforms that require HTTPS.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

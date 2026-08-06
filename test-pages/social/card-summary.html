@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>twitter:card summary with square image — small-card X preview, other platforms unaffected</title>
+    <meta name="description" content="Card-type variant: the small summary card instead of summary_large_image." />
+    <meta property="og:title" content="Aurora Ceramic Mug — Handmade Stoneware" />
+    <meta property="og:description" content="A hand-thrown stoneware mug with a matte aurora glaze." />
+    <meta property="og:image" content="http://localhost:4242/social/static/og-600x600.png" />
+    <meta property="og:url" content="http://localhost:4242/social/card-summary.html" />
+    <meta property="og:type" content="product" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Aurora Ceramic Mug" />
+    <meta name="twitter:description" content="Hand-thrown stoneware, matte aurora glaze, 350ml." />
+    <meta name="twitter:image" content="http://localhost:4242/social/static/og-600x600.png" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>X preview renders the small summary card: square thumbnail left, text right</li>
+        <li>600×600 square image is correct for summary — no ratio warning on X</li>
+        <li>Facebook/LinkedIn still expect landscape from og:image → ratio warning stays on those platforms</li>
+        <li>All tag rows green; no errors; sidebar Social badge hidden</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        Card-type variant: twitter:card summary pairs correctly with a square image, proving the ratio rules are
+        per-platform and per-card-type rather than one global landscape check.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
