@@ -93,7 +93,9 @@ export const ANALYTICS_ACTIONS = [
   'robots_copy',
   'robots_open',
   'robots_ai_toggle',
-  'robots_wrap_toggle'
+  'robots_wrap_toggle',
+  'social_view',
+  'social_platform_click'
 ] as const;
 
 export type AnalyticsAction = (typeof ANALYTICS_ACTIONS)[number];
@@ -199,7 +201,9 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   robots_copy: 30,
   robots_open: 5,
   robots_ai_toggle: 5,
-  robots_wrap_toggle: 0
+  robots_wrap_toggle: 0,
+  social_view: 120,
+  social_platform_click: 5
 };
 
 export const COOLDOWN_MS: Partial<Record<AnalyticsAction, number>> = {

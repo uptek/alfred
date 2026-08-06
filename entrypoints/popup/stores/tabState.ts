@@ -13,6 +13,7 @@ export type PopupSection =
   | 'images'
   | 'robots'
   | 'schema'
+  | 'social'
   | 'settings';
 
 export const SCHEMA_VERSION = 1;

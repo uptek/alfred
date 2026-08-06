@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.08.07
+@ 2026-08-07
+
+### Social Tab
+A new Social tab shows exactly how your page will look when shared on Facebook, X, and LinkedIn, and catches the tag problems that break those previews.
+
+- Live preview cards per platform, including X's small summary card when twitter:card asks for it.
+- Missing tags render the mangled preview platforms would actually show, so the damage is visible before you share.
+- Checks for missing or insecure og:image, wrong image size or ratio per platform, relative URLs, SVG images, double-encoded text, and over-long descriptions.
+- The image is fetched and measured in the background, with declared og:image dimensions verified against the real file.
+- A red badge on the tab counts tag errors, and a table lists every og:, twitter:, and fb: tag found on the page.
+
 ## 2026.08.06
 @ 2026-08-06
 
@@ -14,7 +26,7 @@ A new Overview tab gives you the page's SEO health at a glance, and it's now the
 - Quick links to robots.txt, sitemap.xml, Rich Results Test, and PageSpeed Insights.
 - Social profiles detected on the page, and Shopify-aware checks like .myshopify.com and variant canonicals.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-overview-tab.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-overview-tab.mp4"></video>
 
 ## 2026.07.14
 @ 2026-07-14

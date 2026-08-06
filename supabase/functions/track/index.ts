@@ -97,7 +97,9 @@ const VALID_ACTIONS = [
   'robots_copy',
   'robots_open',
   'robots_ai_toggle',
-  'robots_wrap_toggle'
+  'robots_wrap_toggle',
+  'social_view',
+  'social_platform_click'
 ];
 
 serve(async (req) => {
