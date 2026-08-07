@@ -145,26 +145,18 @@ export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_start',
   async main() {
-    // Handle redirect back to intended page after successful password entry
-    if (await handleReturnUrlRedirect()) {
-      return; // Stop further execution since we're navigating away
-    }
-
-    // Get settings before injecting the script
-    const settings = await getItem<AlfredSettings>('settings');
-
-    await injectScript('/alfred-main-world.js', {
-      keepInDom: true
+    // Resolved when the main-world script announces its request handlers are
+    // registered. Popup relays hold their postMessage until then — a request
+    // posted earlier would be silently lost and read as "not a Shopify store".
+    let mainWorldReadyResolve!: () => void;
+    const mainWorldReady = new Promise<void>((resolve) => {
+      mainWorldReadyResolve = resolve;
     });
 
-    // Pass settings to main world via postMessage (avoids React hydration errors)
-    window.postMessage(
-      {
-        type: 'alfred:settings',
-        settings: settings ?? {}
-      },
-      '*'
-    );
+    // Upper bound on a main-world round trip. Generous because busy storefronts
+    // can block the main thread for seconds during load (issue #82); the popup
+    // shows a loading state meanwhile, so waiting is free.
+    const RELAY_TIMEOUT_MS = 3000;
 
     // Listen for tracking events from the main world
     window.addEventListener('alfred:track', (event: Event) => {
@@ -180,6 +172,10 @@ export default defineContentScript({
     // Listen for postMessage responses from main world
     window.addEventListener('message', (event: MessageEvent<{ type: string; requestId: string; data: unknown }>) => {
       if (event.source !== window) return;
+
+      if (event.data?.type === 'alfred:main_world_ready') {
+        mainWorldReadyResolve();
+      }
 
       if (event.data?.type === 'alfred:theme_response') {
         const { requestId, data } = event.data;
@@ -262,18 +258,20 @@ export default defineContentScript({
             theme: null,
             shop: null
           });
-        }, 200);
+        }, RELAY_TIMEOUT_MS);
 
         window.addEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
 
-        // Use postMessage to request theme data
-        window.postMessage(
-          {
-            type: 'alfred:request_theme',
-            requestId: requestId
-          },
-          '*'
-        );
+        // Request theme data once the main-world handler is listening
+        void mainWorldReady.then(() => {
+          window.postMessage(
+            {
+              type: 'alfred:request_theme',
+              requestId: requestId
+            },
+            '*'
+          );
+        });
 
         // Return true to indicate async response
         return true;
@@ -318,17 +316,19 @@ export default defineContentScript({
 
           window.removeEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
           sendResponse(emptyContext);
-        }, 200);
+        }, RELAY_TIMEOUT_MS);
 
         window.addEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
 
-        window.postMessage(
-          {
-            type: 'alfred:request_shopify_context',
-            requestId: requestId
-          },
-          '*'
-        );
+        void mainWorldReady.then(() => {
+          window.postMessage(
+            {
+              type: 'alfred:request_shopify_context',
+              requestId: requestId
+            },
+            '*'
+          );
+        });
 
         return true;
       }
@@ -1164,5 +1164,30 @@ export default defineContentScript({
       // Return false for unhandled messages
       return false;
     });
+
+    // Listeners are registered above, before any awaits, so a popup opened
+    // during page load gets a queued response instead of "receiving end does
+    // not exist" (issue #82).
+
+    // Handle redirect back to intended page after successful password entry
+    if (await handleReturnUrlRedirect()) {
+      return; // Stop further execution since we're navigating away
+    }
+
+    // Get settings before injecting the script
+    const settings = await getItem<AlfredSettings>('settings');
+
+    await injectScript('/alfred-main-world.js', {
+      keepInDom: true
+    });
+
+    // Pass settings to main world via postMessage (avoids React hydration errors)
+    window.postMessage(
+      {
+        type: 'alfred:settings',
+        settings: settings ?? {}
+      },
+      '*'
+    );
   }
 });

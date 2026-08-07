@@ -1,5 +1,6 @@
 import { initRestoreRightClick } from '../utils/restore-right-click';
 import { Toast } from '@/utils/toast';
+import { isShopifyStorefront } from '@/utils/shopifyDetection';
 
 export default defineUnlistedScript(() => {
   // Settings will be received via postMessage
@@ -78,7 +79,7 @@ export default defineUnlistedScript(() => {
      */
     isShopify: () => {
       const win = window as unknown as WindowWithAlfred;
-      return !!win.Shopify && !!win.__st;
+      return isShopifyStorefront(win);
     },
 
     /**
@@ -686,6 +687,11 @@ export default defineUnlistedScript(() => {
   const win = window as unknown as WindowWithAlfred;
   win.Alfred._initContextMenuListener();
   win.Alfred._initThemeRequestHandler();
+
+  // Tell the content script the request handlers exist, so its relay can stop
+  // holding popup requests. Without this, a request posted before this script
+  // runs is silently lost and the popup reads the store as non-Shopify.
+  window.postMessage({ type: 'alfred:main_world_ready' }, '*');
 
   // Listen for settings from content script via postMessage
   window.addEventListener('message', (event) => {
