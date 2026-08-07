@@ -15,6 +15,7 @@ export type PopupSection =
   | 'hreflangs'
   | 'schema'
   | 'social'
+  | 'sitemaps'
   | 'settings';
 
 export const SCHEMA_VERSION = 1;
