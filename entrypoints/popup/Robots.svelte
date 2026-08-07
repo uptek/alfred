@@ -11,6 +11,7 @@
   import { AI_BOTS, analyzeRobots, isAllowed } from './utils/robots';
   import { trackAction } from '@/utils/analytics';
   import { tick, untrack } from 'svelte';
+  import ActionButton from './ActionButton.svelte';
 
   let {
     robots,
@@ -223,20 +224,20 @@
       </div>
       <div class="header__actions">
         {#if robotsUrl}
-          <a class="action-btn" href={robotsUrl} target="_blank" rel="noopener" onclick={() => trackAction('robots_open', {})}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="action-btn__icon"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+          <ActionButton href={robotsUrl} onclick={() => trackAction('robots_open', {})}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
             Open
-          </a>
+          </ActionButton>
         {/if}
         {#if ok}
-          <button class="action-btn" onclick={handleCopy}>
+          <ActionButton onclick={handleCopy}>
             {#if copyState === 'copied'}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="action-btn__icon"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
             {:else}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="action-btn__icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             {/if}
             Copy
-          </button>
+          </ActionButton>
         {/if}
       </div>
     </div>
@@ -412,9 +413,6 @@
   .pill--green { background: var(--success-bg); color: var(--success-strong); }
   .pill--purple { background: var(--accent-tint); color: var(--accent); }
 
-  .action-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; font-size: 12px; font-weight: 500; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer; transition: all 0.12s; font-family: inherit; text-decoration: none; }
-  .action-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
-  .action-btn__icon { width: 13px; height: 13px; stroke-width: 1.8; }
 
   /* Banner (4xx/5xx fetch states) */
   .banner { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 10px; margin-bottom: 18px; }

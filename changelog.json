@@ -1,5 +1,33 @@
 [
   {
+    "version": "2026.08.07",
+    "date": "2026-08-07",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Social Tab"
+      },
+      {
+        "type": "paragraph",
+        "content": "A new Social tab shows exactly how your page will look when shared on Facebook, X, and LinkedIn, and catches the tag problems that break those previews."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Live preview cards per platform, including X's small summary card when twitter:card asks for it.",
+          "Missing tags render the mangled preview platforms would actually show, so the damage is visible before you share.",
+          "Checks for missing or insecure og:image, wrong image size or ratio per platform, relative URLs, SVG images, double-encoded text, and over-long descriptions.",
+          "The image is fetched and measured in the background, with declared og:image dimensions verified against the real file.",
+          "A red badge on the tab counts tag errors, and a table lists every og:, twitter:, and fb: tag found on the page."
+        ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-social-tab.mp4"
+      }
+    ]
+  },
+  {
     "version": "2026.08.06",
     "date": "2026-08-06",
     "changes": [

@@ -738,6 +738,37 @@ export default defineContentScript({
       }
 
       /**
+       * Scrapes every og:/twitter:/article:/fb: meta tag in document order so
+       * the Social tab can pair siblings like og:image + og:image:width.
+       * @returns {import('./popup/utils/types').RawSocial}
+       */
+      if (request.action === 'get_social') {
+        const SOCIAL_PREFIXES = ['og:', 'twitter:', 'article:', 'fb:'];
+        // Hostile pages can emit unbounded metas/values; cap before shipping to the
+        // popup so its reactive lint/preview pipeline can't be flooded.
+        const MAX_METAS = 200;
+        const MAX_VALUE = 2000;
+        const metas = Array.from(document.querySelectorAll<HTMLMetaElement>('meta[property], meta[name]'))
+          .map((m): { attr: 'property' | 'name'; key: string; value: string } | null => {
+            const attr: 'property' | 'name' = m.hasAttribute('property') ? 'property' : 'name';
+            const key = m.getAttribute(attr) ?? '';
+            const value = (m.getAttribute('content') ?? '').slice(0, MAX_VALUE);
+            if (!value || !SOCIAL_PREFIXES.some((prefix) => key.startsWith(prefix))) return null;
+            return { attr, key, value };
+          })
+          .filter((m): m is { attr: 'property' | 'name'; key: string; value: string } => m !== null)
+          .slice(0, MAX_METAS);
+        sendResponse({
+          metas,
+          fallbackTitle: document.title,
+          fallbackDescription:
+            document.querySelector<HTMLMetaElement>('meta[name="description" i]')?.getAttribute('content') ?? '',
+          pageUrl: location.href
+        });
+        return false;
+      }
+
+      /**
        * Network-level overview data: re-fetches the current URL from the page
        * context (rides its cache/cookies) for the HTTP status, X-Robots-Tag
        * header, and raw pre-JavaScript head tags.

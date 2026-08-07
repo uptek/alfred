@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>No og:* or twitter:* tags at all — bare-URL fallback previews</title>
+    <meta name="description" content="Only a title tag and meta description; platforms must scrape fallbacks." />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>Every og:* and twitter:* row: Missing (red pill)</li>
+        <li>Error-level issues on all platforms for missing title, description tags and image</li>
+        <li>Previews simulate real-world inference mangling instead of a clean title-tag fallback</li>
+        <li>
+          Title picked up from prominent page HTML ("Other fits you might like.") rather than the &lt;title&gt; tag,
+          mirroring the Facebook/LinkedIn field finding that crawlers favor visually prominent on-page text
+        </li>
+        <li>Image is absent or arbitrary — the decorative image below is not a reliable image candidate</li>
+        <li>Fallback source is labeled (info issue noting no og:image and no reliable in-page title match)</li>
+        <li>Sidebar Social badge shows the highest error count of any social scenario</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        Worst case: no Open Graph tags and no Twitter Card tags anywhere in the head. Platforms don't cleanly fall back
+        to the title tag and meta description in practice: crawlers often latch onto whatever heading or bold text is
+        most visually prominent on the page, and grab an unrelated decorative image if one exists. The heading and image
+        below exist to bait that exact mistake.
+      </p>
+      <h2>Other fits you might like.</h2>
+      <img
+        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180'%3E%3Crect width='320' height='180' fill='%23ddd'/%3E%3C/svg%3E"
+        width="320"
+        height="180"
+        alt="Unrelated decorative promo graphic" />
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

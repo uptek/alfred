@@ -203,6 +203,19 @@ export interface RawOverview {
   navStatus: number; // PerformanceNavigationTiming.responseStatus; 0 unknown
 }
 
+export interface RawSocialMeta {
+  attr: 'property' | 'name';
+  key: string; // property/name value verbatim, e.g. 'og:image:width'
+  value: string; // content attribute
+}
+
+export interface RawSocial {
+  metas: RawSocialMeta[]; // document order; duplicates preserved
+  fallbackTitle: string; // document.title
+  fallbackDescription: string; // meta[name="description"] content or ''
+  pageUrl: string; // location.href
+}
+
 // Result of re-fetching the current URL from page context: HTTP-level data
 // plus head tags parsed from the raw (pre-JavaScript) HTML.
 export interface OverviewNetwork {

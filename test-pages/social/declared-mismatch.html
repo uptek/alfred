@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Declared og:image:width/height (1200×630) mismatch actual 600×600 asset — probe flags the gap</title>
+    <meta name="description" content="Declared dimensions disagree with the image the probe actually fetches." />
+    <meta property="og:title" content="Aurora Ceramic Mug — Handmade Stoneware" />
+    <meta property="og:description" content="A hand-thrown stoneware mug with a matte aurora glaze." />
+    <meta property="og:image" content="http://localhost:4242/social/static/og-600x600.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="http://localhost:4242/social/declared-mismatch.html" />
+    <meta property="og:type" content="product" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>Instant validation (before the probe resolves) trusts the declared 1200×630 dimensions</li>
+        <li>Once the probe resolves the actual 600×600 image, a declared-vs-actual mismatch warning fires</li>
+        <li>Ratio warning may also fire: a square image on a summary_large_image card expects landscape</li>
+        <li>No errors; sidebar Social badge hidden (warnings don't count toward the badge)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        og:image:width and og:image:height declare 1200×630, but og:image itself points at the 600×600 fixture. This
+        exercises the gap between what a page claims about its share image and what the probe actually measures once the
+        asset loads.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Overlong og:title and og:description — truncation warnings and clamped previews</title>
+    <meta name="description" content="Length rules: both text fields far exceed platform display limits." />
+    <meta
+      property="og:title"
+      content="Aurora Ceramic Mug — Handmade Stoneware Coffee Cup With Matte Aurora Reactive Glaze, Small Batch Kiln Fired, Dishwasher and Microwave Safe, 350ml Capacity, Free Worldwide Shipping On Orders Over Fifty Dollars" />
+    <meta
+      property="og:description"
+      content="Every Aurora mug begins as a lump of Australian stoneware clay, thrown on the wheel, trimmed by hand, and fired twice in our studio kiln. The reactive aurora glaze means no two mugs are ever alike: bands of violet, teal and slate shift with the firing temperature. It holds 350ml, sits comfortably in either hand, survives the dishwasher and the microwave, and ships in recycled packaging anywhere in the world. This description keeps going well past the point any social platform will display so that every length rule in the validator fires at once." />
+    <meta property="og:image" content="http://localhost:4242/social/static/og-1200x630.png" />
+    <meta property="og:url" content="http://localhost:4242/social/overflow.html" />
+    <meta property="og:type" content="product" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>Warning-level length issues for og:title and og:description on every platform, with character counts</li>
+        <li>
+          Facebook description is cut with an exact grapheme-safe ~300-character slice mid-word (not CSS line-clamp)
+          plus an ellipsis, matching how Facebook actually truncates rather than a CSS approximation
+        </li>
+        <li>
+          X and LinkedIn truncation stays approximate (CSS line-clamp), since their real cutoffs aren't fixed character
+          counts
+        </li>
+        <li>Image and remaining tags stay green; no errors</li>
+        <li>Sidebar Social badge hidden (warnings don't count toward the badge)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        Both text fields blow far past every platform's display limit. The value here is seeing the previews truncate
+        the copy the way real cards would, alongside warnings that state the actual character counts.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Relative og:image URL plus duplicate og:image tags — resolution warning, first-wins</title>
+    <meta name="description" content="Edge cases: relative image path and multiple og:image declarations." />
+    <meta property="og:title" content="Aurora Ceramic Mug — Handmade Stoneware" />
+    <meta property="og:description" content="A hand-thrown stoneware mug with a matte aurora glaze." />
+    <meta property="og:image" content="/social/static/og-1200x630.png" />
+    <meta property="og:image" content="http://localhost:4242/social/static/og-600x600.png" />
+    <meta property="og:url" content="http://localhost:4242/social/relative-image.html" />
+    <meta property="og:type" content="product" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected: Social tab</div>
+      <ul>
+        <li>First og:image wins for the preview (the blue 1200×630 fixture, resolved against the page URL)</li>
+        <li>Warning-level issue: og:image URL is relative — platforms require absolute URLs</li>
+        <li>Tag table notes 2 og:image declarations (count surfaced, second one listed)</li>
+        <li>Dimension check runs against the resolved first image; no size or ratio errors</li>
+        <li>Sidebar Social badge hidden (warnings only)</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        Two edge cases at once: the first og:image is a relative path (invalid for platforms, resolvable by the tab),
+        and a second absolute og:image follows. First-wins precedence plus a relative-URL warning is the expected
+        behavior.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
