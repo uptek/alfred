@@ -190,9 +190,9 @@
   function statusTitle(s: LinkStatusResult): string {
     switch (s.bucket) {
       case 'ok': return `HTTP ${s.status} OK`;
-      case 'redirect': return 'Redirects (3xx) — exact code is not exposed to extensions';
-      case 'client-error': return `HTTP ${s.status} — client error`;
-      case 'server-error': return `HTTP ${s.status} — server error`;
+      case 'redirect': return 'Redirects (3xx): exact code is not exposed to extensions';
+      case 'client-error': return `HTTP ${s.status}: client error`;
+      case 'server-error': return `HTTP ${s.status}: server error`;
       default: return 'Unreachable, blocked, or timed out (may differ for a real visitor)';
     }
   }

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.08.08.1
+@ 2026-08-08
+
+### Sitemaps: The Complete Toolkit
+Alfred now handles everything sitemaps, on any website you visit. It discovers every sitemap automatically, checks their health, lets you search inside all of them at once, and exports whatever you find. No more opening raw XML files one by one.
+
+- Every sitemap in one sortable table: type, URL count, last modified, and health status, with plain-language findings for anything broken or missing.
+- Search any keyword or URL across all sitemaps at once and see exactly which sitemap each matching page lives in.
+- One click answers whether the page open in the current tab is in a sitemap.
+- Copy any sitemap's full URL list, or export everything as CSV, JSON, or text.
+- Sidebar badge flags sitemap errors before you even open the tab.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-sitemaps.mp4"></video>
+
 ## 2026.08.08
 @ 2026-08-08
 
@@ -10,7 +24,7 @@ A new Hreflangs tab lists every language and region alternate declared on the pa
 - Copy the full set or export it as CSV.
 - Summary bar shows alternate count, x-default, and self-referencing status.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-hreflang-tab.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-hreflang-tab.mp4"></video>
 
 ## 2026.08.07
 @ 2026-08-07

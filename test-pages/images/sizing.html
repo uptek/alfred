@@ -49,11 +49,11 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Images tab</div>
+      <div class="t">Expected: Images tab</div>
       <ul>
         <li>4 images, all OK status (sizing is a flag, not a status)</li>
         <li>
-          wide.svg at 160px: <b>Oversized</b> — Dims cell shows 1600×1000 in amber with a tooltip naming natural vs
+          wide.svg at 160px: <b>Oversized</b>. Dims cell shows 1600×1000 in amber with a tooltip naming natural vs
           displayed size
         </li>
         <li>wide.svg at 800px (exactly 2× per dimension) is NOT flagged: that headroom is reserved for retina</li>
@@ -70,19 +70,19 @@
     <main>
       <figure>
         <img src="/images/static/wide.svg" alt="Oversized hero" width="160" height="100" />
-        <figcaption>1. natural 1600×1000 displayed at 160×100 — oversized</figcaption>
+        <figcaption>1. natural 1600×1000 displayed at 160×100: oversized</figcaption>
       </figure>
       <figure>
         <img src="/images/static/wide.svg" alt="Retina headroom" width="800" height="500" />
-        <figcaption>2. natural 1600×1000 displayed at 800×500 — exactly 2× per dimension, allowed</figcaption>
+        <figcaption>2. natural 1600×1000 displayed at 800×500: exactly 2× per dimension, allowed</figcaption>
       </figure>
       <figure>
         <img src="/images/static/photo.svg" alt="Properly sized" width="160" height="100" />
-        <figcaption>3. natural 160×100 displayed at 160×100 — properly sized</figcaption>
+        <figcaption>3. natural 160×100 displayed at 160×100: properly sized</figcaption>
       </figure>
       <figure>
         <img src="/images/static/photo.svg" alt="Icon-sized" width="32" height="20" />
-        <figcaption>4. natural 160×100 displayed at 32×20 — big ratio, tiny waste, not flagged</figcaption>
+        <figcaption>4. natural 160×100 displayed at 32×20: big ratio, tiny waste, not flagged</figcaption>
       </figure>
     </main>
     <a class="back" href="/">← all test pages</a>

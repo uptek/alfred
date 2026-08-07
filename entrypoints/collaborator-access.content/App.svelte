@@ -351,7 +351,7 @@
     </div>
     <div style="border-top:1px solid var(--color-border-default,#333);margin-bottom:16px;"></div>
     <p class="text-body-sm mb-3">
-      <strong>Mantle</strong> — Use as a Mantle custom action by pasting the following URL into the custom action's URL field.
+      <strong>Mantle</strong>: Use as a Mantle custom action by pasting the following URL into the custom action's URL field.
     </p>
     <div class="flex gap-2 items-center">
       <input

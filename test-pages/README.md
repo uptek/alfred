@@ -58,6 +58,6 @@ by default) so the popup's `redirect: 'manual'` probe sees a real redirect.
 The popup fetches it from the page context, which means the request's
 `Referer` is the page you're on. The server uses that: while you're on
 `/robots/<scenario>.html`, `/robots.txt` answers with
-`robots/fixtures/<scenario>.robots.txt` — and two scenarios are synthesized:
+`robots/fixtures/<scenario>.robots.txt`, and two scenarios are synthesized:
 `missing` → 404, `server-error` → 500. From any other page it serves the
 `allow-all` fixture.
