@@ -12,6 +12,7 @@
   import type { SocialProbeResult } from './utils/social';
   import { probeImage } from './utils/social-probe';
   import SocialCard from './SocialCard.svelte';
+  import ActionButton from './ActionButton.svelte';
   import { trackAction } from '@/utils/analytics';
   import { untrack } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
@@ -118,6 +119,42 @@
     return rows;
   });
 
+  // X reads twitter:* with og:* fallbacks, so it gets every row; FB/LinkedIn ignore twitter:*.
+  const copyRows = $derived(
+    platform === 'x' ? tagRows : tagRows.filter((r) => !r.key.startsWith('twitter:'))
+  );
+
+  function escapeAttr(value: string): string {
+    return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  }
+
+  function tagsAsHtml(): string {
+    return copyRows
+      .map((r) => {
+        const key = r.key.replace(/\[\d+\]$/, '');
+        const attr = key.startsWith('twitter:') ? 'name' : 'property';
+        return `<meta ${attr}="${key}" content="${escapeAttr(r.value)}">`;
+      })
+      .join('\n');
+  }
+
+  function tagsAsText(): string {
+    return copyRows.map((r) => `${r.key}: ${r.value}`).join('\n');
+  }
+
+  let copiedFormat = $state<'html' | 'text' | null>(null);
+  let copiedTimer: ReturnType<typeof setTimeout> | undefined;
+
+  async function copyTags(format: 'html' | 'text') {
+    try {
+      await navigator.clipboard.writeText(format === 'html' ? tagsAsHtml() : tagsAsText());
+      copiedFormat = format;
+      clearTimeout(copiedTimer);
+      copiedTimer = setTimeout(() => (copiedFormat = null), 1500);
+      trackAction('social_copy_tags', { platform, format });
+    } catch { /* clipboard permission denied */ }
+  }
+
   const duplicateNotes = $derived(
     resolved ? Object.entries(resolved.duplicateCounts).map(([key, count]) => `${key} appears ${count} times`) : []
   );
@@ -169,7 +206,21 @@
     {/if}
 
     {#if tagRows.length > 0}
-      <div class="section-heading">Tags</div>
+      <div class="section-heading section-heading--row">
+        <span>Tags</span>
+        <span class="copy-actions">
+          {#each [{ format: 'html', label: 'Copy HTML' }, { format: 'text', label: 'Copy text' }] as const as btn}
+            <ActionButton onclick={() => copyTags(btn.format)}>
+              {#if copiedFormat === btn.format}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="icon-copied"><polyline points="20 6 9 17 4 12"/></svg>
+              {:else}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              {/if}
+              {btn.label}
+            </ActionButton>
+          {/each}
+        </span>
+      </div>
       <div class="tags">
         {#each tagRows as row}
           <div class="tag-row">
@@ -210,6 +261,9 @@
 
   /* Section headings (matches Robots.svelte) */
   .section-heading { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-label); padding: 18px 0 8px; }
+  .section-heading--row { display: flex; align-items: center; justify-content: space-between; }
+  .copy-actions { display: inline-flex; gap: 6px; }
+  .icon-copied { color: var(--success-strong); }
 
   /* Issues */
   .issue { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-muted); font-size: 12.5px; color: var(--text-secondary); }
