@@ -64,7 +64,7 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Images tab</div>
+      <div class="t">Expected: Images tab</div>
       <ul>
         <li>5 images: 2 img tags + 3 CSS backgrounds (the multi-background div yields TWO bg rows)</li>
         <li>Badge 0: the decorative alt="" image is deliberate and never counted as missing</li>
@@ -85,19 +85,19 @@
           alt="Data URI image"
           width="160"
           height="100" />
-        <figcaption>1. data: URI src — MIME label, SVG format, unlinked thumb</figcaption>
+        <figcaption>1. data: URI src: MIME label, SVG format, unlinked thumb</figcaption>
       </figure>
       <figure>
         <img src="/images/static/photo.svg" alt="" width="160" height="100" />
-        <figcaption>2. alt="" — decorative, not missing</figcaption>
+        <figcaption>2. alt="": decorative, not missing</figcaption>
       </figure>
       <figure>
         <div class="multi-bg"></div>
-        <figcaption>3. two background-image urls on one element — two rows</figcaption>
+        <figcaption>3. two background-image urls on one element: two rows</figcaption>
       </figure>
       <figure>
         <div class="gradient-hero"></div>
-        <figcaption>4. linear-gradient + url() — the url still counts</figcaption>
+        <figcaption>4. linear-gradient + url(): the url still counts</figcaption>
       </figure>
     </main>
     <a class="back" href="/">← all test pages</a>

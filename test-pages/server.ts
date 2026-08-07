@@ -30,6 +30,7 @@ const MIME: Record<string, string> = {
   '.js': 'text/javascript; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.xml': 'application/xml',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.gif': 'image/gif',
@@ -94,6 +95,16 @@ async function robotsResponse(referer: string | undefined): Promise<{ status: nu
   }
 }
 
+async function sitemapResponse(referer: string | undefined): Promise<{ status: number; type: string; body: string }> {
+  const scenario = referer?.match(/\/sitemaps\/([\w-]+)\.html/)?.[1] ?? 'index-shopify';
+  if (scenario === 'missing') return { status: 404, type: 'text/plain', body: 'not found' };
+  if (scenario === 'html-page') {
+    return { status: 200, type: 'text/html', body: '<!doctype html><html><body>SPA fallback</body></html>' };
+  }
+  const body = await readFile(path.join(ROOT, 'sitemaps', 'fixtures', `${scenario}.xml`), 'utf8');
+  return { status: 200, type: 'application/xml', body };
+}
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
 
@@ -106,6 +117,13 @@ const server = createServer(async (req, res) => {
 
     if (url.pathname === '/robots.txt') {
       const { status, type, body } = await robotsResponse(req.headers.referer);
+      res.writeHead(status, { 'content-type': type });
+      res.end(body);
+      return;
+    }
+
+    if (url.pathname === '/sitemap.xml') {
+      const { status, type, body } = await sitemapResponse(req.headers.referer);
       res.writeHead(status, { 'content-type': type });
       res.end(body);
       return;

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Logo-in-H1 and aria-label headings — alt/aria fallback, no false "empty"</title>
+    <title>Logo-in-H1 and aria-label headings: alt/aria fallback, no false "empty"</title>
     <style>
       body {
         font:
@@ -42,11 +42,11 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Headings tab</div>
+      <div class="t">Expected: Headings tab</div>
       <ul>
-        <li>H1 row reads "Acme Outfitters" (taken from the logo's alt — used to show "(empty)")</li>
+        <li>H1 row reads "Acme Outfitters" (taken from the logo's alt, used to show "(empty)")</li>
         <li>H2 row reads "Featured products" (taken from aria-label)</li>
-        <li>1 issue: "Empty H3" — its image has no alt, so there is genuinely no accessible name</li>
+        <li>1 issue: "Empty H3" (its image has no alt, so there is genuinely no accessible name)</li>
         <li>Badge "1" on the tab</li>
       </ul>
     </aside>

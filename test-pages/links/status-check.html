@@ -45,7 +45,7 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Links tab, Status column</div>
+      <div class="t">Expected: Links tab, Status column</div>
       <ul>
         <li>
           9 links total (the 8 below plus the "← all test pages" nav link, which also resolves 200). Status is opt-in:
@@ -56,7 +56,7 @@
           resolving. Pills fill in live as each link resolves.
         </li>
         <li>Green <b>200</b>: rows 1, 2, and the nav link</li>
-        <li>Amber redirect <b>3xx</b>: rows 3 (301) and 4 (308) — the exact code is not exposed to extensions</li>
+        <li>Amber redirect <b>3xx</b>: rows 3 (301) and 4 (308); the exact code is not exposed to extensions</li>
         <li>Red <b>404</b> (row 5) and red <b>500</b> (row 6)</li>
         <li>
           Red <b>429</b> (row 7): the background backs off once, then reports the still-rate-limited code rather than
