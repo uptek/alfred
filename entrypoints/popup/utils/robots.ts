@@ -297,7 +297,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
     findings.push({
       severity: 'error',
       code: 'rule-before-group',
-      message: `${rule.type === 'allow' ? 'Allow' : 'Disallow'} appears before any User-agent line — crawlers ignore it`,
+      message: `${rule.type === 'allow' ? 'Allow' : 'Disallow'} appears before any User-agent line: crawlers ignore it`,
       line: rule.line
     });
   }
@@ -318,14 +318,14 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
       findings.push({
         severity: 'warning',
         code: 'full-url-path',
-        message: 'Rule uses a full URL — paths must start with `/` (this rule never matches)',
+        message: 'Rule uses a full URL: paths must start with `/` (this rule never matches)',
         line: rule.line
       });
     } else if (!rule.path.startsWith('/') && !rule.path.startsWith('*')) {
       findings.push({
         severity: 'error',
         code: 'path-no-slash',
-        message: `Path \`${rule.path}\` does not start with \`/\` — Google ignores relative paths`,
+        message: `Path \`${rule.path}\` does not start with \`/\`: Google ignores relative paths`,
         line: rule.line
       });
     }
@@ -345,7 +345,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
     findings.push({
       severity: 'error',
       code: 'too-large',
-      message: 'File exceeds 500 KiB — Google ignores everything past that limit'
+      message: 'File exceeds 500 KiB. Google ignores everything past that limit'
     });
   } else if (meta.size > SIZE_WARN_THRESHOLD) {
     findings.push({
@@ -361,7 +361,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
       findings.push({
         severity: 'warning',
         code: 'misspelled',
-        message: `\`${d.name}\` looks like a misspelling of \`${correct}\` — crawlers ignore it`,
+        message: `\`${d.name}\` looks like a misspelling of \`${correct}\`: crawlers ignore it`,
         line: d.line
       });
     } else if (d.name === 'noindex' || d.name === 'nofollow') {
@@ -382,14 +382,14 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
       findings.push({
         severity: 'info',
         code: 'content-signal',
-        message: 'Content-Signal declares AI usage preferences — Google ignores this field',
+        message: 'Content-Signal declares AI usage preferences, but Google ignores this field',
         line: d.line
       });
     } else {
       findings.push({
         severity: 'info',
         code: 'unknown-directive',
-        message: `Unknown directive \`${d.name}\` — crawlers ignore it`,
+        message: `Unknown directive \`${d.name}\`: crawlers ignore it`,
         line: d.line
       });
     }
@@ -402,7 +402,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
         severity: numeric ? 'info' : 'warning',
         code: 'crawl-delay',
         message: numeric
-          ? 'Crawl-delay is ignored by Google — honored by Bing and Yandex only'
+          ? 'Crawl-delay is ignored by Google, honored by Bing and Yandex only'
           : `Crawl-delay value \`${g.crawlDelay.value}\` is not a number`,
         line: g.crawlDelay.line
       });
@@ -413,7 +413,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
         findings.push({
           severity: 'info',
           code: 'empty-group',
-          message: `Group \`${first.token}\` has no rules — that allows everything, which may be unintended`,
+          message: `Group \`${first.token}\` has no rules: that allows everything, which may be unintended`,
           line: first.line
         });
       }
@@ -430,7 +430,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
         findings.push({
           severity: 'info',
           code: 'duplicate-group',
-          message: `\`${ua.token}\` appears in multiple groups — crawlers merge them, but it is easy to misread`,
+          message: `\`${ua.token}\` appears in multiple groups: crawlers merge them, but it is easy to misread`,
           line: ua.line
         });
       }
@@ -464,7 +464,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
     findings.push({
       severity: 'info',
       code: 'no-sitemap',
-      message: 'No Sitemap line — adding one helps crawlers discover URLs'
+      message: 'No Sitemap line. Adding one helps crawlers discover URLs'
     });
   }
 
@@ -472,7 +472,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
     findings.push({
       severity: 'warning',
       code: 'bom',
-      message: 'File starts with a UTF-8 BOM — Google tolerates it, but some parsers break',
+      message: 'File starts with a UTF-8 BOM. Google tolerates it, but some parsers break',
       line: 1
     });
   }
@@ -695,7 +695,7 @@ export function analyzeRobots(
         {
           severity: 'warning',
           code: 'serves-html',
-          message: 'robots.txt serves HTML instead of plain text — crawlers may ignore it'
+          message: 'robots.txt serves HTML instead of plain text: crawlers may ignore it'
         }
       ],
       errorCount: 0,
@@ -719,7 +719,7 @@ export function analyzeRobots(
     findings.push({
       severity: 'warning',
       code: 'truncated',
-      message: 'File is larger than crawlers process — only the beginning is analyzed and shown below'
+      message: 'File is larger than crawlers process: only the beginning is analyzed and shown below'
     });
   }
 
@@ -736,7 +736,7 @@ export function analyzeRobots(
     findings.push({
       severity: 'info',
       code: 'shopify-customized',
-      message: `Differs from the default Shopify robots.txt — ${shopifyDiff.addedLines.length} added, ${shopifyDiff.removedRules.length} removed (added lines highlighted below)`
+      message: `Differs from the default Shopify robots.txt (${shopifyDiff.addedLines.length} added, ${shopifyDiff.removedRules.length} removed, added lines highlighted below)`
     });
   }
 

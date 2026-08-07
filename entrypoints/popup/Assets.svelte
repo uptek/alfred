@@ -196,12 +196,12 @@
   }
 
   function loadTitle(a: RawAsset): string {
-    if (a.isInline) return 'Inline — no separate request';
+    if (a.isInline) return 'Inline: no separate request';
     if (a.kind === 'style') return "Stylesheets are render-blocking by default; async/defer don't apply";
-    if (a.load === 'inline') return 'Inert data block — its src is ignored and never fetched';
-    if (a.load === 'async') return "Async — loads in parallel, doesn't block parsing";
-    if (a.load === 'defer') return 'Defer — runs after the document is parsed';
-    return 'Synchronous — blocks the parser while it loads';
+    if (a.load === 'inline') return 'Inert data block: its src is ignored and never fetched';
+    if (a.load === 'async') return "Async: loads in parallel, doesn't block parsing";
+    if (a.load === 'defer') return 'Defer: runs after the document is parsed';
+    return 'Synchronous: blocks the parser while it loads';
   }
 
   onDestroy(() => {
@@ -477,7 +477,7 @@
                     <span class="src src--inline">inline</span>
                   {/if}
                   {#if asset.status >= 400}
-                    <span class="pill pill--red" title="Failed request — HTTP {asset.status}">{asset.status}</span>
+                    <span class="pill pill--red" title="Failed request: HTTP {asset.status}">{asset.status}</span>
                   {/if}
                   {#if asset.renderBlocking}
                     <span class="pill pill--amber" title="Blocks first render">render-blocking</span>
@@ -502,7 +502,7 @@
               </td>
               <td class="td td--time">
                 {#if asset.cached}
-                  <span class="time-cached" title="Served from cache — no network time">cached</span>
+                  <span class="time-cached" title="Served from cache: no network time">cached</span>
                 {:else if asset.duration > 0}
                   {asset.duration} ms
                 {:else}

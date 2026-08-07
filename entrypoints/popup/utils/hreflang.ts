@@ -115,7 +115,7 @@ export function analyzeHreflangs(tags: RawHreflang[], pageUrl: string | null): H
       issues.push({
         id: 'conflicting-code',
         severity: 'error',
-        message: `"${code}" is declared more than once with different URLs — search engines will pick one arbitrarily`
+        message: `"${code}" is declared more than once with different URLs: search engines will pick one arbitrarily`
       });
     }
     const exactDupes = [...codeCounts.entries()].filter(([code, n]) => n > 1 && (byCode.get(code)?.size ?? 0) === 1);
@@ -128,7 +128,7 @@ export function analyzeHreflangs(tags: RawHreflang[], pageUrl: string | null): H
       issues.push({
         id: 'invalid-code',
         severity: 'error',
-        message: `${invalid.length === 1 ? 'Invalid language code' : `${invalid.length} invalid language codes`}: ${[...new Set(invalid.map((e) => `"${e.hreflang}"`))].join(', ')} — use language, optional script, optional region (e.g. en, en-GB, zh-Hant-TW)`
+        message: `${invalid.length === 1 ? 'Invalid language code' : `${invalid.length} invalid language codes`}: ${[...new Set(invalid.map((e) => `"${e.hreflang}"`))].join(', ')}. Use language, optional script, optional region (e.g. en, en-GB, zh-Hant-TW)`
       });
     }
 
@@ -137,7 +137,7 @@ export function analyzeHreflangs(tags: RawHreflang[], pageUrl: string | null): H
       issues.push({
         id: 'relative-href',
         severity: 'error',
-        message: `${relative.length} ${relative.length === 1 ? 'tag uses' : 'tags use'} a relative URL — hreflang URLs must be fully qualified (https://...)`
+        message: `${relative.length} ${relative.length === 1 ? 'tag uses' : 'tags use'} a relative URL: hreflang URLs must be fully qualified (https://...)`
       });
     }
 
@@ -146,7 +146,7 @@ export function analyzeHreflangs(tags: RawHreflang[], pageUrl: string | null): H
       issues.push({
         id: 'outside-head',
         severity: 'error',
-        message: `${outsideHead.length} ${outsideHead.length === 1 ? 'tag is' : 'tags are'} outside <head> — search engines ignore hreflang in <body>`
+        message: `${outsideHead.length} ${outsideHead.length === 1 ? 'tag is' : 'tags are'} outside <head>: search engines ignore hreflang in <body>`
       });
     }
 
@@ -154,7 +154,7 @@ export function analyzeHreflangs(tags: RawHreflang[], pageUrl: string | null): H
       issues.push({
         id: 'missing-self',
         severity: 'error',
-        message: "No self-referencing tag — the set must include this page's own URL or it may be ignored entirely"
+        message: "No self-referencing tag. The set must include this page's own URL or it may be ignored entirely"
       });
     }
 
@@ -162,7 +162,7 @@ export function analyzeHreflangs(tags: RawHreflang[], pageUrl: string | null): H
       issues.push({
         id: 'missing-x-default',
         severity: 'warning',
-        message: 'No x-default tag — add one to control which page unmatched languages see'
+        message: 'No x-default tag. Add one to control which page unmatched languages see'
       });
     }
   }
