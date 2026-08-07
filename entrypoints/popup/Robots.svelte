@@ -406,6 +406,13 @@
 
   .status-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; font-family: 'SF Mono', ui-monospace, monospace; color: var(--text-secondary); background: var(--bg-inset); padding: 2px 8px; border-radius: 20px; }
   .status-pill--error { background: var(--error-bg); color: var(--error-strong); }
+  /* Dark pill ring (see index.html); this class clashes with Links' neutral
+     .status-pill--error, so the global rule skips it and each component owns
+     its own hue. */
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .status-pill--error { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--error) 35%, transparent); }
+  }
+  :global(:root[data-theme='dark']) .status-pill--error { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--error) 35%, transparent); }
   .status-pill__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
   .status-pill__dot--error { background: var(--error); }
 
