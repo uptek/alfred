@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <title>Alfred Popup - real-CSS preview</title>
@@ -81,111 +81,114 @@
         --overlay-mask: rgba(255, 255, 255, 0.5);
       }
 
-      /* Dark palette mirrors entrypoints/popup/index.html — keep in sync. */
+      /* Dark palette: GitHub "Soft dark" (dark dimmed) — #212830 canvas,
+         #3d444d borders, #478be6 accent, #347d39 green primary buttons,
+         #d1d7e0/#9198a1 text tiers. Mirrors entrypoints/popup/index.html —
+         keep in sync. */
       /* Preview forced to light mode: dark-media block gated behind an
          attribute no element sets, so the OS dark preference is inert here.
          Remove [data-force-dark] from the selector below to re-enable. */
       @media (prefers-color-scheme: dark) {
         :root[data-force-dark]:not([data-theme='light']) {
           color-scheme: dark;
-          --bg: #1e2a38;
-          --bg-canvas: #15202b;
-          --bg-raised: #101a24;
-          --bg-inset: #172431;
-          --bg-hover: #22303c;
-          --border: #38444d;
-          --border-subtle: #2c3640;
-          --border-muted: #253341;
-          --border-hover: #4a5866;
-          --border-strong: #425364;
-          --text: #ffffff;
-          --text-secondary: #e1e8ed;
-          --text-muted: #8899a6;
-          --text-faint: #6e7c89;
-          --text-disabled: #56646f;
-          --text-placeholder: #8899a6;
-          --text-link: #8899a6;
-          --text-link-hover: #ffffff;
-          --text-link-muted: #8899a6;
-          --text-link-muted-hover: #e1e8ed;
-          --text-label: #8899a6;
-          --accent: #1da1f2;
-          --accent-strong: #1a91da;
-          --accent-tint: #182d3d;
-          --btn-bg: #1da1f2;
-          --btn-bg-hover: #1a91da;
+          --bg: #2a313c;
+          --bg-canvas: #212830;
+          --bg-raised: #1c222b;
+          --bg-inset: #262c36;
+          --bg-hover: #2f3742;
+          --border: #3d444d;
+          --border-subtle: #363d46;
+          --border-muted: #2f363f;
+          --border-hover: #4b535e;
+          --border-strong: #444c56;
+          --text: #d1d7e0;
+          --text-secondary: #b7bdc8;
+          --text-muted: #9198a1;
+          --text-faint: #7a828e;
+          --text-disabled: #656c76;
+          --text-placeholder: #9198a1;
+          --text-link: #9198a1;
+          --text-link-hover: #d1d7e0;
+          --text-link-muted: #9198a1;
+          --text-link-muted-hover: #b7bdc8;
+          --text-label: #9198a1;
+          --accent: #478be6;
+          --accent-strong: #316dca;
+          --accent-tint: #253141;
+          --btn-bg: #347d39;
+          --btn-bg-hover: #3b8640;
           --btn-text: #ffffff;
-          --success: #17bf63;
-          --success-strong: #2fd27e;
-          --success-bg: #13291f;
-          --warning: #ffad1f;
-          --warning-bg: #2a2412;
-          --error: #e0245e;
-          --error-strong: #f0356e;
-          --error-bg: #291826;
-          --star-active: #ffad1f;
-          --star-inactive: #38444d;
-          --scrollbar: #38444d;
-          --ring: 0 0 0 3px rgba(29, 161, 242, 0.4);
+          --success: #57ab5a;
+          --success-strong: #6bc46d;
+          --success-bg: #23342a;
+          --warning: #c69026;
+          --warning-bg: #36352c;
+          --error: #e5534b;
+          --error-strong: #f47067;
+          --error-bg: #352327;
+          --star-active: #daaa3f;
+          --star-inactive: #3d444d;
+          --scrollbar: #3d444d;
+          --ring: 0 0 0 3px rgba(71, 139, 230, 0.4);
           --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
           --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
-          --shadow-tab: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(136, 153, 166, 0.06);
+          --shadow-tab: 0 1px 2px rgba(0, 0, 0, 0.4);
           --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.6);
-          --shadow-pop: 0 0 15px rgba(136, 153, 166, 0.2), 0 0 3px 1px rgba(136, 153, 166, 0.15);
-          --hero-gradient: linear-gradient(135deg, #192734 0%, #15202b 55%, #1b2836 100%);
-          --logo-wordmark: #ffffff;
-          --overlay-mask: rgba(21, 32, 43, 0.5);
+          --shadow-pop: 0 8px 24px rgba(1, 4, 9, 0.5);
+          --hero-gradient: linear-gradient(135deg, #252b34 0%, #212830 55%, #29303a 100%);
+          --logo-wordmark: #d1d7e0;
+          --overlay-mask: rgba(33, 40, 48, 0.5);
         }
       }
       :root[data-theme='dark'] {
         color-scheme: dark;
-        --bg: #1e2a38;
-        --bg-canvas: #15202b;
-        --bg-raised: #101a24;
-        --bg-inset: #172431;
-        --bg-hover: #22303c;
-        --border: #38444d;
-        --border-subtle: #2c3640;
-        --border-muted: #253341;
-        --border-hover: #4a5866;
-        --border-strong: #425364;
-        --text: #ffffff;
-        --text-secondary: #e1e8ed;
-        --text-muted: #8899a6;
-        --text-faint: #6e7c89;
-        --text-disabled: #56646f;
-        --text-placeholder: #8899a6;
-        --text-link: #8899a6;
-        --text-link-hover: #ffffff;
-        --text-link-muted: #8899a6;
-        --text-link-muted-hover: #e1e8ed;
-        --text-label: #8899a6;
-        --accent: #1da1f2;
-        --accent-strong: #1a91da;
-        --accent-tint: #182d3d;
-        --btn-bg: #1da1f2;
-        --btn-bg-hover: #1a91da;
+        --bg: #2a313c;
+        --bg-canvas: #212830;
+        --bg-raised: #1c222b;
+        --bg-inset: #262c36;
+        --bg-hover: #2f3742;
+        --border: #3d444d;
+        --border-subtle: #363d46;
+        --border-muted: #2f363f;
+        --border-hover: #4b535e;
+        --border-strong: #444c56;
+        --text: #d1d7e0;
+        --text-secondary: #b7bdc8;
+        --text-muted: #9198a1;
+        --text-faint: #7a828e;
+        --text-disabled: #656c76;
+        --text-placeholder: #9198a1;
+        --text-link: #9198a1;
+        --text-link-hover: #d1d7e0;
+        --text-link-muted: #9198a1;
+        --text-link-muted-hover: #b7bdc8;
+        --text-label: #9198a1;
+        --accent: #478be6;
+        --accent-strong: #316dca;
+        --accent-tint: #253141;
+        --btn-bg: #347d39;
+        --btn-bg-hover: #3b8640;
         --btn-text: #ffffff;
-        --success: #17bf63;
-        --success-strong: #2fd27e;
-        --success-bg: #13291f;
-        --warning: #ffad1f;
-        --warning-bg: #2a2412;
-        --error: #e0245e;
-        --error-strong: #f0356e;
-        --error-bg: #291826;
-        --star-active: #ffad1f;
-        --star-inactive: #38444d;
-        --scrollbar: #38444d;
-        --ring: 0 0 0 3px rgba(29, 161, 242, 0.4);
+        --success: #57ab5a;
+        --success-strong: #6bc46d;
+        --success-bg: #23342a;
+        --warning: #c69026;
+        --warning-bg: #36352c;
+        --error: #e5534b;
+        --error-strong: #f47067;
+        --error-bg: #352327;
+        --star-active: #daaa3f;
+        --star-inactive: #3d444d;
+        --scrollbar: #3d444d;
+        --ring: 0 0 0 3px rgba(71, 139, 230, 0.4);
         --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
         --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
-        --shadow-tab: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(136, 153, 166, 0.06);
+        --shadow-tab: 0 1px 2px rgba(0, 0, 0, 0.4);
         --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.6);
-        --shadow-pop: 0 0 15px rgba(136, 153, 166, 0.2), 0 0 3px 1px rgba(136, 153, 166, 0.15);
-        --hero-gradient: linear-gradient(135deg, #192734 0%, #15202b 55%, #1b2836 100%);
-        --logo-wordmark: #ffffff;
-        --overlay-mask: rgba(21, 32, 43, 0.5);
+        --shadow-pop: 0 8px 24px rgba(1, 4, 9, 0.5);
+        --hero-gradient: linear-gradient(135deg, #252b34 0%, #212830 55%, #29303a 100%);
+        --logo-wordmark: #d1d7e0;
+        --overlay-mask: rgba(33, 40, 48, 0.5);
       }
 
       /* NOTE: the real popup has no global box-sizing reset; mirror that so
@@ -1326,6 +1329,40 @@
         background: var(--bg-inset);
         color: var(--text-secondary);
       }
+      /* Dark: pills carry a subtle ring in their own hue (GitHub label style).
+         Inset shadow, not border, so pill size is unchanged. */
+      @media (prefers-color-scheme: dark) {
+        :root[data-force-dark]:not([data-theme='light']) :is(.pill--green, .stats__update) {
+          box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 35%, transparent);
+        }
+        :root[data-force-dark]:not([data-theme='light']) :is(.pill--red, .tab__badge--red) {
+          box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--error) 35%, transparent);
+        }
+        :root[data-force-dark]:not([data-theme='light']) :is(.pill--amber, .dup-badge) {
+          box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 35%, transparent);
+        }
+        :root[data-force-dark]:not([data-theme='light']) .tree__badge {
+          box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+        }
+        :root[data-force-dark]:not([data-theme='light']) .pill--neutral {
+          box-shadow: inset 0 0 0 1px var(--border-strong);
+        }
+      }
+      :root[data-theme='dark'] :is(.pill--green, .stats__update) {
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 35%, transparent);
+      }
+      :root[data-theme='dark'] :is(.pill--red, .tab__badge--red) {
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--error) 35%, transparent);
+      }
+      :root[data-theme='dark'] :is(.pill--amber, .dup-badge) {
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 35%, transparent);
+      }
+      :root[data-theme='dark'] .tree__badge {
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+      }
+      :root[data-theme='dark'] .pill--neutral {
+        box-shadow: inset 0 0 0 1px var(--border-strong);
+      }
 
       /* ============================ Sitemaps ============================ */
       .sitemaps-tab {
@@ -1484,6 +1521,31 @@
       .variant-toggle__btn.active {
         background: var(--btn-bg);
         color: var(--btn-text);
+      }
+      /* Dark: selected/toggled controls read as accent-selected (GitHub
+         toggled-filter style) — legible on/off state without spending green,
+         which stays reserved for the single primary action per view. */
+      @media (prefers-color-scheme: dark) {
+        :root[data-force-dark]:not([data-theme='light']) :is(.variant-toggle__btn.active, .toolbar-btn--active) {
+          background: var(--accent-tint);
+          color: var(--accent);
+          border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+        }
+        :root[data-force-dark]:not([data-theme='light']) :is(.variant-toggle__btn.active, .toolbar-btn--active):hover {
+          background: color-mix(in srgb, var(--accent) 12%, var(--accent-tint));
+          color: var(--accent);
+          border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+        }
+      }
+      :root[data-theme='dark'] :is(.variant-toggle__btn.active, .toolbar-btn--active) {
+        background: var(--accent-tint);
+        color: var(--accent);
+        border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+      }
+      :root[data-theme='dark'] :is(.variant-toggle__btn.active, .toolbar-btn--active):hover {
+        background: color-mix(in srgb, var(--accent) 12%, var(--accent-tint));
+        color: var(--accent);
+        border-color: color-mix(in srgb, var(--accent) 55%, transparent);
       }
       .sitemaps-variant {
         display: none;

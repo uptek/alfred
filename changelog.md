@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.08.08.2
+@ 2026-08-08
+
+### A Proper Dark Mode
+Some products spend a quarter polishing dark mode while the bugs pile up. We fixed the bugs first, so we're allowed to have this: a calmer dark theme in the style of GitHub's soft dark, with clearer on/off states for buttons and easier-to-spot status badges.
+
+
 ## 2026.08.08.1
 @ 2026-08-08
 
@@ -12,7 +19,7 @@ Alfred now handles everything sitemaps, on any website you visit. It discovers e
 - Copy any sitemap's full URL list, or export everything as CSV, JSON, or text.
 - Sidebar badge flags sitemap errors before you even open the tab.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-sitemaps.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-sitemaps.mp4"></video>
 
 ## 2026.08.08
 @ 2026-08-08

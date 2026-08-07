@@ -816,6 +816,13 @@
   .status-pill--redirect { background: var(--warning-bg); color: var(--warning); }
   .status-pill--client-error, .status-pill--server-error { background: var(--error-bg); color: var(--error-strong); }
   .status-pill--error { background: var(--bg-hover); color: var(--text-muted); }
+  /* Dark pill ring (see index.html); this class clashes with Robots' red
+     .status-pill--error, so the global rule skips it and each component owns
+     its own hue (neutral here: fetch failed, not an HTTP error). */
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .status-pill--error { box-shadow: inset 0 0 0 1px var(--border-strong); }
+  }
+  :global(:root[data-theme='dark']) .status-pill--error { box-shadow: inset 0 0 0 1px var(--border-strong); }
 
   .anchor-row { display: flex; align-items: center; gap: 5px; min-width: 0; margin-top: 1px; }
   .img-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; border-radius: 4px; line-height: 14px; background: var(--accent-tint); color: var(--accent); }

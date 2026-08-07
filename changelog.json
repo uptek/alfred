@@ -1,5 +1,19 @@
 [
   {
+    "version": "2026.08.08.2",
+    "date": "2026-08-08",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "A Proper Dark Mode"
+      },
+      {
+        "type": "paragraph",
+        "content": "Some products spend a quarter polishing dark mode while the bugs pile up. We fixed the bugs first, so we're allowed to have this: a calmer dark theme in the style of GitHub's soft dark, with clearer on/off states for buttons and easier-to-spot status badges."
+      }
+    ]
+  },
+  {
     "version": "2026.08.08.1",
     "date": "2026-08-08",
     "changes": [
