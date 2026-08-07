@@ -1,4 +1,4 @@
-# Alfred — Developer Tools for Shopify
+# Alfred: Developer Tools for Shopify
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/uptek/alfred/actions/workflows/ci.yml/badge.svg)](https://github.com/uptek/alfred/actions/workflows/ci.yml)
@@ -9,9 +9,9 @@ who got tired of clicking through endless menus.
 
 ## Features
 
-- **Theme Inspector** — detect what theme any Shopify store is running, with
+- **Theme Inspector**: detect what theme any Shopify store is running, with
   links to the theme store listing, documentation, and demo
-- **Robots.txt Analyzer** — fetch and analyze any site's robots.txt: AI crawler
+- **Robots.txt Analyzer**: fetch and analyze any site's robots.txt: AI crawler
   access matrix (GPTBot, ClaudeBot, PerplexityBot, and more), issue detection
   with line-linked findings, and Shopify default-vs-customized detection
 - **Smart Shortcuts**
@@ -24,23 +24,23 @@ who got tired of clicking through endless menus.
 - **Theme Customizer Enhancements**
   - Draggable panel resizers for the customizer layout
   - Theme inspector auto-toggle (always on/off/remember last state)
-  - Theme list utilities — copy preview URLs, quick actions per theme
-- **Admin Sidebar Collapse** — toggle the Shopify admin sidebar for more
+  - Theme list utilities: copy preview URLs, quick actions per theme
+- **Admin Sidebar Collapse**: toggle the Shopify admin sidebar for more
   screen space
-- **Code Editor Close Warning** — prevents accidental tab close (Cmd+W) in the
+- **Code Editor Close Warning**: prevents accidental tab close (Cmd+W) in the
   theme code editor
 - **Collaborator Permission Presets**
   - Save frequently used permissions as reusable presets
   - Apply presets instantly when requesting collaborator access
   - Import/export presets to share with your team
-- **App Store Partner Page** — transform the partner page into a clean,
+- **App Store Partner Page**: transform the partner page into a clean,
   scannable table
-- **App Store Search Indexing** — adds position numbers to app search results
-- **Storefront Password Autofill** — auto-fill storefront passwords on
+- **App Store Search Indexing**: adds position numbers to app search results
+- **Storefront Password Autofill**: auto-fill storefront passwords on
   password-protected stores
-- **Dev Dashboard Dark Mode** — adds a light/dark/system theme toggle to
+- **Dev Dashboard Dark Mode**: adds a light/dark/system theme toggle to
   dev.shopify.com
-- **Cartograph** — visual cart editor for inspecting and modifying cart contents,
+- **Cartograph**: visual cart editor for inspecting and modifying cart contents,
   metadata, and shipping details
 
 ## Install
