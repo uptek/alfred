@@ -100,7 +100,10 @@ const VALID_ACTIONS = [
   'robots_wrap_toggle',
   'social_view',
   'social_platform_click',
-  'social_copy_tags'
+  'social_copy_tags',
+  'hreflangs_view',
+  'hreflangs_copy',
+  'hreflangs_export'
 ];
 
 serve(async (req) => {

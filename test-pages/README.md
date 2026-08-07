@@ -31,6 +31,7 @@ test-pages/
   assets/          script/stylesheet scenarios (+ static/ js & css fixtures)
   theme/           fake Shopify storefront (sets window.Shopify + window.__st)
   robots/          robots.txt scenarios (+ fixtures/*.robots.txt)
+  hreflang/        hreflang alternate-tag scenarios
   social/          OG/Twitter card scenarios (+ static/ sized PNG fixtures)
 ```
 

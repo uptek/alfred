@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Empty state: a page with no hreflang tags at all</title>
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Hreflangs tab</div>
+      <ul>
+        <li>Empty state: globe icon, "No hreflang tags found on this page", and the single-language hint</li>
+        <li>No sidebar badge — a missing set is not an error, it just means one language</li>
+      </ul>
+    </aside>
+    <main>
+      <p>This page declares no language alternates, to exercise the Hreflangs tab's empty state.</p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>

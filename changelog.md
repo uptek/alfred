@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.08.08
+@ 2026-08-08
+
+### Hreflangs Tab
+A new Hreflangs tab lists every language and region alternate declared on the page and validates the whole set: invalid language codes, relative URLs, conflicting duplicates, tags outside the head, and missing self-reference or x-default.
+
+- Sidebar badge counts hreflang errors at a glance.
+- Copy the full set or export it as CSV.
+- Summary bar shows alternate count, x-default, and self-referencing status.
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-hreflang-tab.mp4"></video>
+
 ## 2026.08.07
 @ 2026-08-07
 
@@ -12,7 +24,7 @@ A new Social tab shows exactly how your page will look when shared on Facebook, 
 - The image is fetched and measured in the background, with declared og:image dimensions verified against the real file.
 - A red badge on the tab counts tag errors, and a table lists every og:, twitter:, and fb: tag found on the page.
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-social-tab.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-social-tab.mp4"></video>
 
 ## 2026.08.06
 @ 2026-08-06

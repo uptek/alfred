@@ -8,6 +8,7 @@
   import { getRobots, analyzeRobots } from './utils/robots';
   import { getOverview, getOverviewNetwork, getLlmsTxt, getShopifyContext, analyzeOverview } from './utils/overview';
   import { getSocial, resolveSocial, badgeCount } from './utils/social';
+  import { getHreflangs, analyzeHreflangs } from './utils/hreflang';
   import { trackAction } from '@/utils/analytics';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
@@ -18,6 +19,7 @@
   import Robots from './Robots.svelte';
   import Overview from './Overview.svelte';
   import Social from './Social.svelte';
+  import Hreflangs from './Hreflangs.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
   import { getTabState, type PopupSection } from './stores/tabState.svelte';
@@ -32,12 +34,13 @@
     RawOverview,
     OverviewNetwork,
     ShopifyContext,
-    RawSocial
+    RawSocial,
+    RawHreflang
   } from './utils/types';
 
   type TabId = PopupSection;
   const tabState = getTabState();
-  // Future tabs: 'apps' | 'products' | 'hreflangs' | 'social' | 'sitemaps'
+  // Future tabs: 'apps' | 'products' | 'sitemaps'
 
   interface Tab {
     id: TabId;
@@ -64,6 +67,7 @@
   let rawRobots = $state<RobotsResponse | null>(null);
   let robotsLoading = $state(true);
   let rawSocial = $state<RawSocial | null>(null);
+  let rawHreflangs = $state<RawHreflang[]>([]);
   let rawOverview = $state<RawOverview | null>(null);
   let overviewNetwork = $state<OverviewNetwork | null>(null);
   let shopifyContext = $state<ShopifyContext | null>(null);
@@ -81,6 +85,7 @@
   );
   // Tag-level errors only, probe excluded — badge must stay synchronous.
   const socialBadgeCount = $derived(rawSocial ? badgeCount(resolveSocial(rawSocial)) : 0);
+  const hreflangErrorCount = $derived(analyzeHreflangs(rawHreflangs, storeInfo?.page_url ?? null).errorCount);
 
   const seoTabs = $derived<Tab[]>([
     {
@@ -109,7 +114,12 @@
       icon: 'robots',
       ...(robotsErrorCount > 0 ? { badge: { count: robotsErrorCount, color: 'red' as const } } : {})
     },
-    // { id: 'hreflangs', label: 'Hreflangs', icon: 'hreflangs' },
+    {
+      id: 'hreflangs' as TabId,
+      label: 'Hreflangs',
+      icon: 'hreflangs',
+      ...(hreflangErrorCount > 0 ? { badge: { count: hreflangErrorCount, color: 'red' as const } } : {})
+    },
     { id: 'schema' as TabId, label: 'Schema', icon: 'schema' },
     {
       id: 'social' as TabId,
@@ -137,7 +147,7 @@
     });
     const fetchData = async () => {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      const [storeData, headingsData, linksData, assetsData, imagesData, schemaData, overviewData, contextData, socialData] =
+      const [storeData, headingsData, linksData, assetsData, imagesData, schemaData, overviewData, contextData, socialData, hreflangsData] =
         await Promise.all([
           getTheme(),
           getHeadings(),
@@ -148,6 +158,7 @@
           getOverview(),
           getShopifyContext(),
           getSocial(),
+          getHreflangs(),
           tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
         ]);
       trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
@@ -160,6 +171,7 @@
       rawOverview = overviewData;
       shopifyContext = contextData;
       rawSocial = socialData;
+      rawHreflangs = hreflangsData;
       // A restored section wins; otherwise non-Shopify pages land on Overview.
       if (tabState.restoredActiveSection) {
         activeTab = tabState.restoredActiveSection;
@@ -198,13 +210,13 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
   {:else if icon === 'social'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+  {:else if icon === 'hreflangs'}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
   <!-- Future tab icons (uncomment as tabs are enabled)
   {:else if icon === 'apps'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
   {:else if icon === 'products'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg>
-  {:else if icon === 'hreflangs'}
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
   {:else if icon === 'sitemaps'}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
   -->
@@ -313,6 +325,8 @@
           <Images images={rawImages} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'schema'}
           <Schema schema={rawSchema} domain={storeInfo?.domain ?? null} />
+        {:else if activeTab === 'hreflangs'}
+          <Hreflangs tags={rawHreflangs} pageUrl={storeInfo?.page_url ?? null} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'social'}
           <Social raw={rawSocial} />
         {:else if activeTab === 'robots'}

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Broken hreflang set — invalid code, relative URL, conflict, body tag, no self-ref</title>
+    <link rel="alternate" hreflang="en_US" href="https://example.com/en-us/" />
+    <link rel="alternate" hreflang="fr" href="/fr/" />
+    <link rel="alternate" hreflang="de" href="https://example.com/de/" />
+    <link rel="alternate" hreflang="DE" href="https://example.com/de-alt/" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Hreflangs tab</div>
+      <ul>
+        <li>5 alternates; sidebar badge shows 5 errors</li>
+        <li>
+          Error callouts: "de" conflict (two different URLs), invalid code <code>en_US</code>, 1 relative URL, 1 tag
+          outside &lt;head&gt;, no self-referencing tag
+        </li>
+        <li>Warning callout: no x-default</li>
+        <li>
+          <code>en_US</code> pill is red; <code>/fr/</code> row has a red <code>relative</code> flag; both
+          <code>de</code> rows have red <code>conflict</code> flags; the <code>es</code> row (declared in body) has a
+          red <code>body</code> flag
+        </li>
+        <li>
+          Summary bar: 5 alternates &middot; no x-default (amber) &middot; no self-reference (red) &middot; 5 errors
+          (red)
+        </li>
+      </ul>
+    </aside>
+    <link rel="alternate" hreflang="es" href="https://example.com/es/" />
+    <main>
+      <p>
+        Every hreflang defect the tab detects, on one page: an underscore code, a relative URL, the same language
+        declared twice with different URLs, a tag in the body, and no self-reference or x-default.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
