@@ -82,8 +82,11 @@
       }
 
       /* Dark palette mirrors entrypoints/popup/index.html — keep in sync. */
+      /* Preview forced to light mode: dark-media block gated behind an
+         attribute no element sets, so the OS dark preference is inert here.
+         Remove [data-force-dark] from the selector below to re-enable. */
       @media (prefers-color-scheme: dark) {
-        :root:not([data-theme='light']) {
+        :root[data-force-dark]:not([data-theme='light']) {
           color-scheme: dark;
           --bg: #1e2a38;
           --bg-canvas: #15202b;
@@ -1319,6 +1322,305 @@
         background: var(--warning-bg);
         color: var(--warning);
       }
+      .pill--neutral {
+        background: var(--bg-inset);
+        color: var(--text-secondary);
+      }
+
+      /* ============================ Sitemaps ============================ */
+      .sitemaps-tab {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .sitemaps__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .sitemaps__title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: -0.01em;
+      }
+      .sitemaps__subtitle {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+      .sitemaps__body {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      .finding {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: 12px 20px 0;
+        padding: 10px 14px;
+        background: var(--accent-tint);
+        border-radius: 8px;
+        border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+      }
+      .finding__icon {
+        width: 14px;
+        height: 14px;
+        color: var(--accent);
+        stroke-width: 2;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .finding__text {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+      .sitemap-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 14px 20px 20px;
+      }
+      .sitemap-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg);
+      }
+      .sitemap-card__icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .sitemap-card__body {
+        flex: 1;
+        min-width: 0;
+      }
+      .sitemap-card__name {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .sitemap-card__url {
+        display: block;
+        font-family: 'SF Mono', ui-monospace, monospace;
+        font-size: 11px;
+        color: var(--accent);
+        text-decoration: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-top: 2px;
+      }
+      .sitemap-card__url:hover {
+        text-decoration: underline;
+      }
+      .sitemap-card__meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .sitemap-card__stats {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .sitemap-card__count {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+      .sitemap-card__lastmod {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .sitemaps__actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .variant-toggle {
+        display: flex;
+        border: 1px solid var(--border-strong);
+        border-radius: 6px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .variant-toggle__btn {
+        padding: 0 10px;
+        height: 28px;
+        font-size: 11px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--text-muted);
+        background: var(--bg);
+        border: none;
+        cursor: pointer;
+      }
+      .variant-toggle__btn + .variant-toggle__btn {
+        border-left: 1px solid var(--border-strong);
+      }
+      .variant-toggle__btn:hover {
+        color: var(--text-secondary);
+      }
+      .variant-toggle__btn.active {
+        background: var(--btn-bg);
+        color: var(--btn-text);
+      }
+      .sitemaps-variant {
+        display: none;
+      }
+      .sitemaps-variant.active {
+        display: block;
+      }
+      .sitemaps-table-wrap {
+        padding: 0 20px 20px;
+      }
+      .th--sitemap {
+        width: auto;
+      }
+      .th--urls {
+        width: 92px;
+        text-align: right;
+      }
+      .th--modified {
+        width: 78px;
+      }
+      .th--status {
+        width: 56px;
+        text-align: right;
+      }
+      .th--actions {
+        width: 82px;
+      }
+      .td--urls-cell {
+        text-align: right;
+      }
+      .td--status-cell {
+        text-align: right;
+      }
+      .td--actions-cell {
+        padding-right: 0;
+      }
+      .row-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 2px;
+      }
+      .row-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border-radius: 5px;
+        border: none;
+        background: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        text-decoration: none;
+        flex-shrink: 0;
+      }
+      .row-action:hover {
+        background: var(--bg-hover);
+        color: var(--text-secondary);
+      }
+      .row-action svg {
+        width: 14px;
+        height: 14px;
+        stroke-width: 1.8;
+      }
+      .row-action--disabled {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+      .row-action--copied {
+        color: var(--success);
+      }
+      .row-action--copied:hover {
+        color: var(--success);
+        background: none;
+      }
+      .sitemap-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .sitemap-chip {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .sitemap-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+      }
+      .row:hover .sitemap-name {
+        text-decoration: underline;
+        text-decoration-color: var(--text);
+      }
+      .url-count {
+        display: block;
+        font-family: 'SF Mono', ui-monospace, monospace;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .status-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--success);
+      }
+      .finding--compact {
+        margin: 12px 20px 10px;
+        padding: 7px 12px;
+        gap: 6px;
+      }
+      .finding--compact .finding__text {
+        font-size: 11.5px;
+      }
+      .sitemaps-table tfoot .td {
+        border-bottom: none;
+        border-top: 1px solid var(--border);
+        background: var(--bg-raised);
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
 
       /* ============================ Settings ============================ */
       .password-section {
@@ -1576,6 +1878,14 @@
                 <polyline points="16 18 22 12 16 6" />
                 <polyline points="8 6 2 12 8 18" /></svg
               >Assets
+            </button>
+            <button class="tab" data-tab="sitemaps" onclick="sw('sitemaps')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+                <circle cx="7" cy="6" r="1" fill="currentColor" stroke="none" />
+                <circle cx="7" cy="12" r="1" fill="currentColor" stroke="none" />
+                <circle cx="7" cy="18" r="1" fill="currentColor" stroke="none" /></svg
+              >Sitemaps
             </button>
           </div>
           <div class="sidebar__bottom">
@@ -2166,6 +2476,386 @@
             </div>
           </div>
 
+          <!-- SITEMAPS -->
+          <div class="panel panel--flex" id="panel-sitemaps">
+            <div class="sitemaps-tab">
+              <div class="sitemaps__header">
+                <div>
+                  <div class="sitemaps__title">Sitemaps</div>
+                  <div class="sitemaps__subtitle">6 sitemaps &middot; 10,384+ URLs</div>
+                </div>
+                <div class="sitemaps__actions">
+                  <div class="variant-toggle">
+                    <button class="variant-toggle__btn" data-variant="cards" onclick="swSitemapsVariant('cards')">
+                      Cards
+                    </button>
+                    <button
+                      class="variant-toggle__btn active"
+                      data-variant="table"
+                      onclick="swSitemapsVariant('table')">
+                      Table
+                    </button>
+                  </div>
+                  <button class="reset-btn" title="Download sitemap">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                  </button>
+                  <a class="btn btn--ghost" href="#">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" /></svg
+                    >Open sitemap.xml</a
+                  >
+                </div>
+              </div>
+              <div class="sitemaps__body">
+                <!-- TABLE variant (default) -->
+                <div class="sitemaps-variant active" data-variant-panel="table">
+                  <!-- Index-level findings live here (compact, single line); row-level problems stay in the Status column -->
+                  <div class="finding finding--compact">
+                    <svg
+                      class="finding__icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4m0-4h.01" /></svg
+                    ><span class="finding__text"
+                      >robots.txt has no Sitemap: line. Adding one helps crawlers discover it.</span
+                    >
+                  </div>
+                  <div class="sitemaps-table-wrap">
+                    <table class="table sitemaps-table">
+                      <thead>
+                        <tr>
+                          <th class="th th--sitemap"><button class="th-btn">Sitemap</button></th>
+                          <th class="th th--urls">
+                            <button class="th-btn th-btn--active">
+                              URLs<svg
+                                class="sort-arrow"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-linecap="round">
+                                <path d="M6 9l6 6 6-6" />
+                              </svg>
+                            </button>
+                          </th>
+                          <th class="th th--modified"><button class="th-btn">Modified</button></th>
+                          <th class="th th--status"><button class="th-btn">Status</button></th>
+                          <th class="th th--actions"><span style="display: none">Actions</span></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr class="row" title="Open sitemap_products_1.xml">
+                          <td class="td">
+                            <div class="sitemap-row">
+                              <span class="sitemap-chip" style="background: #4a90d9">P</span>
+                              <span class="sitemap-name">sitemap_products_1.xml</span>
+                            </div>
+                          </td>
+                          <td class="td td--urls-cell">
+                            <span class="url-count">4,982</span>
+                          </td>
+                          <td class="td">7d ago</td>
+                          <td class="td td--status-cell"><span class="status-dot" title="OK"></span></td>
+                          <td class="td td--actions-cell">
+                            <div class="row-actions">
+                              <button class="row-action" title="Copy sitemap URL">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>
+                              </button>
+                              <button class="row-action" title="Copy all links in this sitemap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="8" y="2" width="8" height="4" rx="1" />
+                                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+                                  <line x1="8" y1="11" x2="16" y2="11" />
+                                  <line x1="8" y1="15" x2="16" y2="15" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr class="row" title="Open sitemap_collections_1.xml">
+                          <td class="td">
+                            <div class="sitemap-row">
+                              <span class="sitemap-chip" style="background: #5c6ac4">C</span>
+                              <span class="sitemap-name">sitemap_collections_1.xml</span>
+                            </div>
+                          </td>
+                          <td class="td td--urls-cell">
+                            <span class="url-count">214</span>
+                          </td>
+                          <td class="td">3d ago</td>
+                          <td class="td td--status-cell"><span class="status-dot" title="OK"></span></td>
+                          <td class="td td--actions-cell">
+                            <!-- Demo: this row shows the copy-sitemap-URL action in its just-copied state -->
+                            <div class="row-actions">
+                              <button class="row-action row-action--copied" title="Copied">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </button>
+                              <button class="row-action" title="Copy all links in this sitemap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="8" y="2" width="8" height="4" rx="1" />
+                                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+                                  <line x1="8" y1="11" x2="16" y2="11" />
+                                  <line x1="8" y1="15" x2="16" y2="15" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr class="row" title="Open sitemap_pages_1.xml">
+                          <td class="td">
+                            <div class="sitemap-row">
+                              <span class="sitemap-chip" style="background: #ff6b35">Pg</span>
+                              <span class="sitemap-name">sitemap_pages_1.xml</span>
+                            </div>
+                          </td>
+                          <td class="td td--urls-cell">
+                            <span class="url-count">102</span>
+                          </td>
+                          <td class="td">24d ago</td>
+                          <td class="td td--status-cell"><span class="status-dot" title="OK"></span></td>
+                          <td class="td td--actions-cell">
+                            <div class="row-actions">
+                              <button class="row-action" title="Copy sitemap URL">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>
+                              </button>
+                              <button class="row-action" title="Copy all links in this sitemap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="8" y="2" width="8" height="4" rx="1" />
+                                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+                                  <line x1="8" y1="11" x2="16" y2="11" />
+                                  <line x1="8" y1="15" x2="16" y2="15" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr class="row" title="Open sitemap_blogs_1.xml">
+                          <td class="td">
+                            <div class="sitemap-row">
+                              <span class="sitemap-chip" style="background: #e84393">B</span>
+                              <span class="sitemap-name">sitemap_blogs_1.xml</span>
+                            </div>
+                          </td>
+                          <td class="td td--urls-cell">
+                            <span class="url-count">61</span>
+                          </td>
+                          <td class="td">&mdash;</td>
+                          <td class="td td--status-cell"><span class="status-dot" title="OK"></span></td>
+                          <td class="td td--actions-cell">
+                            <div class="row-actions">
+                              <button class="row-action" title="Copy sitemap URL">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>
+                              </button>
+                              <button class="row-action" title="Copy all links in this sitemap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="8" y="2" width="8" height="4" rx="1" />
+                                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+                                  <line x1="8" y1="11" x2="16" y2="11" />
+                                  <line x1="8" y1="15" x2="16" y2="15" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr class="row" title="Open sitemap_discovery.xml">
+                          <td class="td">
+                            <div class="sitemap-row">
+                              <span class="sitemap-chip" style="background: #12b886">AI</span>
+                              <span class="sitemap-name">sitemap_discovery.xml</span>
+                            </div>
+                          </td>
+                          <td class="td td--urls-cell">
+                            <span class="url-count">25</span>
+                          </td>
+                          <td class="td">2d ago</td>
+                          <td class="td td--status-cell"><span class="pill pill--red" title="HTTP 500">500</span></td>
+                          <td class="td td--actions-cell">
+                            <div class="row-actions">
+                              <button class="row-action" title="Copy sitemap URL">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>
+                              </button>
+                              <button
+                                class="row-action row-action--disabled"
+                                title="Copy all links in this sitemap (unavailable, sitemap failed to load)"
+                                aria-disabled="true"
+                                tabindex="-1">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="8" y="2" width="8" height="4" rx="1" />
+                                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+                                  <line x1="8" y1="11" x2="16" y2="11" />
+                                  <line x1="8" y1="15" x2="16" y2="15" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        <!-- Demo: truncated count when a sitemap exceeds the crawler's read limit -->
+                        <tr class="row" title="Open sitemap_products_2.xml">
+                          <td class="td">
+                            <div class="sitemap-row">
+                              <span class="sitemap-chip" style="background: #4a90d9">P</span>
+                              <span class="sitemap-name">sitemap_products_2.xml</span>
+                            </div>
+                          </td>
+                          <td class="td td--urls-cell">
+                            <span class="url-count" title="Count is a minimum, sitemap exceeded the read limit"
+                              >5,000+</span
+                            >
+                          </td>
+                          <td class="td">6d ago</td>
+                          <td class="td td--status-cell"><span class="status-dot" title="OK"></span></td>
+                          <td class="td td--actions-cell">
+                            <div class="row-actions">
+                              <button class="row-action" title="Copy sitemap URL">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>
+                              </button>
+                              <button class="row-action" title="Copy all links in this sitemap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+                                  <rect x="8" y="2" width="8" height="4" rx="1" />
+                                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+                                  <line x1="8" y1="11" x2="16" y2="11" />
+                                  <line x1="8" y1="15" x2="16" y2="15" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td class="td" colspan="2">6 sitemaps</td>
+                          <td class="td td--urls-cell">
+                            <span title="Count is a minimum, sitemap exceeded the read limit">10,384+</span>
+                          </td>
+                          <td class="td" colspan="2"></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- CARDS variant -->
+                <div class="sitemaps-variant" data-variant-panel="cards">
+                  <div class="finding">
+                    <svg
+                      class="finding__icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4m0-4h.01" /></svg
+                    ><span class="finding__text"
+                      >robots.txt has no Sitemap: line &mdash; adding one helps crawlers discover it</span
+                    >
+                  </div>
+                  <div class="sitemap-list">
+                    <div class="sitemap-card">
+                      <div class="sitemap-card__icon" style="background: #4a90d9">P</div>
+                      <div class="sitemap-card__body">
+                        <div class="sitemap-card__name">sitemap_products_1.xml</div>
+                        <a class="sitemap-card__url" href="#">theme-dawn-demo.myshopify.com/sitemap_products_1.xml</a>
+                      </div>
+                      <div class="sitemap-card__meta">
+                        <div class="sitemap-card__stats">
+                          <span class="pill pill--neutral">Products</span
+                          ><span class="sitemap-card__count">4,982 URLs</span>
+                        </div>
+                        <span class="sitemap-card__lastmod">Aug 1, 2026</span>
+                      </div>
+                    </div>
+                    <div class="sitemap-card">
+                      <div class="sitemap-card__icon" style="background: #5c6ac4">C</div>
+                      <div class="sitemap-card__body">
+                        <div class="sitemap-card__name">sitemap_collections_1.xml</div>
+                        <a class="sitemap-card__url" href="#"
+                          >theme-dawn-demo.myshopify.com/sitemap_collections_1.xml</a
+                        >
+                      </div>
+                      <div class="sitemap-card__meta">
+                        <div class="sitemap-card__stats">
+                          <span class="pill pill--neutral">Collections</span
+                          ><span class="sitemap-card__count">214 URLs</span>
+                        </div>
+                        <span class="sitemap-card__lastmod">Aug 5, 2026</span>
+                      </div>
+                    </div>
+                    <div class="sitemap-card">
+                      <div class="sitemap-card__icon" style="background: #ff6b35">Pg</div>
+                      <div class="sitemap-card__body">
+                        <div class="sitemap-card__name">sitemap_pages_1.xml</div>
+                        <a class="sitemap-card__url" href="#">theme-dawn-demo.myshopify.com/sitemap_pages_1.xml</a>
+                      </div>
+                      <div class="sitemap-card__meta">
+                        <div class="sitemap-card__stats">
+                          <span class="pill pill--neutral">Pages</span><span class="sitemap-card__count">102 URLs</span>
+                        </div>
+                        <span class="sitemap-card__lastmod">Jul 15, 2026</span>
+                      </div>
+                    </div>
+                    <div class="sitemap-card">
+                      <div class="sitemap-card__icon" style="background: #e84393">B</div>
+                      <div class="sitemap-card__body">
+                        <div class="sitemap-card__name">sitemap_blogs_1.xml</div>
+                        <a class="sitemap-card__url" href="#">theme-dawn-demo.myshopify.com/sitemap_blogs_1.xml</a>
+                      </div>
+                      <div class="sitemap-card__meta">
+                        <div class="sitemap-card__stats">
+                          <span class="pill pill--neutral">Blogs</span><span class="sitemap-card__count">61 URLs</span>
+                        </div>
+                        <span class="sitemap-card__lastmod">&mdash;</span>
+                      </div>
+                    </div>
+                    <div class="sitemap-card">
+                      <div class="sitemap-card__icon" style="background: #12b886">AI</div>
+                      <div class="sitemap-card__body">
+                        <div class="sitemap-card__name">sitemap_discovery.xml</div>
+                        <a class="sitemap-card__url" href="#">theme-dawn-demo.myshopify.com/sitemap_discovery.xml</a>
+                      </div>
+                      <div class="sitemap-card__meta">
+                        <div class="sitemap-card__stats">
+                          <span class="pill pill--neutral">Discovery</span
+                          ><span class="sitemap-card__count">25 URLs</span>
+                        </div>
+                        <span class="sitemap-card__lastmod">2d ago</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- STATES (empty / loading / not-Shopify) -->
           <div class="panel panel--flex" id="panel-empty">
             <div class="empty-state">
@@ -2250,6 +2940,14 @@
       function sw(t) {
         document.querySelectorAll('.tab').forEach((e) => e.classList.toggle('active', e.dataset.tab === t));
         document.querySelectorAll('.panel').forEach((p) => p.classList.toggle('active', p.id === 'panel-' + t));
+      }
+      function swSitemapsVariant(v) {
+        document
+          .querySelectorAll('.variant-toggle__btn')
+          .forEach((e) => e.classList.toggle('active', e.dataset.variant === v));
+        document
+          .querySelectorAll('.sitemaps-variant')
+          .forEach((p) => p.classList.toggle('active', p.dataset.variantPanel === v));
       }
     </script>
   </body>

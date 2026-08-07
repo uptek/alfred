@@ -214,7 +214,7 @@ filter, a summary bar, media tags, MB sizes, and hardened CSV export.
 
 ### `/assets/external-hosts.html` (host classification)
 
-- [ ] Source filter: External 1 — only the 127.0.0.1 script
+- [ ] Source filter: External 1 (only the 127.0.0.1 script)
 - [ ] The www.localhost script counts as same-site (path-only source cell)
 - [ ] The 127.0.0.1 row shows host + path and "—" size/status (opaque
       cross-origin)

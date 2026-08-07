@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>robots.txt returns an HTML page — SPA fallback misconfiguration</title>
+    <title>robots.txt returns an HTML page: SPA fallback misconfiguration</title>
     <style>
       body {
         font:
@@ -42,7 +42,7 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Robots tab</div>
+      <div class="t">Expected: Robots tab</div>
       <ul>
         <li>HTTP 200, but the body is an HTML document, not robots directives</li>
         <li>Should be flagged as "looks like an HTML page" (common SPA catch-all fallback bug)</li>
@@ -50,7 +50,7 @@
     </aside>
     <main>
       <p>
-        While this page is open, <code>/robots.txt</code> returns a 200 whose body is an HTML error page — the classic
+        While this page is open, <code>/robots.txt</code> returns a 200 whose body is an HTML error page, the classic
         single-page-app catch-all route swallowing robots.txt.
       </p>
     </main>

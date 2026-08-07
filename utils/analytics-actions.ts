@@ -99,7 +99,13 @@ export const ANALYTICS_ACTIONS = [
   'social_copy_tags',
   'hreflangs_view',
   'hreflangs_copy',
-  'hreflangs_export'
+  'hreflangs_export',
+  'sitemaps_view',
+  'sitemaps_open',
+  'sitemaps_copy',
+  'sitemaps_copy_urls',
+  'sitemaps_export',
+  'sitemaps_search'
 ] as const;
 
 export type AnalyticsAction = (typeof ANALYTICS_ACTIONS)[number];
@@ -211,7 +217,13 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   social_copy_tags: 20,
   hreflangs_view: 90,
   hreflangs_copy: 30,
-  hreflangs_export: 60
+  hreflangs_export: 60,
+  sitemaps_view: 60,
+  sitemaps_open: 5,
+  sitemaps_copy: 45,
+  sitemaps_copy_urls: 120,
+  sitemaps_export: 120,
+  sitemaps_search: 120
 };
 
 export const COOLDOWN_MS: Partial<Record<AnalyticsAction, number>> = {

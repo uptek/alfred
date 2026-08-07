@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Blocks CSS/JS assets — Disallow: /assets/ hides render resources</title>
+    <title>Blocks CSS/JS assets: Disallow: /assets/ hides render resources</title>
     <style>
       body {
         font:
@@ -42,14 +42,14 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Robots tab</div>
+      <div class="t">Expected: Robots tab</div>
       <ul>
         <li>HTTP 200; the page itself is crawlable (<code>Allow: /</code>)</li>
         <li>
           A warning that the file blocks CSS/JS assets Google needs to render the page, linked to the
           <code>Disallow: /assets/</code> line
         </li>
-        <li>Otherwise clean — has a sitemap line</li>
+        <li>Otherwise clean: has a sitemap line</li>
       </ul>
     </aside>
     <main>

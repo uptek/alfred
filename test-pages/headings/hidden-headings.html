@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Hidden headings excluded — skips judged on the visible sequence</title>
+    <title>Hidden headings excluded: skips judged on the visible sequence</title>
     <style>
       body {
         font:
@@ -42,10 +42,10 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Headings tab</div>
+      <div class="t">Expected: Headings tab</div>
       <ul>
         <li>
-          Exactly 1 issue: "H1 → H3 (skipped H2)" — the only H2 is display:none, so the visible outline really does skip
+          Exactly 1 issue: "H1 → H3 (skipped H2)" (the only H2 is display:none, so the visible outline really does skip
         </li>
         <li>
           The hidden H1 does NOT trigger "multiple H1s"; the hidden empty H2 does NOT trigger "Empty H2"; the hidden H6
@@ -60,7 +60,7 @@
       <h1>Trail Running Shoes</h1>
       <h1 style="display: none">Trail Running Shoes (hidden SEO duplicate)</h1>
       <h2 style="display: none"></h2>
-      <p>Two hidden headings above: a duplicate H1 and an empty H2 — both excluded from analysis.</p>
+      <p>Two hidden headings above: a duplicate H1 and an empty H2, both excluded from analysis.</p>
       <h3>Grip and outsole</h3>
       <p>The visible outline jumped H1 → H3 because the only H2 is hidden. That skip should be reported.</p>
       <h6 style="visibility: hidden">Hidden deep heading</h6>

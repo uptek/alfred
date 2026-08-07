@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Only H1 is display:none — counts as missing H1</title>
+    <title>Only H1 is display:none, counts as missing H1</title>
     <style>
       body {
         font:
@@ -42,11 +42,9 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Headings tab</div>
+      <div class="t">Expected: Headings tab</div>
       <ul>
-        <li>
-          1 issue: "No H1 tag found" — the only H1 is display:none, which search engines and screen readers ignore
-        </li>
+        <li>1 issue: "No H1 tag found" (the only H1 is display:none, which search engines and screen readers ignore</li>
         <li>No "H2 appears before H1" issue (there is no visible H1 to be late)</li>
         <li>Filter chip shows "1 hidden"; the H1 row is greyed with an eye icon</li>
         <li>Badge "1" on the tab</li>

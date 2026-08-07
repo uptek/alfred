@@ -103,7 +103,13 @@ const VALID_ACTIONS = [
   'social_copy_tags',
   'hreflangs_view',
   'hreflangs_copy',
-  'hreflangs_export'
+  'hreflangs_export',
+  'sitemaps_view',
+  'sitemaps_open',
+  'sitemaps_copy',
+  'sitemaps_copy_urls',
+  'sitemaps_export',
+  'sitemaps_search'
 ];
 
 serve(async (req) => {

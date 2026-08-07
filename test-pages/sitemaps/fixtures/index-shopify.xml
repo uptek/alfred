@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>http://localhost:4242/sitemaps/fixtures/children/sitemap_products_1.xml</loc>
+    <lastmod>2026-08-01T04:00:00Z</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>http://localhost:4242/sitemaps/fixtures/children/sitemap_pages_1.xml</loc>
+    <lastmod>2026-07-15T04:00:00Z</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>http://localhost:4242/sitemaps/fixtures/children/sitemap_collections_1.xml</loc>
+    <lastmod>2026-08-05T04:00:00Z</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>http://localhost:4242/sitemaps/fixtures/children/sitemap_blogs_1.xml</loc>
+  </sitemap>
+</sitemapindex>

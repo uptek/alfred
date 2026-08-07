@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Common robots.txt mistakes — misspelled, retired and misplaced directives</title>
+    <title>Common robots.txt mistakes: misspelled, retired and misplaced directives</title>
     <style>
       body {
         font:
@@ -42,16 +42,16 @@
   </head>
   <body>
     <aside class="expected">
-      <div class="t">Expected — Robots tab</div>
+      <div class="t">Expected: Robots tab</div>
       <ul>
         <li>HTTP 200; this page's URL is still crawlable</li>
         <li>Several issues detected, each linked to its exact line:</li>
-        <li><code>Disallow: /early</code> appears before any User-agent — flagged as an error (crawlers ignore it)</li>
+        <li><code>Disallow: /early</code> appears before any User-agent, flagged as an error (crawlers ignore it)</li>
         <li><code>Dissallow</code> flagged as a misspelling of <code>Disallow</code></li>
         <li><code>Noindex</code> flagged as unsupported / retired (Sept 2019)</li>
         <li><code>Crawl-delay</code> noted as ignored by Google</li>
-        <li><code>example.com/full-path</code> flagged — path must start with <code>/</code></li>
-        <li>No Sitemap line — informational nudge</li>
+        <li><code>example.com/full-path</code> flagged: path must start with <code>/</code></li>
+        <li>No Sitemap line: informational nudge</li>
       </ul>
     </aside>
     <main>

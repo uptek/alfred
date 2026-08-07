@@ -247,7 +247,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
     findings.push({
       id: 'no-social-tags',
       severity: 'error',
-      message: 'No Open Graph or Twitter Card tags found — platforms will infer everything from page HTML',
+      message: 'No Open Graph or Twitter Card tags found. Platforms will infer everything from page HTML',
       platforms: ALL_PLATFORMS
     });
   } else {
@@ -270,7 +270,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
         findings.push({
           id,
           severity: 'error',
-          message: `${label} missing — platforms will infer from page HTML`,
+          message: `${label} missing: platforms will infer from page HTML`,
           platforms: ALL_PLATFORMS
         });
       }
@@ -280,7 +280,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
       findings.push({
         id: 'fb-app-id-missing',
         severity: 'info',
-        message: "fb:app_id missing — Facebook Insights won't attribute shares to your app",
+        message: "fb:app_id missing: Facebook Insights won't attribute shares to your app",
         platforms: ['facebook']
       });
     }
@@ -294,7 +294,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
       findings.push({
         id: 'og-image-insecure',
         severity: 'warning',
-        message: 'og:image uses http: with no og:image:secure_url — some platforms will refuse to render it',
+        message: 'og:image uses http: with no og:image:secure_url. Some platforms will refuse to render it',
         platforms: ALL_PLATFORMS
       });
     }
@@ -303,7 +303,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
       findings.push({
         id: 'og-image-relative',
         severity: 'warning',
-        message: 'og:image is a relative URL — spec requires an absolute URL',
+        message: 'og:image is a relative URL: spec requires an absolute URL',
         platforms: ALL_PLATFORMS
       });
     }
@@ -313,7 +313,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
       findings.push({
         id: 'og-image-svg',
         severity: 'info',
-        message: 'og:image is an SVG — most platforms do not render SVG preview images',
+        message: 'og:image is an SVG: most platforms do not render SVG preview images',
         platforms: ALL_PLATFORMS
       });
     }
@@ -323,7 +323,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
     findings.push({
       id: 'og-image-multiple',
       severity: 'info',
-      message: `${resolved.duplicateCounts['og:image']} og:image tags found — the first is used for preview`,
+      message: `${resolved.duplicateCounts['og:image']} og:image tags found: the first is used for preview`,
       platforms: ALL_PLATFORMS
     });
   }
@@ -334,7 +334,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
       findings.push({
         id: 'description-overflow',
         severity: 'warning',
-        message: `og:description is ${graphemeCount} characters — Facebook truncates around 300, often mid-word`,
+        message: `og:description is ${graphemeCount} characters. Facebook truncates around 300, often mid-word`,
         platforms: ['facebook']
       });
     }
@@ -345,7 +345,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
       id: 'entity-double-encoded',
       severity: 'warning',
       message:
-        'Tag value still contains an HTML entity after decoding — source is double-encoded and platforms will render it literally',
+        'Tag value still contains an HTML entity after decoding: source is double-encoded and platforms will render it literally',
       platforms: ALL_PLATFORMS
     });
   }
@@ -354,7 +354,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
     findings.push({
       id: 'twitter-image-fallback',
       severity: 'info',
-      message: 'No twitter:image set, but og:image is present — X falls back to it automatically',
+      message: 'No twitter:image set, but og:image is present. X falls back to it automatically',
       platforms: ['x']
     });
   }
@@ -363,7 +363,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
     findings.push({
       id: 'og-type-product',
       severity: 'info',
-      message: 'og:type is "product" — LinkedIn and Facebook treat it as a generic article/link',
+      message: 'og:type is "product": LinkedIn and Facebook treat it as a generic article/link',
       platforms: ['linkedin', 'facebook']
     });
   }
@@ -426,7 +426,7 @@ export function lintSocial(resolved: ResolvedSocial, probe: SocialProbeResult | 
       findings.push({
         id: 'image-ratio-square',
         severity: 'warning',
-        message: 'og:image is roughly square — platforms expecting a landscape card will crop it',
+        message: 'og:image is roughly square: platforms expecting a landscape card will crop it',
         platforms: squarePlatforms,
         fromProbe
       });

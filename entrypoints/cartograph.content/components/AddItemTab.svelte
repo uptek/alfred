@@ -194,7 +194,7 @@
                   {#each availablePlans as plan}
                     {@const allocation = selectedVariant.selling_plan_allocations.find(a => a.selling_plan_id === plan.id)}
                     <option value={plan.id}>
-                      {plan.name}{allocation ? ` — $${(allocation.price / 100).toFixed(2)}` : ''}
+                      {plan.name}{allocation ? ` ($${(allocation.price / 100).toFixed(2)})` : ''}
                     </option>
                   {/each}
                 </optgroup>

@@ -6,6 +6,13 @@ import { headingText } from './popup/utils/headings';
 import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/utils/links';
 import { looksLikeHtml } from './popup/utils/robots';
 import {
+  classifySitemap,
+  countUrls,
+  extractRobotsSitemaps,
+  parseIndexEntries,
+  parseUrlsetUrls
+} from './popup/utils/sitemaps';
+import {
   isExternalAssetUrl,
   isRenderBlockingScript,
   isRenderBlockingStylesheet,
@@ -129,6 +136,10 @@ function imageHighlightState(el: Element, source: CollectedImage['source']): str
   // Decorative alt="" is a deliberate signal, not a failure; only an absent attribute flags.
   return altState(img.getAttribute('alt')) === 'missing' ? 'alt' : 'ok';
 }
+
+// Parsed sitemap URL lists, kept for the page's lifetime so repeated copy and
+// search actions fetch each sitemap at most once. Navigation resets it.
+const sitemapUrlCache = new Map<string, { urls: string[]; truncated: boolean }>();
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -843,6 +854,184 @@ export default defineContentScript({
           .then(async (res) => res.ok && !looksLikeHtml((await res.text()).slice(0, 4096)))
           .catch(() => false)
           .then((llmsTxt) => sendResponse(llmsTxt));
+        return true;
+      }
+
+      /**
+       * Discovers and fetches the site's sitemaps from the page context
+       * (rides its HTTP cache and cookies): robots.txt Sitemap: lines first,
+       * falling back to /sitemap.xml, then all index children in parallel.
+       * Only compact stats cross runtime messaging — bodies are counted here
+       * and discarded, so a 50 MB product sitemap never hits sendMessage.
+       * @returns {import('./popup/utils/sitemaps').SitemapsData}
+       */
+      const MAX_SITEMAP_BYTES = 5 * 1024 * 1024;
+
+      const readCapped = async (res: Response): Promise<{ text: string; truncated: boolean }> => {
+        const reader = res.body?.getReader();
+        if (!reader) return { text: await res.text(), truncated: false };
+        const decoder = new TextDecoder();
+        let text = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          text += decoder.decode(value, { stream: true });
+          if (text.length > MAX_SITEMAP_BYTES) {
+            reader.cancel().catch(() => {});
+            return { text: text.slice(0, MAX_SITEMAP_BYTES), truncated: true };
+          }
+        }
+        return { text, truncated: false };
+      };
+
+      if (request.action === 'get_sitemaps') {
+        const MAX_ROOTS = 5;
+        const MAX_CHILDREN = 50;
+
+        // Body is returned separately so index roots can parse children
+        // without the body ever entering the response payload.
+        const fetchDoc = async (url: string, lastmod: string | null) => {
+          const node = {
+            url,
+            finalUrl: '',
+            ok: false,
+            status: 0,
+            kind: 'invalid' as ReturnType<typeof classifySitemap>,
+            urlCount: 0,
+            truncated: false,
+            lastmod,
+            children: [] as unknown[]
+          };
+          try {
+            const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+            node.finalUrl = res.url;
+            node.status = res.status;
+            if (!res.ok) return { node, text: '' };
+            const { text, truncated } = await readCapped(res);
+            node.ok = true;
+            node.truncated = truncated;
+            node.kind = classifySitemap(text);
+            if (node.kind === 'urlset' || node.kind === 'index') node.urlCount = countUrls(text);
+            return { node, text: node.kind === 'index' ? text : '' };
+          } catch {
+            return { node, text: '' };
+          }
+        };
+
+        (async () => {
+          let robotsSitemaps: string[] = [];
+          try {
+            const res = await fetch(`${location.origin}/robots.txt`, { signal: AbortSignal.timeout(8000) });
+            if (res.ok) robotsSitemaps = extractRobotsSitemaps((await res.text()).slice(0, 600 * 1024));
+          } catch {
+            // No robots.txt reachable — fall through to the /sitemap.xml convention.
+          }
+          const rootUrls = [
+            ...new Set(robotsSitemaps.length > 0 ? robotsSitemaps : [`${location.origin}/sitemap.xml`])
+          ].slice(0, MAX_ROOTS);
+
+          const nodes = await Promise.all(
+            rootUrls.map(async (rootUrl) => {
+              const { node, text } = await fetchDoc(rootUrl, null);
+              if (node.kind === 'index') {
+                const entries = parseIndexEntries(text);
+                node.urlCount = entries.length;
+                node.children = (
+                  await Promise.all(entries.slice(0, MAX_CHILDREN).map((e) => fetchDoc(e.loc, e.lastmod)))
+                ).map((c) => c.node);
+              }
+              return node;
+            })
+          );
+          sendResponse({ nodes, robotsSitemaps });
+        })();
+        return true;
+      }
+
+      /**
+       * Fetches one sitemap's URL list through the per-page cache, so repeat
+       * copy/search actions against the same sitemap cost one fetch total.
+       * @returns null when the fetch fails.
+       */
+      const getUrlList = async (url: string): Promise<{ urls: string[]; truncated: boolean } | null> => {
+        const cached = sitemapUrlCache.get(url);
+        if (cached) return cached;
+        try {
+          const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+          if (!res.ok) return null;
+          const { text, truncated } = await readCapped(res);
+          const entry = { urls: parseUrlsetUrls(text), truncated };
+          sitemapUrlCache.set(url, entry);
+          return entry;
+        } catch {
+          return null;
+        }
+      };
+
+      /**
+       * Fetches a single sitemap on demand and returns its page URLs, for the
+       * per-row "copy all links" action. Same page-context rationale as
+       * get_sitemaps; the URL list (not the body) crosses messaging, capped.
+       */
+      if (request.action === 'get_sitemap_urls') {
+        const MAX_URLS = 10_000;
+        const { url } = request as { action: string; url?: string };
+        if (!url || !/^https?:\/\//i.test(url)) {
+          sendResponse(null);
+          return true;
+        }
+        (async () => {
+          const list = await getUrlList(url);
+          if (!list) {
+            sendResponse(null);
+            return;
+          }
+          sendResponse({
+            urls: list.urls.slice(0, MAX_URLS),
+            truncated: list.truncated || list.urls.length > MAX_URLS
+          });
+        })();
+        return true;
+      }
+
+      /**
+       * Searches a query string across the URL lists of the given sitemaps
+       * (case-insensitive substring). Bodies are fetched here and cached per
+       * page load; only the capped match list crosses messaging.
+       */
+      if (request.action === 'search_sitemap_urls') {
+        const MAX_MATCHES = 200;
+        const MAX_SITEMAPS = 50;
+        const { urls, query } = request as { action: string; urls?: string[]; query?: string };
+        if (!Array.isArray(urls) || typeof query !== 'string' || !query.trim()) {
+          sendResponse(null);
+          return true;
+        }
+        const valid = urls.filter((u) => typeof u === 'string' && /^https?:\/\//i.test(u));
+        const targets = valid.slice(0, MAX_SITEMAPS);
+        (async () => {
+          const lists = await Promise.all(targets.map(async (u) => ({ u, list: await getUrlList(u) })));
+          const q = query.trim().toLowerCase();
+          const matches: { sitemap: string; url: string }[] = [];
+          // Sitemaps past the cap were never searched; surface them as unsearched.
+          const failed: string[] = valid.slice(MAX_SITEMAPS);
+          let total = 0;
+          let truncated = false;
+          for (const { u, list } of lists) {
+            if (!list) {
+              failed.push(u);
+              continue;
+            }
+            truncated ||= list.truncated;
+            for (const pageUrl of list.urls) {
+              if (pageUrl.toLowerCase().includes(q)) {
+                total += 1;
+                if (matches.length < MAX_MATCHES) matches.push({ sitemap: u, url: pageUrl });
+              }
+            }
+          }
+          sendResponse({ matches, total, failed, truncated });
+        })();
         return true;
       }
 
