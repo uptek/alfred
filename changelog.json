@@ -20,6 +20,10 @@
           "The image is fetched and measured in the background, with declared og:image dimensions verified against the real file.",
           "A red badge on the tab counts tag errors, and a table lists every og:, twitter:, and fb: tag found on the page."
         ]
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-social-tab.mp4"
       }
     ]
   },

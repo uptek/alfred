@@ -12,6 +12,8 @@ A new Social tab shows exactly how your page will look when shared on Facebook, 
 - The image is fetched and measured in the background, with declared og:image dimensions verified against the real file.
 - A red badge on the tab counts tag errors, and a table lists every og:, twitter:, and fb: tag found on the page.
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-social-tab.mp4"></video>
+
 ## 2026.08.06
 @ 2026-08-06
 
