@@ -374,6 +374,26 @@ export default defineContentScript({
       }
 
       /**
+       * Extracts every hreflang alternate link tag in DOM order. The resolved
+       * href and the authored attribute are both captured so the popup can
+       * flag relative URLs, which search engines reject.
+       * @returns {import('./popup/utils/types').RawHreflang[]}
+       */
+      if (request.action === 'get_hreflangs') {
+        const tags = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="alternate" i][hreflang]')).map(
+          (el, i) => ({
+            index: i,
+            href: el.href,
+            rawHref: el.getAttribute('href') ?? '',
+            hreflang: el.getAttribute('hreflang') ?? '',
+            inHead: document.head?.contains(el) ?? false
+          })
+        );
+        sendResponse(tags);
+        return false;
+      }
+
+      /**
        * Extracts all anchor links from the page in DOM order. Each anchor is
        * stamped with its index so scroll_to_link can find it even if the DOM
        * mutates afterwards (lazy menus, carousels).

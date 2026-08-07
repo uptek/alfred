@@ -80,6 +80,14 @@ export interface RawSchemaBlock {
   placement: 'head' | 'body';
 }
 
+export interface RawHreflang {
+  index: number; // position among hreflang link tags in DOM order (stable key)
+  href: string; // resolved absolute URL ('' when unresolvable)
+  rawHref: string; // href attribute as authored (relative URLs are a defect)
+  hreflang: string;
+  inHead: boolean;
+}
+
 // One structured-data node lifted from a block (top-level, array element, or
 // @graph member), carrying its parsed data for the code-block view.
 export interface SchemaEntity {

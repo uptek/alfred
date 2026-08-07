@@ -12,6 +12,7 @@ export type PopupSection =
   | 'assets'
   | 'images'
   | 'robots'
+  | 'hreflangs'
   | 'schema'
   | 'social'
   | 'settings';

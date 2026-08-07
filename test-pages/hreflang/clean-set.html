@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Clean hreflang set — self-ref + x-default, zero issues</title>
+    <link rel="alternate" hreflang="x-default" href="http://localhost:4242/hreflang/clean-set.html" />
+    <link rel="alternate" hreflang="en" href="http://localhost:4242/hreflang/clean-set.html" />
+    <link rel="alternate" hreflang="fr-CA" href="https://example.com/fr-ca/" />
+    <link rel="alternate" hreflang="zh-Hant-TW" href="https://example.com/zh-tw/" />
+    <style>
+      body {
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #222;
+      }
+      .expected {
+        background: #eef4ff;
+        border: 1px solid #c7d8f7;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .expected .t {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .expected ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      main {
+        max-width: 680px;
+        margin: 24px auto 48px;
+        padding: 0 16px;
+      }
+      .back {
+        display: inline-block;
+        margin: 0 16px 24px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="expected">
+      <div class="t">Expected — Hreflangs tab</div>
+      <ul>
+        <li>
+          4 alternates: <code>x-default</code>, <code>en</code>, <code>fr-CA</code>, <code>zh-Hant-TW</code> — all in
+          purple pills
+        </li>
+        <li>No issue callouts; no sidebar badge</li>
+        <li><code>x-default</code> and <code>en</code> rows carry a green <code>self</code> flag</li>
+        <li>Summary bar: 4 alternates &middot; x-default &middot; self-referencing</li>
+      </ul>
+    </aside>
+    <main>
+      <p>
+        A complete, valid hreflang set: absolute URLs, valid codes, a self-referencing entry, and an x-default fallback.
+      </p>
+    </main>
+    <a class="back" href="/">← all test pages</a>
+  </body>
+</html>
