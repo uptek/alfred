@@ -57,10 +57,8 @@
 
 <style>
   .tray {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    z-index: 2147483000;
+    /* Positioned by the shared corner stack; always its bottom item */
+    order: 2;
     display: flex;
     align-items: center;
     gap: 12px;

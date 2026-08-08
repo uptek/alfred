@@ -3,6 +3,8 @@
   import { fetchAppListing, formatAppAge } from '~/utils/appListing';
   import { removeFromTray } from '~/utils/compareTray';
   import { sendTrackEvent } from '@/utils/analytics';
+  import CreditChip from '@/components/CreditChip.svelte';
+  import { cornerStack } from '~/utils/cornerStack';
   import { Toast } from '~/utils/toast';
   import { buildComparisonCsv, buildComparisonJson, buildComparisonMarkdown, COMPARISON_ROWS } from './exporters';
 
@@ -567,6 +569,10 @@
       </table>
     </div>
   {/if}
+
+  <div class="compare-credit-float" use:cornerStack>
+    <CreditChip source="compare" />
+  </div>
 </div>
 
 <style>
@@ -603,6 +609,11 @@
     margin: 0;
     font-size: 28px;
     font-weight: 700;
+  }
+
+  /* Lives in the shared corner stack; order keeps it above the tray */
+  .compare-credit-float {
+    order: 1;
   }
 
   .compare-actions {

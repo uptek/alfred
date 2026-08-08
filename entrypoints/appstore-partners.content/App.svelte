@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fetchAppData, downloadCSV, getResourceIcon } from './utils';
   import { sendTrackEvent } from '@/utils/analytics';
+  import CreditChip from '@/components/CreditChip.svelte';
   import type { App } from './types';
 
   import builtForShopifyIcon from '@/assets/icon-built-for-shopify.svg';
@@ -162,11 +163,12 @@
   <!-- empty -->
 {:else}
   <div class="container">
-    <div class="export-button-container">
+    <div class="table-toolbar">
       <button class="export-button" onclick={() => downloadCSV(apps)}>
         <img src={exportIcon} alt="Export to CSV" />
         Export to CSV
       </button>
+      <CreditChip source="partner_table" />
     </div>
     <div class="table-container">
       <table class="table">
@@ -299,7 +301,7 @@
 
 <style>
   .container { margin: 20px 0; }
-  .export-button-container { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+  .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-family: 'Inter var', Helvetica, Arial, sans-serif; }
   .export-button { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; background-color: #ffffff; border: 1px solid #c9cccf; border-radius: 4px; color: #2c6ecb; font-size: 14px; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease; height: 36px; }
   .export-button:hover { background-color: #f6f6f7; border-color: #aeb4b9; }
   .export-button:active { background-color: #ebebeb; }
