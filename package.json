@@ -17,6 +17,8 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "changelog:gen": "bun scripts/generate-changelog.ts",
+    "track:gen": "bun scripts/generate-valid-actions.ts",
+    "deploy:track": "bun run track:gen && supabase functions deploy track",
     "testpages": "bun test-pages/server.ts",
     "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
     "submit": "bash scripts/submit.sh",

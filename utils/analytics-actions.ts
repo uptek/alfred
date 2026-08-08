@@ -1,8 +1,9 @@
 // Single source of truth for analytics action names. The Supabase track edge
-// function keeps its own VALID_ACTIONS literal (Deno can't import extension
-// code), but utils/analytics-actions.test.ts asserts the two lists match, so
-// drift fails `bun test` instead of silently dropping events server-side
-// (which is exactly what happened to the images_* events in v2026.06.05).
+// function imports a copy generated from this list by `bun run track:gen`
+// (Deno can't import extension code), and utils/tests/analytics-actions.test.ts
+// fails `bun test` when the generated file is stale, so drift can't silently
+// drop events server-side (which is exactly what happened to the images_*
+// events in v2026.06.05).
 export const ANALYTICS_ACTIONS = [
   'open_in_admin',
   'open_in_customizer',
