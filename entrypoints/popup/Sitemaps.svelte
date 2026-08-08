@@ -16,6 +16,7 @@
   } from './utils/sitemaps';
   import { csvField } from './utils/format';
   import { trackAction } from '@/utils/analytics';
+  import { withCsvCredit } from '@/utils/credit';
   import { untrack, onDestroy } from 'svelte';
   import ActionButton from './ActionButton.svelte';
 
@@ -235,7 +236,7 @@
         .map(csvField)
         .join(',');
     });
-    downloadFile([header, ...csvRows].join('\n'), 'sitemaps.csv', 'text/csv');
+    downloadFile(withCsvCredit([header, ...csvRows].join('\n')), 'sitemaps.csv', 'text/csv');
     trackAction('sitemaps_export', { format: 'csv' });
     menuOpen = false;
   }

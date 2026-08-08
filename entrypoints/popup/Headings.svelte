@@ -2,6 +2,7 @@
   import type { RawHeading, HeadingIssue } from './utils/types';
   import { scrollToHeading } from './utils/headings';
   import { trackAction } from '@/utils/analytics';
+  import { withCredit } from '@/utils/credit';
   import { untrack } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
 
@@ -79,7 +80,7 @@
       .map(h => `${'  '.repeat(h.level - 1)}H${h.level}: ${h.text || '(empty)'}${h.isHidden ? ' [hidden]' : ''}`)
       .join('\n');
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(withCredit(text));
       copyState = 'copied';
       trackAction('headings_copy', { heading_count: headings.length, issue_count: issues.length });
       setTimeout(() => (copyState = 'idle'), 1500);

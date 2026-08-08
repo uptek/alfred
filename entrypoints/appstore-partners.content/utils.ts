@@ -1,4 +1,5 @@
 import { sendTrackEvent } from '@/utils/analytics';
+import { withCsvCredit } from '@/utils/credit';
 import defaultIcon from '@/assets/icon-default.svg';
 import privacyIcon from '@/assets/icon-privacy.svg';
 import tutorialIcon from '@/assets/icon-tutorial.svg';
@@ -291,7 +292,7 @@ const convertToCSV = (apps: App[]) => {
  * @param apps {App[]} - The apps to download
  */
 export const downloadCSV = (apps: App[]) => {
-  const csv = convertToCSV(apps);
+  const csv = withCsvCredit(convertToCSV(apps));
 
   // Create a blob with the CSV data
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

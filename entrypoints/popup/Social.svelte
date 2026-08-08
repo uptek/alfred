@@ -15,6 +15,7 @@
   import ActionButton from './ActionButton.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
   import { trackAction } from '@/utils/analytics';
+  import { withCredit } from '@/utils/credit';
   import { untrack } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
 
@@ -148,7 +149,7 @@
 
   async function copyTags(format: 'html' | 'text') {
     try {
-      await navigator.clipboard.writeText(format === 'html' ? tagsAsHtml() : tagsAsText());
+      await navigator.clipboard.writeText(format === 'html' ? tagsAsHtml() : withCredit(tagsAsText()));
       copiedFormat = format;
       clearTimeout(copiedTimer);
       copiedTimer = setTimeout(() => (copiedFormat = null), 1500);

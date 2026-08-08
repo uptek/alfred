@@ -5,6 +5,7 @@
   import { sendTrackEvent } from '@/utils/analytics';
   import CreditChip from '@/components/CreditChip.svelte';
   import { cornerStack } from '~/utils/cornerStack';
+  import { withCredit } from '~/utils/credit';
   import { Toast } from '~/utils/toast';
   import { buildComparisonCsv, buildComparisonJson, buildComparisonMarkdown, COMPARISON_ROWS } from './exporters';
 
@@ -104,7 +105,7 @@
     closeExportMenu();
 
     try {
-      await navigator.clipboard.writeText(buildComparisonMarkdown(loadedListings));
+      await navigator.clipboard.writeText(withCredit(buildComparisonMarkdown(loadedListings)));
       Toast.success('Comparison copied as markdown');
       sendTrackEvent('compare_export_markdown', { app_count: loadedListings.length });
     } catch {
@@ -129,7 +130,7 @@
 
   function downloadCsv() {
     closeExportMenu();
-    downloadFile(exportFilename('csv'), buildComparisonCsv(loadedListings), 'text/csv;charset=utf-8;');
+    downloadFile(exportFilename('csv'), withCsvCredit(buildComparisonCsv(loadedListings)), 'text/csv;charset=utf-8;');
     Toast.success('Comparison downloaded as CSV');
     sendTrackEvent('compare_export_csv', { app_count: loadedListings.length });
   }
