@@ -1,5 +1,6 @@
 <script lang="ts">
   import { trackAction, markNudgeShown } from '@/utils/analytics';
+  import { nudgeRated } from '@/utils/successNudge';
   import { CWS_REVIEW_URL, FEEDBACK_URL } from '@/utils/constants';
 
   let { variant = 'default', source = 'review_nudge' }: {
@@ -17,6 +18,7 @@
 
   function handleRate(rating: number) {
     trackAction('credit_click', { source, rating });
+    nudgeRated();
     browser.tabs.create({ url: rating === 5 ? CWS_REVIEW_URL : FEEDBACK_URL });
   }
 </script>
