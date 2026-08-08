@@ -1,5 +1,5 @@
 import { sendTrackEvent } from '@/utils/analytics';
-import { daysBetween, formatAppAge } from '@/utils/appListing';
+import { formatAppAge, formatDetailedAppAge } from '@/utils/appListing';
 import { withCsvCredit } from '@/utils/credit';
 import { csvField, downloadFile } from '@/utils/export';
 import defaultIcon from '@/assets/icon-default.svg';
@@ -117,7 +117,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
 
         appData.launchDate = launchDateText;
         appData.age = formatAppAge(launchDateText ?? '') ?? null;
-        appData.detailedAge = appData.age === null ? null : formatDetailedAge(launchDateText ?? '');
+        appData.detailedAge = formatDetailedAppAge(launchDateText ?? '') ?? null;
       }
     }
   } catch (error) {
@@ -126,46 +126,6 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
   }
 
   return appData;
-};
-
-/**
- * Format the detailed age
- * @param launchDateStr {string} - The launch date
- * @returns {string} The detailed age
- */
-const formatDetailedAge = (launchDateStr: string) => {
-  if (!launchDateStr) return null;
-
-  const launchDate = new Date(launchDateStr);
-  if (isNaN(launchDate.getTime())) return null;
-
-  const totalDays = daysBetween(new Date(), launchDate);
-
-  // Calculate years, months, and remaining days
-  const years = Math.floor(totalDays / 365);
-  let remainingDays = totalDays % 365;
-
-  // Approximate months (using 30.4 days as average month length)
-  const months = Math.floor(remainingDays / 30.4);
-  remainingDays = Math.floor(remainingDays % 30.4);
-
-  // Format the result
-  let formattedAge = '';
-  if (years > 0) {
-    formattedAge += `${years} ${years === 1 ? 'year' : 'years'}`;
-  }
-
-  if (months > 0) {
-    if (formattedAge) formattedAge += ', ';
-    formattedAge += `${months} ${months === 1 ? 'month' : 'months'}`;
-  }
-
-  if (remainingDays > 0 || (years === 0 && months === 0)) {
-    if (formattedAge) formattedAge += ', ';
-    formattedAge += `${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
-  }
-
-  return formattedAge;
 };
 
 /**

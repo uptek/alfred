@@ -271,22 +271,20 @@ export function parseAppListing(html: string, handle: string): AppListing {
 export const daysBetween = (a: Date, b: Date): number => Math.floor(Math.abs(a.getTime() - b.getTime()) / 86_400_000);
 
 /**
- * Human-readable app age from a launch-date string, e.g. "Today", "3 days",
- * "5 months", "1 year", "1.5 years". Calendar year/month arithmetic, so a
- * whole year reads "1 year" rather than "1.0 years". Undefined when the date
- * can't be parsed or is in the future.
+ * Calendar year/month decomposition of the time since `launched`, shared by
+ * both age formatters so short and detailed ages can never disagree. A month
+ * only counts once its day-of-month has passed, so 15 days that straddle a
+ * month boundary decompose to 0 months. Null when unparseable or future.
  */
-export function formatAppAge(launchDate: string, now: Date = new Date()): string | undefined {
+function calendarAge(launchDate: string, now: Date): { launched: Date; years: number; months: number } | null {
   const launched = new Date(launchDate);
 
   if (isNaN(launched.getTime()) || launched.getTime() > now.getTime()) {
-    return undefined;
+    return null;
   }
 
   let years = now.getFullYear() - launched.getFullYear();
   let months = now.getMonth() - launched.getMonth();
-  // A month only counts once its day-of-month has passed, so 15 days that
-  // straddle a month boundary read "15 days", not "1 month".
   if (now.getDate() < launched.getDate()) {
     months--;
   }
@@ -294,6 +292,20 @@ export function formatAppAge(launchDate: string, now: Date = new Date()): string
     years--;
     months += 12;
   }
+
+  return { launched, years, months };
+}
+
+/**
+ * Human-readable app age from a launch-date string, e.g. "Today", "3 days",
+ * "5 months", "1 year", "1.5 years". Calendar year/month arithmetic, so a
+ * whole year reads "1 year" rather than "1.0 years". Undefined when the date
+ * can't be parsed or is in the future.
+ */
+export function formatAppAge(launchDate: string, now: Date = new Date()): string | undefined {
+  const age = calendarAge(launchDate, now);
+  if (!age) return undefined;
+  const { launched, years, months } = age;
 
   if (years === 0 && months === 0) {
     const days = daysBetween(now, launched);
@@ -306,6 +318,30 @@ export function formatAppAge(launchDate: string, now: Date = new Date()): string
 
   const decimal = months === 0 ? '' : (months / 12).toFixed(1).substring(1);
   return `${years}${decimal} ${years === 1 && months === 0 ? 'year' : 'years'}`;
+}
+
+/**
+ * Long-form app age like "1 year, 2 months, 3 days". Same calendar
+ * decomposition as formatAppAge. Undefined when the date can't be parsed or
+ * is in the future.
+ */
+export function formatDetailedAppAge(launchDate: string, now: Date = new Date()): string | undefined {
+  const age = calendarAge(launchDate, now);
+  if (!age) return undefined;
+  const { launched, years, months } = age;
+
+  // Leftover days are measured from the last whole-month anniversary. setMonth
+  // can overflow past `now` for month-end launch dates (Jan 31 + 1 month), so
+  // clamp at zero.
+  const anchor = new Date(launched);
+  anchor.setMonth(anchor.getMonth() + years * 12 + months);
+  const days = Math.max(0, Math.floor((now.getTime() - anchor.getTime()) / 86_400_000));
+
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
+  if (months > 0) parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
+  if (days > 0 || parts.length === 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+  return parts.join(', ');
 }
 
 /**
