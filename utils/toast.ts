@@ -9,36 +9,11 @@ class AlfredToast extends HTMLElement {
   }
 
   disconnectedCallback() {
-    // Cleanup when removed from DOM
+    // Clear the auto-hide timer Toast attached to this element
     if (this.timeout) {
       clearTimeout(this.timeout);
       this.timeout = null;
     }
-  }
-
-  setAutoHide(duration: number) {
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-    }
-    this.timeout = setTimeout(() => {
-      this.hide();
-    }, duration);
-  }
-
-  hide() {
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-      this.timeout = null;
-    }
-
-    // Add hide class and remove show class for hide animation
-    this.classList.remove('alfred-toast--show');
-    this.classList.add('alfred-toast--hide');
-
-    setTimeout(() => {
-      this.hidePopover();
-      this.remove();
-    }, 400);
   }
 }
 

@@ -114,30 +114,17 @@ const TARGET_GROUPERS: TargetGrouper[] = [
 const getTargetGrouper = (event: TimelineEvent): TargetGrouper | null =>
   TARGET_GROUPERS.find((grouper) => grouper.test(event)) ?? null;
 
-/** Milliseconds since epoch from a Shopify event, or null when missing. */
-export const getEventTimestampMs = (event: TimelineEvent | Record<string, unknown>): number | null => {
-  const record = event as Record<string, unknown>;
-  const candidates: unknown[] = [
-    record.created_at,
-    record.createdAt,
-    (record.attributes as Record<string, unknown> | undefined)?.created_at,
-    (record.attributes as Record<string, unknown> | undefined)?.createdAt
-  ];
-
-  for (const value of candidates) {
-    if (typeof value === 'string' && value.trim()) {
-      const ms = Date.parse(value);
-      if (Number.isFinite(ms)) {
-        return ms;
-      }
-    }
-
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return value < 1e12 ? value * 1000 : value;
-    }
+/**
+ * Milliseconds since epoch from a normalized event, or null when missing.
+ * Shape aliases (createdAt, attributes.*) are flattened by normalizeEvent
+ * before any caller reaches this.
+ */
+export const getEventTimestampMs = (event: TimelineEvent): number | null => {
+  if (!event.created_at.trim()) {
+    return null;
   }
-
-  return null;
+  const ms = Date.parse(event.created_at);
+  return Number.isFinite(ms) ? ms : null;
 };
 
 const sameEventTimestamp = (a: TimelineEvent, b: TimelineEvent): boolean => {
@@ -324,7 +311,7 @@ export const getActorLabel = (actor: EventActor): string | null =>
   actor === 'app' ? 'App' : actor === 'system' ? 'System' : null;
 
 /** Local clock time like "5:43 pm" for an event timestamp. */
-export const formatEventTime = (event: TimelineEvent | Record<string, unknown>): string => {
+export const formatEventTime = (event: TimelineEvent): string => {
   const timestampMs = getEventTimestampMs(event);
   if (timestampMs === null) {
     return '';

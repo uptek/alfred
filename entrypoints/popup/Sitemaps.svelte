@@ -1,29 +1,33 @@
 <script lang="ts" module>
   // Module scope: once per popup load, not per tab-switch remount.
-  let viewTracked = false;
+  const viewState = { done: false };
 </script>
 
 <script lang="ts">
   import {
-    analyzeSitemaps,
     categorizeSitemap,
     getSitemapUrls,
     searchSitemapUrls,
     sitemapFilename,
     type SitemapNode,
     type SitemapSearchResult,
+    type SitemapsAnalysis,
     type SitemapsData
   } from './utils/sitemaps';
-  import { csvField } from './utils/format';
+  import { csvField, downloadFile } from './utils/format';
+  import { getActiveTab } from './utils/messaging';
+  import { createCopyFeedback, createKeyedCopyFeedback } from './utils/copy.svelte';
+  import { trackOnce } from './utils/track.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
-  import { untrack, onDestroy } from 'svelte';
+  import { untrack } from 'svelte';
   import ActionButton from './ActionButton.svelte';
 
-  let { data, loading = false }: { data: SitemapsData | null; loading?: boolean } = $props();
-
-  // Same pipeline as the App.svelte tab badge — the two can't disagree.
-  const analysis = $derived(analyzeSitemaps(data));
+  let {
+    data,
+    analysis,
+    loading = false
+  }: { data: SitemapsData | null; analysis: SitemapsAnalysis; loading?: boolean } = $props();
 
   // Flatten for rendering: index children as rows; a flat urlset root is its own row.
   const rows = $derived.by(() => {
@@ -102,43 +106,20 @@
     trackAction('sitemaps_open');
   }
 
-  let copied = $state(false);
-  let copyTimer: ReturnType<typeof setTimeout> | null = null;
+  const copyFeedback = createCopyFeedback();
   async function copyUrls() {
     const text = rows.map(({ node }) => node.finalUrl || node.url).join('\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (copyTimer) clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => {
-        copied = false;
-      }, 1500);
-      trackAction('sitemaps_copy');
-    } catch {
-      // ignore clipboard errors
-    }
+    if (await copyFeedback.copy(text)) trackAction('sitemaps_copy');
     menuOpen = false;
   }
 
   // Per-row action feedback, keyed by sitemap URL so sorting can't misplace it.
-  let copiedUrlKey = $state<string | null>(null);
-  let copiedLinksKey = $state<string | null>(null);
+  const urlCopy = createKeyedCopyFeedback<string>();
+  const linksCopy = createKeyedCopyFeedback<string>();
   let pendingLinksKey = $state<string | null>(null);
-  let rowUrlTimer: ReturnType<typeof setTimeout> | null = null;
-  let rowLinksTimer: ReturnType<typeof setTimeout> | null = null;
 
   async function copySitemapUrl(node: SitemapNode) {
-    try {
-      await navigator.clipboard.writeText(node.finalUrl || node.url);
-      copiedUrlKey = node.url;
-      if (rowUrlTimer) clearTimeout(rowUrlTimer);
-      rowUrlTimer = setTimeout(() => {
-        copiedUrlKey = null;
-      }, 1500);
-      trackAction('sitemaps_copy');
-    } catch {
-      // ignore clipboard errors
-    }
+    if (await urlCopy.copy(node.finalUrl || node.url, node.url)) trackAction('sitemaps_copy');
   }
 
   async function copySitemapLinks(node: SitemapNode) {
@@ -147,15 +128,11 @@
     try {
       const result = await getSitemapUrls(node.finalUrl || node.url);
       if (!result || result.urls.length === 0) return;
-      await navigator.clipboard.writeText(result.urls.join('\n'));
-      copiedLinksKey = node.url;
-      if (rowLinksTimer) clearTimeout(rowLinksTimer);
-      rowLinksTimer = setTimeout(() => {
-        copiedLinksKey = null;
-      }, 1500);
-      trackAction('sitemaps_copy_urls', { url_count: result.urls.length, truncated: result.truncated });
+      if (await linksCopy.copy(result.urls.join('\n'), node.url)) {
+        trackAction('sitemaps_copy_urls', { url_count: result.urls.length, truncated: result.truncated });
+      }
     } catch {
-      // ignore clipboard errors
+      // ignore fetch errors
     } finally {
       pendingLinksKey = null;
     }
@@ -194,7 +171,7 @@
 
   async function findCurrentPage() {
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      const tab = await getActiveTab();
       if (!tab?.url) return;
       const u = new URL(tab.url);
       query = u.host + u.pathname;
@@ -204,16 +181,6 @@
   }
 
   let menuOpen = $state(false);
-
-  function downloadFile(content: string, filename: string, mime: string) {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
 
   function exportRow(node: SitemapNode) {
     return {
@@ -259,24 +226,17 @@
     return severity === 'error' ? 'Error' : severity === 'warning' ? 'Warning' : 'Info';
   }
 
-  $effect(() => {
-    if (viewTracked || data === null) return;
-    viewTracked = true;
-    untrack(() => {
+  trackOnce(
+    () => data !== null,
+    () =>
       trackAction('sitemaps_view', {
         ok: analysis.ok,
         sitemap_count: analysis.totalSitemaps,
         url_count: analysis.totalUrls,
         error_count: analysis.errorCount
-      });
-    });
-  });
-
-  onDestroy(() => {
-    if (copyTimer) clearTimeout(copyTimer);
-    if (rowUrlTimer) clearTimeout(rowUrlTimer);
-    if (rowLinksTimer) clearTimeout(rowLinksTimer);
-  });
+      }),
+    viewState
+  );
 
   function handleWindowClick(e: MouseEvent) {
     const target = e.target as HTMLElement;
@@ -395,7 +355,7 @@
                 <div class="export__divider"></div>
                 <button class="export__item" role="menuitem" onclick={copyUrls}>
                   <span class="export__item-label">
-                    {#if copied}
+                    {#if copyFeedback.copied}
                       <svg class="export__item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                     {/if}
                     Copy
@@ -549,14 +509,14 @@
                     <div class="row-actions">
                       <button
                         class="row-action"
-                        class:row-action--copied={copiedUrlKey === node.url}
-                        title={copiedUrlKey === node.url ? 'Copied' : 'Copy sitemap URL'}
+                        class:row-action--copied={urlCopy.key === node.url}
+                        title={urlCopy.key === node.url ? 'Copied' : 'Copy sitemap URL'}
                         onclick={(e) => {
                           e.stopPropagation();
                           copySitemapUrl(node);
                         }}
                       >
-                        {#if copiedUrlKey === node.url}
+                        {#if urlCopy.key === node.url}
                           {@render checkIcon()}
                         {:else}
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
@@ -568,15 +528,15 @@
                       {#if node.ok}
                         <button
                           class="row-action"
-                          class:row-action--copied={copiedLinksKey === node.url}
+                          class:row-action--copied={linksCopy.key === node.url}
                           class:row-action--pending={pendingLinksKey === node.url}
-                          title={copiedLinksKey === node.url ? 'Copied' : 'Copy all links in this sitemap'}
+                          title={linksCopy.key === node.url ? 'Copied' : 'Copy all links in this sitemap'}
                           onclick={(e) => {
                             e.stopPropagation();
                             copySitemapLinks(node);
                           }}
                         >
-                          {#if copiedLinksKey === node.url}
+                          {#if linksCopy.key === node.url}
                             {@render checkIcon()}
                           {:else}
                             {@render copyLinksIcon()}

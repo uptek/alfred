@@ -10,6 +10,7 @@
   import { getSocial, resolveSocial, badgeCount } from './utils/social';
   import { getHreflangs, analyzeHreflangs } from './utils/hreflang';
   import { getSitemaps, analyzeSitemaps } from './utils/sitemaps';
+  import { getActiveTab } from './utils/messaging';
   import { trackAction } from '@/utils/analytics';
   import { onSuccessNudge, recordPassiveValue } from '@/utils/successNudge';
   import Theme from './Theme.svelte';
@@ -98,63 +99,35 @@
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
   const imageIssueCount = $derived(analyzeImages(rawImages));
-  const robotsErrorCount = $derived(
-    analyzeRobots(rawRobots, storeInfo?.isShopify ?? false, storeInfo?.page_url ?? null).errorCount
+  // Full analyses live here so badge counts and the tab components share one
+  // computation instead of re-running the analyzers on every tab mount.
+  const robotsAnalysis = $derived(
+    analyzeRobots(rawRobots, storeInfo?.isShopify ?? false, storeInfo?.page_url ?? null)
   );
   const overviewAnalysis = $derived(
-    analyzeOverview(rawOverview, overviewNetwork, shopifyContext, rawRobots, rawSchema, llmsTxt)
+    analyzeOverview(rawOverview, overviewNetwork, shopifyContext, rawRobots, llmsTxt)
   );
   // Tag-level errors only, probe excluded — badge must stay synchronous.
-  const socialBadgeCount = $derived(rawSocial ? badgeCount(resolveSocial(rawSocial)) : 0);
-  const hreflangErrorCount = $derived(analyzeHreflangs(rawHreflangs, storeInfo?.page_url ?? null).errorCount);
-  const sitemapsErrorCount = $derived(analyzeSitemaps(rawSitemaps).errorCount);
+  const socialResolved = $derived(rawSocial ? resolveSocial(rawSocial) : null);
+  const socialBadgeCount = $derived(socialResolved ? badgeCount(socialResolved) : 0);
+  const hreflangAnalysis = $derived(analyzeHreflangs(rawHreflangs, storeInfo?.page_url ?? null));
+  const sitemapsAnalysis = $derived(analyzeSitemaps(rawSitemaps));
+
+  function seoTab(id: TabId, label: string, icon: string, badgeCount = 0): Tab {
+    return badgeCount > 0 ? { id, label, icon, badge: { count: badgeCount, color: 'red' } } : { id, label, icon };
+  }
 
   const seoTabs = $derived<Tab[]>([
-    {
-      id: 'overview' as TabId,
-      label: 'Overview',
-      icon: 'overview',
-      ...(overviewAnalysis.errorCount > 0 ? { badge: { count: overviewAnalysis.errorCount, color: 'red' as const } } : {})
-    },
-    {
-      id: 'headings' as TabId,
-      label: 'Headings',
-      icon: 'headings',
-      ...(headingIssues.length > 0 ? { badge: { count: headingIssues.length, color: 'red' as const } } : {})
-    },
-    { id: 'links' as TabId, label: 'Links', icon: 'links' },
-    { id: 'assets' as TabId, label: 'Assets', icon: 'assets' },
-    {
-      id: 'images' as TabId,
-      label: 'Images',
-      icon: 'images',
-      ...(imageIssueCount > 0 ? { badge: { count: imageIssueCount, color: 'red' as const } } : {})
-    },
-    {
-      id: 'robots' as TabId,
-      label: 'Robots.txt',
-      icon: 'robots',
-      ...(robotsErrorCount > 0 ? { badge: { count: robotsErrorCount, color: 'red' as const } } : {})
-    },
-    {
-      id: 'hreflangs' as TabId,
-      label: 'Hreflangs',
-      icon: 'hreflangs',
-      ...(hreflangErrorCount > 0 ? { badge: { count: hreflangErrorCount, color: 'red' as const } } : {})
-    },
-    { id: 'schema' as TabId, label: 'Schema', icon: 'schema' },
-    {
-      id: 'social' as TabId,
-      label: 'Social',
-      icon: 'social',
-      ...(socialBadgeCount > 0 ? { badge: { count: socialBadgeCount, color: 'red' as const } } : {})
-    },
-    {
-      id: 'sitemaps' as TabId,
-      label: 'Sitemaps',
-      icon: 'sitemaps',
-      ...(sitemapsErrorCount > 0 ? { badge: { count: sitemapsErrorCount, color: 'red' as const } } : {})
-    },
+    seoTab('overview', 'Overview', 'overview', overviewAnalysis.errorCount),
+    seoTab('headings', 'Headings', 'headings', headingIssues.length),
+    seoTab('links', 'Links', 'links'),
+    seoTab('assets', 'Assets', 'assets'),
+    seoTab('images', 'Images', 'images', imageIssueCount),
+    seoTab('robots', 'Robots.txt', 'robots', robotsAnalysis.errorCount),
+    seoTab('hreflangs', 'Hreflangs', 'hreflangs', hreflangAnalysis.errorCount),
+    seoTab('schema', 'Schema', 'schema'),
+    seoTab('social', 'Social', 'social', socialBadgeCount),
+    seoTab('sitemaps', 'Sitemaps', 'sitemaps', sitemapsAnalysis.errorCount),
   ]);
 
   $effect(() => {
@@ -177,7 +150,7 @@
       sitemapsLoading = false;
     });
     const fetchData = async () => {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      const tab = await getActiveTab();
       const [storeData, headingsData, linksData, assetsData, imagesData, schemaData, overviewData, contextData, socialData, hreflangsData] =
         await Promise.all([
           getTheme(),
@@ -357,13 +330,13 @@
         {:else if activeTab === 'schema'}
           <Schema schema={rawSchema} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'hreflangs'}
-          <Hreflangs tags={rawHreflangs} pageUrl={storeInfo?.page_url ?? null} domain={storeInfo?.domain ?? null} />
+          <Hreflangs tags={rawHreflangs} analysis={hreflangAnalysis} pageUrl={storeInfo?.page_url ?? null} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'social'}
-          <Social raw={rawSocial} />
+          <Social raw={rawSocial} resolved={socialResolved} />
         {:else if activeTab === 'robots'}
-          <Robots robots={rawRobots} loading={robotsLoading} pageUrl={storeInfo?.page_url ?? null} isShopify={storeInfo?.isShopify ?? false} />
+          <Robots robots={rawRobots} analysis={robotsAnalysis} loading={robotsLoading} pageUrl={storeInfo?.page_url ?? null} />
         {:else if activeTab === 'sitemaps'}
-          <Sitemaps data={rawSitemaps} loading={sitemapsLoading} />
+          <Sitemaps data={rawSitemaps} analysis={sitemapsAnalysis} loading={sitemapsLoading} />
         {:else if activeTab === 'settings'}
           <div class="content__pad">
             <Settings storeInfo={storeInfo ?? { isShopify: false, shopDomain: null, domain: null, page_url: null, theme: null }} />

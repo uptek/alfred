@@ -3,16 +3,16 @@
     IndexabilityStatus,
     OverviewAnalysis,
     OverviewNetwork,
-    OverviewFinding,
     RawLink,
     RawOverview,
     ShopifyContext
   } from './utils/types';
   import { socialProfiles, TITLE_MIN, TITLE_MAX, DESC_MIN, DESC_MAX } from './utils/overview';
   import { titleWidthPx, TITLE_MAX_PX } from './utils/text-width';
+  import { createKeyedCopyFeedback } from './utils/copy.svelte';
+  import { trackOnce } from './utils/track.svelte';
   import SerpPreview from './SerpPreview.svelte';
   import { trackAction } from '@/utils/analytics';
-  import { untrack } from 'svelte';
 
   let {
     raw,
@@ -32,19 +32,16 @@
     links: RawLink[];
   } = $props();
 
-  let tracked = false;
-  $effect(() => {
-    if (tracked || !raw) return;
-    tracked = true;
-    untrack(() => {
+  trackOnce(
+    () => !!raw,
+    () =>
       trackAction('overview_view', {
         indexability: analysis.indexability.status,
         error_count: analysis.errorCount,
         finding_count: analysis.findings.length,
         is_shopify: shopify?.isShopify ?? false
-      });
-    });
-  });
+      })
+  );
 
   const profiles = $derived(socialProfiles(links));
   const origin = $derived.by(() => {
@@ -59,9 +56,6 @@
   const previewFinding = $derived(
     analysis.findings.find((f) => f.code === 'preview-mode' || f.code === 'password-page')
   );
-  const listedFindings = $derived(analysis.findings.filter((f) => f !== previewFinding));
-  // Findings list is hidden for now; flip to bring it back.
-  const showFindings = false;
 
   const verdictLabel: Record<IndexabilityStatus, string> = {
     indexable: 'Indexable',
@@ -121,26 +115,9 @@
   const metaDirectives = $derived(analysis.directives.filter((d) => d.source !== 'header'));
   const robotsTagText = $derived(metaDirectives.map(directiveLabel).join(', '));
 
-  // Lint messages mark code with backticks; odd-indexed parts render as <code>.
-  const messageParts = (message: string): { text: string; code: boolean }[] =>
-    message.split('`').map((text, i) => ({ text, code: i % 2 === 1 }));
-
-  const severityVariant: Record<OverviewFinding['severity'], string> = {
-    error: 'error',
-    warning: 'warning',
-    info: 'info'
-  };
-
-  let copiedKey = $state<string | null>(null);
+  const copyFeedback = createKeyedCopyFeedback<string>();
   async function copy(key: string, value: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      copiedKey = key;
-      trackAction('overview_copy', { field: key });
-      setTimeout(() => (copiedKey = null), 1500);
-    } catch {
-      // clipboard denied: leave the row unchanged
-    }
+    if (await copyFeedback.copy(value, key)) trackAction('overview_copy', { field: key });
   }
 
   function quickLink(name: string, url: string) {
@@ -218,7 +195,7 @@
         {#if analysis.title.text}
           <span class="ovw-meta-text">{analysis.title.text}</span>
           <button class="copy-btn" onclick={() => copy('title', analysis.title.text ?? '')} aria-label="Copy title">
-            {#if copiedKey === 'title'}
+            {#if copyFeedback.key === 'title'}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12" /></svg>
             {:else}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
@@ -255,7 +232,7 @@
         {#if analysis.canonical.href}
           <a href={analysis.canonical.href} target="_blank" rel="noopener">{analysis.canonical.href}</a>
           <button class="copy-btn" onclick={() => copy('canonical', analysis.canonical.href ?? '')} aria-label="Copy canonical URL">
-            {#if copiedKey === 'canonical'}
+            {#if copyFeedback.key === 'canonical'}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12" /></svg>
             {:else}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
@@ -337,21 +314,6 @@
         PageSpeed Insights
       </button>
     </div>
-
-    <!-- Findings (hidden for now, kept for a future toggle) -->
-    {#if showFindings && listedFindings.length > 0}
-      <div class="section-heading">Findings</div>
-      {#each listedFindings as finding}
-        <div class="rbt-issue rbt-issue--{severityVariant[finding.severity]}">
-          <span class="dot" aria-hidden="true"></span>
-          <span class="rbt-issue-msg">
-            {#each messageParts(finding.message) as part}
-              {#if part.code}<code>{part.text}</code>{:else}{part.text}{/if}
-            {/each}
-          </span>
-        </div>
-      {/each}
-    {/if}
 
     <!-- Social Profiles -->
     {#if profiles.length > 0}
@@ -702,46 +664,6 @@
     width: 12px;
     height: 12px;
     opacity: 0.55;
-  }
-
-  /* Findings */
-  .rbt-issue {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border-muted);
-    font-size: 12.5px;
-    color: var(--text-secondary);
-  }
-  .rbt-issue:last-of-type {
-    border-bottom: none;
-  }
-  .rbt-issue .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .rbt-issue--error .dot {
-    background: var(--error);
-  }
-  .rbt-issue--warning .dot {
-    background: var(--warning);
-  }
-  .rbt-issue--info .dot {
-    background: var(--text-faint);
-  }
-  .rbt-issue-msg {
-    flex: 1;
-  }
-  .rbt-issue-msg code {
-    font-family: ui-monospace, monospace;
-    font-size: 11.5px;
-    background: var(--bg-inset);
-    padding: 1px 5px;
-    border-radius: 4px;
-    color: var(--text);
   }
 
   /* Social profiles */

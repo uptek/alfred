@@ -1,26 +1,27 @@
 <script lang="ts">
   import type { RawHreflang } from './utils/types';
-  import { analyzeHreflangs } from './utils/hreflang';
+  import type { HreflangAnalysis } from './utils/hreflang';
+  import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
+  import { createCopyFeedback } from './utils/copy.svelte';
+  import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
-  import { untrack, onDestroy } from 'svelte';
 
-  let { tags, pageUrl, domain }: { tags: RawHreflang[]; pageUrl: string | null; domain: string | null } = $props();
+  let {
+    tags,
+    analysis,
+    pageUrl,
+    domain
+  }: { tags: RawHreflang[]; analysis: HreflangAnalysis; pageUrl: string | null; domain: string | null } = $props();
 
-  const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
-  const analysis = $derived(analyzeHreflangs(tags, pageUrl));
+  const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  let tracked = false;
-  $effect(() => {
-    const { entries, issues } = analysis;
-    if (tracked || entries.length === 0) return;
-    tracked = true;
-    untrack(() => {
-      trackAction('hreflangs_view', { tags: entries.length, issues: issues.length });
-    });
-  });
+  trackOnce(
+    () => analysis.entries.length > 0,
+    () => trackAction('hreflangs_view', { tags: analysis.entries.length, issues: analysis.issues.length })
+  );
 
   const summaryItems = $derived.by(() => {
     const n = analysis.entries.length;
@@ -43,39 +44,19 @@
     return items;
   });
 
-  let copied = $state(false);
-  let copyTimer: ReturnType<typeof setTimeout> | null = null;
+  const copyFeedback = createCopyFeedback();
   async function copyAll() {
     const text = tags.map((t) => `${t.hreflang}\t${t.href || t.rawHref}`).join('\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (copyTimer) clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => { copied = false; }, 1500);
-      trackAction('hreflangs_copy', { tags: tags.length });
-    } catch {
-      // ignore clipboard errors
-    }
+    if (await copyFeedback.copy(text)) trackAction('hreflangs_copy', { tags: tags.length });
   }
   function exportCsv() {
-    const csvField = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
     const rows = analysis.entries.map((e) =>
-      [e.hreflang, e.href || e.rawHref, e.isSelf, e.invalidCode, e.relativeHref, e.inHead].map(String).map(csvField).join(',')
+      [e.hreflang, e.href || e.rawHref, e.isSelf, e.invalidCode, e.relativeHref, e.inHead].map(csvField).join(',')
     );
     const content = withCsvCredit(['Hreflang,URL,Self,Invalid Code,Relative URL,In Head', ...rows].join('\n'));
-    const blob = new Blob([content], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `alfred-hreflangs-${siteSlug}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(content, `alfred-hreflangs-${siteSlug}.csv`, 'text/csv');
     trackAction('hreflangs_export', { tags: tags.length });
   }
-
-  onDestroy(() => {
-    if (copyTimer) clearTimeout(copyTimer);
-  });
 </script>
 
 {#if tags.length === 0}
@@ -89,8 +70,8 @@
     <div class="toolbar">
       <span class="toolbar__hint">Language &amp; region alternates</span>
       <div class="toolbar__actions">
-        <button class="toolbar-btn" onclick={copyAll} aria-label="Copy all hreflang tags" title={copied ? 'Copied!' : 'Copy as tab-separated list'}>
-          {#if copied}
+        <button class="toolbar-btn" onclick={copyAll} aria-label="Copy all hreflang tags" title={copyFeedback.copied ? 'Copied!' : 'Copy as tab-separated list'}>
+          {#if copyFeedback.copied}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           {:else}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>

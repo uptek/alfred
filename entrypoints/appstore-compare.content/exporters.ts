@@ -1,4 +1,5 @@
 import { formatAppAge } from '~/utils/appListing';
+import { csvField } from '~/utils/export';
 
 function escapeCell(value: string): string {
   return value.replace(/\|/g, '\\|').replace(/\n/g, ' ');
@@ -88,10 +89,6 @@ export function buildComparisonMarkdown(listings: AppListing[]): string {
   ].join('\n');
 }
 
-function csvCell(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
-}
-
 /** Flatten the renderers' markdown links for plain-text formats: [label](url) -> label (url) */
 function plainText(value: string): string {
   return value.replace(/\[([^\]]*)\]\(([^)]*)\)/g, '$1 ($2)');
@@ -103,10 +100,10 @@ function plainText(value: string): string {
  */
 export function buildComparisonCsv(listings: AppListing[]): string {
   const header = ['Attribute', ...listings.map((l) => l.name ?? l.handle)];
-  const lines = [header.map(csvCell).join(',')];
+  const lines = [header.map(csvField).join(',')];
 
   for (const [label, render] of COMPARISON_ROWS) {
-    lines.push([label, ...listings.map((l) => plainText(render(l)))].map(csvCell).join(','));
+    lines.push([label, ...listings.map((l) => plainText(render(l)))].map(csvField).join(','));
   }
 
   return lines.join('\n');

@@ -91,15 +91,12 @@
     return Object.keys(properties).length;
   }
 
-  const propsToEntries = recordToEntries;
-  const entriesToProps = entriesToRecord;
-
   // Local entries state for expanded property editors, keyed by item key
   let propertyEntries: Record<string, Array<{ key: string; value: string }>> = $state({});
 
   function initEntries(itemKey: string, properties: Record<string, string> | null) {
     if (!(itemKey in propertyEntries)) {
-      propertyEntries[itemKey] = propsToEntries(properties);
+      propertyEntries[itemKey] = recordToEntries(properties);
     }
   }
 
@@ -119,7 +116,7 @@
 
   function isPropertiesModified(itemKey: string, currentProperties: Record<string, string> | null): boolean {
     if (!(itemKey in propertyEntries)) return false;
-    return JSON.stringify(entriesToProps(propertyEntries[itemKey])) !== JSON.stringify(currentProperties || {});
+    return JSON.stringify(entriesToRecord(propertyEntries[itemKey])) !== JSON.stringify(currentProperties || {});
   }
 
   async function saveProperties(itemKey: string, quantity: number) {
@@ -129,7 +126,7 @@
     // Shopify's change.js overwrites the entire properties object, so sending
     // only the remaining keys drops any removed ones. However, setting properties
     // to {} is a no-op — the parent handler deals with that via remove+re-add.
-    const newProps = entriesToProps(entries);
+    const newProps = entriesToRecord(entries);
 
     const didSave = await withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, newProps));
     if (!didSave) return;
@@ -139,7 +136,7 @@
     // clean up orphaned state and collapse the editor.
     const updatedItem = cart.items.find((item) => item.key === itemKey);
     if (updatedItem) {
-      propertyEntries[itemKey] = propsToEntries(updatedItem.properties);
+      propertyEntries[itemKey] = recordToEntries(updatedItem.properties);
     } else {
       // Item key changed after replaceItem — clean up stale state
       delete propertyEntries[itemKey];

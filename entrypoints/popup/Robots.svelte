@@ -2,26 +2,26 @@
   // Module scope: once per popup load, not per tab-switch remount — the
   // component remounts on every tab change and would re-fire robots_view
   // (and its time-saved credit) each time.
-  let viewTracked = false;
+  const viewState = { done: false };
 </script>
 
 <script lang="ts">
   import type { RobotsResponse } from './utils/types';
-  import type { AiBot, LintFinding } from './utils/robots';
-  import { AI_BOTS, analyzeRobots, isAllowed } from './utils/robots';
+  import type { AiBot, LintFinding, RobotsAnalysis } from './utils/robots';
+  import { AI_BOTS, isAllowed } from './utils/robots';
   import { trackAction } from '@/utils/analytics';
-  import { tick, untrack } from 'svelte';
+  import { createCopyFeedback } from './utils/copy.svelte';
+  import { trackOnce } from './utils/track.svelte';
+  import { tick } from 'svelte';
   import ActionButton from './ActionButton.svelte';
 
   let {
     robots,
+    analysis,
     loading = false,
-    pageUrl,
-    isShopify
-  }: { robots: RobotsResponse | null; loading?: boolean; pageUrl: string | null; isShopify: boolean } = $props();
+    pageUrl
+  }: { robots: RobotsResponse | null; analysis: RobotsAnalysis; loading?: boolean; pageUrl: string | null } = $props();
 
-  // Same pipeline as the App.svelte tab badge — the two can't disagree.
-  const analysis = $derived(analyzeRobots(robots, isShopify, pageUrl));
   const ok = $derived(analysis.ok);
   const isHtml = $derived(analysis.isHtml);
   const parsed = $derived(analysis.parsed);
@@ -96,17 +96,16 @@
     return size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`;
   });
 
-  $effect(() => {
-    if (viewTracked || robots === null) return;
-    viewTracked = true;
-    untrack(() => {
+  trackOnce(
+    () => robots !== null,
+    () =>
       trackAction('robots_view', {
-        status: robots.status,
+        status: robots!.status,
         is_shopify_default: shopifyDiff?.isDefault ?? false,
         error_count: analysis.errorCount
-      });
-    });
-  });
+      }),
+    viewState
+  );
 
   // Source view: click-to-line scroll + flash
   let srcEl: HTMLElement | undefined = $state();
@@ -130,17 +129,10 @@
 
   let wrapLines = $state(false);
 
-  let copyState = $state<'idle' | 'copied'>('idle');
+  const copyFeedback = createCopyFeedback();
   async function handleCopy() {
     if (!robots) return;
-    try {
-      await navigator.clipboard.writeText(robots.content);
-      copyState = 'copied';
-      trackAction('robots_copy', { size: robots.size });
-      setTimeout(() => (copyState = 'idle'), 1500);
-    } catch {
-      // silent fail
-    }
+    if (await copyFeedback.copy(robots.content)) trackAction('robots_copy', { size: robots.size });
   }
 
   type Segment = { text: string; kind: 'code' | 'directive' | 'comment' | 'link' };
@@ -231,7 +223,7 @@
         {/if}
         {#if ok}
           <ActionButton onclick={handleCopy}>
-            {#if copyState === 'copied'}
+            {#if copyFeedback.copied}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
             {:else}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>

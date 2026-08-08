@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fetchAppData, downloadCSV, getResourceIcon } from './utils';
   import { sendTrackEvent } from '@/utils/analytics';
+  import { sleep } from '@/utils/helpers';
   import CreditChip from '@/components/CreditChip.svelte';
   import type { App } from './types';
 
@@ -82,13 +83,11 @@
 
         sendTrackEvent('appstore_partner_table_view', { app_count: initialApps.length, page_url: window.location.href, page_type: 'appstore_partners' });
 
-        const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
         for (const app of initialApps) {
           try {
             const appData = await fetchAppData(app.link);
             apps = apps.map((a) => a.handle === app.handle ? { ...a, ...appData } : a);
-            await delay(250);
+            await sleep(250);
           } catch (err) {
             console.error(`Error fetching additional data for ${app.name}:`, err);
           }

@@ -29,19 +29,3 @@ export type App = {
   isInstalled: boolean;
   isBuiltForShopify: boolean;
 } & AppRaw;
-
-export interface SummaryCardProps {
-  app: App;
-  className?: string;
-}
-
-export interface SortableHeaderProps {
-  label: string;
-  column: keyof App;
-  align?: 'left' | 'center' | 'right';
-  sortState: {
-    column: keyof App | null;
-    direction: 'asc' | 'desc' | null;
-  };
-  onSort: (column: keyof App, direction: 'asc' | 'desc') => void;
-}

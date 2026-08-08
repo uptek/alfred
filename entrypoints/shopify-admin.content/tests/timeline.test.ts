@@ -234,23 +234,20 @@ describe('parseEventsResponse', () => {
 });
 
 describe('getEventTimestampMs', () => {
-  it('parses ISO timestamps and scales epoch seconds to milliseconds', () => {
+  it('parses ISO timestamps', () => {
     expect(getEventTimestampMs(baseEvent({ created_at: '2026-02-19T10:40:57+00:00' }))).toBe(
       Date.parse('2026-02-19T10:40:57+00:00')
     );
-    expect(getEventTimestampMs({ created_at: 1755000000 })).toBe(1755000000000);
-    expect(getEventTimestampMs({ created_at: 1755000000000 })).toBe(1755000000000);
   });
 
-  it('reads camelCase and attribute fallbacks', () => {
-    expect(getEventTimestampMs({ createdAt: '2026-02-19T17:46:30+00:00' })).not.toBeNull();
-    expect(getEventTimestampMs({ attributes: { created_at: '2026-02-19T17:46:30+00:00' } })).not.toBeNull();
+  it('reads camelCase aliases via normalizeEvent', () => {
+    const [event] = parseEventsResponse([{ id: 1, verb: 'create', createdAt: '2026-02-19T17:46:30+00:00' }]);
+    expect(getEventTimestampMs(event!)).not.toBeNull();
   });
 
   it('returns null for missing or unparseable timestamps', () => {
-    expect(getEventTimestampMs({})).toBeNull();
-    expect(getEventTimestampMs({ created_at: '' })).toBeNull();
-    expect(getEventTimestampMs({ created_at: 'not a date' })).toBeNull();
+    expect(getEventTimestampMs(baseEvent({ created_at: '' }))).toBeNull();
+    expect(getEventTimestampMs(baseEvent({ created_at: 'not a date' }))).toBeNull();
   });
 });
 
@@ -262,7 +259,7 @@ describe('formatEventTime', () => {
   });
 
   it('returns an empty string for missing or invalid timestamps', () => {
-    expect(formatEventTime({})).toBe('');
+    expect(formatEventTime(baseEvent({ created_at: '' }))).toBe('');
     expect(formatEventTime(baseEvent({ created_at: 'garbage' }))).toBe('');
   });
 });

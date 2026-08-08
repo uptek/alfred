@@ -2,17 +2,19 @@
   import type { RawImage, ImageStatus } from './utils/types';
   import type { AltState } from './utils/images';
   import { altState, fileLabel, imageStatus, highlightImages, scrollToImage } from './utils/images';
-  import { csvField, formatSize } from './utils/format';
+  import { csvField, downloadFile, formatSize, siteSlug as siteSlugOf } from './utils/format';
+  import { createCopyFeedback } from './utils/copy.svelte';
+  import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
-  import { untrack, onDestroy, onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
 
   let { images, domain }: { images: RawImage[]; domain: string | null } = $props();
 
-  const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
+  const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
   // Backgrounds have no alt concept (alt is null); everything else defers to altState
   // so the classification has a single source of truth.
@@ -24,18 +26,15 @@
   );
   const statusOf = (img: RawImage): ImageStatus => statusByIndex.get(img.index) ?? 'ok';
 
-  let tracked = false;
-  $effect(() => {
-    if (tracked || images.length === 0) return;
-    tracked = true;
-    untrack(() => {
+  trackOnce(
+    () => images.length > 0,
+    () =>
       trackAction('images_view', {
         image_count: images.length,
         missing_alt_count: images.filter(i => i.lacksAlt).length,
         broken_count: images.filter(i => i.broken).length
-      });
-    });
-  });
+      })
+  );
 
   type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
 
@@ -67,8 +66,7 @@
   let sortKey = $state<SortKey>(restored?.sortKey ?? 'index');
   let sortDir = $state<'asc' | 'desc'>(restored?.sortDir ?? 'asc');
 
-  let copied = $state(false);
-  let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
+  const copyFeedback = createCopyFeedback();
   let highlightOn = $state(restored?.highlightOn ?? false);
   let searchInput = $state<HTMLInputElement | null>(null);
 
@@ -184,10 +182,6 @@
     trackAction('images_sort', { key, dir: sortDir });
   }
 
-  function formatBytes(n: number): string {
-    return n ? formatSize(n) : '—';
-  }
-
   function dimsLabel(img: RawImage): string {
     if (!img.naturalWidth || !img.naturalHeight) return '—';
     return `${img.naturalWidth}×${img.naturalHeight}`;
@@ -228,23 +222,12 @@
 
   onDestroy(() => {
     if (highlightOn) highlightImages(false);
-    if (copyResetTimer) clearTimeout(copyResetTimer);
   });
 
   function handleRowClick(e: MouseEvent, index: number) {
     if ((e.target as HTMLElement).closest('a')) return;
     scrollToImage(index);
     trackAction('images_scroll_to', {});
-  }
-
-  function downloadFile(content: string, filename: string, mime: string) {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   function exportCsv() {
@@ -281,15 +264,7 @@
 
   async function copyUrls() {
     const text = images.map(img => img.src).filter(Boolean).join('\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (copyResetTimer) clearTimeout(copyResetTimer);
-      copyResetTimer = setTimeout(() => { copied = false; }, 1500);
-      trackAction('images_copy', { format: 'urls', image_count: images.length });
-    } catch {
-      // ignore clipboard errors
-    }
+    if (await copyFeedback.copy(text)) trackAction('images_copy', { format: 'urls', image_count: images.length });
   }
 
   const altOptions = $derived([
@@ -422,7 +397,7 @@
                 </button>
                 <div class="export__divider"></div>
                 <button class="export__item" onclick={copyUrls}>
-                  <span class="export__item-label">{copied ? 'Copied!' : 'Copy'}</span>
+                  <span class="export__item-label">{copyFeedback.copied ? 'Copied!' : 'Copy'}</span>
                   <span class="export__item-desc">URLs only</span>
                 </button>
               </div>
@@ -498,7 +473,7 @@
                   </div>
                 </div>
               </td>
-              <td class="td td--size">{formatBytes(img.size)}</td>
+              <td class="td td--size">{img.size ? formatSize(img.size) : '—'}</td>
               <td class="td td--fmt">{img.format ? img.format.toUpperCase() : '—'}</td>
               <td class="td td--dims"><span class:dims--oversized={img.oversized} title={dimsTitle(img)}>{dimsLabel(img)}</span></td>
               <td class="td td--load">

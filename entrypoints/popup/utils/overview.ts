@@ -10,13 +10,13 @@ import type {
   IndexabilityVerdict,
   RobotsResponse,
   ShopifyContext,
-  RawSchemaBlock,
   RawLink,
   SocialProfile,
   OverviewAnalysis
 } from './types';
 import { parseRobots, isAllowed, looksLikeHtml } from './robots';
 import { queryActiveTab } from './messaging';
+import { normalizeUrl as normalizeUrlOrNull } from './url';
 
 export const TITLE_MIN = 30;
 export const TITLE_MAX = 60;
@@ -86,17 +86,8 @@ export const hasNofollow = (ds: RobotsDirective[]): boolean =>
 export const hasNosnippet = (ds: RobotsDirective[]): boolean =>
   ds.some((d) => d.name === 'nosnippet' || (d.name === 'max-snippet' && d.value === '0'));
 
-/** Comparable URL form: no hash, no trailing slash (except root), query kept. */
-export function normalizeUrl(input: string): string {
-  try {
-    const u = new URL(input);
-    let path = u.pathname.replace(/\/+$/, '');
-    if (path === '') path = '/';
-    return `${u.origin.toLowerCase()}${path}${u.search}`;
-  } catch {
-    return input;
-  }
-}
+/** Comparable URL form: no hash, no trailing slash (except root), query kept. Unparseable input is returned as-is. */
+export const normalizeUrl = (input: string): string => normalizeUrlOrNull(input) ?? input;
 
 export function canonicalInfo(raw: RawOverview | null): CanonicalInfo {
   // Google only honors canonicals in <head>; body canonicals still get a
@@ -721,33 +712,6 @@ export function shopifyFindings(
   return findings;
 }
 
-/** First datePublished/dateModified found anywhere in the JSON-LD blocks. */
-export function schemaDates(schema: RawSchemaBlock[]): { published: string | null; modified: string | null } {
-  let published: string | null = null;
-  let modified: string | null = null;
-  const visit = (node: unknown): void => {
-    if (published && modified) return;
-    if (Array.isArray(node)) {
-      for (const item of node) visit(item);
-      return;
-    }
-    if (!node || typeof node !== 'object') return;
-    const obj = node as Record<string, unknown>;
-    if (!published && typeof obj.datePublished === 'string') published = obj.datePublished;
-    if (!modified && typeof obj.dateModified === 'string') modified = obj.dateModified;
-    for (const value of Object.values(obj)) visit(value);
-  };
-  for (const block of schema) {
-    if (block.parseError) continue;
-    try {
-      visit(JSON.parse(block.raw));
-    } catch {
-      // parseError should have caught this; skip defensively
-    }
-  }
-  return { published, modified };
-}
-
 const SOCIAL_HOSTS: [RegExp, string][] = [
   [/(^|\.)facebook\.com$/, 'Facebook'],
   [/(^|\.)instagram\.com$/, 'Instagram'],
@@ -801,7 +765,6 @@ export function analyzeOverview(
   network: OverviewNetwork | null,
   shopify: ShopifyContext | null,
   robots: RobotsResponse | null,
-  schema: RawSchemaBlock[],
   llmsTxt: boolean | null = null
 ): OverviewAnalysis {
   const directives = parseDirectives(raw, network);
@@ -862,7 +825,6 @@ export function analyzeOverview(
     ? { status: 'not-indexable', reasons: ['Store is password-protected; Google cannot crawl any page'] }
     : computeIndexability(raw, network, directives, canonical, robotsAllowed, robotsError);
 
-  const fallbackDates = schemaDates(schema);
   const titleText = raw?.titles.find((t) => t.length > 0) ?? null;
   const descriptionText = raw?.descriptions.find((d) => d.trim().length > 0) ?? null;
 
@@ -874,11 +836,7 @@ export function analyzeOverview(
     description: { text: descriptionText, length: descriptionText?.length ?? 0 },
     canonical,
     directives,
-    pageType: raw ? detectPageType(raw.url, shopify?.pageType ?? null) : null,
-    dates: {
-      published: raw?.publishedTime ?? fallbackDates.published,
-      modified: raw?.modifiedTime ?? fallbackDates.modified
-    }
+    pageType: raw ? detectPageType(raw.url, shopify?.pageType ?? null) : null
   };
 }
 

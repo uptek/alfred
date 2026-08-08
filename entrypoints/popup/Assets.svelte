@@ -2,31 +2,29 @@
   import type { RawAsset } from './utils/types';
   import type { AssetFlag } from './utils/assets';
   import { displaySource as displaySourceUrl, hasOwnLoad, matchesAssetFlag, typeLabel } from './utils/assets';
-  import { csvField, formatSize } from './utils/format';
+  import { csvField, downloadFile, formatSize, siteSlug as siteSlugOf } from './utils/format';
+  import { createCopyFeedback } from './utils/copy.svelte';
+  import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
-  import { untrack, onDestroy } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
 
   let { assets, domain }: { assets: RawAsset[]; domain: string | null } = $props();
 
-  const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
+  const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  let tracked = false;
-  $effect(() => {
-    if (tracked || assets.length === 0) return;
-    tracked = true;
-    untrack(() => {
+  trackOnce(
+    () => assets.length > 0,
+    () =>
       trackAction('assets_view', {
         total: assets.length,
         script_count: assets.filter(a => a.kind === 'script').length,
         style_count: assets.filter(a => a.kind === 'style').length,
         external_count: assets.filter(a => a.isExternal).length
-      });
-    });
-  });
+      })
+  );
 
   type SortKey = 'index' | 'src' | 'size' | 'time' | 'type' | 'load';
 
@@ -55,8 +53,7 @@
   let sourceFilter = $state(restored?.sourceFilter ?? 'all');
   let loadFilter = $state(restored?.loadFilter ?? 'all');
   let flagFilter = $state(restored?.flagFilter ?? 'all');
-  let copied = $state(false);
-  let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
+  const copyFeedback = createCopyFeedback();
   let searchInput = $state<HTMLInputElement | null>(null);
   let expanded = $state<Set<number>>(new Set(restored?.expanded ?? []));
 
@@ -205,10 +202,6 @@
     return 'Synchronous: blocks the parser while it loads';
   }
 
-  onDestroy(() => {
-    if (copyResetTimer) clearTimeout(copyResetTimer);
-  });
-
   function handleRowClick(e: MouseEvent, a: RawAsset) {
     if ((e.target as HTMLElement).closest('a')) return;
     if (a.isInline && a.content) {
@@ -220,16 +213,6 @@
       window.open(a.src, '_blank', 'noopener,noreferrer');
       trackAction('assets_view_source', { kind: a.kind, external: true });
     }
-  }
-
-  function downloadFile(content: string, filename: string, mime: string) {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   function exportCsv() {
@@ -276,14 +259,8 @@
 
   async function copyUrls() {
     const text = assets.filter(a => a.src).map(a => a.src).join('\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (copyResetTimer) clearTimeout(copyResetTimer);
-      copyResetTimer = setTimeout(() => { copied = false; }, 1500);
+    if (await copyFeedback.copy(text)) {
       trackAction('assets_copy', { format: 'urls', count: assets.filter(a => a.src).length });
-    } catch {
-      // ignore clipboard errors
     }
   }
 
@@ -422,7 +399,7 @@
                 </button>
                 <div class="export__divider"></div>
                 <button class="export__item" onclick={copyUrls}>
-                  <span class="export__item-label">{copied ? 'Copied!' : 'Copy'}</span>
+                  <span class="export__item-label">{copyFeedback.copied ? 'Copied!' : 'Copy'}</span>
                   <span class="export__item-desc">URLs only</span>
                 </button>
               </div>

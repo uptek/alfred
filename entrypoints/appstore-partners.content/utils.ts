@@ -1,5 +1,6 @@
 import { sendTrackEvent } from '@/utils/analytics';
 import { withCsvCredit } from '@/utils/credit';
+import { csvField, downloadFile } from '@/utils/export';
 import defaultIcon from '@/assets/icon-default.svg';
 import privacyIcon from '@/assets/icon-privacy.svg';
 import tutorialIcon from '@/assets/icon-tutorial.svg';
@@ -114,51 +115,8 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
         }
 
         appData.launchDate = launchDateText;
-
-        // Calculate app age in years and months
-        const launchDate = new Date(launchDateText ?? '');
-        if (!isNaN(launchDate.getTime())) {
-          const currentDate = new Date();
-
-          // Calculate differences
-          const diffTime = Math.abs(currentDate.getTime() - launchDate.getTime());
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-          // Calculate difference in years and months
-          let years = currentDate.getFullYear() - launchDate.getFullYear();
-          let months = currentDate.getMonth() - launchDate.getMonth();
-
-          // Adjust years and months if needed
-          if (months < 0) {
-            years--;
-            months += 12;
-          }
-
-          // Create age string based on timeframe
-          let ageString = '';
-          if (years === 0 && months === 0) {
-            // Less than a month - show in days
-            if (diffDays === 0) {
-              ageString = 'Today';
-            } else if (diffDays === 1) {
-              ageString = '1 day';
-            } else {
-              ageString = diffDays + ' days';
-            }
-          } else if (years === 0) {
-            // Less than a year - show in months
-            ageString = months + (months === 1 ? ' month' : ' months');
-          } else {
-            // More than a year - show as X.Y years
-            const decimalMonths = (months / 12).toFixed(1).substring(1) || '';
-            ageString = years + decimalMonths + (years === 1 && months === 0 ? ' year' : ' years');
-          }
-
-          appData.age = ageString.trim() || null;
-
-          // Also add detailed age format
-          appData.detailedAge = formatDetailedAge(launchDateText ?? '');
-        }
+        appData.age = formatShortAge(launchDateText ?? '');
+        appData.detailedAge = appData.age === null ? null : formatDetailedAge(launchDateText ?? '');
       }
     }
   } catch (error) {
@@ -167,6 +125,43 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
   }
 
   return appData;
+};
+
+const daysBetween = (a: Date, b: Date): number => Math.floor(Math.abs(a.getTime() - b.getTime()) / 86_400_000);
+
+/**
+ * Compact age like "Today", "3 days", "5 months", "1.5 years". Uses calendar
+ * year/month arithmetic (unlike utils/appListing.ts formatAppAge, whose
+ * average-month math and "1.0 years" style would change this table's output).
+ * @param launchDateStr {string} - The launch date
+ * @returns {string | null} The compact age, or null when unparseable
+ */
+const formatShortAge = (launchDateStr: string): string | null => {
+  const launchDate = new Date(launchDateStr);
+  if (isNaN(launchDate.getTime())) return null;
+
+  const currentDate = new Date();
+  const diffDays = daysBetween(currentDate, launchDate);
+
+  let years = currentDate.getFullYear() - launchDate.getFullYear();
+  let months = currentDate.getMonth() - launchDate.getMonth();
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  let ageString = '';
+  if (years === 0 && months === 0) {
+    ageString = diffDays === 0 ? 'Today' : diffDays === 1 ? '1 day' : diffDays + ' days';
+  } else if (years === 0) {
+    ageString = months + (months === 1 ? ' month' : ' months');
+  } else {
+    // More than a year - show as X.Y years
+    const decimalMonths = (months / 12).toFixed(1).substring(1) || '';
+    ageString = years + decimalMonths + (years === 1 && months === 0 ? ' year' : ' years');
+  }
+
+  return ageString.trim() || null;
 };
 
 /**
@@ -180,13 +175,7 @@ const formatDetailedAge = (launchDateStr: string) => {
   const launchDate = new Date(launchDateStr);
   if (isNaN(launchDate.getTime())) return null;
 
-  const currentDate = new Date();
-
-  // Calculate time difference in milliseconds
-  const diffTime = Math.abs(currentDate.getTime() - launchDate.getTime());
-
-  // Calculate total days difference
-  const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const totalDays = daysBetween(new Date(), launchDate);
 
   // Calculate years, months, and remaining days
   const years = Math.floor(totalDays / 365);
@@ -256,31 +245,19 @@ const convertToCSV = (apps: App[]) => {
 
   // Add each app as a row in the CSV
   apps.forEach((app) => {
-    // Format the values and handle special cases
     const values = [
-      // Escape quotes in name and wrap in quotes
-      '"' + (app.name ?? '').replace(/"/g, '""') + '"',
-      // Rating
+      app.name ?? '',
       app.rating ?? 'N/A',
-      // Review count
       app.reviewCount ?? '0',
-      // Escape quotes in pricing and wrap in quotes
-      '"' + (app.pricing ?? '').replace(/"/g, '""') + '"',
-      // Launch date - properly quoted to prevent CSV issues with commas
-      '"' + (app.launchDate ?? '').replace(/"/g, '""') + '"',
-      // Installed status (Yes/No)
+      app.pricing ?? '',
+      app.launchDate ?? '',
       app.isInstalled ? 'Yes' : 'No',
-      // Built for Shopify status (Yes/No)
       app.isBuiltForShopify ? 'Yes' : 'No',
-      // Escape quotes in description and wrap in quotes
-      '"' + (app.description ?? '').replace(/"/g, '""') + '"',
-      // App URL
+      app.description ?? '',
       app.link?.split('?')[0]?.split('#')[0] ?? '',
-      // Website URL
       app.developer?.website ?? ''
-    ];
+    ].map(csvField);
 
-    // Add the row to the CSV
     csv += values.join(',') + '\n';
   });
 
@@ -294,33 +271,9 @@ const convertToCSV = (apps: App[]) => {
 export const downloadCSV = (apps: App[]) => {
   const csv = withCsvCredit(convertToCSV(apps));
 
-  // Create a blob with the CSV data
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-
-  // Create a link to download the blob
-  const link = document.createElement('a');
-
-  // Create the download URL
-  const url = URL.createObjectURL(blob);
-
-  // Generate filename
   const pageTitle = getPageTitle();
   const date = new Date().toISOString().split('T')[0];
-  const filename = `shopify-alfred-${pageTitle}-${date}.csv`;
-
-  // Setup the link properties
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-
-  // Add the link to the DOM
-  document.body.appendChild(link);
-
-  // Click the link to trigger the download
-  link.click();
-
-  // Clean up
-  document.body.removeChild(link);
+  downloadFile(csv, `shopify-alfred-${pageTitle}-${date}.csv`, 'text/csv;charset=utf-8;');
 
   sendTrackEvent('appstore_partner_table_export', {
     app_count: apps.length,

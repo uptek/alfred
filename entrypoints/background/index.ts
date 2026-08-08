@@ -64,8 +64,10 @@ export default defineBackground(() => {
   // Set up periodic keep-alive (every 20 seconds)
   setInterval(keepAlive, 20000);
 
-  // Keep track of current shortcuts in memory to avoid unnecessary re-registration
-  let currentShortcuts: unknown = null;
+  // Keep track of current shortcuts (as their serialized form, so each settings
+  // write compares against a cached string) to avoid unnecessary re-registration
+  // 'null' matches the never-seen sentinel so the first watch event always re-registers
+  let currentShortcutsJson: string | undefined = 'null';
   let currentPresetMenuItemHandles: string | undefined;
 
   registerShortcuts();
@@ -75,15 +77,12 @@ export default defineBackground(() => {
   // change to either rebuilds the menus.
   storage.watch<AlfredSettings>('local:settings', (newValue) => {
     void (async () => {
-      const newShortcuts = newValue?.shortcuts;
+      const newShortcutsJson = JSON.stringify(newValue?.shortcuts);
       const newPresetMenuItemHandles = newValue?.collaboratorAccess?.presetMenuItemHandles;
-      if (
-        JSON.stringify(newShortcuts) !== JSON.stringify(currentShortcuts) ||
-        newPresetMenuItemHandles !== currentPresetMenuItemHandles
-      ) {
-        currentShortcuts = newShortcuts;
+      if (newShortcutsJson !== currentShortcutsJson || newPresetMenuItemHandles !== currentPresetMenuItemHandles) {
+        currentShortcutsJson = newShortcutsJson;
         currentPresetMenuItemHandles = newPresetMenuItemHandles;
-        await registerShortcuts();
+        await registerShortcuts(newValue);
       }
     })();
   });
@@ -94,30 +93,31 @@ export default defineBackground(() => {
     void registerShortcuts();
   });
 
-  // Listen for tracking messages from content scripts
-  browser.runtime.onMessage.addListener((message: { type?: string; [key: string]: unknown }) => {
-    if (message.type === 'track_action') {
-      try {
-        trackAction(message.action as AnalyticsAction, message.metadata as Record<string, unknown>);
-      } catch (error) {
-        console.error('Failed to track action:', error);
-      }
-    }
-  });
-
-  // Resolve link HTTP statuses for the popup. Fetching here (not in the popup)
+  // Single message dispatcher: tracking events from content scripts, and link
+  // HTTP status checks for the popup. Fetching statuses here (not in the popup)
   // keeps checks alive after the popup closes and uses host permissions to read
   // cross-origin status codes. Returning true keeps the channel open for the
   // async sendResponse.
-  browser.runtime.onMessage.addListener((message: { action?: string; url?: string }, sender, sendResponse) => {
-    // Only honor requests from the extension's own contexts (popup/content scripts).
-    if (sender.id !== browser.runtime.id) return false;
-    if (message.action === 'check_link_status' && typeof message.url === 'string') {
-      checkLinkStatus(message.url).then(sendResponse);
-      return true;
+  browser.runtime.onMessage.addListener(
+    (message: { type?: string; action?: unknown; url?: unknown; [key: string]: unknown }, sender, sendResponse) => {
+      if (message.type === 'track_action') {
+        try {
+          trackAction(message.action as AnalyticsAction, message.metadata as Record<string, unknown>);
+        } catch (error) {
+          console.error('Failed to track action:', error);
+        }
+        return false;
+      }
+
+      // Only honor link-status requests from the extension's own contexts (popup/content scripts).
+      if (sender.id !== browser.runtime.id) return false;
+      if (message.action === 'check_link_status' && typeof message.url === 'string') {
+        checkLinkStatus(message.url).then(sendResponse);
+        return true;
+      }
+      return false;
     }
-    return false;
-  });
+  );
 
   // The popup persists per-tab view state (open section, link-status scan) keyed
   // by tab id. Drop it the moment the tab closes so the state dies with the tab

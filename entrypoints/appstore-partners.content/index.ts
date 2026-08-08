@@ -51,14 +51,6 @@ export default defineContentScript({
       }
     });
 
-    // Explicitly mount the UI
     ui.mount();
-
-    browser.runtime.onMessage.addListener((event: { type?: string; [key: string]: unknown }) => {
-      if (event.type === 'MOUNT_UI') {
-        // dynamic mount by user action via messaging.
-        ui.mount();
-      }
-    });
   }
 });

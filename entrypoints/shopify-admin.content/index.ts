@@ -6,8 +6,10 @@ export default defineContentScript({
   matches: ['https://admin.shopify.com/*', 'https://*.myshopify.com/admin/*'],
   runAt: 'document_end',
   async main() {
-    setupToggleSidebar();
-    setupTimeline();
+    const settings = await getItem<AlfredSettings>('settings');
+
+    void setupToggleSidebar(settings);
+    setupTimeline(settings);
 
     /**
      * Warn before closing the theme code editor page.
@@ -15,7 +17,6 @@ export default defineContentScript({
      * which instead closes the browser tab.
      */
     if (/^\/store\/[^/]+\/themes\/\d+\/?$/.test(window.location.pathname)) {
-      const settings = await getItem<AlfredSettings>('settings');
       if (settings?.admin?.warnBeforeClosingCodeEditor !== false) {
         window.addEventListener('beforeunload', (e) => {
           e.preventDefault();

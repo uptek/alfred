@@ -1,27 +1,25 @@
 <script lang="ts">
   import type { LinkKind, RawLink, LinkStatusResult } from './utils/types';
   import { followRank, isDofollow, highlightLinks, scrollToLink, checkLinkStatus } from './utils/links';
-  import { csvField } from './utils/format';
+  import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
+  import { createCopyFeedback } from './utils/copy.svelte';
+  import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
-  import { untrack, onDestroy, onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { getTabState } from './stores/tabState.svelte';
 
   let { links, domain }: { links: RawLink[]; domain: string | null } = $props();
 
-  const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
+  const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  let tracked = false;
-  $effect(() => {
-    if (tracked || links.length === 0) return;
-    tracked = true;
-    untrack(() => {
-      trackAction('links_view', { link_count: links.length, external_count: links.filter(l => l.kind === 'external').length, nofollow_count: links.filter(l => l.isNofollow).length });
-    });
-  });
+  trackOnce(
+    () => links.length > 0,
+    () => trackAction('links_view', { link_count: links.length, external_count: links.filter(l => l.kind === 'external').length, nofollow_count: links.filter(l => l.isNofollow).length })
+  );
 
   type SortKey = 'index' | 'url' | 'follow' | 'type' | 'status';
 
@@ -54,8 +52,7 @@
   let sortKey = $state<SortKey>(restored?.sortKey ?? 'index');
   let sortDir = $state<'asc' | 'desc'>(restored?.sortDir ?? 'asc');
 
-  let copied = $state(false);
-  let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
+  const copyFeedback = createCopyFeedback();
   let highlightOn = $state(restored?.highlightOn ?? false);
   let searchInput = $state<HTMLInputElement | null>(null);
 
@@ -376,7 +373,6 @@
 
   onDestroy(() => {
     if (highlightOn) highlightLinks(false);
-    if (copyResetTimer) clearTimeout(copyResetTimer);
     checkRun++; // stop any in-flight status sweep
   });
 
@@ -384,16 +380,6 @@
     if ((e.target as HTMLElement).closest('a')) return;
     scrollToLink(index);
     trackAction('links_scroll_to', {});
-  }
-
-  function downloadFile(content: string, filename: string, mime: string) {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   function exportCsv() {
@@ -440,15 +426,7 @@
 
   async function copyUrls() {
     const text = links.map(l => l.href).join('\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (copyResetTimer) clearTimeout(copyResetTimer);
-      copyResetTimer = setTimeout(() => { copied = false; }, 1500);
-      trackAction('links_copy', { format: 'urls', link_count: links.length });
-    } catch {
-      // ignore clipboard errors
-    }
+    if (await copyFeedback.copy(text)) trackAction('links_copy', { format: 'urls', link_count: links.length });
   }
 
   const typeOptions = $derived([
@@ -588,7 +566,7 @@
                 </button>
                 <div class="export__divider"></div>
                 <button class="export__item" onclick={copyUrls}>
-                  <span class="export__item-label">{copied ? 'Copied!' : 'Copy'}</span>
+                  <span class="export__item-label">{copyFeedback.copied ? 'Copied!' : 'Copy'}</span>
                   <span class="export__item-desc">URLs only</span>
                 </button>
               </div>

@@ -1,5 +1,6 @@
 import type { RawHreflang } from './types';
 import { queryActiveTab } from './messaging';
+import { normalizeUrl } from './url';
 
 /**
  * Extracts all hreflang alternate link tags from the active tab via content script.
@@ -22,20 +23,10 @@ export function isValidHreflangCode(code: string): boolean {
 const normCode = (code: string): string => code.trim().toLowerCase();
 
 /**
- * Normalizes a URL for self-reference comparison: drops the hash, lowercases
- * the host, and strips a single trailing slash so `/en` and `/en/` match.
+ * Normalizes a URL for self-reference comparison so `/en` and `/en/` match.
  * Returns null for unparseable input.
  */
-export function normalizeUrl(url: string): string | null {
-  try {
-    const u = new URL(url);
-    u.hash = '';
-    const path = u.pathname.length > 1 ? u.pathname.replace(/\/$/, '') : u.pathname;
-    return `${u.protocol}//${u.host.toLowerCase()}${path}${u.search}`;
-  } catch {
-    return null;
-  }
-}
+export { normalizeUrl };
 
 export type HreflangIssueId =
   | 'invalid-code'

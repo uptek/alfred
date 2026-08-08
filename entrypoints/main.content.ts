@@ -158,6 +158,46 @@ export default defineContentScript({
     // shows a loading state meanwhile, so waiting is free.
     const RELAY_TIMEOUT_MS = 3000;
 
+    /**
+     * Relays a popup request to the main world via postMessage and forwards
+     * the response (or a fallback on timeout) through sendResponse. Waits for
+     * mainWorldReady so a request posted before the main-world handlers are
+     * registered isn't silently lost.
+     */
+    const relayToMainWorld = (
+      requestType: string,
+      responseEventPrefix: string,
+      fallback: unknown,
+      sendResponse: (response?: unknown) => void
+    ): true => {
+      const requestId = Date.now() + '_' + Math.random();
+      const eventName = `${responseEventPrefix}_${requestId}`;
+      let responseHandled = false;
+
+      const handleResponse = (event: Event) => {
+        if (responseHandled) return;
+        responseHandled = true;
+        window.removeEventListener(eventName, handleResponse);
+        clearTimeout(timeoutId);
+        sendResponse((event as CustomEvent<unknown>).detail ?? fallback);
+      };
+
+      const timeoutId = setTimeout(() => {
+        if (responseHandled) return;
+        responseHandled = true;
+        window.removeEventListener(eventName, handleResponse);
+        sendResponse(fallback);
+      }, RELAY_TIMEOUT_MS);
+
+      window.addEventListener(eventName, handleResponse);
+
+      void mainWorldReady.then(() => {
+        window.postMessage({ type: requestType, requestId }, '*');
+      });
+
+      return true;
+    };
+
     // Listen for tracking events from the main world
     window.addEventListener('alfred:track', (event: Event) => {
       const { action, metadata } = (
@@ -219,62 +259,12 @@ export default defineContentScript({
        * @returns {{ isShopify: boolean, theme: object | null, shop: string | null }}
        */
       if (request.action === 'get_theme') {
-        // Create a unique request ID
-        const requestId = Date.now() + '_' + Math.random();
-
-        // Set up listener for response
-        let responseHandled = false;
-
-        const handleThemeResponse = (event: Event) => {
-          if (responseHandled) return;
-          responseHandled = true;
-
-          window.removeEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
-          clearTimeout(timeoutId);
-
-          sendResponse(
-            (
-              event as CustomEvent<{
-                isShopify: boolean;
-                theme: unknown;
-                shop: unknown;
-              }>
-            ).detail ?? {
-              isShopify: false,
-              theme: null,
-              shop: null
-            }
-          );
-        };
-
-        // Add timeout fallback
-        const timeoutId = setTimeout(() => {
-          if (responseHandled) return;
-          responseHandled = true;
-
-          window.removeEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
-          sendResponse({
-            isShopify: false,
-            theme: null,
-            shop: null
-          });
-        }, RELAY_TIMEOUT_MS);
-
-        window.addEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
-
-        // Request theme data once the main-world handler is listening
-        void mainWorldReady.then(() => {
-          window.postMessage(
-            {
-              type: 'alfred:request_theme',
-              requestId: requestId
-            },
-            '*'
-          );
-        });
-
-        // Return true to indicate async response
-        return true;
+        return relayToMainWorld(
+          'alfred:request_theme',
+          'alfred:theme_response',
+          { isShopify: false, theme: null, shop: null },
+          sendResponse
+        );
       }
 
       /**
@@ -296,41 +286,12 @@ export default defineContentScript({
           designMode: false
         };
 
-        const requestId = Date.now() + '_' + Math.random();
-
-        let responseHandled = false;
-
-        const handleContextResponse = (event: Event) => {
-          if (responseHandled) return;
-          responseHandled = true;
-
-          window.removeEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
-          clearTimeout(contextTimeoutId);
-
-          sendResponse((event as CustomEvent<unknown>).detail ?? emptyContext);
-        };
-
-        const contextTimeoutId = setTimeout(() => {
-          if (responseHandled) return;
-          responseHandled = true;
-
-          window.removeEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
-          sendResponse(emptyContext);
-        }, RELAY_TIMEOUT_MS);
-
-        window.addEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
-
-        void mainWorldReady.then(() => {
-          window.postMessage(
-            {
-              type: 'alfred:request_shopify_context',
-              requestId: requestId
-            },
-            '*'
-          );
-        });
-
-        return true;
+        return relayToMainWorld(
+          'alfred:request_shopify_context',
+          'alfred:shopify_context_response',
+          emptyContext,
+          sendResponse
+        );
       }
 
       /**
@@ -609,7 +570,11 @@ export default defineContentScript({
           }
         };
 
-        const images = collectImageEls().map(({ el, source, bg }, i) => {
+        const collected = collectImageEls();
+        // Stamp indices so scroll_to_image can find the element by attribute
+        // instead of re-running the full-DOM walk (mirrors get_links).
+        collected.forEach(({ el }, i) => el.setAttribute('data-alfred-image-index', String(i)));
+        const images = collected.map(({ el, source, bg }, i) => {
           if (source === 'background') {
             const src = bg ? capDataUri(resolveUrl(bg)) : '';
             const t = src ? timingByUrl.get(src) : undefined;
@@ -1142,7 +1107,17 @@ export default defineContentScript({
        * @param {number} request.index - Zero-based index in collectImageEls() order.
        */
       if (request.action === 'scroll_to_image') {
-        const item = collectImageEls()[(request as { action: string; index: number }).index];
+        const index = (request as { action: string; index: number }).index;
+        // Prefer the index stamped by get_images; fall back to the full walk
+        // (an element with several background images keeps only the last stamp).
+        const stamped = document.querySelector(`[data-alfred-image-index="${index}"]`);
+        const item: CollectedImage | undefined = stamped
+          ? {
+              el: stamped,
+              source:
+                stamped.tagName === 'IMG' ? (stamped.closest('picture') ? 'picture' : 'img') : ('background' as const)
+            }
+          : collectImageEls()[index];
         if (item) {
           const { el, source } = item;
           ensureImageHighlightStyle();

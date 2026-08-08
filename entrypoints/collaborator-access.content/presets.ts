@@ -33,7 +33,7 @@ export interface PermissionSearchController {
 // ---------------------------------------------------------------------------
 
 const STORAGE_KEY = 'alfred:permission-presets';
-const HOTLINK_PRESET_PARAM = 'alfred_preset';
+export const HOTLINK_PRESET_PARAM = 'alfred_preset';
 export const HOTLINK_AUTOSUBMIT_PARAM = 'alfred_submit';
 
 type StoredPermissionPreset = PermissionPreset;
@@ -50,9 +50,19 @@ export function generatePresetId(): string {
  * Builds the hotlink URL for a preset using the current partner ID.
  * @param handle - The preset handle to include in the hotlink
  * @param autoSubmit - When true, appends the auto-submit param so the request is sent automatically after applying
+ * @param options.bare - When true, returns the current page URL with the preset params
+ *   appended (for bookmarks/sharing) instead of the Mantle template URL with its
+ *   `store_url` placeholder.
  * @returns A collaborator request URL with the preset param appended
  */
-export function buildHotlinkUrl(handle: string, autoSubmit = false): string {
+export function buildHotlinkUrl(handle: string, autoSubmit = false, options: { bare?: boolean } = {}): string {
+  if (options.bare) {
+    const bareUrl = new URL(window.location.href);
+    bareUrl.searchParams.set(HOTLINK_PRESET_PARAM, handle);
+    if (autoSubmit) bareUrl.searchParams.set(HOTLINK_AUTOSUBMIT_PARAM, '1');
+    return bareUrl.toString();
+  }
+
   const url = new URL(window.location.href);
   const segments = url.pathname.split('/').filter(Boolean);
   const partnerId = segments[1];

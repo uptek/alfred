@@ -1,4 +1,5 @@
 import type { StoreInfo, Theme } from './types';
+import { getActiveTab } from './messaging';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
 
 /**
@@ -7,10 +8,7 @@ import { lookupThemeStoreEntry } from './themeStoreLookup';
  */
 export const getTheme = async (): Promise<StoreInfo | null> => {
   try {
-    const [tab] = await browser.tabs.query({
-      active: true,
-      currentWindow: true
-    });
+    const tab = await getActiveTab();
 
     if (tab?.id && tab?.url) {
       interface ThemeResponse {

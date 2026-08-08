@@ -27,10 +27,6 @@ export default defineContentScript({
       debounceTimer = setTimeout(() => tryInject(ctx), 200);
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
-
-    browser.runtime.onMessage.addListener((event: { type: string }) => {
-      if (event.type === 'MOUNT_UI') tryInject(ctx);
-    });
   }
 });
 

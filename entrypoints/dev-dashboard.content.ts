@@ -1,3 +1,4 @@
+import { storage } from '#imports';
 import { getItem, setItem } from '@/utils/storage';
 
 type ThemeMode = 'light' | 'dark' | 'system';
@@ -9,22 +10,20 @@ export default defineContentScript({
 
   async main() {
     const saved = await getItem<ThemeMode>(STORAGE_KEY);
-    const mode = saved ?? 'system';
+    // Kept current via storage.watch so SPA header rebuilds don't hit storage
+    // or re-apply unchanged styles on every tryInject.
+    let mode: ThemeMode = saved ?? 'system';
 
     applyTheme(mode);
 
+    storage.watch<ThemeMode>(`local:${STORAGE_KEY}`, (value) => {
+      mode = value ?? 'system';
+    });
+
     // Inject toggle and re-inject when SPA navigation rebuilds the header
-    let injecting = false;
-    const tryInject = async () => {
-      if (injecting || document.getElementById('alfred-theme-toggle')) return;
-      injecting = true;
-      try {
-        const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'system';
-        applyTheme(current);
-        injectToggle(current);
-      } finally {
-        injecting = false;
-      }
+    const tryInject = () => {
+      if (document.getElementById('alfred-theme-toggle')) return;
+      injectToggle(mode);
     };
 
     if (document.readyState === 'loading') {
@@ -44,9 +43,8 @@ export default defineContentScript({
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
     // Listen for system color scheme changes once (not per-injection)
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
-      const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'system';
-      if (current === 'system') {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (mode === 'system') {
         applyTheme('system');
       }
     });

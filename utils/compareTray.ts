@@ -4,6 +4,13 @@ import { getItem, setItem } from '~/utils/storage';
 export const COMPARE_TRAY_KEY = 'compareTray';
 export const COMPARE_TRAY_LIMIT = 4;
 
+/** App Store listing handle shape (e.g. "judgeme"). */
+const APP_HANDLE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+
+export function isAppHandle(value: string): boolean {
+  return APP_HANDLE_PATTERN.test(value);
+}
+
 export type AddToTrayResult = 'added' | 'duplicate' | 'full';
 
 /**

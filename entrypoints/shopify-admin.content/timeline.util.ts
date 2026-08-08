@@ -1,4 +1,3 @@
-import { getItem } from '~/utils/storage';
 import { CWS_REVIEW_URL } from '~/utils/constants';
 import { sendTrackEvent } from '~/utils/analytics';
 import {
@@ -487,8 +486,7 @@ const injectTimeline = (): void => {
 };
 
 /** Inject the activity timeline on product, page, and collection admin screens. */
-export const setupTimeline = async (): Promise<void> => {
-  const settings = await getItem<AlfredSettings>('settings');
+export const setupTimeline = (settings: AlfredSettings | null): void => {
   if (settings?.admin?.timeline === false) {
     return;
   }

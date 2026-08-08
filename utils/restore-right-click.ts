@@ -13,7 +13,7 @@ const blockedEvents = ['contextmenu', 'copy', 'cut', 'paste', 'selectstart', 'dr
  * Early Shopify detection using HTML elements (available before JS globals).
  * This is more reliable than checking window.Shopify which loads later.
  */
-const isShopifyStorefront = (): boolean => {
+const isShopifyStorefrontDom = (): boolean => {
   const isAdminUrl = window.location.hostname === 'admin.shopify.com' || window.location.pathname.startsWith('/admin/');
 
   if (isAdminUrl) return false;
@@ -30,7 +30,7 @@ const isShopifyStorefront = (): boolean => {
  */
 export const initRestoreRightClick = (): void => {
   // Only run on Shopify sites to avoid conflicts with apps like Google Docs
-  if (!isShopifyStorefront()) {
+  if (!isShopifyStorefrontDom()) {
     return;
   }
 

@@ -49,17 +49,22 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
   // the user has opted out of tracking or in dev mode.
   recordSuccess(action).catch(() => {});
   try {
+    const cooldown = COOLDOWN_MS[action];
+    const cooldownKey = `cooldown_${action}`;
+
+    // Settings and cooldown reads are independent — fetch them in parallel
+    const [settings, lastFired] = await Promise.all([
+      getItem<AlfredSettings>('settings'),
+      cooldown ? getItem<number>(cooldownKey) : Promise.resolve(null)
+    ]);
+
     // Respect user's privacy opt-out
-    const settings = await getItem<AlfredSettings>('settings');
     if (settings?.general?.analytics === false) return;
 
     // Cooldown check — skip the event if fired too recently
-    const cooldown = COOLDOWN_MS[action];
     if (cooldown) {
-      const key = `cooldown_${action}`;
-      const lastFired = (await getItem<number>(key)) ?? 0;
-      if (Date.now() - lastFired < cooldown) return;
-      await setItem(key, Date.now());
+      if (Date.now() - (lastFired ?? 0) < cooldown) return;
+      await setItem(cooldownKey, Date.now());
     }
 
     // Get all required data

@@ -110,16 +110,6 @@ export interface HeadingIssue {
   indexes?: number[]; // all affected headings (multiple-h1: every H1 gets a row marker)
 }
 
-export type InfoItemType = 'url' | 'text';
-
-export interface InfoItemProps {
-  label: string;
-  value: string | undefined | null;
-  type?: InfoItemType;
-  isLast?: boolean;
-  copyable?: boolean;
-}
-
 export interface Theme {
   name?: string;
   id?: number;
@@ -292,5 +282,4 @@ export interface OverviewAnalysis {
   canonical: CanonicalInfo;
   directives: RobotsDirective[];
   pageType: string | null; // Shopify page type, URL-derived fallback
-  dates: { published: string | null; modified: string | null };
 }

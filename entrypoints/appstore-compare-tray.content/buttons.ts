@@ -1,5 +1,5 @@
 import { sendTrackEvent } from '@/utils/analytics';
-import { addToTray, removeFromTray, getTray, watchTray, COMPARE_TRAY_LIMIT } from '~/utils/compareTray';
+import { addToTray, removeFromTray, getTray, watchTray, COMPARE_TRAY_LIMIT, isAppHandle } from '~/utils/compareTray';
 import { Toast } from '~/utils/toast';
 
 const BUTTON_CLASS = 'alfred-compare-button';
@@ -237,17 +237,18 @@ function injectListingButton() {
   }
 
   // Only individual listings live at a single-segment path like /judgeme
-  const match = window.location.pathname.match(/^\/([a-z0-9][a-z0-9_-]*)$/);
+  const segment = window.location.pathname.replace(/^\//, '');
+  const handle = !segment.includes('/') && isAppHandle(segment) ? segment : null;
   const h1 = hero.querySelector('h1');
 
-  if (!match?.[1] || !h1) {
+  if (!handle || !h1) {
     return;
   }
 
   const button = createButton(
     {
-      handle: match[1],
-      name: h1.textContent?.trim() ?? match[1],
+      handle,
+      name: h1.textContent?.trim() ?? handle,
       iconUrl: getListingIconUrl()
     },
     () => hero.querySelector('img')
@@ -266,6 +267,15 @@ export function initCompareButtons(): () => void {
   };
 
   let observer: MutationObserver | undefined;
+  // One pending pass at a time: a mutation burst coalesces into a single run.
+  let pendingInjectTimeout: number | undefined;
+  const scheduleInjectAll = () => {
+    clearTimeout(pendingInjectTimeout);
+    pendingInjectTimeout = window.setTimeout(() => {
+      pendingInjectTimeout = undefined;
+      injectAll();
+    }, 100);
+  };
 
   const unwatch = watchTray((items) => {
     trayHandles = new Set(items.map((item) => item.handle));
@@ -278,19 +288,20 @@ export function initCompareButtons(): () => void {
     refreshButtons();
 
     observer = new MutationObserver((mutations) => {
-      const hasNewCards = mutations.some(
-        (mutation) =>
-          mutation.type === 'childList' &&
-          Array.from(mutation.addedNodes).some(
-            (node) =>
-              node.nodeType === Node.ELEMENT_NODE &&
-              ((node as Element).matches('[data-controller="app-card"]') ||
-                (node as Element).querySelector('[data-controller="app-card"]') !== null)
-          )
-      );
-
-      if (hasNewCards) {
-        setTimeout(injectAll, 100);
+      for (const mutation of mutations) {
+        if (mutation.type !== 'childList') {
+          continue;
+        }
+        for (const node of mutation.addedNodes) {
+          if (
+            node.nodeType === Node.ELEMENT_NODE &&
+            ((node as Element).matches('[data-controller="app-card"]') ||
+              (node as Element).querySelector('[data-controller="app-card"]') !== null)
+          ) {
+            scheduleInjectAll();
+            return;
+          }
+        }
       }
     });
 
@@ -298,6 +309,7 @@ export function initCompareButtons(): () => void {
   });
 
   return () => {
+    clearTimeout(pendingInjectTimeout);
     observer?.disconnect();
     unwatch();
     document.getElementById(STYLE_ID)?.remove();

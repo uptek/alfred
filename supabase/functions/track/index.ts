@@ -113,6 +113,11 @@ const VALID_ACTIONS = [
   'credit_click'
 ];
 
+const VALID_ACTIONS_SET = new Set(VALID_ACTIONS);
+
+// Deno isolates reuse module state across requests, so build the client once
+const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -120,15 +125,12 @@ serve(async (req) => {
   }
 
   try {
-    // Create Supabase client
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-
     // Parse event data
     const body = await req.json();
     const { user_id, action, time_saved, version, metadata } = body;
 
     // Only process if we have the minimum required fields
-    if (user_id && action && VALID_ACTIONS.includes(action) && typeof time_saved === 'number') {
+    if (user_id && action && VALID_ACTIONS_SET.has(action) && typeof time_saved === 'number') {
       // Insert event - ignore any errors
       await supabase
         .from('events')

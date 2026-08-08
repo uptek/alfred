@@ -77,8 +77,7 @@ const onMouseUp = () => {
 
 const onMouseDown = (e: MouseEvent, resizer: Resizer) => {
   e.preventDefault();
-  const { main, primarySidebar, secondarySidebar } = queryElements();
-  const { frame } = queryElements();
+  const { main, frame, primarySidebar, secondarySidebar } = queryElements();
   if (main && resizer.isMainResizer) main.style.pointerEvents = 'none';
   if (!resizer.isMainResizer && frame) frame.style.transition = 'none';
   activeResizer = resizer;
@@ -114,7 +113,6 @@ const createResizer = (
     ...styles
   });
   element.appendChild(resizerEl);
-  console.log(`[Alfred Resizers] Created resizer: ${type ?? 'primary'}`);
 
   const resizer: Resizer = {
     element: resizerEl,
@@ -212,13 +210,6 @@ const getResizerSettings = async () => {
 const Resizers = async () => {
   const { frame, main, primarySidebar, secondarySidebar } = queryElements();
 
-  console.log('[Alfred Resizers] Element check:', {
-    frame: !!frame,
-    main: !!main,
-    primarySidebar: !!primarySidebar,
-    secondarySidebar: !!secondarySidebar
-  });
-
   if (!frame && !main) return false;
 
   // Allow the 1fr main column to shrink past its content's min-width.
@@ -230,7 +221,6 @@ const Resizers = async () => {
   }
 
   const resizerSettings = await getResizerSettings();
-  let newlyAttached = false;
 
   // Primary Sidebar Resizer
   if (
@@ -241,7 +231,6 @@ const Resizers = async () => {
   ) {
     primarySidebar.setAttribute(`${RESIZER_ATTR_PREFIX}primary`, 'true');
     createSidebarResizer(frame, primarySidebar, true);
-    newlyAttached = true;
   }
 
   // Secondary Sidebar Resizer
@@ -253,7 +242,6 @@ const Resizers = async () => {
   ) {
     secondarySidebar.setAttribute(`${RESIZER_ATTR_PREFIX}secondary`, 'true');
     createSidebarResizer(frame, secondarySidebar, false);
-    newlyAttached = true;
   }
 
   // Main Horizontal Resizer
@@ -276,7 +264,6 @@ const Resizers = async () => {
       true,
       'main-horizontal'
     );
-    newlyAttached = true;
   }
 
   // Main Vertical Resizer
@@ -301,7 +288,6 @@ const Resizers = async () => {
       true,
       'main-vertical'
     );
-    newlyAttached = true;
   }
 
   // Dimensions badge in top bar
@@ -309,20 +295,23 @@ const Resizers = async () => {
     createDimensionsBadge(main);
   }
 
-  if (newlyAttached) {
-    console.log('[Alfred Resizers] Attached new resizers');
-  }
   return true;
 };
 
+const allResizersAttached = (): boolean =>
+  ['primary', 'secondary', 'horizontal', 'vertical'].every(
+    (kind) => document.querySelector(`[${RESIZER_ATTR_PREFIX}${kind}]`) !== null
+  );
+
 export const setupResizers = async () => {
-  console.log('[Alfred Resizers] setupResizers called');
   await Resizers();
 
   // Keep watching permanently. Shopify's React app destroys and recreates
   // sidebar panels when they hide/show, so we need to re-attach resizers.
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   const observer = new MutationObserver(() => {
+    // Everything is already attached — skip the debounce/re-run entirely.
+    if (allResizersAttached()) return;
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       void Resizers();
