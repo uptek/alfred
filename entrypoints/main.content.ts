@@ -189,6 +189,20 @@ export default defineContentScript({
       return true;
     };
 
+    /**
+     * Fast Shopify detection from the isolated world: DOM footprints only, no
+     * main-world round trip. Lets the popup pick its initial tab and paint
+     * before the (relayed, worst-case 3s) getTheme answer arrives. A miss here
+     * is corrected when getTheme resolves, so favor cheap over exhaustive.
+     */
+    const sniffShopify = (): boolean =>
+      window.location.hostname.endsWith('.myshopify.com') ||
+      document.querySelector(
+        'script[src*="cdn.shopify.com"], link[href*="cdn.shopify.com"], ' +
+          'script[src*="/cdn/shop/"], link[href*="/cdn/shop/"], ' +
+          'meta[name^="shopify-"], #shopify-features'
+      ) !== null;
+
     // Listen for tracking events from the main world. The event detail crosses
     // a world boundary, so validate the action instead of trusting the cast.
     window.addEventListener('alfred:track', (event: Event) => {
@@ -230,6 +244,15 @@ export default defineContentScript({
        */
       if (request.action === 'get_theme') {
         return relayToMainWorld('getTheme', { isShopify: false, theme: null, shop: null }, sendResponse);
+      }
+
+      /**
+       * Synchronous DOM-only Shopify check for the popup's first paint.
+       * @returns {boolean}
+       */
+      if (request.action === 'sniff_shopify') {
+        sendResponse(sniffShopify());
+        return false;
       }
 
       /**

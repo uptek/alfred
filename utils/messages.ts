@@ -13,6 +13,7 @@ type PayloadlessTabAction =
   | 'open_cartograph'
   | 'get_theme'
   | 'get_shopify_context'
+  | 'sniff_shopify'
   | 'get_headings'
   | 'get_schema'
   | 'get_hreflangs'

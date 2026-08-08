@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getTheme } from './utils/theme';
+  import { getTheme, sniffShopify } from './utils/theme';
   import { getHeadings, analyzeHeadings } from './utils/headings';
   import { getLinks } from './utils/links';
   import { getAssets } from './utils/assets';
@@ -70,7 +70,10 @@
   let overviewNetworkLoading = $state(true);
   let llmsTxt = $state<boolean | null>(null);
   let loading = $state(true);
+  let themeLoading = $state(true);
   let showSuccessNudge = $state(false);
+  // Once the user picks a tab themselves, the late theme answer must not move them.
+  let userNavigated = false;
 
   $effect(() => {
     onSuccessNudge(() => (showSuccessNudge = true));
@@ -132,38 +135,63 @@
     });
     const fetchData = async () => {
       const tab = await getActiveTab();
-      const [storeData, headingsData, linksData, assetsData, imagesData, schemaData, overviewData, contextData, socialData, hreflangsData] =
+      // Theme and Shopify context relay through the main world (worst case 3s
+      // when injection is slow or the page is mid-load); never gate first
+      // paint on them. The DOM-only sniff answers isShopify for the initial
+      // tab pick and popup_open, and getTheme corrects it when it lands.
+      getShopifyContext().then((contextData) => {
+        shopifyContext = contextData;
+      });
+      const themePromise = getTheme();
+      const [sniffedShopify, headingsData, linksData, assetsData, imagesData, schemaData, overviewData, socialData, hreflangsData] =
         await Promise.all([
-          getTheme(),
+          sniffShopify(),
           getHeadings(),
           getLinks(),
           getAssets(),
           getImages(),
           getSchema(),
           getOverview(),
-          getShopifyContext(),
           getSocial(),
           getHreflangs(),
           tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
         ]);
-      trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
-      storeInfo = storeData;
+      trackAction('popup_open', { is_shopify: sniffedShopify });
+      // Provisional store info so domain/page_url consumers render before the
+      // theme relay resolves; replaced wholesale when it does.
+      if (tab?.url) {
+        storeInfo = {
+          isShopify: sniffedShopify,
+          domain: new URL(tab.url).hostname,
+          shopDomain: null,
+          page_url: tab.url,
+          theme: null
+        };
+      }
       rawHeadings = headingsData;
       rawLinks = linksData;
       rawAssets = assetsData;
       rawImages = imagesData;
       rawSchema = schemaData;
       rawOverview = overviewData;
-      shopifyContext = contextData;
       rawSocial = socialData;
       rawHreflangs = hreflangsData;
       // A restored section wins; otherwise non-Shopify pages land on Overview.
       if (tabState.restoredActiveSection) {
         activeTab = tabState.restoredActiveSection;
-      } else if (!storeData?.isShopify) {
+      } else if (!sniffedShopify) {
         activeTab = 'overview';
       }
       loading = false;
+
+      const storeData = await themePromise;
+      if (storeData) storeInfo = storeData;
+      themeLoading = false;
+      // The sniff can miss either way; settle the default tab from the real
+      // answer unless the user already navigated or a restored section won.
+      if (!userNavigated && !tabState.restoredActiveSection) {
+        activeTab = (storeData?.isShopify ?? false) ? 'theme' : 'overview';
+      }
     };
     fetchData();
   });
@@ -215,7 +243,7 @@
     class:active={activeTab === tab.id}
     role="tab"
     aria-selected={activeTab === tab.id}
-    onclick={() => { activeTab = tab.id; }}
+    onclick={() => { userNavigated = true; activeTab = tab.id; }}
   >
     {@render tabIcon(tab.id)}
     {tab.label}
@@ -282,7 +310,12 @@
       <!-- Content -->
       <div class="content" role="main">
         {#if activeTab === 'theme'}
-          {#if storeInfo?.isShopify}
+          {#if themeLoading}
+            <div class="loading">
+              <div class="loading__spinner"></div>
+              <span>Detecting theme...</span>
+            </div>
+          {:else if storeInfo?.isShopify}
             <Theme {storeInfo} />
           {:else}
             <div class="not-shopify">
