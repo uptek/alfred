@@ -27,7 +27,8 @@
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
   import SuccessNudge from './SuccessNudge.svelte';
-  import { getTabState, type PopupSection } from './stores/tabState.svelte';
+  import { getTabState } from './stores/tabState.svelte';
+  import { tabsInGroup, type Tab, type TabId } from './tabs';
   import type {
     StoreInfo,
     RawHeading,
@@ -44,24 +45,11 @@
   } from './utils/types';
   import type { SitemapsData } from './utils/sitemaps';
 
-  type TabId = PopupSection;
   const tabState = getTabState();
-  // Future tabs: 'apps' | 'products'
 
-  interface Tab {
-    id: TabId;
-    label: string;
-    icon: string;
-    badge?: { count: number; color: 'red' | 'green' };
-  }
-
-  const shopifyTabs: Tab[] = [
-    { id: 'theme', label: 'Theme', icon: 'theme' },
-    // { id: 'apps', label: 'Apps', icon: 'apps' },
-    // { id: 'products', label: 'Products', icon: 'products' },
-  ];
-
-  const settingsTab: Tab = { id: 'settings', label: 'Settings', icon: 'settings' };
+  const shopifyTabs = tabsInGroup('shopify');
+  const seoTabs = tabsInGroup('seo');
+  const utilityTabs = tabsInGroup('utility');
 
   let activeTab = $state<TabId>('theme');
   let storeInfo = $state<StoreInfo | null>(null);
@@ -113,22 +101,15 @@
   const hreflangAnalysis = $derived(analyzeHreflangs(rawHreflangs, storeInfo?.page_url ?? null));
   const sitemapsAnalysis = $derived(analyzeSitemaps(rawSitemaps));
 
-  function seoTab(id: TabId, label: string, icon: string, badgeCount = 0): Tab {
-    return badgeCount > 0 ? { id, label, icon, badge: { count: badgeCount, color: 'red' } } : { id, label, icon };
-  }
-
-  const seoTabs = $derived<Tab[]>([
-    seoTab('overview', 'Overview', 'overview', overviewAnalysis.errorCount),
-    seoTab('headings', 'Headings', 'headings', headingIssues.length),
-    seoTab('links', 'Links', 'links'),
-    seoTab('assets', 'Assets', 'assets'),
-    seoTab('images', 'Images', 'images', imageIssueCount),
-    seoTab('robots', 'Robots.txt', 'robots', robotsAnalysis.errorCount),
-    seoTab('hreflangs', 'Hreflangs', 'hreflangs', hreflangAnalysis.errorCount),
-    seoTab('schema', 'Schema', 'schema'),
-    seoTab('social', 'Social', 'social', socialBadgeCount),
-    seoTab('sitemaps', 'Sitemaps', 'sitemaps', sitemapsAnalysis.errorCount),
-  ]);
+  const badgeCounts = $derived<Partial<Record<TabId, number>>>({
+    overview: overviewAnalysis.errorCount,
+    headings: headingIssues.length,
+    images: imageIssueCount,
+    robots: robotsAnalysis.errorCount,
+    hreflangs: hreflangAnalysis.errorCount,
+    social: socialBadgeCount,
+    sitemaps: sitemapsAnalysis.errorCount
+  });
 
   $effect(() => {
     // Robots.txt is a real network fetch (slow origins take seconds, timeout
@@ -228,6 +209,7 @@
 {/snippet}
 
 {#snippet sidebarTab(tab: Tab)}
+  {@const badgeCount = badgeCounts[tab.id] ?? 0}
   <button
     class="tab"
     class:active={activeTab === tab.id}
@@ -237,10 +219,8 @@
   >
     {@render tabIcon(tab.icon)}
     {tab.label}
-    {#if tab.badge}
-      <span class="tab__badge" class:tab__badge--red={tab.badge.color === 'red'} class:tab__badge--green={tab.badge.color === 'green'}>
-        {tab.badge.count}
-      </span>
+    {#if badgeCount > 0}
+      <span class="tab__badge tab__badge--red">{badgeCount}</span>
     {/if}
   </button>
 {/snippet}
@@ -289,7 +269,9 @@
 
         <!-- Bottom -->
         <div class="sidebar__bottom" role="tablist" aria-label="Utility tabs">
-          {@render sidebarTab(settingsTab)}
+          {#each utilityTabs as tab}
+            {@render sidebarTab(tab)}
+          {/each}
           <a href="https://github.com/uptek/alfred/issues" target="_blank" class="sidebar__suggest">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             Suggest a feature
@@ -385,7 +367,6 @@
   .tab.active :global(svg) { opacity: 0.9; }
   .tab__badge { margin-left: auto; font-size: 10px; font-weight: 600; padding: 0px 5px; border-radius: 8px; min-width: 16px; text-align: center; line-height: 16px; border: 1px solid transparent; }
   .tab__badge--red { background: var(--error-bg); color: var(--error-strong); border-color: color-mix(in srgb, var(--error-strong) var(--pill-border-strength), transparent); }
-  .tab__badge--green { background: var(--success-bg); color: var(--success-strong); border-color: color-mix(in srgb, var(--success-strong) var(--pill-border-strength), transparent); }
 
   /* Content block */
   .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg); scrollbar-gutter: stable; }
