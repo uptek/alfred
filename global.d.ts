@@ -75,7 +75,7 @@ declare interface AlfredSettings {
     collapsibleSidebar?: boolean;
     warnBeforeClosingCodeEditor?: boolean;
     themeListUtils?: boolean;
-    editHistory?: boolean;
+    timeline?: boolean;
   };
 }
 

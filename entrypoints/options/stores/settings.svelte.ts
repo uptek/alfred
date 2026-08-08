@@ -42,7 +42,7 @@ const defaultSettings: AlfredSettings = {
     collapsibleSidebar: true,
     warnBeforeClosingCodeEditor: true,
     themeListUtils: true,
-    editHistory: true
+    timeline: true
   }
 };
 

@@ -1,8 +1,6 @@
 <script lang="ts">
   import { trackAction, markNudgeShown } from '@/utils/analytics';
-
-  const CWS_REVIEW_URL = 'https://chromewebstore.google.com/detail/jbdcmokdibodbplhjcajgcbmnflcchbi/reviews';
-  const FEEDBACK_URL = 'https://tally.so/r/nPgYx0';
+  import { CWS_REVIEW_URL, FEEDBACK_URL } from '@/utils/constants';
 
   let { variant = 'default' }: { variant?: 'default' | 'compact' } = $props();
 

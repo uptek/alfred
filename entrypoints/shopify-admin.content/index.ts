@@ -1,5 +1,5 @@
 import { setupToggleSidebar } from './ToggleSidebar';
-import { setupEditHistory } from './edit-history.util';
+import { setupTimeline } from './timeline.util';
 import { getItem } from '~/utils/storage';
 
 export default defineContentScript({
@@ -7,7 +7,7 @@ export default defineContentScript({
   runAt: 'document_end',
   async main() {
     setupToggleSidebar();
-    setupEditHistory();
+    setupTimeline();
 
     /**
      * Warn before closing the theme code editor page.

@@ -106,8 +106,8 @@ export const ANALYTICS_ACTIONS = [
   'sitemaps_copy_urls',
   'sitemaps_export',
   'sitemaps_search',
-  'edit_history_expand',
-  'edit_history_view'
+  'timeline_view',
+  'credit_click'
 ] as const;
 
 export type AnalyticsAction = (typeof ANALYTICS_ACTIONS)[number];
@@ -226,8 +226,8 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   sitemaps_copy_urls: 120,
   sitemaps_export: 120,
   sitemaps_search: 120,
-  edit_history_expand: 0,
-  edit_history_view: 30
+  timeline_view: 30,
+  credit_click: 0
 };
 
 export const COOLDOWN_MS: Partial<Record<AnalyticsAction, number>> = {
@@ -243,8 +243,8 @@ export const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   open_image_in_admin: 'Admin Nav',
   open_section_in_code_editor: 'Admin Nav',
   toggle_admin_sidebar: 'Admin Nav',
-  edit_history_expand: 'Admin Nav',
-  edit_history_view: 'Admin Nav',
+  timeline_view: 'Admin',
+  credit_click: 'Insights',
   copy_product_json: 'Copy Data',
   copy_cart_json: 'Copy Data',
   copy_theme_preview_url: 'Copy Data',
@@ -325,5 +325,21 @@ export const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   robots_copy: 'SEO',
   robots_open: 'SEO',
   robots_ai_toggle: 'SEO',
-  robots_wrap_toggle: 'SEO'
+  robots_wrap_toggle: 'SEO',
+  overview_view: 'SEO',
+  overview_copy: 'SEO',
+  overview_quick_link: 'SEO',
+  overview_social_profile: 'SEO',
+  social_view: 'SEO',
+  social_platform_click: 'SEO',
+  social_copy_tags: 'SEO',
+  hreflangs_view: 'SEO',
+  hreflangs_copy: 'SEO',
+  hreflangs_export: 'SEO',
+  sitemaps_view: 'SEO',
+  sitemaps_open: 'SEO',
+  sitemaps_copy: 'SEO',
+  sitemaps_copy_urls: 'SEO',
+  sitemaps_export: 'SEO',
+  sitemaps_search: 'SEO'
 };
