@@ -55,6 +55,13 @@
   }
 
 
+  .credit-chip.plain .credit-chip-icon {
+    background: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+
   .credit-chip.plain .credit-chip-muted {
     color: inherit;
     opacity: 0.65;

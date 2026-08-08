@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import * as api from './cartApi';
+  import CreditChip from '@/components/CreditChip.svelte';
   import { trackAction } from '@/utils/analytics';
   import type { AddItemPayload, CartData, TabId } from './types';
   import ItemsTab from './components/ItemsTab.svelte';
@@ -292,6 +293,10 @@
           <JsonTab {cart} />
         {/if}
       </main>
+
+      <footer class="credit">
+        <CreditChip source="cartograph" variant="plain" />
+      </footer>
     {/if}
   </div>
 </div>
@@ -429,6 +434,16 @@
     border-radius: 10px;
     font-size: 12px;
     font-weight: 550;
+  }
+
+  .credit {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 20px;
+    border-top: 1px solid var(--cs-border);
+    font-size: 12px;
+    color: var(--cs-text-primary);
+    flex-shrink: 0;
   }
 
   .header-right {
