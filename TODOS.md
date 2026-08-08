@@ -151,30 +151,6 @@ Currently, adding an item requires knowing the product URL or handle upfront. Wi
 
 ## Storefront Inspector
 
-### Metafield Inspector
-
-**Priority:** P1
-
-See all metafields for any resource right on the storefront page. On a product page, right-click > "Inspect Metafields" opens an overlay showing every metafield (namespace, key, type, value) in a clean, searchable table.
-
-Works for products, collections, pages, and shop-level metafields. Uses the Storefront API (publicly accessible) or falls back to the store's `/products/{handle}.json` endpoint which includes metafields exposed to the Storefront API.
-
-**Scope:**
-
-- Right-click > Alfred > Inspect Metafields (or a button in the Cartograph-style overlay)
-- Auto-detect resource type from the current URL (product, collection, page, blog/article)
-- Table with columns: namespace, key, type, value (truncated with expand)
-- Copy individual values, copy all as JSON
-- Search/filter by namespace or key
-- For shop-level metafields: accessible from any storefront page
-
-**Context:**
-
-- Shopify's Storefront API exposes metafields that the merchant has explicitly made visible — this is the publicly queryable set
-- Admin API metafields (private namespaces) require authentication and are out of scope for a content script
-- Could reuse the Cartograph overlay pattern (shadow DOM, postMessage bridge to main world)
-- The main-world script can query `/products/{handle}.json` which includes visible metafields without any API key
-
 ### Liquid X-Ray
 
 **Priority:** P2

@@ -439,7 +439,7 @@
 
   /* Wrap toggle */
   .wrap-btn { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer; font-family: inherit; transition: all 0.12s; }
-  .wrap-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+  .wrap-btn:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
   .wrap-btn--active { background: var(--btn-bg); color: var(--btn-text); border-color: var(--btn-bg); }
   .wrap-btn--active:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); color: var(--btn-text); }
   .wrap-btn__icon { width: 12px; height: 12px; stroke-width: 1.8; }

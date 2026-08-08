@@ -441,7 +441,7 @@
   /* Btn block */
   .btn { display: inline-flex; align-items: center; gap: 5px; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all 0.12s; font-family: inherit; }
   .btn--ghost { padding: 6px 12px; font-size: 12px; font-weight: 500; color: var(--text-secondary); background: var(--bg); border: 1px solid var(--border); }
-  .btn--ghost:hover { border-color: var(--border-hover); color: var(--text); box-shadow: var(--shadow-sm); }
+  .btn--ghost:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
   .btn--ghost:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn--ghost :global(svg) { width: 13px; height: 13px; stroke-width: 1.7; }
   .btn--primary { padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--btn-text); background: var(--btn-bg); border: none; }
@@ -459,7 +459,7 @@
   .stats__update { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--success-bg); color: var(--success-strong); white-space: nowrap; }
   .stats__status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
-  :global(.copy-trigger) { width: 16px !important; height: 16px !important; color: var(--text-placeholder); cursor: pointer; transition: color 0.12s; }
+  :global(.copy-trigger) { width: 18px !important; height: 18px !important; padding: 3px !important; color: var(--text-placeholder); cursor: pointer; transition: color 0.12s, background-color 0.12s; }
   :global(.copy-trigger:hover) { color: var(--text-muted) !important; }
 
   /* Sections block */
@@ -475,6 +475,8 @@
   .internal-name { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-inset); border-radius: 10px; border: 1px dashed var(--border); }
   .internal-name__label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); white-space: nowrap; }
   .internal-name__value { font-family: 'SF Mono', ui-monospace, monospace; font-size: 13px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
+  /* The row itself is --bg-inset, so the icon's default hover wash would vanish. */
+  .internal-name :global(.copy-trigger:hover) { background: var(--bg-hover); }
 
   /* Preview block */
   .preview { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }

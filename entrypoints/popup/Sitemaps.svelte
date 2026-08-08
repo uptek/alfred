@@ -652,7 +652,9 @@
   .issue__msg { flex: 1; min-width: 0; }
 
   /* Search — same control as the Links tab */
-  .search { display: flex; align-items: center; gap: 6px; margin: 12px 20px 2px; padding: 5px 10px; border: 1px solid var(--border-strong); border-radius: 6px; transition: border-color 0.12s; }
+  /* Right padding is 3px because the This-page button carries 7px of its own;
+     3 + 7 keeps the text 10px from the edge, matching the icon on the left. */
+  .search { display: flex; align-items: center; gap: 6px; margin: 12px 20px 2px; padding: 5px 3px 5px 10px; border: 1px solid var(--border-strong); border-radius: 6px; transition: border-color 0.12s; }
   .search:focus-within { border-color: var(--border-hover); }
   .search__icon { width: 14px; height: 14px; flex-shrink: 0; stroke-width: 1.8; color: var(--text-muted); }
   .search__input { flex: 1; border: none; outline: none; background: none; font-family: inherit; font-size: 12px; color: var(--text); }
@@ -661,7 +663,7 @@
   .search__clear:hover { color: var(--text-secondary); background: var(--bg-hover); }
   .search__clear svg { width: 12px; height: 12px; stroke-width: 2; }
   .search__find { flex-shrink: 0; padding: 2px 7px; border: none; background: none; cursor: pointer; font-family: inherit; font-size: 10.5px; font-weight: 600; white-space: nowrap; color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; border-radius: 4px; transition: all 0.12s; }
-  .search__find:hover { color: var(--accent); background: var(--accent-tint); }
+  .search__find:hover { color: var(--text); background: var(--bg-hover); }
 
   /* Search results */
   .search-status { display: flex; align-items: center; gap: 8px; padding: 16px 20px; font-size: 12.5px; color: var(--text-muted); }
@@ -719,9 +721,9 @@
   /* Row actions */
   .row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
   .row-action { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border-radius: 6px; border: 1px solid transparent; background: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; transition: all 0.12s; }
-  /* The row underneath is already --bg-hover, so the action pops as a tinted
-     pill (accent wash + border) instead of another gray that would blend in. */
-  .row-action:hover { background: var(--accent-tint); border-color: color-mix(in srgb, var(--accent) 25%, transparent); color: var(--accent); }
+  /* The row underneath is already --bg-hover, so a plain gray wash would blend
+     in; the lift surface + border reads as a small raised button instead. */
+  .row-action:hover { background: var(--bg); border-color: var(--border-hover); color: var(--text); }
   .row-action svg { width: 14px; height: 14px; stroke-width: 1.8; }
   .row-action--disabled { opacity: 0.35; pointer-events: none; }
   .row-action--pending { opacity: 0.5; pointer-events: none; }
@@ -735,7 +737,7 @@
   /* Export dropdown */
   .export { position: relative; }
   .export__trigger { white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .export__trigger:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+  .export__trigger:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
   .export__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; }
   .export__menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-pop); z-index: 10; min-width: 150px; padding: 4px; }
   .export__item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 10px; border: none; background: none; font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 5px; transition: background 0.1s; }

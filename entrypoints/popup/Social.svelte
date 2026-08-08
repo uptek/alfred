@@ -13,6 +13,7 @@
   import { probeImage } from './utils/social-probe';
   import SocialCard from './SocialCard.svelte';
   import ActionButton from './ActionButton.svelte';
+  import SegmentedControl from './SegmentedControl.svelte';
   import { trackAction } from '@/utils/analytics';
   import { untrack } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
@@ -172,18 +173,13 @@
   </div>
 {:else}
   <div class="social">
-    <div class="switcher" role="tablist" aria-label="Preview platform">
-      {#each PLATFORMS as p}
-        <button
-          class="switcher__tab"
-          class:switcher__tab--active={platform === p.id}
-          role="tab"
-          aria-selected={platform === p.id}
-          onclick={() => selectPlatform(p.id)}
-        >
-          {p.label}
-        </button>
-      {/each}
+    <div class="switcher-row">
+      <SegmentedControl
+        tablist
+        options={PLATFORMS.map((p) => ({ value: p.id, label: p.label }))}
+        value={platform}
+        label="Preview platform"
+        onSelect={(v) => selectPlatform(v as SocialPlatform)} />
     </div>
 
     <div class="preview">
@@ -249,11 +245,7 @@
   .empty-state p { font-size: 13px; margin: 0; }
 
   /* Platform switcher */
-  .switcher { display: inline-flex; padding: 3px; gap: 2px; background: var(--bg-inset); border-radius: 8px; margin-bottom: 16px; }
-  .switcher__tab { padding: 5px 14px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); background: none; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; transition: all 0.12s; }
-  .switcher__tab:hover { color: var(--text-secondary); }
-  .switcher__tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .switcher__tab--active { background: var(--bg); color: var(--text); box-shadow: var(--shadow-tab); }
+  .switcher-row { margin-bottom: 16px; }
 
   /* Preview */
   .preview { max-width: 380px; }

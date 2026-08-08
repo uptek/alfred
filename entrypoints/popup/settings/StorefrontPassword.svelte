@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fade } from 'svelte/transition';
   import { getPasswordEntry, savePassword, deletePassword, setPasswordEnabled } from '@/utils/storefrontPasswords';
   import type { StoreInfo } from '../types';
 
@@ -68,8 +69,11 @@
           id="autoFillPassword"
           checked={autoFillPassword}
           onchange={(e) => handleAutoFillPasswordChange(e.currentTarget.checked)}
-          class="checkbox"
+          class="checkbox-input"
         />
+        <span class="checkbox" aria-hidden="true">
+          <svg class="checkbox__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        </span>
         <span class="toggle-text">Auto-fill password?</span>
       </label>
     </div>
@@ -118,7 +122,7 @@
         <span>{saving ? 'Saved' : 'Save'}</span>
       </button>
       {#if !autoFillPassword}
-        <div class="disabled-mask"></div>
+        <div class="disabled-mask" transition:fade={{ duration: 150 }}></div>
       {/if}
     </div>
   </div>
@@ -182,12 +186,52 @@
     cursor: pointer;
   }
 
-  .checkbox {
+  /* Native checkboxes ignore border-radius, so the input is visually hidden and
+     the sibling span draws the box; the label makes the whole row clickable. */
+  .checkbox-input {
+    position: absolute;
+    opacity: 0;
     width: 16px;
     height: 16px;
-    accent-color: var(--text);
+    margin: 0;
     cursor: pointer;
+  }
+
+  .checkbox {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--border-hover);
     border-radius: 4px;
+    background: var(--bg);
+    color: var(--bg);
+    flex-shrink: 0;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+
+  .checkbox-input:checked ~ .checkbox {
+    background: var(--text);
+    border-color: var(--text);
+  }
+
+  .checkbox-input:focus-visible ~ .checkbox {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .checkbox__check {
+    width: 11px;
+    height: 11px;
+    opacity: 0;
+    transform: scale(0.4);
+    transition: opacity 0.12s, transform 0.16s cubic-bezier(0.2, 0.9, 0.35, 1.3);
+  }
+
+  .checkbox-input:checked ~ .checkbox .checkbox__check {
+    opacity: 1;
+    transform: scale(1);
   }
 
   .toggle-text {
@@ -266,20 +310,23 @@
     font-weight: 600;
     font-size: 13px;
     font-family: inherit;
-    border: none;
+    border: 1px solid var(--border-strong);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     flex-shrink: 0;
-    background: var(--btn-bg);
-    color: var(--btn-text);
-    transition: background 0.15s;
+    background: var(--bg);
+    color: var(--text-secondary);
+    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
   }
 
-  .save-btn:hover {
-    background: var(--btn-bg-hover);
+  .save-btn:hover:not(:disabled) {
+    border-color: var(--action-hover-border);
+    color: var(--action-hover-fg);
+    background: var(--action-hover-bg);
+    box-shadow: var(--action-hover-shadow);
   }
 
   .save-btn:disabled {
@@ -287,8 +334,12 @@
     cursor: not-allowed;
   }
 
-  .save-btn.saved {
-    background: var(--success);
+  .save-btn.saved,
+  .save-btn.saved:hover:not(:disabled) {
+    background: var(--bg-raised);
+    border-color: var(--border-strong);
+    color: var(--text);
+    box-shadow: none;
   }
 
   .save-icon {

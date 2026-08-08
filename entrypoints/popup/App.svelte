@@ -391,9 +391,9 @@
   .tab.disabled:hover { background: none; color: var(--text-disabled); } */
   .tab :global(svg) { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.5; stroke-width: 1.8; }
   .tab.active :global(svg) { opacity: 0.9; }
-  .tab__badge { margin-left: auto; font-size: 10px; font-weight: 600; padding: 0px 5px; border-radius: 8px; min-width: 16px; text-align: center; line-height: 16px; }
-  .tab__badge--red { background: var(--error-bg); color: var(--error-strong); }
-  .tab__badge--green { background: var(--success-bg); color: var(--success-strong); }
+  .tab__badge { margin-left: auto; font-size: 10px; font-weight: 600; padding: 0px 5px; border-radius: 8px; min-width: 16px; text-align: center; line-height: 16px; border: 1px solid transparent; }
+  .tab__badge--red { background: var(--error-bg); color: var(--error-strong); border-color: color-mix(in srgb, var(--error-strong) var(--pill-border-strength), transparent); }
+  .tab__badge--green { background: var(--success-bg); color: var(--success-strong); border-color: color-mix(in srgb, var(--success-strong) var(--pill-border-strength), transparent); }
 
   /* Content block */
   .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg); scrollbar-gutter: stable; }
