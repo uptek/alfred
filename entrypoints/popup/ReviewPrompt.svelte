@@ -76,8 +76,11 @@
 
   /* Compact modifier */
   .prompt--compact { gap: 8px; }
-  .prompt--compact .prompt__label { font-size: 12px; color: var(--text-link-muted); }
-  .prompt--compact .prompt__stars { gap: 1px; }
+  .prompt--compact .prompt__label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  .prompt--compact .prompt__stars { gap: 2px; }
+  .prompt--compact .prompt__star { transition: transform 0.1s; }
+  .prompt--compact .prompt__star:hover { transform: scale(1.2); }
+  .prompt--compact:hover .prompt__label { color: var(--text); }
 
   /* Default modifier */
   .prompt--default { padding: 8px 16px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; justify-content: space-between; margin-top: 12px; }

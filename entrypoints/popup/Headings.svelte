@@ -233,7 +233,7 @@
 
   /* Filter */
   .filter { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .filter:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+  .filter:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
   .filter--active { background: var(--btn-bg); color: var(--btn-text); border-color: var(--btn-bg); }
   .filter--active:hover { background: var(--btn-bg-hover); border-color: var(--btn-bg-hover); color: var(--btn-text); }
   .filter__icon { width: 13px; height: 13px; stroke-width: 1.8; }
@@ -243,7 +243,7 @@
 
   /* Copy button */
   .copy-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .copy-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+  .copy-btn:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
   .copy-btn__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; }
 
   /* Animation */

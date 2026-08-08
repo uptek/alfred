@@ -64,7 +64,13 @@
 
         /* Stars */
         --star-active: #fbbf24;
-        --star-inactive: #e2e4e9;
+        --pill-border-strength: 15%; /* tinted-pill border mix; heavier in dark where tints barely contrast */
+        /* Shared hover recipe for toolbar/action buttons; scoped rules reference these */
+        --action-hover-bg: var(--bg-raised);
+        --action-hover-fg: var(--text);
+        --action-hover-border: var(--border-hover);
+        --action-hover-shadow: var(--shadow-sm);
+        --star-inactive: #a9b0bd;
 
         /* Scrollbar */
         --scrollbar: #d2d5dd;
@@ -132,7 +138,8 @@
           --error-strong: #f47067;
           --error-bg: #352327;
           --star-active: #daaa3f;
-          --star-inactive: #3d444d;
+          --pill-border-strength: 25%;
+          --star-inactive: #616b79;
           --scrollbar: #3d444d;
           --ring: 0 0 0 3px rgba(71, 139, 230, 0.4);
           --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -183,7 +190,8 @@
         --error-strong: #f47067;
         --error-bg: #352327;
         --star-active: #daaa3f;
-        --star-inactive: #3d444d;
+        --pill-border-strength: 25%;
+        --star-inactive: #616b79;
         --scrollbar: #3d444d;
         --ring: 0 0 0 3px rgba(71, 139, 230, 0.4);
         --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);

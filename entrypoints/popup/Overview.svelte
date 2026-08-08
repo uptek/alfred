@@ -599,14 +599,15 @@
     border: none;
     cursor: pointer;
     color: var(--text-muted);
-    padding: 2px;
-    border-radius: 3px;
+    padding: 3px;
+    border-radius: 5px;
     line-height: 0;
     flex-shrink: 0;
-    transition: color 0.12s;
+    transition: color 0.12s, background 0.12s;
   }
   .copy-btn:hover {
     color: var(--text);
+    background: var(--bg-inset);
   }
   .copy-btn svg {
     width: 13px;
@@ -622,22 +623,29 @@
     padding: 2px 8px;
     border-radius: 20px;
     white-space: nowrap;
+    /* Tint backgrounds wash out on the light canvas; a border mixed from each
+       pill's own text color keeps the shape legible in both themes. */
+    border: 1px solid transparent;
   }
   .pill-red {
     background: var(--error-bg);
     color: var(--error-strong);
+    border-color: color-mix(in srgb, var(--error-strong) var(--pill-border-strength), transparent);
   }
   .pill-green {
     background: var(--success-bg);
     color: var(--success-strong);
+    border-color: color-mix(in srgb, var(--success-strong) var(--pill-border-strength), transparent);
   }
   .pill-yellow {
     background: var(--warning-bg);
     color: var(--warning);
+    border-color: color-mix(in srgb, var(--warning) var(--pill-border-strength), transparent);
   }
   .pill-gray {
     background: var(--bg-inset);
     color: var(--text-secondary);
+    border-color: var(--border);
   }
   .row-label-link {
     display: inline-flex;

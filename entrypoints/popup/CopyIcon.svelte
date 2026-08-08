@@ -31,9 +31,9 @@
 
 <style>
   .copy-icon {
-    width: 20px;
-    height: 20px;
-    padding: 2px;
+    width: 22px;
+    height: 22px;
+    padding: 3px;
     flex-shrink: 0;
     align-self: center;
     cursor: pointer;

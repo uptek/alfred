@@ -266,7 +266,7 @@
   .toolbar__hint { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); }
   .toolbar__actions { display: flex; align-items: center; gap: 6px; }
   .toolbar-btn { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .toolbar-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+  .toolbar-btn:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
   .toolbar-btn svg { width: 13px; height: 13px; stroke-width: 1.8; flex-shrink: 0; }
 
   /* List */
@@ -283,7 +283,7 @@
 
   /* Per-type copy button */
   .entity__copy { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 28px; height: 28px; margin-left: 8px; border: none; border-radius: 6px; background: none; color: var(--text-faint); cursor: pointer; transition: color 0.12s, background 0.12s; }
-  .entity__copy:hover { color: var(--text-secondary); background: var(--bg-hover); }
+  .entity__copy:hover { color: var(--text); background: var(--bg-inset); }
   .entity__copy svg { width: 14px; height: 14px; stroke-width: 1.8; }
   .entity__copy--done, .entity__copy--done:hover { color: var(--success); }
   .entity__chevron { width: 14px; height: 14px; flex-shrink: 0; stroke-width: 2.2; color: var(--text-muted); transition: transform 0.15s; }
