@@ -3,11 +3,12 @@
   import { CWS_REVIEW_URL } from '@/utils/constants';
   import alfredIcon from '@/assets/icon.png';
 
-  let { source }: { source: string } = $props();
+  let { source, variant = 'chip' }: { source: string; variant?: 'chip' | 'plain' } = $props();
 </script>
 
 <a
   class="credit-chip"
+  class:plain={variant === 'plain'}
   href={CWS_REVIEW_URL}
   target="_blank"
   rel="noopener"
@@ -37,6 +38,32 @@
     border-color: rgba(26, 26, 26, 0.3);
     box-shadow: 0 6px 16px rgba(26, 26, 26, 0.16);
     transform: translateY(-1px);
+  }
+
+  /* Bare variant: no chrome, inherits the host page's text color */
+  .credit-chip.plain,
+  .credit-chip.plain:hover {
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: inherit;
+  }
+
+  .credit-chip.plain:hover {
+    transform: translateY(-1px);
+  }
+
+
+  .credit-chip.plain .credit-chip-muted {
+    color: inherit;
+    opacity: 0.65;
+  }
+
+  .credit-chip.plain .credit-chip-name {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .credit-chip-icon {
