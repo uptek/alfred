@@ -7,6 +7,7 @@ import type {
   CartData,
   ProductData
 } from './cartograph.content/types';
+import { createBridgeServer } from '~/utils/mainWorldBridge';
 
 export default defineUnlistedScript(() => {
   if ((window as any).__alfredCartApiInitialized) return;
@@ -135,54 +136,13 @@ export default defineUnlistedScript(() => {
     return data.product || data;
   }
 
-  const methodMap: Record<string, (payload: any) => Promise<any>> = {
+  createBridgeServer('cart', {
     getCart: () => getCart(),
-    addItem: (payload) => addItem(payload),
-    updateCart: (payload) => updateCart(payload),
-    changeItem: (payload) => changeItem(payload),
+    addItem: (payload: AddItemPayload | AddItemPayload[]) => addItem(payload),
+    updateCart: (payload: UpdatePayload) => updateCart(payload),
+    changeItem: (payload: ChangePayload) => changeItem(payload),
     clearCart: () => clearCart(),
-    getShippingRates: (payload) => getShippingRates(payload),
-    getProductByUrl: (payload) => getProductByUrl(payload)
-  };
-
-  window.addEventListener('message', async (event) => {
-    if (event.source !== window) return;
-    if (event.data?.type !== 'alfred:cart_request') return;
-
-    const { requestId, method, payload } = event.data;
-    const handler = methodMap[method];
-
-    if (!handler) {
-      window.postMessage(
-        {
-          type: 'alfred:cart_response',
-          requestId,
-          error: `Unknown method: ${method}`
-        },
-        window.location.origin
-      );
-      return;
-    }
-
-    try {
-      const data = await handler(payload);
-      window.postMessage(
-        {
-          type: 'alfred:cart_response',
-          requestId,
-          data
-        },
-        window.location.origin
-      );
-    } catch (err) {
-      window.postMessage(
-        {
-          type: 'alfred:cart_response',
-          requestId,
-          error: err instanceof Error ? err.message : String(err)
-        },
-        window.location.origin
-      );
-    }
+    getShippingRates: (payload: ShippingAddress) => getShippingRates(payload),
+    getProductByUrl: (payload: string) => getProductByUrl(payload)
   });
 });

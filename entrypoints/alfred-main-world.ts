@@ -1,6 +1,7 @@
 import { initRestoreRightClick } from '../utils/restore-right-click';
 import { Toast } from '@/utils/toast';
 import { isShopifyStorefront } from '@/utils/shopifyDetection';
+import { createBridgeServer } from '@/utils/mainWorldBridge';
 
 export default defineUnlistedScript(() => {
   // Settings will be received via postMessage
@@ -59,48 +60,12 @@ export default defineUnlistedScript(() => {
     },
 
     _initThemeRequestHandler: () => {
-      // Handle postMessage requests
-      window.addEventListener('message', (event) => {
-        if (event.source !== window) return;
-
-        const data = event.data as { type?: string; requestId?: string };
-        if (data?.type === 'alfred:request_theme') {
-          const requestId = data.requestId;
-          if (requestId) {
-            // Get theme data
-            const themeData = (window as unknown as WindowWithAlfred).Alfred.getTheme();
-
-            // Serialize the data to avoid DataCloneError
-            const serializedData = JSON.parse(JSON.stringify(themeData)) as typeof themeData;
-
-            // Send response back via postMessage
-            window.postMessage(
-              {
-                type: 'alfred:theme_response',
-                requestId,
-                data: serializedData
-              },
-              '*'
-            );
-          }
-        }
-
-        if (data?.type === 'alfred:request_shopify_context') {
-          const requestId = data.requestId;
-          if (requestId) {
-            const context = (window as unknown as WindowWithAlfred).Alfred.getShopifyContext();
-            const serializedContext = JSON.parse(JSON.stringify(context)) as typeof context;
-
-            window.postMessage(
-              {
-                type: 'alfred:shopify_context_response',
-                requestId,
-                data: serializedContext
-              },
-              '*'
-            );
-          }
-        }
+      // Serve the popup's theme/context queries. Results are JSON round-tripped
+      // because Shopify globals can hold non-cloneable values (DataCloneError).
+      const jsonClone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+      createBridgeServer('alfred', {
+        getTheme: () => jsonClone(alfredWin().Alfred.getTheme()),
+        getShopifyContext: () => jsonClone(alfredWin().Alfred.getShopifyContext())
       });
     },
 

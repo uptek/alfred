@@ -3,6 +3,7 @@ import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
 import type { TabMessage } from '@/utils/messages';
+import { createBridgeClient } from '@/utils/mainWorldBridge';
 import { headingText } from './popup/utils/headings';
 import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/utils/links';
 import { looksLikeHtml } from './popup/utils/robots';
@@ -159,43 +160,28 @@ export default defineContentScript({
     // shows a loading state meanwhile, so waiting is free.
     const RELAY_TIMEOUT_MS = 3000;
 
+    const alfredBridge = createBridgeClient<'getTheme' | 'getShopifyContext'>('alfred');
+
     /**
-     * Relays a popup request to the main world via postMessage and forwards
-     * the response (or a fallback on timeout) through sendResponse. Waits for
-     * mainWorldReady so a request posted before the main-world handlers are
-     * registered isn't silently lost.
+     * Relays a popup request to the main world over the bridge and forwards
+     * the response (or `fallback` on timeout/error) through sendResponse.
+     * Waits for mainWorldReady so a request posted before the main-world
+     * handlers are registered isn't silently lost; the deadline still runs
+     * from request receipt, so an unready main world can't hang the popup.
      */
     const relayToMainWorld = (
-      requestType: string,
-      responseEventPrefix: string,
+      method: 'getTheme' | 'getShopifyContext',
       fallback: unknown,
       sendResponse: (response?: unknown) => void
     ): true => {
-      const requestId = Date.now() + '_' + Math.random();
-      const eventName = `${responseEventPrefix}_${requestId}`;
-      let responseHandled = false;
-
-      const handleResponse = (event: Event) => {
-        if (responseHandled) return;
-        responseHandled = true;
-        window.removeEventListener(eventName, handleResponse);
-        clearTimeout(timeoutId);
-        sendResponse((event as CustomEvent<unknown>).detail ?? fallback);
-      };
-
-      const timeoutId = setTimeout(() => {
-        if (responseHandled) return;
-        responseHandled = true;
-        window.removeEventListener(eventName, handleResponse);
-        sendResponse(fallback);
-      }, RELAY_TIMEOUT_MS);
-
-      window.addEventListener(eventName, handleResponse);
-
-      void mainWorldReady.then(() => {
-        window.postMessage({ type: requestType, requestId }, '*');
+      const call = mainWorldReady.then(() => alfredBridge.call<unknown>(method, undefined, RELAY_TIMEOUT_MS));
+      const deadline = new Promise<unknown>((resolve) => {
+        setTimeout(() => resolve(fallback), RELAY_TIMEOUT_MS);
       });
-
+      Promise.race([call, deadline]).then(
+        (data) => sendResponse(data ?? fallback),
+        () => sendResponse(fallback)
+      );
       return true;
     };
 
@@ -210,31 +196,11 @@ export default defineContentScript({
       sendTrackEvent(action as import('@/utils/analytics-actions').AnalyticsAction, metadata);
     });
 
-    // Listen for postMessage responses from main world
-    window.addEventListener('message', (event: MessageEvent<{ type: string; requestId: string; data: unknown }>) => {
+    // The main world announces its bridge server is registered.
+    window.addEventListener('message', (event: MessageEvent<{ type?: string }>) => {
       if (event.source !== window) return;
-
       if (event.data?.type === 'alfred:main_world_ready') {
         mainWorldReadyResolve();
-      }
-
-      if (event.data?.type === 'alfred:theme_response') {
-        const { requestId, data } = event.data;
-        // Dispatch custom event with the response data
-        window.dispatchEvent(
-          new CustomEvent(`alfred:theme_response_${requestId}`, {
-            detail: data
-          })
-        );
-      }
-
-      if (event.data?.type === 'alfred:shopify_context_response') {
-        const { requestId, data } = event.data;
-        window.dispatchEvent(
-          new CustomEvent(`alfred:shopify_context_response_${requestId}`, {
-            detail: data
-          })
-        );
       }
     });
 
@@ -256,12 +222,7 @@ export default defineContentScript({
        * @returns {{ isShopify: boolean, theme: object | null, shop: string | null }}
        */
       if (request.action === 'get_theme') {
-        return relayToMainWorld(
-          'alfred:request_theme',
-          'alfred:theme_response',
-          { isShopify: false, theme: null, shop: null },
-          sendResponse
-        );
+        return relayToMainWorld('getTheme', { isShopify: false, theme: null, shop: null }, sendResponse);
       }
 
       /**
@@ -283,12 +244,7 @@ export default defineContentScript({
           designMode: false
         };
 
-        return relayToMainWorld(
-          'alfred:request_shopify_context',
-          'alfred:shopify_context_response',
-          emptyContext,
-          sendResponse
-        );
+        return relayToMainWorld('getShopifyContext', emptyContext, sendResponse);
       }
 
       /**
