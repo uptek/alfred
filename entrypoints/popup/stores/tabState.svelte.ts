@@ -9,8 +9,6 @@ import { SCHEMA_VERSION, keyFor, isFreshFor, type PersistedBlob, type PopupSecti
  * on browser restart (session area). Any storage failure degrades to in-memory.
  */
 
-export type { PopupSection } from './tabState';
-
 const SAVE_DEBOUNCE_MS = 250;
 
 let tabId: number | null = null;

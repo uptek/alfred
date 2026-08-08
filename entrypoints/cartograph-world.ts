@@ -5,6 +5,7 @@ import type {
   ShippingAddress,
   ShippingRate,
   CartData,
+  CartMethods,
   ProductData
 } from './cartograph.content/types';
 import { createBridgeServer } from '~/utils/mainWorldBridge';
@@ -136,13 +137,13 @@ export default defineUnlistedScript(() => {
     return data.product || data;
   }
 
-  createBridgeServer('cart', {
-    getCart: () => getCart(),
-    addItem: (payload: AddItemPayload | AddItemPayload[]) => addItem(payload),
-    updateCart: (payload: UpdatePayload) => updateCart(payload),
-    changeItem: (payload: ChangePayload) => changeItem(payload),
-    clearCart: () => clearCart(),
-    getShippingRates: (payload: ShippingAddress) => getShippingRates(payload),
-    getProductByUrl: (payload: string) => getProductByUrl(payload)
+  createBridgeServer<CartMethods>('cart', {
+    getCart,
+    addItem,
+    updateCart,
+    changeItem,
+    clearCart,
+    getShippingRates,
+    getProductByUrl
   });
 });

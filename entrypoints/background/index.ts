@@ -101,7 +101,7 @@ export default defineBackground(() => {
     if (sender.id !== browser.runtime.id) return false;
     const message = rawMessage as RuntimeMessage;
 
-    if ('type' in message && message.type === 'track_action') {
+    if (message.type === 'track_action') {
       try {
         trackAction(message.action, message.metadata);
       } catch (error) {
@@ -110,7 +110,7 @@ export default defineBackground(() => {
       return false;
     }
 
-    if (message.action === 'check_link_status' && typeof message.url === 'string') {
+    if (message.type === 'check_link_status' && typeof message.url === 'string') {
       checkLinkStatus(message.url).then(sendResponse);
       return true;
     }

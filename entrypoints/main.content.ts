@@ -1,5 +1,6 @@
 import { getSettings } from '@/utils/settings';
 import { sendTrackEvent } from '@/utils/analytics';
+import { ANALYTICS_ACTIONS, type AnalyticsAction } from '@/utils/analytics-actions';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
 import type { TabMessage } from '@/utils/messages';
@@ -160,7 +161,7 @@ export default defineContentScript({
     // shows a loading state meanwhile, so waiting is free.
     const RELAY_TIMEOUT_MS = 3000;
 
-    const alfredBridge = createBridgeClient<'getTheme' | 'getShopifyContext'>('alfred');
+    const alfredBridge = createBridgeClient<{ getTheme(): unknown; getShopifyContext(): unknown }>('alfred');
 
     /**
      * Relays a popup request to the main world over the bridge and forwards
@@ -174,18 +175,22 @@ export default defineContentScript({
       fallback: unknown,
       sendResponse: (response?: unknown) => void
     ): true => {
-      const call = mainWorldReady.then(() => alfredBridge.call<unknown>(method, undefined, RELAY_TIMEOUT_MS));
-      const deadline = new Promise<unknown>((resolve) => {
-        setTimeout(() => resolve(fallback), RELAY_TIMEOUT_MS);
-      });
-      Promise.race([call, deadline]).then(
-        (data) => sendResponse(data ?? fallback),
-        () => sendResponse(fallback)
-      );
+      let settled = false;
+      const finish = (data: unknown) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(deadline);
+        sendResponse(data ?? fallback);
+      };
+      const deadline = setTimeout(() => finish(fallback), RELAY_TIMEOUT_MS);
+      mainWorldReady
+        .then(() => alfredBridge.call(method, undefined, RELAY_TIMEOUT_MS))
+        .then(finish, () => finish(fallback));
       return true;
     };
 
-    // Listen for tracking events from the main world
+    // Listen for tracking events from the main world. The event detail crosses
+    // a world boundary, so validate the action instead of trusting the cast.
     window.addEventListener('alfred:track', (event: Event) => {
       const { action, metadata } = (
         event as CustomEvent<{
@@ -193,7 +198,9 @@ export default defineContentScript({
           metadata?: Record<string, unknown>;
         }>
       ).detail;
-      sendTrackEvent(action as import('@/utils/analytics-actions').AnalyticsAction, metadata);
+      if ((ANALYTICS_ACTIONS as readonly string[]).includes(action)) {
+        sendTrackEvent(action as AnalyticsAction, metadata);
+      }
     });
 
     // The main world announces its bridge server is registered.

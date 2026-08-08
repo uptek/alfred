@@ -30,7 +30,7 @@ export const scrollToLink = (index: number): Promise<void> => sendToActiveTab('s
  */
 export const checkLinkStatus = async (url: string): Promise<LinkStatusResult> => {
   try {
-    const res = (await sendRuntimeMessage({ action: 'check_link_status', url })) as LinkStatusResult | undefined;
+    const res = (await sendRuntimeMessage({ type: 'check_link_status', url })) as LinkStatusResult | undefined;
     return res ?? { status: 0, bucket: 'error' };
   } catch {
     return { status: 0, bucket: 'error' };

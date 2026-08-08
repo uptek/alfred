@@ -216,3 +216,14 @@ export interface SellingPlanGroup {
 }
 
 export type TabId = 'items' | 'add' | 'metadata' | 'shipping' | 'json';
+
+/** Cart RPC contract shared by the content-script client and main-world server. */
+export type CartMethods = {
+  getCart(): Promise<CartData>;
+  addItem(items: AddItemPayload | AddItemPayload[]): Promise<CartData>;
+  updateCart(updates: UpdatePayload): Promise<CartData>;
+  changeItem(change: ChangePayload): Promise<CartData>;
+  clearCart(): Promise<CartData>;
+  getShippingRates(address: ShippingAddress): Promise<ShippingRate[]>;
+  getProductByUrl(url: string): Promise<ProductData>;
+};

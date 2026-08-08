@@ -217,7 +217,7 @@
     aria-selected={activeTab === tab.id}
     onclick={() => { activeTab = tab.id; }}
   >
-    {@render tabIcon(tab.icon)}
+    {@render tabIcon(tab.id)}
     {tab.label}
     {#if badgeCount > 0}
       <span class="tab__badge tab__badge--red">{badgeCount}</span>
