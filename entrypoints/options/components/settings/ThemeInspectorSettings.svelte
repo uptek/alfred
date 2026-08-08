@@ -12,9 +12,15 @@
     label="Theme inspector"
     labelAccessibilityVisibility="exclusive"
     name="theme-inspector"
-    value={store.settings.themeCustomizer?.inspector ?? 'default'}
+    values={[store.settings.themeCustomizer.inspector ?? 'default']}
     onchange={(e: Event) => store.updateSettings({
-      themeCustomizer: { ...store.settings.themeCustomizer, inspector: (e.currentTarget as HTMLElement & { value: string }).value as 'default' | 'disable' | 'restore' }
+      themeCustomizer: {
+        ...store.settings.themeCustomizer,
+        inspector: ((e.currentTarget as HTMLElement & { values: string[] }).values[0] ?? 'default') as
+          | 'default'
+          | 'disable'
+          | 'restore'
+      }
     })}
   >
     <s-choice value="default">Default behavior</s-choice>
