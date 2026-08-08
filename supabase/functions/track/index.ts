@@ -25,18 +25,15 @@ serve(async (req) => {
 
     // Only process if we have the minimum required fields
     if (user_id && action && VALID_ACTIONS_SET.has(action) && typeof time_saved === 'number') {
-      // Insert event - ignore any errors
-      await supabase
-        .from('events')
-        .insert({
-          user_id,
-          action,
-          time_saved,
-          version: version || null,
-          metadata: metadata
-        })
-        .then(() => {})
-        .catch((err) => console.error('Insert error:', err));
+      // Insert event - the builder resolves with { error } instead of rejecting
+      const { error } = await supabase.from('events').insert({
+        user_id,
+        action,
+        time_saved,
+        version: version || null,
+        metadata: metadata
+      });
+      if (error) console.error('Insert error:', error);
     }
 
     // Always return success
