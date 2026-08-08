@@ -7,6 +7,8 @@
  * that have their own custom context menus.
  */
 
+import { sniffShopifyDom } from './shopifyDetection';
+
 const blockedEvents = ['contextmenu', 'copy', 'cut', 'paste', 'selectstart', 'dragstart'];
 
 /**
@@ -18,10 +20,7 @@ const isShopifyStorefrontDom = (): boolean => {
 
   if (isAdminUrl) return false;
 
-  return (
-    !!document.querySelector('link[href*="cdn.shopify.com"]') ||
-    !!document.querySelector('meta[name="shopify-checkout-api-token"]')
-  );
+  return sniffShopifyDom(document, window.location.hostname);
 };
 
 /**

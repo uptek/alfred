@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 import { ANALYTICS_ACTIONS } from '../utils/analytics-actions';
 
 /** Repo-relative path of the generated file the track edge function imports. */
@@ -16,7 +17,6 @@ export function renderValidActions(): string {
 }
 
 if (import.meta.main) {
-  const { writeFileSync } = await import('node:fs');
   writeFileSync(new URL(`../${GENERATED_PATH}`, import.meta.url), renderValidActions());
   console.log(`Wrote ${GENERATED_PATH} (${ANALYTICS_ACTIONS.length} actions)`);
 }

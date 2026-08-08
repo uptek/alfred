@@ -1,5 +1,5 @@
 import { sendTrackEvent } from '@/utils/analytics';
-import { formatAppAge } from '@/utils/appListing';
+import { daysBetween, formatAppAge } from '@/utils/appListing';
 import { withCsvCredit } from '@/utils/credit';
 import { csvField, downloadFile } from '@/utils/export';
 import defaultIcon from '@/assets/icon-default.svg';
@@ -127,8 +127,6 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
 
   return appData;
 };
-
-const daysBetween = (a: Date, b: Date): number => Math.floor(Math.abs(a.getTime() - b.getTime()) / 86_400_000);
 
 /**
  * Format the detailed age

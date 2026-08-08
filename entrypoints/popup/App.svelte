@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getTheme, sniffShopify } from './utils/theme';
+  import { getTheme, provisionalStoreInfo, sniffShopify } from './utils/theme';
   import { getHeadings, analyzeHeadings } from './utils/headings';
   import { getLinks } from './utils/links';
   import { getAssets } from './utils/assets';
@@ -157,16 +157,8 @@
           tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
         ]);
       trackAction('popup_open', { is_shopify: sniffedShopify });
-      // Provisional store info so domain/page_url consumers render before the
-      // theme relay resolves; replaced wholesale when it does.
       if (tab?.url) {
-        storeInfo = {
-          isShopify: sniffedShopify,
-          domain: new URL(tab.url).hostname,
-          shopDomain: null,
-          page_url: tab.url,
-          theme: null
-        };
+        storeInfo = provisionalStoreInfo(tab.url, sniffedShopify);
       }
       rawHeadings = headingsData;
       rawLinks = linksData;

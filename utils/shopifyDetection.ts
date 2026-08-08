@@ -13,3 +13,20 @@ export function isShopifyStorefront(win: ShopifyGlobals): boolean {
   if (!win.Shopify) return false;
   return !!win.__st || typeof win.Shopify.shop === 'string';
 }
+
+/**
+ * DOM-footprint Shopify sniff for contexts where page globals aren't
+ * reachable (isolated-world content scripts) or set yet (early main-world
+ * init). Cheap over exhaustive: callers refine with globals-based detection
+ * when it becomes available.
+ */
+export function sniffShopifyDom(doc: Pick<Document, 'querySelector'>, hostname: string): boolean {
+  return (
+    hostname.endsWith('.myshopify.com') ||
+    doc.querySelector(
+      'script[src*="cdn.shopify.com"], link[href*="cdn.shopify.com"], ' +
+        'script[src*="/cdn/shop/"], link[href*="/cdn/shop/"], ' +
+        'meta[name^="shopify-"], #shopify-features'
+    ) !== null
+  );
+}

@@ -267,6 +267,9 @@ export function parseAppListing(html: string, handle: string): AppListing {
   };
 }
 
+/** Whole days between two dates, direction-agnostic. */
+export const daysBetween = (a: Date, b: Date): number => Math.floor(Math.abs(a.getTime() - b.getTime()) / 86_400_000);
+
 /**
  * Human-readable app age from a launch-date string, e.g. "Today", "3 days",
  * "5 months", "1 year", "1.5 years". Calendar year/month arithmetic, so a
@@ -293,7 +296,7 @@ export function formatAppAge(launchDate: string, now: Date = new Date()): string
   }
 
   if (years === 0 && months === 0) {
-    const days = Math.floor((now.getTime() - launched.getTime()) / 86_400_000);
+    const days = daysBetween(now, launched);
     return days === 0 ? 'Today' : `${days} day${days === 1 ? '' : 's'}`;
   }
 

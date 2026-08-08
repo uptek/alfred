@@ -2,6 +2,7 @@ import { getSettings } from '@/utils/settings';
 import { sendTrackEvent } from '@/utils/analytics';
 import { ANALYTICS_ACTIONS, type AnalyticsAction } from '@/utils/analytics-actions';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
+import { sniffShopifyDom } from '@/utils/shopifyDetection';
 import { Toast } from '@/utils/toast';
 import type { TabMessage } from '@/utils/messages';
 import { createBridgeClient } from '@/utils/mainWorldBridge';
@@ -189,20 +190,6 @@ export default defineContentScript({
       return true;
     };
 
-    /**
-     * Fast Shopify detection from the isolated world: DOM footprints only, no
-     * main-world round trip. Lets the popup pick its initial tab and paint
-     * before the (relayed, worst-case 3s) getTheme answer arrives. A miss here
-     * is corrected when getTheme resolves, so favor cheap over exhaustive.
-     */
-    const sniffShopify = (): boolean =>
-      window.location.hostname.endsWith('.myshopify.com') ||
-      document.querySelector(
-        'script[src*="cdn.shopify.com"], link[href*="cdn.shopify.com"], ' +
-          'script[src*="/cdn/shop/"], link[href*="/cdn/shop/"], ' +
-          'meta[name^="shopify-"], #shopify-features'
-      ) !== null;
-
     // Listen for tracking events from the main world. The event detail crosses
     // a world boundary, so validate the action instead of trusting the cast.
     window.addEventListener('alfred:track', (event: Event) => {
@@ -247,11 +234,13 @@ export default defineContentScript({
       }
 
       /**
-       * Synchronous DOM-only Shopify check for the popup's first paint.
+       * Synchronous DOM-only Shopify check for the popup's first paint — no
+       * main-world round trip, so it answers before the (relayed, worst-case
+       * 3s) get_theme response. A miss is corrected when get_theme resolves.
        * @returns {boolean}
        */
       if (request.action === 'sniff_shopify') {
-        sendResponse(sniffShopify());
+        sendResponse(sniffShopifyDom(document, window.location.hostname));
         return false;
       }
 
