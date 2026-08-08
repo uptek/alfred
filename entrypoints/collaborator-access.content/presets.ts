@@ -1,4 +1,5 @@
 import { getItem, setItem } from '@/utils/storage';
+import { getSettings, updateSettings } from '@/utils/settings';
 import { sendTrackEvent, trackAction } from '@/utils/analytics';
 import { getShopifyStore } from '@/utils/shopify';
 import { showTabToast } from '@/utils/toast';
@@ -135,13 +136,10 @@ export async function captureOrganizationId(rawUrl: string): Promise<void> {
   const organizationId = extractOrganizationId(rawUrl);
   if (!organizationId) return;
 
-  const settings = (await getItem<AlfredSettings>('settings')) ?? {};
-  if (settings.collaboratorAccess?.organizationId?.trim()) return;
+  const settings = await getSettings();
+  if (settings.collaboratorAccess.organizationId?.trim()) return;
 
-  await setItem('settings', {
-    ...settings,
-    collaboratorAccess: { ...settings.collaboratorAccess, organizationId }
-  });
+  await updateSettings({ collaboratorAccess: { organizationId } });
 }
 
 /**
@@ -163,8 +161,8 @@ export async function openCollaborationRequest(tab: Browser.tabs.Tab, preset?: P
       return;
     }
 
-    const settings = await getItem<AlfredSettings>('settings');
-    const organizationId = settings?.collaboratorAccess?.organizationId?.trim();
+    const settings = await getSettings();
+    const organizationId = settings.collaboratorAccess.organizationId?.trim();
 
     // Without an organization the request URL would 404. Rather than open a dead page,
     // tell the user to visit their dashboard once (which auto-captures the org) so every

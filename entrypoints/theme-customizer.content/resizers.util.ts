@@ -1,4 +1,4 @@
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 
 interface Dimensions {
@@ -192,17 +192,11 @@ const createDimensionsBadge = (main: HTMLElement) => {
   ro.observe(main);
 };
 
-let settingsCache: Record<string, boolean> | null = null;
+let settingsCache: NonNullable<NonNullable<AlfredSettings['themeCustomizer']>['resizers']> | null = null;
 
 const getResizerSettings = async () => {
   if (!settingsCache) {
-    const settings = await getItem<AlfredSettings>('settings');
-    settingsCache = settings?.themeCustomizer?.resizers ?? {
-      primarySidebar: true,
-      secondarySidebar: true,
-      previewHorizontal: true,
-      previewVertical: true
-    };
+    settingsCache = (await getSettings()).themeCustomizer.resizers ?? {};
   }
   return settingsCache;
 };
@@ -226,7 +220,7 @@ const Resizers = async () => {
   if (
     frame &&
     primarySidebar &&
-    resizerSettings.primarySidebar !== false &&
+    isEnabled(resizerSettings.primarySidebar) &&
     !primarySidebar.hasAttribute(`${RESIZER_ATTR_PREFIX}primary`)
   ) {
     primarySidebar.setAttribute(`${RESIZER_ATTR_PREFIX}primary`, 'true');
@@ -237,7 +231,7 @@ const Resizers = async () => {
   if (
     frame &&
     secondarySidebar &&
-    resizerSettings.secondarySidebar !== false &&
+    isEnabled(resizerSettings.secondarySidebar) &&
     !secondarySidebar.hasAttribute(`${RESIZER_ATTR_PREFIX}secondary`)
   ) {
     secondarySidebar.setAttribute(`${RESIZER_ATTR_PREFIX}secondary`, 'true');
@@ -245,7 +239,7 @@ const Resizers = async () => {
   }
 
   // Main Horizontal Resizer
-  if (main && resizerSettings.previewHorizontal !== false && !main.hasAttribute(`${RESIZER_ATTR_PREFIX}horizontal`)) {
+  if (main && isEnabled(resizerSettings.previewHorizontal) && !main.hasAttribute(`${RESIZER_ATTR_PREFIX}horizontal`)) {
     main.setAttribute(`${RESIZER_ATTR_PREFIX}horizontal`, 'true');
     createResizer(
       main,
@@ -267,7 +261,7 @@ const Resizers = async () => {
   }
 
   // Main Vertical Resizer
-  if (main && resizerSettings.previewVertical !== false && !main.hasAttribute(`${RESIZER_ATTR_PREFIX}vertical`)) {
+  if (main && isEnabled(resizerSettings.previewVertical) && !main.hasAttribute(`${RESIZER_ATTR_PREFIX}vertical`)) {
     main.setAttribute(`${RESIZER_ATTR_PREFIX}vertical`, 'true');
     createResizer(
       main,

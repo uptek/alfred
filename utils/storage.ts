@@ -1,4 +1,5 @@
-import { storage } from '#imports';
+// Direct path instead of '#imports' so bun test can resolve this module.
+import { storage } from 'wxt/utils/storage';
 
 /**
  * Retrieves an item from local storage.

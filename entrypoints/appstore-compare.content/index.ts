@@ -1,6 +1,6 @@
 import { createIntegratedUi } from '#imports';
 import { mount, unmount } from 'svelte';
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 import { COMPARE_TRAY_LIMIT, isAppHandle } from '~/utils/compareTray';
 import App from './App.svelte';
 import './style.css';
@@ -14,8 +14,8 @@ export default defineContentScript({
   matches: ['*://apps.shopify.com/compare/*'],
   async main(ctx) {
     // Check if compare apps is enabled
-    const settings = await getItem<AlfredSettings>('settings');
-    const isCompareAppsEnabled = settings?.appStore?.compareApps !== false;
+    const settings = await getSettings();
+    const isCompareAppsEnabled = isEnabled(settings.appStore.compareApps);
 
     if (!isCompareAppsEnabled) {
       revealMain();

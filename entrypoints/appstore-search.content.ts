@@ -1,11 +1,11 @@
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 
 export default defineContentScript({
   matches: ['https://apps.shopify.com/search?*'],
   async main(ctx) {
     // Check if search indexing is enabled
-    const settings = await getItem<AlfredSettings>('settings');
-    const isSearchIndexingEnabled = settings?.appStore?.searchIndexing !== false;
+    const settings = await getSettings();
+    const isSearchIndexingEnabled = isEnabled(settings.appStore.searchIndexing);
 
     if (!isSearchIndexingEnabled) {
       return; // Exit early if indexing is disabled

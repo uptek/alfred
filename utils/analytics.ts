@@ -1,5 +1,6 @@
 import { getUserId, getVersion } from './helpers';
 import { getItem, setItem } from './storage';
+import { getSettings, isEnabled } from './settings';
 import { recordSuccess } from './successNudge';
 
 const SUPABASE_URL = 'https://obrjirdnqoiailhbsnmu.supabase.co';
@@ -54,12 +55,12 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
 
     // Settings and cooldown reads are independent — fetch them in parallel
     const [settings, lastFired] = await Promise.all([
-      getItem<AlfredSettings>('settings'),
+      getSettings(),
       cooldown ? getItem<number>(cooldownKey) : Promise.resolve(null)
     ]);
 
     // Respect user's privacy opt-out
-    if (settings?.general?.analytics === false) return;
+    if (!isEnabled(settings.general.analytics)) return;
 
     // Cooldown check — skip the event if fired too recently
     if (cooldown) {

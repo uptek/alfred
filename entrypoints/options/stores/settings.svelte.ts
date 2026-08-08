@@ -1,78 +1,14 @@
 import { getItem, setItem } from '~/utils/storage';
+import {
+  defaultSettings,
+  mergeSettings,
+  updateSettings as persistSettings,
+  type ResolvedSettings
+} from '~/utils/settings';
 import { Toast } from '@/utils/toast';
 
-const defaultSettings: AlfredSettings = {
-  general: {
-    analytics: true,
-    restoreRightClick: true,
-    openChangelogOnUpdate: true
-  },
-  themeCustomizer: {
-    inspector: 'default',
-    resizers: {
-      primarySidebar: true,
-      secondarySidebar: true,
-      previewHorizontal: true,
-      previewVertical: true
-    }
-  },
-  shortcuts: {
-    openInAdmin: true,
-    openInCustomizer: true,
-    copyProductJson: true,
-    copyCartJson: true,
-    copyThemePreviewUrl: true,
-    exitThemePreview: true,
-    clearCart: true,
-    cartograph: true,
-    openSectionInCodeEditor: true,
-    openImageInAdmin: true,
-    requestStoreAccess: true
-  },
-  appStore: {
-    searchIndexing: true,
-    enhancedPartnerPages: true,
-    compareApps: true
-  },
-  collaboratorAccess: {
-    presets: true,
-    presetMenuItemBehavior: 'apply'
-  },
-  admin: {
-    collapsibleSidebar: true,
-    warnBeforeClosingCodeEditor: true,
-    themeListUtils: true,
-    timeline: true
-  }
-};
-
-// Deep merge function to handle nested objects
-function deepMerge<T>(target: T, source: Partial<T>): T {
-  const result = { ...target };
-
-  for (const key in source) {
-    const sourceValue = source[key];
-    if (sourceValue !== undefined) {
-      if (typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue)) {
-        if (typeof target[key] === 'object' && target[key] !== null && !Array.isArray(target[key])) {
-          result[key] = deepMerge(
-            target[key] as Record<string, unknown>,
-            sourceValue as Partial<Record<string, unknown>>
-          ) as T[Extract<keyof T, string>];
-        } else {
-          result[key] = sourceValue as T[Extract<keyof T, string>];
-        }
-      } else {
-        result[key] = sourceValue as T[Extract<keyof T, string>];
-      }
-    }
-  }
-
-  return result;
-}
-
 // Module-level reactive state
-let settings = $state.raw<AlfredSettings>(defaultSettings);
+let settings = $state.raw<ResolvedSettings>(defaultSettings);
 let isLoading = $state(true);
 let isSaving = $state(false);
 
@@ -81,12 +17,11 @@ async function loadSettings() {
     isLoading = true;
     const storedSettings = await getItem<AlfredSettings>('settings');
 
+    // First run: persist the defaults so other contexts see a complete blob.
     if (!storedSettings) {
       await setItem('settings', defaultSettings);
-      settings = defaultSettings;
-    } else {
-      settings = deepMerge(defaultSettings, storedSettings);
     }
+    settings = mergeSettings(storedSettings);
   } catch (error) {
     console.error('Failed to load settings:', error);
     settings = defaultSettings;
@@ -98,8 +33,7 @@ async function loadSettings() {
 async function updateSettings(newSettings: Partial<AlfredSettings>): Promise<boolean> {
   try {
     isSaving = true;
-    settings = deepMerge(settings, newSettings);
-    await setItem('settings', settings);
+    settings = await persistSettings(newSettings);
     Toast.success('Settings saved');
     return true;
   } catch (error) {

@@ -1,4 +1,4 @@
-import { getItem } from '@/utils/storage';
+import { getSettings } from '@/utils/settings';
 import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
@@ -1150,7 +1150,7 @@ export default defineContentScript({
     }
 
     // Get settings before injecting the script
-    const settings = await getItem<AlfredSettings>('settings');
+    const settings = await getSettings();
 
     await injectScript('/alfred-main-world.js', {
       keepInDom: true

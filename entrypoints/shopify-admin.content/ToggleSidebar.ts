@@ -1,4 +1,5 @@
 import { getItem, setItem } from '~/utils/storage';
+import { isEnabled, type ResolvedSettings } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 
 type SidebarState = 'collapsed' | 'expanded';
@@ -163,9 +164,8 @@ const injectToggleElement = (): void => {
  * Sets up the toggle sidebar feature
  * @returns {void}
  */
-export const setupToggleSidebar = async (settings: AlfredSettings | null): Promise<void> => {
-  // Check if the feature is enabled in settings
-  if (!(settings?.admin?.collapsibleSidebar ?? true)) {
+export const setupToggleSidebar = async (settings: ResolvedSettings): Promise<void> => {
+  if (!isEnabled(settings.admin.collapsibleSidebar)) {
     return;
   }
 

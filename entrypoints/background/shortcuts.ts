@@ -1,5 +1,5 @@
 import { create, createSeparator, removeAll } from '@/utils/contextMenu';
-import { getItem } from '@/utils/storage';
+import { getSettings, isEnabled, mergeSettings } from '@/utils/settings';
 import { trackAction } from '@/utils/analytics';
 import {
   getPresets,
@@ -110,7 +110,7 @@ const registerItems = (
   parentId: string
 ) => {
   for (const item of items) {
-    if (shortcuts[item.settingKey] === false) continue;
+    if (!isEnabled(shortcuts[item.settingKey])) continue;
     create(
       {
         id: item.id,
@@ -140,22 +140,8 @@ export const registerShortcuts = async (providedSettings?: AlfredSettings | null
   removeAll();
 
   // Get settings to determine which shortcuts to show
-  const settings = providedSettings ?? (await getItem<AlfredSettings>('settings'));
-  // Fallback mirrors the options store defaults, which aren't exported and would
-  // drag the options bundle into the background if imported.
-  const shortcuts = settings?.shortcuts ?? {
-    openInAdmin: true,
-    openInCustomizer: true,
-    openSectionInCodeEditor: true,
-    openImageInAdmin: true,
-    copyThemePreviewUrl: true,
-    exitThemePreview: true,
-    copyProductJson: true,
-    copyCartJson: true,
-    clearCart: true,
-    cartograph: true,
-    requestStoreAccess: true
-  };
+  const settings = providedSettings !== undefined ? mergeSettings(providedSettings) : await getSettings();
+  const shortcuts = settings.shortcuts;
 
   // Create main menu
   const alfredMenuId = create({
@@ -168,7 +154,7 @@ export const registerShortcuts = async (providedSettings?: AlfredSettings | null
   registerItems(navigationItems, shortcuts, alfredMenuId);
 
   // Open Image in Admin > Files
-  if (shortcuts.openImageInAdmin !== false) {
+  if (isEnabled(shortcuts.openImageInAdmin)) {
     create(
       {
         id: 'open-image-in-admin',
@@ -225,7 +211,7 @@ export const registerShortcuts = async (providedSettings?: AlfredSettings | null
   createSeparator('separator-cart', alfredMenuId);
 
   // Cartograph
-  if (shortcuts.cartograph !== false) {
+  if (isEnabled(shortcuts.cartograph)) {
     create(
       {
         id: 'cartograph',
@@ -253,7 +239,7 @@ export const registerShortcuts = async (providedSettings?: AlfredSettings | null
   // Laid out as a flat group under the Alfred menu to match its separator-group idiom:
   // a general "Request Store Access" action, then each saved preset as a child-styled
   // item directly below it. It's a right-click shortcut, so it's gated by its shortcut flag.
-  if (shortcuts.requestStoreAccess !== false) {
+  if (isEnabled(shortcuts.requestStoreAccess)) {
     createSeparator('separator-collab', alfredMenuId);
 
     create(

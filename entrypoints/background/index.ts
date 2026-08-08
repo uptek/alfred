@@ -7,7 +7,7 @@ import type { AnalyticsAction } from '@/utils/analytics-actions';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
 import { captureOrganizationId } from '@/entrypoints/collaborator-access.content/presets';
-import { getItem } from '@/utils/storage';
+import { getSettings, isEnabled, watchSettings } from '@/utils/settings';
 
 const UNINSTALL_SURVEY_URL = 'https://tally.so/r/zx79O8';
 
@@ -75,16 +75,14 @@ export default defineBackground(() => {
   // Re-register shortcuts when they change. The "Request store access" menu is a
   // shortcut flag too, and its preset list/order depends on presetMenuItemHandles, so a
   // change to either rebuilds the menus.
-  storage.watch<AlfredSettings>('local:settings', (newValue) => {
-    void (async () => {
-      const newShortcutsJson = JSON.stringify(newValue?.shortcuts);
-      const newPresetMenuItemHandles = newValue?.collaboratorAccess?.presetMenuItemHandles;
-      if (newShortcutsJson !== currentShortcutsJson || newPresetMenuItemHandles !== currentPresetMenuItemHandles) {
-        currentShortcutsJson = newShortcutsJson;
-        currentPresetMenuItemHandles = newPresetMenuItemHandles;
-        await registerShortcuts(newValue);
-      }
-    })();
+  watchSettings((settings) => {
+    const newShortcutsJson = JSON.stringify(settings.shortcuts);
+    const newPresetMenuItemHandles = settings.collaboratorAccess.presetMenuItemHandles;
+    if (newShortcutsJson !== currentShortcutsJson || newPresetMenuItemHandles !== currentPresetMenuItemHandles) {
+      currentShortcutsJson = newShortcutsJson;
+      currentPresetMenuItemHandles = newPresetMenuItemHandles;
+      void registerShortcuts(settings);
+    }
   });
 
   // Saved presets appear as items under the "Request store access" menu —
@@ -132,8 +130,8 @@ export default defineBackground(() => {
 
     // Open changelog page when extension is updated, unless disabled in settings
     if (!import.meta.env.DEV && details.reason === 'update') {
-      const settings = await getItem<AlfredSettings>('settings');
-      if (settings?.general?.openChangelogOnUpdate !== false) {
+      const settings = await getSettings();
+      if (isEnabled(settings.general.openChangelogOnUpdate)) {
         browser.tabs.create({
           url: browser.runtime.getURL('/options.html?page=changelog')
         });

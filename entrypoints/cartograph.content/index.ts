@@ -1,4 +1,4 @@
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 import { trackAction } from '@/utils/analytics';
 
 export default defineContentScript({
@@ -6,8 +6,8 @@ export default defineContentScript({
   runAt: 'document_idle',
   cssInjectionMode: 'ui',
   async main(ctx) {
-    const settings = await getItem<AlfredSettings>('settings');
-    if (settings?.shortcuts?.cartograph === false) return;
+    const settings = await getSettings();
+    if (!isEnabled(settings.shortcuts.cartograph)) return;
 
     let mounted = false;
 
