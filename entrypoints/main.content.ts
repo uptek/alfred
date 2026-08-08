@@ -2,6 +2,7 @@ import { getSettings } from '@/utils/settings';
 import { sendTrackEvent } from '@/utils/analytics';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { Toast } from '@/utils/toast';
+import type { TabMessage } from '@/utils/messages';
 import { headingText } from './popup/utils/headings';
 import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/utils/links';
 import { looksLikeHtml } from './popup/utils/robots';
@@ -242,14 +243,10 @@ export default defineContentScript({
      * relay them to the main world script,
      * and send the response back to the registered script
      */
-    browser.runtime.onMessage.addListener((request: { action: string }, _sender, sendResponse) => {
+    browser.runtime.onMessage.addListener((request: TabMessage, _sender, sendResponse) => {
       // Surface a toast on behalf of the background, which has no DOM of its own.
       if (request.action === 'alfred_toast') {
-        const { message, toastType } = request as {
-          action: string;
-          message?: string;
-          toastType?: 'success' | 'error';
-        };
+        const { message, toastType } = request;
         if (message) Toast.show(message, toastType === 'success' ? 'success' : 'error');
         return false;
       }
@@ -940,7 +937,7 @@ export default defineContentScript({
        */
       if (request.action === 'get_sitemap_urls') {
         const MAX_URLS = 10_000;
-        const { url } = request as { action: string; url?: string };
+        const { url } = request;
         if (!url || !/^https?:\/\//i.test(url)) {
           sendResponse(null);
           return true;
@@ -967,7 +964,7 @@ export default defineContentScript({
       if (request.action === 'search_sitemap_urls') {
         const MAX_MATCHES = 200;
         const MAX_SITEMAPS = 50;
-        const { urls, query } = request as { action: string; urls?: string[]; query?: string };
+        const { urls, query } = request;
         if (!Array.isArray(urls) || typeof query !== 'string' || !query.trim()) {
           sendResponse(null);
           return true;
@@ -1005,7 +1002,7 @@ export default defineContentScript({
        * @param {boolean} request.enabled - Whether to apply or remove highlights.
        */
       if (request.action === 'highlight_links') {
-        const { enabled } = request as { action: string; enabled: boolean };
+        const { enabled } = request;
         const styleId = 'alfred-link-highlights';
         const existing = document.getElementById(styleId);
         if (!enabled) {
@@ -1048,7 +1045,7 @@ export default defineContentScript({
        * @param {number} request.index - Zero-based index of the link among all `a[href]` elements.
        */
       if (request.action === 'scroll_to_link') {
-        const index = Number((request as { action: string; index: number }).index);
+        const index = Number(request.index);
         if (!Number.isInteger(index) || index < 0) {
           sendResponse(false);
           return false;
@@ -1062,7 +1059,7 @@ export default defineContentScript({
 
       if (request.action === 'scroll_to_heading') {
         const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        const target = allHeadings[(request as { action: string; index: number }).index];
+        const target = allHeadings[request.index];
         if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
@@ -1074,7 +1071,7 @@ export default defineContentScript({
        * @param {boolean} request.enabled - Whether to apply or remove highlights.
        */
       if (request.action === 'highlight_images') {
-        const { enabled } = request as { action: string; enabled: boolean };
+        const { enabled } = request;
         if (!enabled) {
           document.getElementById(IMAGE_HIGHLIGHT_STYLE_ID)?.remove();
           document.querySelectorAll('[data-alfred-image-highlight]').forEach((el) => {
@@ -1107,7 +1104,7 @@ export default defineContentScript({
        * @param {number} request.index - Zero-based index in collectImageEls() order.
        */
       if (request.action === 'scroll_to_image') {
-        const index = (request as { action: string; index: number }).index;
+        const index = request.index;
         // Prefer the index stamped by get_images; fall back to the full walk
         // (an element with several background images keeps only the last stamp).
         const stamped = document.querySelector(`[data-alfred-image-index="${index}"]`);

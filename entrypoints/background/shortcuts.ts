@@ -1,6 +1,7 @@
 import { create, createSeparator, removeAll } from '@/utils/contextMenu';
 import { getSettings, isEnabled, mergeSettings } from '@/utils/settings';
 import { trackAction } from '@/utils/analytics';
+import { sendTabMessage } from '@/utils/messages';
 import {
   getPresets,
   normalizePresetHandle,
@@ -221,9 +222,7 @@ export const registerShortcuts = async (providedSettings?: AlfredSettings | null
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
           try {
-            await browser.tabs.sendMessage(tab.id!, {
-              action: 'open_cartograph'
-            });
+            await sendTabMessage(tab.id!, 'open_cartograph');
           } catch (error) {
             console.error('Error opening Cartograph:', error);
           }

@@ -3,7 +3,7 @@ import { registerShortcuts } from './shortcuts';
 import { checkLinkStatus } from './linkStatus';
 import { keyFor } from '@/entrypoints/popup/stores/tabState';
 import { trackAction } from '@/utils/analytics';
-import type { AnalyticsAction } from '@/utils/analytics-actions';
+import type { RuntimeMessage } from '@/utils/messages';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
 import { captureOrganizationId } from '@/entrypoints/collaborator-access.content/presets';
@@ -96,26 +96,26 @@ export default defineBackground(() => {
   // keeps checks alive after the popup closes and uses host permissions to read
   // cross-origin status codes. Returning true keeps the channel open for the
   // async sendResponse.
-  browser.runtime.onMessage.addListener(
-    (message: { type?: string; action?: unknown; url?: unknown; [key: string]: unknown }, sender, sendResponse) => {
-      if (message.type === 'track_action') {
-        try {
-          trackAction(message.action as AnalyticsAction, message.metadata as Record<string, unknown>);
-        } catch (error) {
-          console.error('Failed to track action:', error);
-        }
-        return false;
-      }
+  browser.runtime.onMessage.addListener((rawMessage: unknown, sender, sendResponse) => {
+    // Only honor messages from the extension's own contexts (popup/content scripts).
+    if (sender.id !== browser.runtime.id) return false;
+    const message = rawMessage as RuntimeMessage;
 
-      // Only honor link-status requests from the extension's own contexts (popup/content scripts).
-      if (sender.id !== browser.runtime.id) return false;
-      if (message.action === 'check_link_status' && typeof message.url === 'string') {
-        checkLinkStatus(message.url).then(sendResponse);
-        return true;
+    if ('type' in message && message.type === 'track_action') {
+      try {
+        trackAction(message.action, message.metadata);
+      } catch (error) {
+        console.error('Failed to track action:', error);
       }
       return false;
     }
-  );
+
+    if (message.action === 'check_link_status' && typeof message.url === 'string') {
+      checkLinkStatus(message.url).then(sendResponse);
+      return true;
+    }
+    return false;
+  });
 
   // The popup persists per-tab view state (open section, link-status scan) keyed
   // by tab id. Drop it the moment the tab closes so the state dies with the tab

@@ -1,6 +1,7 @@
 import type { StoreInfo, Theme } from './types';
 import { getActiveTab } from './messaging';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
+import { sendTabMessage } from '@/utils/messages';
 
 /**
  * Detects Shopify theme info from the active tab via content script and enriches it with Theme Store metadata.
@@ -17,9 +18,7 @@ export const getTheme = async (): Promise<StoreInfo | null> => {
         theme?: Theme;
       }
 
-      const response: ThemeResponse = await browser.tabs.sendMessage(tab.id, {
-        action: 'get_theme'
-      });
+      const response = (await sendTabMessage(tab.id, 'get_theme')) as ThemeResponse;
 
       const theme = response?.theme ?? null;
 

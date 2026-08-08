@@ -1,5 +1,6 @@
 import type { LinkKind, RawLink, LinkStatusResult } from './types';
 import { queryActiveTab, sendToActiveTab } from './messaging';
+import { sendRuntimeMessage } from '@/utils/messages';
 import type { TextSourceElement } from './dom-text';
 import { accessibleText } from './dom-text';
 
@@ -29,7 +30,7 @@ export const scrollToLink = (index: number): Promise<void> => sendToActiveTab('s
  */
 export const checkLinkStatus = async (url: string): Promise<LinkStatusResult> => {
   try {
-    const res = await browser.runtime.sendMessage({ action: 'check_link_status', url });
+    const res = (await sendRuntimeMessage({ action: 'check_link_status', url })) as LinkStatusResult | undefined;
     return res ?? { status: 0, bucket: 'error' };
   } catch {
     return { status: 0, bucket: 'error' };

@@ -1,5 +1,6 @@
 import { getSettings, isEnabled } from '~/utils/settings';
 import { trackAction } from '@/utils/analytics';
+import type { TabMessage } from '@/utils/messages';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -27,7 +28,7 @@ export default defineContentScript({
     }
 
     // Context menu trigger (via background script message)
-    browser.runtime.onMessage.addListener((msg) => {
+    browser.runtime.onMessage.addListener((msg: TabMessage) => {
       if (msg.action === 'open_cartograph') {
         open().catch(console.error);
       }

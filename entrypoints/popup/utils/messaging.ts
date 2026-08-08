@@ -3,6 +3,7 @@
  * its data and drives its on-page interactions through these two helpers, so
  * the `tabs.query` + `sendMessage` + unreachable-tab handling lives in one place.
  */
+import { sendTabMessage, type TabAction, type TabPayloadArgs } from '@/utils/messages';
 
 /**
  * Sends a one-off message to the active tab and returns the typed response,
@@ -30,16 +31,16 @@ export function getActiveTab(): ReturnType<typeof queryActive> {
   return activeTabPromise;
 }
 
-export async function queryActiveTab<T>(
-  action: string,
+export async function queryActiveTab<T, A extends TabAction = TabAction>(
+  action: A,
   fallback: T,
   accept: (response: unknown) => boolean = Array.isArray,
-  extra?: Record<string, unknown>
+  ...payload: TabPayloadArgs<A>
 ): Promise<T> {
   try {
     const tab = await getActiveTab();
     if (tab?.id) {
-      const response = await browser.tabs.sendMessage(tab.id, { action, ...extra });
+      const response = await sendTabMessage(tab.id, action, ...payload);
       return accept(response) ? (response as T) : fallback;
     }
     return fallback;
@@ -52,13 +53,13 @@ export async function queryActiveTab<T>(
  * Fires a message at the active tab for its side effect (scroll, highlight),
  * silently no-opping when the content script is unreachable.
  * @param action - The message action the content script switches on.
- * @param extra - Extra fields merged into the message (e.g. `{ index }`, `{ enabled }`).
+ * @param payload - The action's payload, when it has one (e.g. `{ index }`, `{ enabled }`).
  */
-export async function sendToActiveTab(action: string, extra?: Record<string, unknown>): Promise<void> {
+export async function sendToActiveTab<A extends TabAction>(action: A, ...payload: TabPayloadArgs<A>): Promise<void> {
   try {
     const tab = await getActiveTab();
     if (tab?.id) {
-      await browser.tabs.sendMessage(tab.id, { action, ...extra });
+      await sendTabMessage(tab.id, action, ...payload);
     }
   } catch {
     // silently fail if the content script is unreachable

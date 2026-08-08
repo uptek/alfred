@@ -2,6 +2,7 @@ import { getUserId, getVersion } from './helpers';
 import { getItem, setItem } from './storage';
 import { getSettings, isEnabled } from './settings';
 import { recordSuccess } from './successNudge';
+import { sendRuntimeMessage } from './messages';
 
 const SUPABASE_URL = 'https://obrjirdnqoiailhbsnmu.supabase.co';
 const SUPABASE_ANON_KEY =
@@ -111,7 +112,7 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
  * Falls back to calling trackAction() directly if the background is unavailable.
  */
 export function sendTrackEvent(action: AnalyticsAction, metadata?: Record<string, unknown>): void {
-  browser.runtime.sendMessage({ type: 'track_action', action, metadata }).catch(() => {
+  sendRuntimeMessage({ type: 'track_action', action, metadata }).catch(() => {
     trackAction(action, metadata);
   });
 }

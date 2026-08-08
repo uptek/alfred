@@ -1,3 +1,5 @@
+import { sendTabMessage } from './messages';
+
 // Define the custom element class
 class AlfredToast extends HTMLElement {
   private timeout: ReturnType<typeof setTimeout> | null = null;
@@ -278,7 +280,7 @@ export async function showTabToast(
 ): Promise<void> {
   if (tabId == null) return;
   try {
-    await browser.tabs.sendMessage(tabId, { action: 'alfred_toast', message, toastType });
+    await sendTabMessage(tabId, 'alfred_toast', { message, toastType });
   } catch {
     // No Alfred content script on this page to surface the toast.
   }
