@@ -268,33 +268,41 @@ export function parseAppListing(html: string, handle: string): AppListing {
 }
 
 /**
- * Human-readable app age from a launch-date string, e.g. "10.9 years",
- * "7 months", "12 days". Undefined when the date can't be parsed.
+ * Human-readable app age from a launch-date string, e.g. "Today", "3 days",
+ * "5 months", "1 year", "1.5 years". Calendar year/month arithmetic, so a
+ * whole year reads "1 year" rather than "1.0 years". Undefined when the date
+ * can't be parsed or is in the future.
  */
-export function formatAppAge(launchDate: string): string | undefined {
+export function formatAppAge(launchDate: string, now: Date = new Date()): string | undefined {
   const launched = new Date(launchDate);
 
-  if (isNaN(launched.getTime())) {
+  if (isNaN(launched.getTime()) || launched.getTime() > now.getTime()) {
     return undefined;
   }
 
-  const days = Math.floor((Date.now() - launched.getTime()) / 86_400_000);
-
-  if (days < 0) {
-    return undefined;
+  let years = now.getFullYear() - launched.getFullYear();
+  let months = now.getMonth() - launched.getMonth();
+  // A month only counts once its day-of-month has passed, so 15 days that
+  // straddle a month boundary read "15 days", not "1 month".
+  if (now.getDate() < launched.getDate()) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
   }
 
-  if (days < 30) {
-    return `${days} day${days === 1 ? '' : 's'}`;
+  if (years === 0 && months === 0) {
+    const days = Math.floor((now.getTime() - launched.getTime()) / 86_400_000);
+    return days === 0 ? 'Today' : `${days} day${days === 1 ? '' : 's'}`;
   }
 
-  const months = Math.floor(days / 30.44);
-
-  if (months < 12) {
+  if (years === 0) {
     return `${months} month${months === 1 ? '' : 's'}`;
   }
 
-  return `${(days / 365.25).toFixed(1)} years`;
+  const decimal = months === 0 ? '' : (months / 12).toFixed(1).substring(1);
+  return `${years}${decimal} ${years === 1 && months === 0 ? 'year' : 'years'}`;
 }
 
 /**

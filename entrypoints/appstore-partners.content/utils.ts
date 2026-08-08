@@ -1,4 +1,5 @@
 import { sendTrackEvent } from '@/utils/analytics';
+import { formatAppAge } from '@/utils/appListing';
 import { withCsvCredit } from '@/utils/credit';
 import { csvField, downloadFile } from '@/utils/export';
 import defaultIcon from '@/assets/icon-default.svg';
@@ -115,7 +116,7 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
         }
 
         appData.launchDate = launchDateText;
-        appData.age = formatShortAge(launchDateText ?? '');
+        appData.age = formatAppAge(launchDateText ?? '') ?? null;
         appData.detailedAge = appData.age === null ? null : formatDetailedAge(launchDateText ?? '');
       }
     }
@@ -128,41 +129,6 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
 };
 
 const daysBetween = (a: Date, b: Date): number => Math.floor(Math.abs(a.getTime() - b.getTime()) / 86_400_000);
-
-/**
- * Compact age like "Today", "3 days", "5 months", "1.5 years". Uses calendar
- * year/month arithmetic (unlike utils/appListing.ts formatAppAge, whose
- * average-month math and "1.0 years" style would change this table's output).
- * @param launchDateStr {string} - The launch date
- * @returns {string | null} The compact age, or null when unparseable
- */
-const formatShortAge = (launchDateStr: string): string | null => {
-  const launchDate = new Date(launchDateStr);
-  if (isNaN(launchDate.getTime())) return null;
-
-  const currentDate = new Date();
-  const diffDays = daysBetween(currentDate, launchDate);
-
-  let years = currentDate.getFullYear() - launchDate.getFullYear();
-  let months = currentDate.getMonth() - launchDate.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-
-  let ageString = '';
-  if (years === 0 && months === 0) {
-    ageString = diffDays === 0 ? 'Today' : diffDays === 1 ? '1 day' : diffDays + ' days';
-  } else if (years === 0) {
-    ageString = months + (months === 1 ? ' month' : ' months');
-  } else {
-    // More than a year - show as X.Y years
-    const decimalMonths = (months / 12).toFixed(1).substring(1) || '';
-    ageString = years + decimalMonths + (years === 1 && months === 0 ? ' year' : ' years');
-  }
-
-  return ageString.trim() || null;
-};
 
 /**
  * Format the detailed age
