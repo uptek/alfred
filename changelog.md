@@ -6,6 +6,9 @@
 ### A Proper Dark Mode
 Some products spend a quarter polishing dark mode while the bugs pile up. We fixed the bugs first, so we're allowed to have this: a calmer dark theme in the style of GitHub's soft dark, with clearer on/off states for buttons and easier-to-spot status badges.
 
+- Fixed Alfred sometimes showing "Not a Shopify store" on slower stores. It now waits patiently for the store to finish loading before deciding.
+- Every button, filter, and copy icon now shares one consistent hover style in both light and dark modes, and status pills got subtle borders so they read clearly at a glance.
+
 
 ## 2026.08.08.1
 @ 2026-08-08
