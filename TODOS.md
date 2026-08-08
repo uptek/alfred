@@ -1,5 +1,35 @@
 # TODOS
 
+## Background
+
+### Remove MV3 keep-alive (fix context menu first-click race properly)
+
+**Priority:** P2 — do as a standalone change, single commit, nothing else mixed in, so it can be reverted cleanly if regressions show up.
+
+The background service worker runs a `setInterval` keep-alive (`entrypoints/background/index.ts:57-65`) that pings `getPlatformInfo()` every 20s so the worker never idles out. It exists because context menu shortcuts didn't fire on the first click after the worker went inactive. That first-click failure is a fixable listener-registration race, not something that needs keep-alive, and Chrome keeps tightening the keep-alive loophole anyway.
+
+**Root cause of the first-click bug:**
+
+- Chrome persists the context menu _items_ across worker shutdowns, but the click _handlers_ live in the in-memory `menus` Map in `utils/contextMenu.ts`.
+- The `contextMenus.onClicked` listener is registered lazily inside `initialize()`, which only runs when `create()` is first called, and `create()` is only reached in `registerShortcuts()` after `await getSettings()` (`entrypoints/background/shortcuts.ts:144`). MV3 requires listeners to be registered synchronously in the worker's first turn; a listener added after an `await` can miss the click event that woke the worker.
+- Even when the listener wins the race, the `menus` Map can still be empty because `registerShortcuts()` hasn't finished rebuilding it, so `menus.get(...)` misses and the click is silently dropped.
+
+**Fix plan (in order):**
+
+1. Register `browser.contextMenus.onClicked` synchronously at module top level in `utils/contextMenu.ts` (import time), removing the lazy `initialize()` path.
+2. Expose the in-flight startup promise from `registerShortcuts()` (it already runs unconditionally at `background/index.ts:73`); in the click listener, `await` that promise before looking up the handler in the Map. Awaiting inside an already-registered listener is fine in MV3; only late listener _registration_ is forbidden.
+3. Keep the startup `removeAll()` + rebuild as is: idempotent, and the handler Map must be rebuilt on every cold start regardless.
+4. Audit `pendingNavigations` (the password-redirect Map in `background/index.ts`): once the worker can die mid-navigation, in-memory state is lost. If the /password redirect flow matters across an idle gap, move it to `storage.session`.
+5. Delete the `keepAlive` function and its `setInterval`.
+
+**Verification (the real repro, not just a smoke test):**
+
+- Load the extension, wait for the worker to show "inactive" on chrome://extensions (or force-stop it via chrome://serviceworker-internals).
+- Right-click once on a Shopify page and confirm the shortcut fires on that _first_ click.
+- Repeat for: popup open, changing a shortcut setting (menus re-register), and the password-store redirect flow from a cold worker.
+
+**Revert story:** one commit, e.g. `fix(background): register menu click listener eagerly, drop keep-alive`. Reverting that commit restores keep-alive and the lazy listener wholesale.
+
 ## Cartograph
 
 ### Cart Permalinks / Checkout Links
