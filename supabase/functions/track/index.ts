@@ -55,6 +55,7 @@ const VALID_ACTIONS = [
   'collapse_all_permissions',
   'popup_open',
   'review_nudge_show',
+  'review_nudge_dismiss',
   'overview_view',
   'overview_copy',
   'overview_quick_link',

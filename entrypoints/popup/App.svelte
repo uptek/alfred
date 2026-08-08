@@ -11,6 +11,7 @@
   import { getHreflangs, analyzeHreflangs } from './utils/hreflang';
   import { getSitemaps, analyzeSitemaps } from './utils/sitemaps';
   import { trackAction } from '@/utils/analytics';
+  import { onSuccessNudge, recordPassiveValue } from '@/utils/successNudge';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
   import Links from './Links.svelte';
@@ -24,6 +25,7 @@
   import Sitemaps from './Sitemaps.svelte';
   import Settings from './Settings.svelte';
   import ReviewPrompt from './ReviewPrompt.svelte';
+  import SuccessNudge from './SuccessNudge.svelte';
   import { getTabState, type PopupSection } from './stores/tabState.svelte';
   import type {
     StoreInfo,
@@ -79,6 +81,20 @@
   let overviewNetworkLoading = $state(true);
   let llmsTxt = $state<boolean | null>(null);
   let loading = $state(true);
+  let showSuccessNudge = $state(false);
+
+  $effect(() => {
+    onSuccessNudge(() => (showSuccessNudge = true));
+    return () => onSuccessNudge(null);
+  });
+
+  // Passive value: dwelling on a tab for 3s means Alfred delivered something
+  // worth reading. Settings doesn't count.
+  $effect(() => {
+    if (activeTab === 'settings') return;
+    const timer = setTimeout(() => recordPassiveValue(), 3000);
+    return () => clearTimeout(timer);
+  });
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
   const imageIssueCount = $derived(analyzeImages(rawImages));
@@ -355,12 +371,16 @@
         {/if}
       </div>
     </div>
+
+    {#if showSuccessNudge}
+      <SuccessNudge onDismiss={() => (showSuccessNudge = false)} />
+    {/if}
   </div>
 {/if}
 
 <style>
   /* Popup block */
-  .popup { width: 790px; height: 550px; background: var(--bg-canvas); display: flex; flex-direction: column; overflow: hidden; }
+  .popup { position: relative; width: 790px; height: 550px; background: var(--bg-canvas); display: flex; flex-direction: column; overflow: hidden; }
 
   /* Brand block */
   .brand { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -416,4 +436,5 @@
   .not-shopify__icon { width: 28px; height: 28px; color: var(--text-disabled); stroke-width: 1.7; }
   .not-shopify h3 { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin: 0; }
   .not-shopify p { font-size: 13px; color: var(--text-muted); margin: 0; }
+
 </style>

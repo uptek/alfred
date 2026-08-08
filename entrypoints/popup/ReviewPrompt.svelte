@@ -2,7 +2,10 @@
   import { trackAction, markNudgeShown } from '@/utils/analytics';
   import { CWS_REVIEW_URL, FEEDBACK_URL } from '@/utils/constants';
 
-  let { variant = 'default' }: { variant?: 'default' | 'compact' } = $props();
+  let { variant = 'default', source = 'review_nudge' }: {
+    variant?: 'default' | 'compact';
+    source?: string;
+  } = $props();
 
   let hovered = $state(0);
 
@@ -13,7 +16,7 @@
   });
 
   function handleRate(rating: number) {
-    trackAction('credit_click', { source: 'review_nudge', rating });
+    trackAction('credit_click', { source, rating });
     browser.tabs.create({ url: rating === 5 ? CWS_REVIEW_URL : FEEDBACK_URL });
   }
 </script>
