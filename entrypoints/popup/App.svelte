@@ -257,7 +257,7 @@
 {/snippet}
 
 {#if loading}
-  <div class="popup popup--compact">
+  <div class="popup">
     <div class="loading">
       <div class="loading__spinner"></div>
       <span>Analyzing page...</span>
@@ -361,7 +361,6 @@
 <style>
   /* Popup block */
   .popup { width: 790px; height: 550px; background: var(--bg-canvas); display: flex; flex-direction: column; overflow: hidden; }
-  .popup--compact { width: 350px; height: 200px; }
 
   /* Brand block */
   .brand { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }

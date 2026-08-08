@@ -13,13 +13,8 @@
   });
 
   function handleRate(rating: number) {
-    if (rating === 5) {
-      trackAction('review_nudge_click');
-      browser.tabs.create({ url: CWS_REVIEW_URL });
-    } else {
-      trackAction('review_nudge_dismiss');
-      browser.tabs.create({ url: FEEDBACK_URL });
-    }
+    trackAction('credit_click', { source: 'review_nudge', rating });
+    browser.tabs.create({ url: rating === 5 ? CWS_REVIEW_URL : FEEDBACK_URL });
   }
 </script>
 
