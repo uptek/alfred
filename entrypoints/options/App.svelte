@@ -1,5 +1,6 @@
 <script lang="ts">
   import Navigation from './components/Navigation.svelte';
+  import ReviewRequest from './components/ReviewRequest.svelte';
   import Settings from './components/pages/Settings.svelte';
   import Changelog from './components/pages/Changelog.svelte';
 
@@ -52,7 +53,10 @@
   <s-page>
     <s-box paddingBlock="large-500">
       <s-grid gridTemplateColumns="18rem 1fr" gap="base">
-        <Navigation {currentPage} onNavigate={handleNavigation} />
+        <s-grid gap="base" alignContent="start">
+          <Navigation {currentPage} onNavigate={handleNavigation} />
+          <ReviewRequest />
+        </s-grid>
         <s-box>
           {#if currentPage === 'settings'}
             <Settings />

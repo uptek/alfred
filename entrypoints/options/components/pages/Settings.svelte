@@ -1,6 +1,5 @@
 <script lang="ts">
   import PageHeader from '../PageHeader.svelte';
-  import ReviewRequest from '../ReviewRequest.svelte';
   import ThemeInspectorSettings from '../settings/ThemeInspectorSettings.svelte';
   import CustomizerResizersSettings from '../settings/CustomizerResizersSettings.svelte';
   import ShortcutsSettings from '../settings/ShortcutsSettings.svelte';
@@ -14,7 +13,6 @@
 <form id="settings">
   <s-grid gap="base">
     <PageHeader title="Settings" icon="settings" />
-    <ReviewRequest />
     <GeneralSettings />
     <ShortcutsSettings />
     <CollaboratorAccessSettings />
