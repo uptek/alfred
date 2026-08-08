@@ -1,5 +1,6 @@
 <script lang="ts">
   import { sendTrackEvent } from '@/utils/analytics';
+  import CreditChip from '@/components/CreditChip.svelte';
   import {
     buildHotlinkUrl, generatePresetId, getPresets, savePreset,
     deletePreset, exportPresets, importPresets, normalizePresetHandle,
@@ -496,5 +497,9 @@
         {/if}
       </tbody>
     </table>
+  </div>
+
+  <div class="flex justify-end mt-3">
+    <CreditChip source="collaborator_access" variant="plain" />
   </div>
 </div>

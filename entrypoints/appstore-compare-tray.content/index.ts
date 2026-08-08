@@ -1,5 +1,6 @@
 import { createIntegratedUi } from '#imports';
 import { mount, unmount } from 'svelte';
+import { getCornerStack } from '~/utils/cornerStack';
 import { getItem } from '~/utils/storage';
 import { initCompareButtons } from './buttons';
 import Tray from './Tray.svelte';
@@ -22,7 +23,7 @@ export default defineContentScript({
       anchor: 'body',
       append: 'last',
       onMount: (container) => {
-        app = mount(Tray, { target: container });
+        app = mount(Tray, { target: getCornerStack() });
         return container;
       },
       onRemove: (elements) => {

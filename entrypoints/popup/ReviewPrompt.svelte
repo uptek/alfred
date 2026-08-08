@@ -1,10 +1,12 @@
 <script lang="ts">
   import { trackAction, markNudgeShown } from '@/utils/analytics';
+  import { nudgeRated } from '@/utils/successNudge';
+  import { CWS_REVIEW_URL, FEEDBACK_URL } from '@/utils/constants';
 
-  const CWS_REVIEW_URL = 'https://chromewebstore.google.com/detail/jbdcmokdibodbplhjcajgcbmnflcchbi/reviews';
-  const FEEDBACK_URL = 'https://tally.so/r/nPgYx0';
-
-  let { variant = 'default' }: { variant?: 'default' | 'compact' } = $props();
+  let { variant = 'default', source = 'review_nudge' }: {
+    variant?: 'default' | 'compact';
+    source?: string;
+  } = $props();
 
   let hovered = $state(0);
 
@@ -15,13 +17,9 @@
   });
 
   function handleRate(rating: number) {
-    if (rating === 5) {
-      trackAction('review_nudge_click');
-      browser.tabs.create({ url: CWS_REVIEW_URL });
-    } else {
-      trackAction('review_nudge_dismiss');
-      browser.tabs.create({ url: FEEDBACK_URL });
-    }
+    trackAction('credit_click', { source, rating });
+    nudgeRated();
+    browser.tabs.create({ url: rating === 5 ? CWS_REVIEW_URL : FEEDBACK_URL });
   }
 </script>
 

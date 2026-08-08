@@ -4,6 +4,7 @@
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
+  import { withCsvCredit } from '@/utils/credit';
   import { untrack, onDestroy } from 'svelte';
 
   let { tags, pageUrl, domain }: { tags: RawHreflang[]; pageUrl: string | null; domain: string | null } = $props();
@@ -61,7 +62,7 @@
     const rows = analysis.entries.map((e) =>
       [e.hreflang, e.href || e.rawHref, e.isSelf, e.invalidCode, e.relativeHref, e.inHead].map(String).map(csvField).join(',')
     );
-    const content = ['Hreflang,URL,Self,Invalid Code,Relative URL,In Head', ...rows].join('\n');
+    const content = withCsvCredit(['Hreflang,URL,Self,Invalid Code,Relative URL,In Head', ...rows].join('\n'));
     const blob = new Blob([content], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

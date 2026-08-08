@@ -55,7 +55,6 @@ const VALID_ACTIONS = [
   'collapse_all_permissions',
   'popup_open',
   'review_nudge_show',
-  'review_nudge_click',
   'review_nudge_dismiss',
   'overview_view',
   'overview_copy',
@@ -109,7 +108,9 @@ const VALID_ACTIONS = [
   'sitemaps_copy',
   'sitemaps_copy_urls',
   'sitemaps_export',
-  'sitemaps_search'
+  'sitemaps_search',
+  'timeline_view',
+  'credit_click'
 ];
 
 serve(async (req) => {

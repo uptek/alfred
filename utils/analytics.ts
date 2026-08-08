@@ -1,5 +1,6 @@
 import { getUserId, getVersion } from './helpers';
 import { getItem, setItem } from './storage';
+import { recordSuccess } from './successNudge';
 
 const SUPABASE_URL = 'https://obrjirdnqoiailhbsnmu.supabase.co';
 const SUPABASE_ANON_KEY =
@@ -44,6 +45,9 @@ export async function markNudgeShown(): Promise<boolean> {
  * @param metadata - Additional context (e.g. page_url, page_type, shop_domain, app_count)
  */
 export async function trackAction(action: AnalyticsAction, metadata?: Record<string, unknown>): Promise<void> {
+  // Success counting is UX (review nudge), not analytics — runs even when
+  // the user has opted out of tracking or in dev mode.
+  recordSuccess(action).catch(() => {});
   try {
     // Respect user's privacy opt-out
     const settings = await getItem<AlfredSettings>('settings');

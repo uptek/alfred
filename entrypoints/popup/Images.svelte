@@ -6,6 +6,7 @@
   import SummaryBar from './SummaryBar.svelte';
   import type { SummaryItem } from './SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
+  import { withCsvCredit } from '@/utils/credit';
   import { untrack, onDestroy, onMount } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
 
@@ -253,7 +254,7 @@
         .map(csvField)
         .join(',');
     });
-    downloadFile([header, ...rows].join('\n'), `alfred-images-${siteSlug}.csv`, 'text/csv');
+    downloadFile(withCsvCredit([header, ...rows].join('\n')), `alfred-images-${siteSlug}.csv`, 'text/csv');
     trackAction('images_export', { format: 'csv', image_count: images.length });
     openMenu = null;
   }

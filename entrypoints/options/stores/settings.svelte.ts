@@ -41,7 +41,8 @@ const defaultSettings: AlfredSettings = {
   admin: {
     collapsibleSidebar: true,
     warnBeforeClosingCodeEditor: true,
-    themeListUtils: true
+    themeListUtils: true,
+    timeline: true
   }
 };
 
