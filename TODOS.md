@@ -340,7 +340,6 @@ Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTF
 
 Non-blocking findings from the popup-improvements pre-landing review, deferred to keep the ship moving:
 
-- **Popup renders non-http(s) hrefs as live anchors** — javascript:/data: links rely on MV3 CSP to stay inert; render `other`-kind schemes as plain text in Links (and the same pattern in Images/Assets open actions)
 - **Link index stamping is page-visible** — `data-alfred-link-index` lets pages fingerprint the extension; accepted tradeoff for mutation-safe scroll-to-link, revisit with a WeakRef snapshot if it ever matters
 
 ### Robots.txt Tab — Matcher Edge Cases

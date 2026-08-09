@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { LinkKind, RawLink, LinkStatusResult } from './utils/types';
   import { followRank, isDofollow, highlightLinks, scrollToLink, checkLinkStatus, summarizeLinks } from './utils/links';
+  import { isNavigable } from './utils/url';
   import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
@@ -508,7 +509,11 @@
               <td class="td td--num">{i + 1}</td>
               <td class="td td--url">
                 <div class="url-row">
-                  <a href={link.href} target="_blank" rel="noopener noreferrer" class="url" title={link.href}>{displayUrl(link)}</a>
+                  {#if isNavigable(link.href)}
+                    <a href={link.href} target="_blank" rel="noopener noreferrer" class="url" title={link.href}>{displayUrl(link)}</a>
+                  {:else}
+                    <span class="url url--inert" title="{link.href}&#10;&#10;Not openable from the popup">{displayUrl(link)}</span>
+                  {/if}
                   {#if stats.hrefCounts[link.href]! > 1}
                     <span class="dup-badge">&times;{stats.hrefCounts[link.href]}</span>
                   {/if}
@@ -606,7 +611,8 @@
 
   .url-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
   .url { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .url:hover { text-decoration: underline; }
+  a.url:hover { text-decoration: underline; }
+  .url--inert { color: var(--text-muted); }
   .dup-badge { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; background: var(--warning-bg); color: var(--warning); }
   .flag { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; }
   .flag--amber { background: var(--warning-bg); color: var(--warning); }

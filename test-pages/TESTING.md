@@ -97,6 +97,8 @@ numbered links on that page.
 - [ ] Row 9 (`www.localhost`) is **Internal** and has no `http` badge
 - [ ] Rows 15, 16, 17 show Type **Mailto**, **Tel**, **Other** and their full
       href in the URL cell
+- [ ] Rows 15 and 16 are clickable links; row 17 (`javascript:`) is muted plain
+      text with no hover underline and no cursor change
 
 ### Follow hints (sponsored/ugc are new)
 
@@ -134,7 +136,7 @@ numbered links on that page.
       toolbar sits on one row, Type/Follow/Anchor do not wrap (the alignment
       fix)
 - [ ] Row 14 is dimmed with an eye icon at the end of the URL line
-- [ ] Toggling the eye-off button hides the row (17/18) and the reset button
+- [ ] Toggling the eye-off button hides the row (20/21) and the reset button
       appears; reset restores it
 
 ### Highlight overlay
@@ -202,6 +204,8 @@ filter, a summary bar, media tags, MB sizes, and hardened CSV export.
 - [ ] Importmap, JSON-LD, and speculation-rules blocks show Types **Map**,
       **JSON-LD**, **Rules**, all load "inline", none flagged
 - [ ] Only blocking.js is render-blocking; Flags shows Render-blocking 1
+- [ ] The `data:text/css` stylesheet shows Source as muted plain text, not a
+      link; clicking its row opens nothing and the row has no pointer cursor
 
 ### `/assets/media-styles.html` (stylesheet applicability)
 

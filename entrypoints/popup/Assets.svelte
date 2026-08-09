@@ -2,6 +2,7 @@
   import type { RawAsset } from './utils/types';
   import type { AssetFlag } from './utils/assets';
   import { displaySource as displaySourceUrl, hasOwnLoad, matchesAssetFlag, summarizeAssets, typeLabel } from './utils/assets';
+  import { isNavigable } from './utils/url';
   import { csvField, downloadFile, formatSize, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
@@ -195,7 +196,7 @@
       if (next.has(a.index)) next.delete(a.index);
       else { next.add(a.index); trackAction('assets_expand_inline', { kind: a.kind }); }
       expanded = next;
-    } else if (a.src) {
+    } else if (a.src && isNavigable(a.src)) {
       window.open(a.src, '_blank', 'noopener,noreferrer');
       trackAction('assets_view_source', { kind: a.kind, external: true });
     }
@@ -343,12 +344,15 @@
         </thead>
         <tbody>
           {#each sorted as asset, i (asset.index)}
-            <tr class="row" class:row--clickable={(asset.isInline && asset.content) || asset.src} onclick={(e) => handleRowClick(e, asset)} title={asset.isInline ? (asset.content ? 'Click to view source' : '') : 'Click to open source'}>
+            {@const openable = !!asset.src && isNavigable(asset.src)}
+            <tr class="row" class:row--clickable={(asset.isInline && asset.content) || openable} onclick={(e) => handleRowClick(e, asset)} title={asset.isInline ? (asset.content ? 'Click to view source' : '') : openable ? 'Click to open source' : ''}>
               <td class="td td--num">{i + 1}</td>
               <td class="td td--src">
                 <div class="src-row">
-                  {#if asset.src}
+                  {#if asset.src && isNavigable(asset.src)}
                     <a href={asset.src} target="_blank" rel="noopener noreferrer" class="src" title={asset.src}>{displaySource(asset)}</a>
+                  {:else if asset.src}
+                    <span class="src src--inert" title="{asset.src}&#10;&#10;Not openable from the popup">{displaySource(asset)}</span>
                   {:else}
                     <span class="src src--inline">inline</span>
                   {/if}
@@ -435,8 +439,9 @@
 
   .src-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
   .src { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .src:hover { text-decoration: underline; }
+  a.src:hover { text-decoration: underline; }
   .src--inline { color: var(--text-muted); font-style: italic; }
+  .src--inert { color: var(--text-muted); }
   .expand-chevron { width: 12px; height: 12px; flex-shrink: 0; stroke-width: 2; color: var(--text-muted); transition: transform 0.15s; }
   .expand-chevron--open { transform: rotate(180deg); }
 

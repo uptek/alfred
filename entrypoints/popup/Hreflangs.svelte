@@ -2,6 +2,7 @@
   import type { RawHreflang } from './utils/types';
   import type { HreflangAnalysis } from './utils/hreflang';
   import { summarizeHreflangs } from './utils/hreflang';
+  import { isNavigable } from './utils/url';
   import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
@@ -99,8 +100,10 @@
               </td>
               <td class="td td--url">
                 <div class="url-row">
-                  {#if entry.href}
+                  {#if entry.href && isNavigable(entry.href)}
                     <a href={entry.href} target="_blank" rel="noopener noreferrer" class="url" title={entry.href}>{entry.href}</a>
+                  {:else if entry.href}
+                    <span class="url url--dead" title="{entry.href}&#10;&#10;Not openable from the popup">{entry.href}</span>
                   {:else}
                     <span class="url url--dead" title="Could not be resolved to a URL">{entry.rawHref || '(empty)'}</span>
                   {/if}

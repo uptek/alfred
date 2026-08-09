@@ -2,6 +2,7 @@
   import type { RawImage, ImageStatus } from './utils/types';
   import type { AltState } from './utils/images';
   import { altState, fileLabel, imageStatus, highlightImages, scrollToImage, summarizeImages } from './utils/images';
+  import { isNavigable } from './utils/url';
   import { csvField, downloadFile, formatSize, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
@@ -343,19 +344,20 @@
         </thead>
         <tbody>
           {#each sorted as img (img.index)}
+            {@const renderable = !!img.src && (!img.src.startsWith('data:') || img.src.includes(','))}
             <tr class="row" class:row--hidden={img.isHidden} onclick={(e) => handleRowClick(e, img.index)} title="Click to scroll to this image">
               <td class="td td--img">
                 <div class="img-cell">
-                  {#if img.src && !img.src.startsWith('data:')}
+                  {#if !renderable}
+                    <!-- No src, or a data URI capped to its MIME essence (no renderable payload) -->
+                    <div class="thumb thumb--empty"></div>
+                  {:else if isNavigable(img.src)}
                     <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab" onclick={() => trackAction('images_open', { source: img.source })}>
                       <img class="thumb" src={img.src} alt="" loading="lazy" />
                     </a>
-                  {:else if img.src.includes(',')}
-                    <!-- Browsers block top-frame navigation to data: URLs, so no link -->
-                    <img class="thumb" src={img.src} alt="" loading="lazy" />
                   {:else}
-                    <!-- No src, or a data URI capped to its MIME essence (no renderable payload) -->
-                    <div class="thumb thumb--empty"></div>
+                    <!-- data:/blob: render fine as an <img> but cannot be opened as a top-frame navigation -->
+                    <img class="thumb" src={img.src} alt="" loading="lazy" />
                   {/if}
                   <div class="img-meta">
                     {#if img.source === 'background'}

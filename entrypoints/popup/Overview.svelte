@@ -9,6 +9,7 @@
   } from './utils/types';
   import { socialProfiles, TITLE_MIN, TITLE_MAX, DESC_MIN, DESC_MAX } from './utils/overview';
   import { titleWidthPx, TITLE_MAX_PX } from './utils/text-width';
+  import { isNavigable } from './utils/url';
   import { createKeyedCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
   import SerpPreview from './components/SerpPreview.svelte';
@@ -230,7 +231,11 @@
       </div>
       <div class="ovw-meta-value">
         {#if analysis.canonical.href}
-          <a href={analysis.canonical.href} target="_blank" rel="noopener">{analysis.canonical.href}</a>
+          {#if isNavigable(analysis.canonical.href)}
+            <a href={analysis.canonical.href} target="_blank" rel="noopener">{analysis.canonical.href}</a>
+          {:else}
+            <span class="ovw-inert" title="{analysis.canonical.href}&#10;&#10;Not openable from the popup">{analysis.canonical.href}</span>
+          {/if}
           <button class="copy-btn" onclick={() => copy('canonical', analysis.canonical.href ?? '')} aria-label="Copy canonical URL">
             {#if copyFeedback.key === 'canonical'}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -513,6 +518,14 @@
   }
   .ovw-meta-value a:hover {
     text-decoration: underline;
+  }
+  .ovw-inert {
+    color: var(--text-muted);
+    font-family: ui-monospace, monospace;
+    font-size: 12.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* Technical rows */
