@@ -428,11 +428,6 @@
   .empty-state__icon { width: 28px; height: 28px; opacity: 0.3; stroke-width: 1.7; }
   .empty-state p { font-size: 13px; margin: 0; }
 
-  /* Table — full-bleed rows: no wrapper side padding, gutter lives on the edge cells */
-
-
-  /* Edge-cell gutters keep content inset while row/hover background spans full width */
-
   .th--size { width: 58px; text-align: right; }
   .th--fmt { width: 42px; text-align: center; }
   .th--dims { width: 72px; text-align: center; }
@@ -479,7 +474,6 @@
   .pill--green { background: var(--success-bg); color: var(--success-strong); }
   .pill--red { background: var(--error-bg); color: var(--error-strong); }
   .pill--amber { background: var(--warning-bg); color: var(--warning); }
-
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }

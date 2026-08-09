@@ -11,6 +11,7 @@
   import type { Facet } from './components/TableToolbar.svelte';
   import type { ExportItem } from './components/ExportMenu.svelte';
   import SortHeader from './components/SortHeader.svelte';
+  import UrlCell from './components/UrlCell.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
   import { getTabState } from './stores/tabState.svelte';
@@ -345,12 +346,10 @@
               <td class="td td--num">{i + 1}</td>
               <td class="td td--src">
                 <div class="src-row">
-                  {#if asset.src && isNavigable(asset.src)}
-                    <a href={asset.src} target="_blank" rel="noopener noreferrer" class="src" title={asset.src}>{displaySource(asset)}</a>
-                  {:else if asset.src}
-                    <span class="src src--inert" title="{asset.src}&#10;&#10;Not openable from the popup">{displaySource(asset)}</span>
+                  {#if asset.src}
+                    <UrlCell href={asset.src} text={displaySource(asset)} />
                   {:else}
-                    <span class="src src--inline">inline</span>
+                    <span class="src--inline">inline</span>
                   {/if}
                   {#if asset.status >= 400}
                     <span class="pill pill--red" title="Failed request: HTTP {asset.status}">{asset.status}</span>
@@ -415,10 +414,6 @@
   .empty-state__icon { width: 28px; height: 28px; opacity: 0.3; stroke-width: 1.7; }
   .empty-state p { font-size: 13px; margin: 0; }
 
-  /* Table — full-bleed rows: no wrapper side padding, gutter lives on the edge cells */
-
-
-  /* Edge-cell gutters keep content inset while row/hover background spans full width */
   .code-row td:last-child { padding-right: 20px; }
 
   .th--num { width: 30px; padding-right: 0; }
@@ -434,10 +429,7 @@
   .td--src { overflow: hidden; }
 
   .src-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .src { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  a.src:hover { text-decoration: underline; }
-  .src--inline { color: var(--text-muted); font-style: italic; }
-  .src--inert { color: var(--text-muted); }
+  .src--inline { font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; color: var(--text-muted); font-style: italic; }
   .expand-chevron { width: 12px; height: 12px; flex-shrink: 0; stroke-width: 2; color: var(--text-muted); transition: transform 0.15s; }
   .expand-chevron--open { transform: rotate(180deg); }
 
@@ -463,7 +455,6 @@
 
   /* Stylesheet media attribute — neutral fact, not a problem flag */
   .media-tag { flex-shrink: 0; font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 20px; white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; background: var(--bg-raised); color: var(--text-muted); border: 1px solid var(--border); }
-
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }

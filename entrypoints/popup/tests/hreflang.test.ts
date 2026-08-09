@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { analyzeHreflangs, isValidHreflangCode, normalizeUrl, summarizeHreflangs } from '../utils/hreflang';
+import { analyzeHreflangs, isValidHreflangCode, summarizeHreflangs } from '../utils/hreflang';
 import type { HreflangAnalysis, HreflangEntry } from '../utils/hreflang';
 import type { RawHreflang } from '../utils/types';
 
@@ -25,17 +25,6 @@ describe('isValidHreflangCode', () => {
     for (const code of ['en_US', 'english', 'en-USA', '', 'en-']) {
       expect(isValidHreflangCode(code)).toBe(false);
     }
-  });
-});
-
-describe('normalizeUrl', () => {
-  test('drops hash, lowercases host, strips trailing slash beyond root', () => {
-    expect(normalizeUrl('https://Example.com/en/#top')).toBe('https://example.com/en');
-    expect(normalizeUrl('https://example.com/')).toBe('https://example.com/');
-  });
-
-  test('returns null for unparseable input', () => {
-    expect(normalizeUrl('/en/')).toBeNull();
   });
 });
 

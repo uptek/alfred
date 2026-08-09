@@ -503,25 +503,23 @@
   .ovw-meta-text {
     min-width: 0;
   }
-  .ovw-meta-value a {
-    color: var(--accent);
-    text-decoration: none;
+  .ovw-meta-value a,
+  .ovw-inert {
     font-family: ui-monospace, monospace;
     font-size: 12.5px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .ovw-meta-value a {
+    color: var(--accent);
+    text-decoration: none;
   }
   .ovw-meta-value a:hover {
     text-decoration: underline;
   }
   .ovw-inert {
     color: var(--text-muted);
-    font-family: ui-monospace, monospace;
-    font-size: 12.5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   /* Technical rows */

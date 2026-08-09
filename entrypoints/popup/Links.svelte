@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { LinkKind, RawLink, LinkStatusResult } from './utils/types';
   import { followRank, isDofollow, highlightLinks, scrollToLink, checkLinkStatus, summarizeLinks } from './utils/links';
-  import { isNavigable } from './utils/url';
   import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackViewOnce } from './utils/track.svelte';
@@ -11,6 +10,7 @@
   import type { ExportItem } from './components/ExportMenu.svelte';
   import ToolbarButton from './components/ToolbarButton.svelte';
   import SortHeader from './components/SortHeader.svelte';
+  import UrlCell from './components/UrlCell.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
   import { onDestroy, onMount } from 'svelte';
@@ -510,11 +510,7 @@
               <td class="td td--num">{i + 1}</td>
               <td class="td td--url">
                 <div class="url-row">
-                  {#if isNavigable(link.href)}
-                    <a href={link.href} target="_blank" rel="noopener noreferrer" class="url" title={link.href}>{displayUrl(link)}</a>
-                  {:else}
-                    <span class="url url--inert" title="{link.href}&#10;&#10;Not openable from the popup">{displayUrl(link)}</span>
-                  {/if}
+                  <UrlCell href={link.href} text={displayUrl(link)} />
                   {#if stats.hrefCounts[link.href]! > 1}
                     <span class="dup-badge">&times;{stats.hrefCounts[link.href]}</span>
                   {/if}
@@ -591,11 +587,6 @@
   .check-action:disabled { cursor: default; }
   .check-action svg { width: 12px; height: 12px; stroke-width: 1.9; flex-shrink: 0; }
 
-  /* Table — full-bleed rows: no wrapper side padding, gutter lives on the edge cells */
-
-
-  /* Edge-cell gutters keep content inset while row/hover background spans full width */
-
   .th--num { width: 30px; padding-right: 0; }
   .th--follow { width: 76px; }
   .th--type { width: 76px; }
@@ -611,9 +602,6 @@
   .td--url { overflow: hidden; }
 
   .url-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .url { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  a.url:hover { text-decoration: underline; }
-  .url--inert { color: var(--text-muted); }
   .dup-badge { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; background: var(--warning-bg); color: var(--warning); }
   .flag { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; }
   .flag--amber { background: var(--warning-bg); color: var(--warning); }
@@ -645,7 +633,6 @@
   .pill--green { background: var(--success-bg); color: var(--success-strong); }
   .pill--red { background: var(--error-bg); color: var(--error-strong); }
   .pill--amber { background: var(--warning-bg); color: var(--warning); }
-
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }

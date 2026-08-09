@@ -2,12 +2,12 @@
   import type { RawHreflang } from './utils/types';
   import type { HreflangAnalysis } from './utils/hreflang';
   import { summarizeHreflangs } from './utils/hreflang';
-  import { isNavigable } from './utils/url';
   import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackViewOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
   import ToolbarButton from './components/ToolbarButton.svelte';
+  import UrlCell from './components/UrlCell.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
 
@@ -100,12 +100,10 @@
               </td>
               <td class="td td--url">
                 <div class="url-row">
-                  {#if entry.href && isNavigable(entry.href)}
-                    <a href={entry.href} target="_blank" rel="noopener noreferrer" class="url" title={entry.href}>{entry.href}</a>
-                  {:else if entry.href}
-                    <span class="url url--dead" title="{entry.href}&#10;&#10;Not openable from the popup">{entry.href}</span>
+                  {#if entry.href}
+                    <UrlCell href={entry.href} text={entry.href} />
                   {:else}
-                    <span class="url url--dead" title="Could not be resolved to a URL">{entry.rawHref || '(empty)'}</span>
+                    <span class="url--dead" title="Could not be resolved to a URL">{entry.rawHref || '(empty)'}</span>
                   {/if}
                   {#if entry.isSelf}
                     <span class="flag flag--green" title="References the page you're on">self</span>
@@ -147,7 +145,6 @@
   .toolbar__hint { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); }
   .toolbar__actions { display: flex; align-items: center; gap: 6px; }
 
-
   /* Issue callouts */
   .issues { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); }
   .issue { display: flex; align-items: baseline; gap: 9px; padding: 7px 20px; font-size: 12.5px; border-top: 1px solid var(--border-subtle); }
@@ -170,9 +167,7 @@
   .td--url { overflow: hidden; }
 
   .url-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .url { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .url:hover { text-decoration: underline; }
-  .url--dead { color: var(--text-muted); }
+  .url--dead { font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
   .flag { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; }
   .flag--green { background: var(--success-bg); color: var(--success-strong); }

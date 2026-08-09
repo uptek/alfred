@@ -19,10 +19,10 @@
   import SearchField from './SearchField.svelte';
 
   let {
-    facets = [],
-    anyFilterActive = false,
+    facets,
+    anyFilterActive,
     onReset,
-    exportItems = [],
+    exportItems,
     exportLabel,
     searchLabel,
     searchPlaceholder,
@@ -30,10 +30,10 @@
     searchOpen = $bindable(false),
     actions
   }: {
-    facets?: Facet[];
-    anyFilterActive?: boolean;
-    onReset?: () => void;
-    exportItems?: ExportItem[];
+    facets: Facet[];
+    anyFilterActive: boolean;
+    onReset: () => void;
+    exportItems: ExportItem[];
     exportLabel: string;
     searchLabel: string;
     searchPlaceholder: string;
@@ -45,12 +45,16 @@
   // One slot for every dropdown (facets and export share it), so opening one
   // closes the rest. 'export' is reserved; the rest are facet keys.
   let openMenu = $state<string | null>(null);
-  let searchField = $state<ReturnType<typeof SearchField> | null>(null);
+
+  // Only a click on the search button should pull focus. searchOpen also arrives
+  // true from the restored per-tab state, and focusing then would yank focus out
+  // of the tab strip every time the popup reopens.
+  let focusOnOpen = $state(false);
 
   function toggleSearch() {
     searchOpen = !searchOpen;
-    if (!searchOpen) search = '';
-    else setTimeout(() => searchField?.focus(), 0);
+    if (searchOpen) focusOnOpen = true;
+    else search = '';
   }
 
   function handleWindowClick(e: MouseEvent) {
@@ -98,7 +102,7 @@
           {/if}
         </div>
       {/each}
-      {#if anyFilterActive && onReset}
+      {#if anyFilterActive}
         <button class="reset-btn" onclick={onReset} title="Reset all filters">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
         </button>
@@ -109,19 +113,17 @@
       <ToolbarButton active={searchOpen} onclick={toggleSearch} title={searchLabel}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       </ToolbarButton>
-      {#if exportItems.length > 0}
-        <ExportMenu
-          items={exportItems}
-          label={exportLabel}
-          open={openMenu === 'export'}
-          onToggle={() => { openMenu = openMenu === 'export' ? null : 'export'; }}
-          onClose={() => { openMenu = null; }}
-        />
-      {/if}
+      <ExportMenu
+        items={exportItems}
+        label={exportLabel}
+        open={openMenu === 'export'}
+        onToggle={() => { openMenu = openMenu === 'export' ? null : 'export'; }}
+        onClose={() => { openMenu = null; }}
+      />
     </div>
   </div>
   {#if searchOpen}
-    <SearchField bind:this={searchField} bind:value={search} placeholder={searchPlaceholder} />
+    <SearchField bind:value={search} placeholder={searchPlaceholder} autofocus={focusOnOpen} />
   {/if}
 </div>
 

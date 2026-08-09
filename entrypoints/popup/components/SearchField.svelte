@@ -5,20 +5,23 @@
     value = $bindable(''),
     placeholder,
     clearLabel = 'Clear filter',
+    autofocus = false,
     trailing
   }: {
     value?: string;
     placeholder: string;
     clearLabel?: string;
+    /** For fields revealed by a toggle, where mounting is the moment to focus. */
+    autofocus?: boolean;
     /** Extra control pinned after the clear button (Sitemaps' "This page"). */
     trailing?: Snippet;
   } = $props();
 
   let input = $state<HTMLInputElement | null>(null);
 
-  export function focus() {
-    input?.focus();
-  }
+  $effect(() => {
+    if (autofocus) input?.focus();
+  });
 </script>
 
 <div class="search">

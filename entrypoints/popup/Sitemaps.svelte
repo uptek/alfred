@@ -550,9 +550,7 @@
   .issue__dot--info { background: var(--text-faint); }
   .issue__msg { flex: 1; min-width: 0; }
 
-  /* Search — same control as the Links tab */
-  /* Right padding is 3px because the This-page button carries 7px of its own;
-     3 + 7 keeps the text 10px from the edge, matching the icon on the left. */
+  /* Search — the "This page" control the shared SearchField renders as `trailing` */
   .search__find { flex-shrink: 0; padding: 2px 7px; border: none; background: none; cursor: pointer; font-family: inherit; font-size: 10.5px; font-weight: 600; white-space: nowrap; color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; border-radius: 4px; transition: all 0.12s; }
   .search__find:hover { color: var(--text); background: var(--bg-hover); }
 

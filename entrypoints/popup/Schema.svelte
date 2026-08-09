@@ -5,6 +5,7 @@
   import { createCopyFeedback, createKeyedCopyFeedback } from './utils/copy.svelte';
   import { trackViewOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
+  import ToolbarButton from './components/ToolbarButton.svelte';
   import { trackAction } from '@/utils/analytics';
   import { getTabState } from './stores/tabState.svelte';
 
@@ -117,16 +118,16 @@
     <div class="toolbar">
       <span class="toolbar__hint">JSON-LD structured data</span>
       <div class="toolbar__actions">
-        <button class="toolbar-btn" onclick={copyAll} aria-label="Copy all JSON-LD" title={copyFeedback.copied ? 'Copied!' : 'Copy all JSON-LD'}>
+        <ToolbarButton onclick={copyAll} ariaLabel="Copy all JSON-LD" title={copyFeedback.copied ? 'Copied!' : 'Copy all JSON-LD'}>
           {#if copyFeedback.copied}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           {:else}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           {/if}
-        </button>
-        <button class="toolbar-btn" onclick={exportJson} aria-label="Download JSON-LD" title="Download JSON-LD">
+        </ToolbarButton>
+        <ToolbarButton onclick={exportJson} ariaLabel="Download JSON-LD" title="Download JSON-LD">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
+        </ToolbarButton>
       </div>
     </div>
 
@@ -221,9 +222,6 @@
   .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .toolbar__hint { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); }
   .toolbar__actions { display: flex; align-items: center; gap: 6px; }
-  .toolbar-btn { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .toolbar-btn:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
-  .toolbar-btn svg { width: 13px; height: 13px; stroke-width: 1.8; flex-shrink: 0; }
 
   /* List */
   .list { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 20px 12px; }
