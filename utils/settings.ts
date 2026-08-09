@@ -105,16 +105,31 @@ export async function getSettings(): Promise<ResolvedSettings> {
   return mergeSettings(await getItem<AlfredSettings>('settings'));
 }
 
+// Writes are read-modify-write, so two overlapping calls would both read the
+// pre-write blob and the second would clobber the first's patch. Chaining them
+// makes each write see its predecessor's result.
+let writeQueue: Promise<void> = Promise.resolve();
+
 /**
  * Merges a patch into stored settings and persists the defaults-merged result,
- * so partial writers can't strip groups other features rely on.
+ * so partial writers can't strip groups other features rely on. Concurrent
+ * calls are serialized, so a burst of writes never drops a patch.
  * @param patch - Partial settings to apply.
  * @returns The persisted, fully-merged settings.
  */
-export async function updateSettings(patch: Partial<AlfredSettings>): Promise<ResolvedSettings> {
-  const merged = deepMerge<ResolvedSettings>(await getSettings(), patch as Partial<ResolvedSettings>);
-  await setItem('settings', merged);
-  return merged;
+export function updateSettings(patch: Partial<AlfredSettings>): Promise<ResolvedSettings> {
+  const write = writeQueue.then(async () => {
+    const merged = deepMerge<ResolvedSettings>(await getSettings(), patch as Partial<ResolvedSettings>);
+    await setItem('settings', merged);
+    return merged;
+  });
+  // Swallow on the queue only: a rejected write must not poison later ones.
+  // The caller still sees the rejection through the returned promise.
+  writeQueue = write.then(
+    () => undefined,
+    () => undefined
+  );
+  return write;
 }
 
 /**

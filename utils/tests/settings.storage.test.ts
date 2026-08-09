@@ -6,11 +6,20 @@ import { beforeEach, describe, expect, it, mock } from 'bun:test';
 const store = new Map<string, unknown>();
 let watcher: ((newValue: unknown) => void) | undefined;
 let unwatched = false;
+// Set to make the next setItem reject, so the write queue's failure path is
+// exercised rather than assumed.
+let failNextWrite = false;
 
 mock.module('wxt/utils/storage', () => ({
   storage: {
     getItem: async (key: string) => (store.has(key) ? store.get(key) : null),
-    setItem: async (key: string, value: unknown) => void store.set(key, value),
+    setItem: async (key: string, value: unknown) => {
+      if (failNextWrite) {
+        failNextWrite = false;
+        throw new Error('storage full');
+      }
+      store.set(key, value);
+    },
     watch: (_key: string, callback: (newValue: unknown) => void) => {
       watcher = callback;
       return () => {
@@ -26,6 +35,7 @@ beforeEach(() => {
   store.clear();
   watcher = undefined;
   unwatched = false;
+  failNextWrite = false;
 });
 
 describe('getSettings', () => {
@@ -60,6 +70,45 @@ describe('updateSettings', () => {
     const settings = await getSettings();
     expect(settings.appStore.compareApps).toBe(false);
     expect(settings.general.analytics).toBe(false);
+  });
+
+  it('serializes concurrent writes so neither patch is lost', async () => {
+    await Promise.all([
+      updateSettings({ general: { analytics: false } }),
+      updateSettings({ admin: { timeline: false } })
+    ]);
+    const settings = await getSettings();
+    expect(settings.general.analytics).toBe(false);
+    expect(settings.admin.timeline).toBe(false);
+  });
+
+  it('applies a burst of writes to the same group in order', async () => {
+    await Promise.all([
+      updateSettings({ shortcuts: { clearCart: false } }),
+      updateSettings({ shortcuts: { cartograph: false } }),
+      updateSettings({ shortcuts: { openInAdmin: false } })
+    ]);
+    const settings = await getSettings();
+    expect(settings.shortcuts.clearCart).toBe(false);
+    expect(settings.shortcuts.cartograph).toBe(false);
+    expect(settings.shortcuts.openInAdmin).toBe(false);
+  });
+
+  it('surfaces a failed write to its own caller', async () => {
+    failNextWrite = true;
+    expect(updateSettings({ general: { analytics: false } })).rejects.toThrow('storage full');
+  });
+
+  it('keeps serving later writes after one rejects', async () => {
+    failNextWrite = true;
+    const failing = updateSettings({ general: { analytics: false } });
+    const following = updateSettings({ admin: { timeline: false } });
+    await failing.catch(() => {});
+    await following;
+    const settings = await getSettings();
+    expect(settings.admin.timeline).toBe(false);
+    // The failed write left no trace; the queue did not stall on it.
+    expect(settings.general.analytics).toBe(true);
   });
 
   it('merges nested groups instead of replacing them', async () => {

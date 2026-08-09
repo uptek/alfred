@@ -1,5 +1,6 @@
 import { getItem, setItem } from '~/utils/storage';
 import {
+  deepMerge,
   defaultSettings,
   mergeSettings,
   updateSettings as persistSettings,
@@ -33,6 +34,11 @@ async function loadSettings() {
 async function updateSettings(newSettings: Partial<AlfredSettings>): Promise<boolean> {
   try {
     isSaving = true;
+    // Reflect the patch before the storage round-trip. Handlers build their
+    // patch by spreading the current group (`{ ...store.settings.shortcuts }`),
+    // so a second toggle fired mid-write would otherwise spread pre-patch
+    // values and undo the first one.
+    settings = deepMerge(settings, newSettings as Partial<ResolvedSettings>);
     settings = await persistSettings(newSettings);
     Toast.success('Settings saved');
     return true;
