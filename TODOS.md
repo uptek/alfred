@@ -116,7 +116,7 @@ Think of it as a mini DevTools console, but scoped to the cart object and with z
 
 **Context:**
 
-- Current JsonTab.svelte is ~40 lines — this replaces it with ~150-200 lines
+- JsonTab.svelte is ~155 lines today, but almost all of it is a static `<pre>` dump plus a copy button and its styles — the query console is entirely unbuilt
 - No external dependencies needed — autocomplete is a simple filtered list, not a full editor
 - The cart object is already available as a prop — no new API calls
 - Similar UX to browser DevTools console autocomplete or jq playground
@@ -185,11 +185,10 @@ Currently, adding an item requires knowing the product URL or handle upfront. Wi
 
 Issues identified by 4-pass adversarial review during ship. None are blocking but improve robustness:
 
-- **`applicable` field missing from discount_codes type** — all codes display "Not applicable" even when applied. Fix: add `applicable: boolean` to types.ts
-- **Product URL path validation too strict** — `/en/products/` and `/collections/*/products/` paths rejected. Fix: normalize to extract handle
-- **Shipping rate polling timeout mismatch** — world script polls 5s but client allows 30s. Fix: increase to ~20 polling attempts
-- **replaceItem captures stale originalItem** — should read inside mutate callback, not at enqueue time
-- **Mount failure bricks overlay** — if script injection fails, `mounted` flag never resets. Fix: add try/catch around `mountCartograph()`
+- **`applicable` field missing from discount_codes type** — `MetadataTab.svelte` reads `dc.applicable` but `types.ts:15` declares only `{ code, amount, type }`, so every code displays "Not applicable". Fix: add `applicable: boolean`
+- **Product URL path validation too strict** — `getProductByUrl` in `cartograph-world.ts` requires `pathname.startsWith('/products/')`, rejecting `/en/products/` and `/collections/*/products/`. Fix: normalize to extract the handle
+- **Shipping rate polling timeout mismatch** — `cartograph-world.ts` polls 10 × 500ms = 5s while the client allows 30s (`SHIPPING_TIMEOUT_MS`). Fix: raise `maxAttempts` to ~20
+- **Mount failure bricks overlay** — `open()` in `cartograph.content/index.ts` sets `mounted = true` before awaiting the dynamic import, so a failed import leaves it stuck true and the overlay never opens again. Fix: try/catch that resets the flag
 - **USD-only currency formatting** — prices hardcoded as `$` + `toFixed(2)`, ignores `cart.currency`
 - **Quantity input capped at 99** — silent clamp on existing items with qty > 99
 
@@ -330,7 +329,7 @@ Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTF
 
 **Context:**
 
-- Design mockup exists in `designs/popup-theme-v2.html` (removed from current version to keep scope tight)
+- No mockup in the repo any more; `designs/` holds only `popup-preview.html`, so this needs a fresh design pass
 - Overlaps with Store Health Check but this is a lightweight, always-visible summary vs. a full audit
 - PerformanceObserver is available in content scripts — no main-world injection needed for CWV
 - INP replaces FID as of March 2024 — use INP as the responsiveness metric
@@ -342,8 +341,8 @@ Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTF
 Non-blocking findings from the popup-improvements pre-landing review, deferred to keep the ship moving:
 
 - **Toolbar scaffolding triplicated** — Links/Assets/Images each carry identical facet dropdown, export menu, search bar, sort-icon snippets, and ~250 lines of matching CSS. Extract FacetDropdown/ExportMenu/SearchBar components (or one TableToolbar) the way SummaryBar was extracted. The shared `csvField`/`downloadFile`/`siteSlug` helper landed in `utils/export.ts` in the simplify sweep (#93); the component extraction is what remains
-- **summaryItems aggregation untested** — extract pure `summarizeLinks/Images/Assets` helpers returning SummaryItem[] and pin singular/plural labels, zero-suppression, and warn/err tones with bun tests
-- **Broken-anchor predicate unexercised** — extract `isBrokenAnchorFragment` into links.ts with tests for the `''`/`top`/named-anchor branches, and add a `<a name=...>` row to test-pages/links/mixed.html (the hasNamedAnchor Set path currently has no fixture)
+- **summaryItems aggregation untested** — five tabs now build `summaryItems` as an inline `$derived.by` (Links, Images, Assets, Schema, Hreflangs). Extract pure `summarize*` helpers returning SummaryItem[] and pin singular/plural labels, zero-suppression, and warn/err tones with bun tests
+- **Broken-anchor predicate unexercised** — `samePageFragment` is extracted and tested in `popup/utils/links.ts`, but the `isBrokenAnchor` predicate around it is still inline in `main.content.ts` and untested. Extract it with tests for the `''`/`top`/named-anchor branches, and add an `<a name=...>` row to test-pages/links/mixed.html (the hasNamedAnchor Set path has no fixture)
 - **Popup renders non-http(s) hrefs as live anchors** — javascript:/data: links rely on MV3 CSP to stay inert; render `other`-kind schemes as plain text in Links (and the same pattern in Images/Assets open actions)
 - **Link index stamping is page-visible** — `data-alfred-link-index` lets pages fingerprint the extension; accepted tradeoff for mutation-safe scroll-to-link, revisit with a WeakRef snapshot if it ever matters
 
@@ -360,6 +359,4 @@ Refinements flagged by the v2026.06.10 adversarial review as INVESTIGATE (correc
 
 **Context:**
 
-- All in `entrypoints/popup/robots.ts` / `Robots.svelte`; matcher has full test coverage in `robots.test.ts` to refactor against
-
-## Completed
+- All in `entrypoints/popup/utils/robots.ts` / `Robots.svelte`; matcher has full test coverage in `entrypoints/popup/tests/robots.test.ts` to refactor against
