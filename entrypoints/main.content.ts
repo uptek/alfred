@@ -48,6 +48,17 @@ let linkSnapshot: WeakRef<HTMLAnchorElement>[] = [];
 let imageSnapshot: { ref: WeakRef<Element>; source: CollectedImage['source'] }[] = [];
 
 /**
+ * The snapshotted element, or undefined once the page has dropped it. The
+ * isConnected check matters as much as the deref: a detached node stays
+ * strongly reachable from any handler that still holds it, so deref alone
+ * would hand back an element no longer in the document.
+ */
+function liveRef<T extends Element>(ref: WeakRef<T> | undefined): T | undefined {
+  const el = ref?.deref();
+  return el?.isConnected ? el : undefined;
+}
+
+/**
  * Collects all page images in a deterministic order shared by get_images,
  * highlight_images, and scroll_to_image so indices stay consistent across calls.
  * Order: every <img> in DOM order, then every element with a CSS background-image
@@ -1033,8 +1044,7 @@ export default defineContentScript({
           sendResponse(false);
           return false;
         }
-        const snapped = linkSnapshot[index]?.deref();
-        const target = snapped?.isConnected ? snapped : document.querySelectorAll('a[href]')[index];
+        const target = liveRef(linkSnapshot[index]) ?? document.querySelectorAll('a[href]')[index];
         if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
@@ -1091,9 +1101,9 @@ export default defineContentScript({
         // Prefer the entry get_images recorded; fall back to the full walk when
         // that element has since been detached or garbage-collected.
         const snapped = imageSnapshot[index];
-        const snappedEl = snapped?.ref.deref();
+        const el = snapped && liveRef(snapped.ref);
         const item: CollectedImage | undefined =
-          snapped && snappedEl?.isConnected ? { el: snappedEl, source: snapped.source } : collectImageEls()[index];
+          snapped && el ? { el, source: snapped.source } : collectImageEls()[index];
         if (item) {
           const { el, source } = item;
           ensureImageHighlightStyle();
