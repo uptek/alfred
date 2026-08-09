@@ -48,9 +48,11 @@ async function updateSettings(newSettings: Partial<AlfredSettings>): Promise<boo
 async function resetSettings(): Promise<boolean> {
   try {
     isSaving = true;
-    // Defaults are a complete blob, so merging them over the stored value
-    // through the facade's write path overwrites every setting.
-    settings = await persistSettings(defaultSettings);
+    // A straight write, not the merging facade: reset must also clear keys that
+    // have no default (organizationId, presetMenuItemHandles), which a merge of
+    // defaults over the stored blob would leave behind.
+    await setItem('settings', defaultSettings);
+    settings = defaultSettings;
     Toast.success('Settings reset to defaults');
     return true;
   } catch (error) {
