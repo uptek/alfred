@@ -1,17 +1,10 @@
-<script lang="ts" module>
-  // Module scope: once per popup load, not per tab-switch remount — the
-  // component remounts on every tab change and would re-fire robots_view
-  // (and its time-saved credit) each time.
-  const viewState = { done: false };
-</script>
-
 <script lang="ts">
   import type { RobotsResponse } from './utils/types';
   import type { AiBot, LintFinding, RobotsAnalysis } from './utils/robots';
   import { AI_BOTS, isAllowed } from './utils/robots';
   import { trackAction } from '@/utils/analytics';
   import { createCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import { tick } from 'svelte';
   import ActionButton from './components/ActionButton.svelte';
 
@@ -96,16 +89,11 @@
     return size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`;
   });
 
-  trackOnce(
-    () => robots !== null,
-    () =>
-      trackAction('robots_view', {
-        status: robots!.status,
-        is_shopify_default: shopifyDiff?.isDefault ?? false,
-        error_count: analysis.errorCount
-      }),
-    viewState
-  );
+  trackViewOnce('robots_view', () => robots !== null, () => ({
+    status: robots!.status,
+    is_shopify_default: shopifyDiff?.isDefault ?? false,
+    error_count: analysis.errorCount
+  }));
 
   // Source view: click-to-line scroll + flash
   let srcEl: HTMLElement | undefined = $state();

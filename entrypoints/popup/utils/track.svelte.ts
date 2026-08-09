@@ -1,18 +1,29 @@
 import { untrack } from 'svelte';
+import { trackAction } from '@/utils/analytics';
+import type { AnalyticsAction } from '@/utils/analytics-actions';
+
+// Actions already reported during this popup open. Module scope on purpose:
+// App.svelte renders tabs through an `{#if activeTab === ...}` chain, so every
+// tab component unmounts and remounts on each tab switch. A per-mount guard
+// would re-award the tab's time-saved credit every time the user tabs back.
+// Closing the popup tears down this module, which is exactly the reset we want:
+// the next open is a genuine new view.
+const reported = new Set<AnalyticsAction>();
 
 /**
- * Fires an analytics call once, the first time `ready()` is true. The default
- * guard is per-mount; pass a module-scoped `state` object to fire once per
- * popup open instead. Must be called during component initialization.
+ * Reports a tab's view event once per popup open, as soon as its data lands.
+ * @param action - Analytics action, doubling as the once-per-popup key.
  * @param ready - Reactive gate; the effect re-runs until it returns true.
- * @param fire - Tracking call, run untracked so its reads aren't dependencies.
- * @param state - Optional external done-flag for once-per-popup semantics.
+ * @param metadata - Built untracked, so its reads don't become dependencies.
  */
-export function trackOnce(ready: () => boolean, fire: () => void, state?: { done: boolean }) {
-  const guard = state ?? { done: false };
+export function trackViewOnce(
+  action: AnalyticsAction,
+  ready: () => boolean,
+  metadata: () => Record<string, unknown>
+): void {
   $effect(() => {
-    if (guard.done || !ready()) return;
-    guard.done = true;
-    untrack(fire);
+    if (reported.has(action) || !ready()) return;
+    reported.add(action);
+    untrack(() => trackAction(action, metadata()));
   });
 }

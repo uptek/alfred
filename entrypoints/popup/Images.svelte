@@ -5,7 +5,7 @@
   import { isNavigable } from './utils/url';
   import { csvField, downloadFile, formatSize, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
   import TableToolbar from './components/TableToolbar.svelte';
   import type { Facet } from './components/TableToolbar.svelte';
@@ -31,15 +31,11 @@
   );
   const statusOf = (img: RawImage): ImageStatus => statusByIndex.get(img.index) ?? 'ok';
 
-  trackOnce(
-    () => images.length > 0,
-    () =>
-      trackAction('images_view', {
-        image_count: images.length,
-        missing_alt_count: images.filter(i => i.lacksAlt).length,
-        broken_count: images.filter(i => i.broken).length
-      })
-  );
+  trackViewOnce('images_view', () => images.length > 0, () => ({
+    image_count: images.length,
+    missing_alt_count: images.filter(i => i.lacksAlt).length,
+    broken_count: images.filter(i => i.broken).length
+  }));
 
   type SortKey = 'index' | 'size' | 'format' | 'dims' | 'load' | 'status';
 

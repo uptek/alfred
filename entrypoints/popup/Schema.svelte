@@ -3,7 +3,7 @@
   import { analyzeSchema, schemaTypeName, summarizeSchema } from './utils/schema';
   import { downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback, createKeyedCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { getTabState } from './stores/tabState.svelte';
@@ -80,14 +80,10 @@
     return rows;
   }
 
-  trackOnce(
+  trackViewOnce(
+    'schema_view',
     () => analysis.entities.length > 0 || analysis.invalidBlocks.length > 0,
-    () =>
-      trackAction('schema_view', {
-        blocks: schema.length,
-        entities: analysis.entities.length,
-        invalid: analysis.invalidBlocks.length
-      })
+    () => ({ blocks: schema.length, entities: analysis.entities.length, invalid: analysis.invalidBlocks.length })
   );
 
   const summaryItems = $derived(summarizeSchema(analysis));

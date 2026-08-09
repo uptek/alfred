@@ -1,10 +1,3 @@
-<script lang="ts" module>
-  // Module scope: once per popup load, not per tab-switch remount — the
-  // component remounts on every tab change and would re-fire social_view
-  // (and its time-saved credit) each time.
-  const viewState = { done: false };
-</script>
-
 <script lang="ts">
   import type { RawSocial } from './utils/types';
   import type { ResolvedSocial, SocialPlatform, SocialSeverity } from './utils/social';
@@ -12,7 +5,7 @@
   import type { SocialProbeResult } from './utils/social';
   import { probeImage } from './utils/social-probe';
   import { createKeyedCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import SocialCard from './components/SocialCard.svelte';
   import ActionButton from './components/ActionButton.svelte';
   import SegmentedControl from './components/SegmentedControl.svelte';
@@ -66,16 +59,11 @@
     tabState.saveSection('social', { platform });
   });
 
-  trackOnce(
-    () => raw !== null,
-    () =>
-      trackAction('social_view', {
-        error_count: findings.filter((f) => f.severity === 'error').length,
-        warning_count: findings.filter((f) => f.severity === 'warning').length,
-        platform
-      }),
-    viewState
-  );
+  trackViewOnce('social_view', () => raw !== null, () => ({
+    error_count: findings.filter((f) => f.severity === 'error').length,
+    warning_count: findings.filter((f) => f.severity === 'warning').length,
+    platform
+  }));
 
   const PLATFORMS: { id: SocialPlatform; label: string }[] = [
     { id: 'facebook', label: 'Facebook' },

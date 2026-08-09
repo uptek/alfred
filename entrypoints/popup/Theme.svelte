@@ -1,6 +1,6 @@
 <script lang="ts">
   import { trackAction } from '@/utils/analytics';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import CopyIcon from './components/CopyIcon.svelte';
   import Tooltip from './components/Tooltip.svelte';
   import { getTabState } from './stores/tabState.svelte';
@@ -22,17 +22,13 @@
     tabState.saveSection('theme', { disablePreviewBar });
   });
 
-  trackOnce(
-    () => true,
-    () =>
-      trackAction('detect_theme', {
-        is_shopify: storeInfo.isShopify,
-        page_url: storeInfo.page_url ?? '',
-        shop_domain: storeInfo.shopDomain ?? '',
-        theme_name: storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? '',
-        theme_version: storeInfo.theme?.schema_version ?? ''
-      })
-  );
+  trackViewOnce('detect_theme', () => true, () => ({
+    is_shopify: storeInfo.isShopify,
+    page_url: storeInfo.page_url ?? '',
+    shop_domain: storeInfo.shopDomain ?? '',
+    theme_name: storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? '',
+    theme_version: storeInfo.theme?.schema_version ?? ''
+  }));
 
   function withUtm(url: string, content: string): string {
     try {

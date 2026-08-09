@@ -5,7 +5,7 @@
   import { isNavigable } from './utils/url';
   import { csvField, downloadFile, formatSize, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
   import TableToolbar from './components/TableToolbar.svelte';
   import type { Facet } from './components/TableToolbar.svelte';
@@ -19,16 +19,12 @@
 
   const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  trackOnce(
-    () => assets.length > 0,
-    () =>
-      trackAction('assets_view', {
-        total: assets.length,
-        script_count: assets.filter(a => a.kind === 'script').length,
-        style_count: assets.filter(a => a.kind === 'style').length,
-        external_count: assets.filter(a => a.isExternal).length
-      })
-  );
+  trackViewOnce('assets_view', () => assets.length > 0, () => ({
+    total: assets.length,
+    script_count: assets.filter(a => a.kind === 'script').length,
+    style_count: assets.filter(a => a.kind === 'style').length,
+    external_count: assets.filter(a => a.isExternal).length
+  }));
 
   type SortKey = 'index' | 'src' | 'size' | 'time' | 'type' | 'load';
 

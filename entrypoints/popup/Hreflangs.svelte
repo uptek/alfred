@@ -5,7 +5,7 @@
   import { isNavigable } from './utils/url';
   import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
   import ToolbarButton from './components/ToolbarButton.svelte';
   import { trackAction } from '@/utils/analytics';
@@ -20,10 +20,10 @@
 
   const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  trackOnce(
-    () => analysis.entries.length > 0,
-    () => trackAction('hreflangs_view', { tags: analysis.entries.length, issues: analysis.issues.length })
-  );
+  trackViewOnce('hreflangs_view', () => analysis.entries.length > 0, () => ({
+    tags: analysis.entries.length,
+    issues: analysis.issues.length
+  }));
 
   const summaryItems = $derived(summarizeHreflangs(analysis, pageUrl));
 

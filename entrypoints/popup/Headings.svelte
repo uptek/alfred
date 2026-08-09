@@ -2,17 +2,18 @@
   import type { RawHeading, HeadingIssue } from './utils/types';
   import { scrollToHeading } from './utils/headings';
   import { createCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCredit } from '@/utils/credit';
   import { getTabState } from './stores/tabState.svelte';
 
   let { headings, issues }: { headings: RawHeading[]; issues: HeadingIssue[] } = $props();
 
-  trackOnce(
-    () => headings.length > 0,
-    () => trackAction('headings_view', { heading_count: headings.length, issue_count: issues.length, hidden_count: headings.filter(h => h.isHidden).length })
-  );
+  trackViewOnce('headings_view', () => headings.length > 0, () => ({
+    heading_count: headings.length,
+    issue_count: issues.length,
+    hidden_count: headings.filter(h => h.isHidden).length
+  }));
 
   interface HeadingsPersisted {
     showHidden: boolean;

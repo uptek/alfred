@@ -1,8 +1,3 @@
-<script lang="ts" module>
-  // Module scope: once per popup load, not per tab-switch remount.
-  const viewState = { done: false };
-</script>
-
 <script lang="ts">
   import {
     categorizeSitemap,
@@ -17,7 +12,7 @@
   import { csvField, downloadFile } from './utils/format';
   import { getActiveTab } from './utils/messaging';
   import { createCopyFeedback, createKeyedCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
   import { untrack } from 'svelte';
@@ -233,17 +228,12 @@
     return severity === 'error' ? 'Error' : severity === 'warning' ? 'Warning' : 'Info';
   }
 
-  trackOnce(
-    () => data !== null,
-    () =>
-      trackAction('sitemaps_view', {
-        ok: analysis.ok,
-        sitemap_count: analysis.totalSitemaps,
-        url_count: analysis.totalUrls,
-        error_count: analysis.errorCount
-      }),
-    viewState
-  );
+  trackViewOnce('sitemaps_view', () => data !== null, () => ({
+    ok: analysis.ok,
+    sitemap_count: analysis.totalSitemaps,
+    url_count: analysis.totalUrls,
+    error_count: analysis.errorCount
+  }));
 
   function handleWindowClick(e: MouseEvent) {
     const target = e.target as HTMLElement;

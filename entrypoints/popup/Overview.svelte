@@ -11,7 +11,7 @@
   import { titleWidthPx, TITLE_MAX_PX } from './utils/text-width';
   import { isNavigable } from './utils/url';
   import { createKeyedCopyFeedback } from './utils/copy.svelte';
-  import { trackOnce } from './utils/track.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import SerpPreview from './components/SerpPreview.svelte';
   import { trackAction } from '@/utils/analytics';
 
@@ -33,16 +33,12 @@
     links: RawLink[];
   } = $props();
 
-  trackOnce(
-    () => !!raw,
-    () =>
-      trackAction('overview_view', {
-        indexability: analysis.indexability.status,
-        error_count: analysis.errorCount,
-        finding_count: analysis.findings.length,
-        is_shopify: shopify?.isShopify ?? false
-      })
-  );
+  trackViewOnce('overview_view', () => !!raw, () => ({
+    indexability: analysis.indexability.status,
+    error_count: analysis.errorCount,
+    finding_count: analysis.findings.length,
+    is_shopify: shopify?.isShopify ?? false
+  }));
 
   const profiles = $derived(socialProfiles(links));
   const origin = $derived.by(() => {
