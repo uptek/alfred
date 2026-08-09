@@ -13,9 +13,9 @@
   import { probeImage } from './utils/social-probe';
   import { createKeyedCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
-  import SocialCard from './SocialCard.svelte';
-  import ActionButton from './ActionButton.svelte';
-  import SegmentedControl from './SegmentedControl.svelte';
+  import SocialCard from './components/SocialCard.svelte';
+  import ActionButton from './components/ActionButton.svelte';
+  import SegmentedControl from './components/SegmentedControl.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCredit } from '@/utils/credit';
   import { getTabState } from './stores/tabState.svelte';

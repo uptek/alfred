@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { PlatformPreview, SocialPlatform } from './utils/social';
-  import { graphemeSlice } from './utils/social';
+  import type { PlatformPreview, SocialPlatform } from '../utils/social';
+  import { graphemeSlice } from '../utils/social';
 
   let { preview, platform }: { preview: PlatformPreview; platform: SocialPlatform } = $props();
 

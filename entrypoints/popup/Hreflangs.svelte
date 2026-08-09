@@ -4,8 +4,9 @@
   import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
-  import SummaryBar from './SummaryBar.svelte';
-  import type { SummaryItem } from './SummaryBar.svelte';
+  import SummaryBar from './components/SummaryBar.svelte';
+  import ToolbarButton from './components/ToolbarButton.svelte';
+  import type { SummaryItem } from './components/SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
 
@@ -70,20 +71,20 @@
     <div class="toolbar">
       <span class="toolbar__hint">Language &amp; region alternates</span>
       <div class="toolbar__actions">
-        <button class="toolbar-btn" onclick={copyAll} aria-label="Copy all hreflang tags" title={copyFeedback.copied ? 'Copied!' : 'Copy as tab-separated list'}>
+        <ToolbarButton onclick={copyAll} ariaLabel="Copy all hreflang tags" title={copyFeedback.copied ? 'Copied!' : 'Copy as tab-separated list'}>
           {#if copyFeedback.copied}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           {:else}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           {/if}
-        </button>
-        <button class="toolbar-btn" onclick={exportCsv} aria-label="Download as CSV" title="Download as CSV">
+        </ToolbarButton>
+        <ToolbarButton onclick={exportCsv} ariaLabel="Download as CSV" title="Download as CSV">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
+        </ToolbarButton>
       </div>
     </div>
 
-    <div class="scroll">
+    <div class="table-wrap">
       {#if analysis.issues.length > 0}
         <div class="issues">
           {#each analysis.issues as issue (issue.id + issue.message)}
@@ -161,13 +162,7 @@
   .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .toolbar__hint { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); }
   .toolbar__actions { display: flex; align-items: center; gap: 6px; }
-  .toolbar-btn { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .toolbar-btn:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
-  .toolbar-btn svg { width: 13px; height: 13px; stroke-width: 1.8; flex-shrink: 0; }
 
-  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
-  .scroll::-webkit-scrollbar { width: 3px; }
-  .scroll::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 
   /* Issue callouts */
   .issues { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); }
@@ -181,18 +176,12 @@
   .issue__msg { color: var(--text-secondary); }
 
   /* Table — full-bleed rows: gutter lives on the edge cells */
-  .table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-  .th:first-child, .td:first-child { padding-left: 20px; }
-  .th:last-child, .td:last-child { padding-right: 20px; }
 
-  .th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); padding: 8px 8px 8px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-canvas); z-index: 1; }
   .th--num { width: 30px; padding-right: 0; }
   .th--code { width: 110px; }
 
-  .row { transition: background 0.1s; }
   .row:hover { background: var(--bg-hover); }
 
-  .td { padding: 9px 8px 9px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border-muted); vertical-align: middle; }
   .td--num { color: var(--text-muted); font-size: 12px; padding-right: 0; }
   .td--url { overflow: hidden; }
 

@@ -4,8 +4,8 @@
   import { downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback, createKeyedCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
-  import SummaryBar from './SummaryBar.svelte';
-  import type { SummaryItem } from './SummaryBar.svelte';
+  import SummaryBar from './components/SummaryBar.svelte';
+  import type { SummaryItem } from './components/SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { getTabState } from './stores/tabState.svelte';
 

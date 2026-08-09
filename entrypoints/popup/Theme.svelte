@@ -1,8 +1,8 @@
 <script lang="ts">
   import { trackAction } from '@/utils/analytics';
   import { trackOnce } from './utils/track.svelte';
-  import CopyIcon from './CopyIcon.svelte';
-  import Tooltip from './Tooltip.svelte';
+  import CopyIcon from './components/CopyIcon.svelte';
+  import Tooltip from './components/Tooltip.svelte';
   import { getTabState } from './stores/tabState.svelte';
   import type { StoreInfo } from './utils/types';
 

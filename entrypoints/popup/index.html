@@ -207,7 +207,8 @@
       /* Dark: toggled filter/toolbar buttons read as accent-selected (GitHub
          toggled-filter style) — legible on/off state without spending green,
          which stays reserved for the single primary action per view. Global on
-         purpose — these classes live in scoped Svelte styles across tabs. */
+         purpose — these classes live in scoped Svelte styles (.toolbar-btn--active
+         in ToolbarButton.svelte, the rest across tabs). */
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme='light']) :is(.toolbar-btn--active, .filter--active, .wrap-btn--active) {
           background: var(--accent-tint);

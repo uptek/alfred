@@ -340,7 +340,6 @@ Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTF
 
 Non-blocking findings from the popup-improvements pre-landing review, deferred to keep the ship moving:
 
-- **Toolbar scaffolding triplicated** — Links/Assets/Images each carry identical facet dropdown, export menu, search bar, sort-icon snippets, and ~250 lines of matching CSS. Extract FacetDropdown/ExportMenu/SearchBar components (or one TableToolbar) the way SummaryBar was extracted. The shared `csvField`/`downloadFile`/`siteSlug` helper landed in `utils/export.ts` in the simplify sweep (#93); the component extraction is what remains
 - **summaryItems aggregation untested** — five tabs now build `summaryItems` as an inline `$derived.by` (Links, Images, Assets, Schema, Hreflangs). Extract pure `summarize*` helpers returning SummaryItem[] and pin singular/plural labels, zero-suppression, and warn/err tones with bun tests
 - **Broken-anchor predicate unexercised** — `samePageFragment` is extracted and tested in `popup/utils/links.ts`, but the `isBrokenAnchor` predicate around it is still inline in `main.content.ts` and untested. Extract it with tests for the `''`/`top`/named-anchor branches, and add an `<a name=...>` row to test-pages/links/mixed.html (the hasNamedAnchor Set path has no fixture)
 - **Popup renders non-http(s) hrefs as live anchors** — javascript:/data: links rely on MV3 CSP to stay inert; render `other`-kind schemes as plain text in Links (and the same pattern in Images/Assets open actions)

@@ -13,7 +13,7 @@
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
   import { tick } from 'svelte';
-  import ActionButton from './ActionButton.svelte';
+  import ActionButton from './components/ActionButton.svelte';
 
   let {
     robots,

@@ -11,7 +11,7 @@
   import { titleWidthPx, TITLE_MAX_PX } from './utils/text-width';
   import { createKeyedCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
-  import SerpPreview from './SerpPreview.svelte';
+  import SerpPreview from './components/SerpPreview.svelte';
   import { trackAction } from '@/utils/analytics';
 
   let {

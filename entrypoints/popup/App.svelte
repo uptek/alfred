@@ -25,8 +25,8 @@
   import Hreflangs from './Hreflangs.svelte';
   import Sitemaps from './Sitemaps.svelte';
   import Settings from './Settings.svelte';
-  import ReviewPrompt from './ReviewPrompt.svelte';
-  import SuccessNudge from './SuccessNudge.svelte';
+  import ReviewPrompt from './components/ReviewPrompt.svelte';
+  import SuccessNudge from './components/SuccessNudge.svelte';
   import { getTabState } from './stores/tabState.svelte';
   import { tabsInGroup, type Tab, type TabId } from './tabs';
   import type {

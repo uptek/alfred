@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { titleWidthPx, TITLE_MAX_PX } from './utils/text-width';
-  import { DESC_MAX } from './utils/overview';
+  import { titleWidthPx, TITLE_MAX_PX } from '../utils/text-width';
+  import { DESC_MAX } from '../utils/overview';
 
   let {
     title,
