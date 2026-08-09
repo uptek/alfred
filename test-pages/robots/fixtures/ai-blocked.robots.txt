@@ -16,7 +16,7 @@ Disallow: /
 User-agent: Bytespider
 Disallow: /
 
-User-agent: PerplexityBot
+User-agent: PerplexityBot/1.0
 Disallow: /
 
 Sitemap: https://example.com/sitemap.xml

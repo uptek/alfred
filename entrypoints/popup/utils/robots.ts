@@ -194,11 +194,36 @@ export function looksLikeHtml(text: string): boolean {
   return /<html|<!doctype/i.test(text.slice(0, 1024));
 }
 
+/** A percent-encoded octet, the one form already-encoded input must survive as-is. */
+const PCT_TRIPLET = /%[0-9A-Fa-f]{2}/g;
+
+/**
+ * Brings a rule path into the same percent-encoded form as `URL.pathname`, so
+ * `Disallow: /café` compares against `/caf%C3%A9` (RFC 9309 §2.2.2 requires
+ * both sides be encoded consistently). Existing `%XX` octets are left alone
+ * rather than re-encoded into `%25XX`, and `*`/`$` pass through `encodeURI`
+ * untouched, so the wildcard syntax survives.
+ * @param {string} path - A rule path or page path.
+ * @returns {string} The path with unencoded non-ASCII and unsafe octets encoded.
+ */
+export function encodePath(path: string): string {
+  let out = '';
+  let last = 0;
+  PCT_TRIPLET.lastIndex = 0;
+  for (let m = PCT_TRIPLET.exec(path); m !== null; m = PCT_TRIPLET.exec(path)) {
+    out += encodeURI(path.slice(last, m.index)) + m[0];
+    last = m.index + m[0].length;
+  }
+  return out + encodeURI(path.slice(last));
+}
+
 /**
  * RFC 9309 pattern match: `*` matches any sequence, `$` is only special at
- * the end. Greedy two-pointer scan — linear in path length, so hostile
- * patterns with many wildcards can't trigger regex-style catastrophic
- * backtracking (the file comes from the site being inspected, i.e. untrusted).
+ * the end. Both arguments must already have been through encodePath, so an
+ * unencoded rule compares against the browser's encoded path. Greedy
+ * two-pointer scan — linear in path length, so hostile patterns with many
+ * wildcards can't trigger regex-style catastrophic backtracking (the file comes
+ * from the site being inspected, i.e. untrusted).
  */
 function matchesPattern(pattern: string, path: string): boolean {
   let p = pattern;
@@ -228,17 +253,33 @@ function matchesPattern(pattern: string, path: string): boolean {
   return true;
 }
 
+/**
+ * Reduces a declared `User-agent:` value to the product token crawlers match
+ * on: lowercased, truncated at the first character outside RFC 9309's
+ * `[A-Za-z_-]` set. That drops the version suffix so a group declared as
+ * `Googlebot/2.1` still applies to the bot token `Googlebot`, matching how
+ * Google's own parser reads the line.
+ * @param {string} raw - The value as written in robots.txt.
+ * @returns {string} The bare product token, '' when the value has no leading
+ *   token character (an empty or punctuation-only User-agent line).
+ */
+export function userAgentToken(raw: string): string {
+  return /^[A-Za-z_-]*/.exec(raw.trim())![0]!.toLowerCase();
+}
+
 function selectGroups(parsed: ParsedRobots, botToken: string): { groups: RobotsGroup[]; token: string | null } {
-  const bot = botToken.toLowerCase();
+  const bot = userAgentToken(botToken);
   let best = '';
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      const t = ua.token.toLowerCase();
-      if (t !== '*' && bot.startsWith(t) && t.length > best.length) best = t;
+      if (ua.token === '*') continue;
+      // An empty token would prefix-match every bot; it declares no group at all.
+      const t = userAgentToken(ua.token);
+      if (t !== '' && bot.startsWith(t) && t.length > best.length) best = t;
     }
   }
   if (best) {
-    const groups = parsed.groups.filter((g) => g.userAgents.some((ua) => ua.token.toLowerCase() === best));
+    const groups = parsed.groups.filter((g) => g.userAgents.some((ua) => userAgentToken(ua.token) === best));
     return { groups, token: best };
   }
   const wildcard = parsed.groups.filter((g) => g.userAgents.some((ua) => ua.token === '*'));
@@ -255,13 +296,17 @@ export function isAllowed(parsed: ParsedRobots, path: string, botToken: string):
   const { groups, token } = selectGroups(parsed, botToken);
   if (groups.length === 0) return { allowed: true, rule: null, group: null };
 
+  // Encoded once here rather than per rule; both sides must be in the same form.
+  const target = encodePath(path);
   let best: RobotsRule | null = null;
   let bestLen = -1;
   for (const g of groups) {
     for (const rule of g.rules) {
       if (rule.path === '') continue; // empty Disallow = no restriction
-      if (!matchesPattern(rule.path, path)) continue;
-      const len = byteLength(rule.path);
+      const pattern = encodePath(rule.path);
+      if (!matchesPattern(pattern, target)) continue;
+      // Encoded length, so `/café` and `/caf%C3%A9` rank as the same specificity.
+      const len = byteLength(pattern);
       if (len > bestLen) {
         best = rule;
         bestLen = len;
@@ -396,6 +441,20 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
   }
 
   for (const g of parsed.groups) {
+    for (const ua of g.userAgents) {
+      // Reduces to '' when the value is blank or has no token character at all.
+      // Such a group matches no crawler, so its rules never apply to anyone.
+      if (ua.token !== '*' && userAgentToken(ua.token) === '') {
+        findings.push({
+          severity: 'info',
+          code: 'empty-user-agent',
+          message: ua.token
+            ? `User-agent \`${ua.token}\` has no product token: this group matches no crawler`
+            : 'User-agent has no value: this group matches no crawler',
+          line: ua.line
+        });
+      }
+    }
     if (g.crawlDelay) {
       const numeric = /^\d+(\.\d+)?$/.test(g.crawlDelay.value);
       findings.push({
@@ -423,7 +482,10 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
   const seenTokens = new Map<string, number>();
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      const t = ua.token.toLowerCase();
+      // Normalized, so `Googlebot` and `Googlebot/2.1` count as the one group
+      // they actually merge into. Tokenless values are reported separately.
+      const t = ua.token === '*' ? '*' : userAgentToken(ua.token);
+      if (t === '') continue;
       const count = (seenTokens.get(t) ?? 0) + 1;
       seenTokens.set(t, count);
       if (count === 2) {
