@@ -3,4 +3,5 @@
 bun run lint || exit 1
 bun run format:check || exit 1
 bun run typecheck || exit 1
+bun run check || exit 1
 bun test || exit 1
