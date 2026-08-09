@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { CartData, CartItem, ProductData } from '../types';
-  import { entriesToRecord, recordToEntries } from '../utils';
+  import { entriesToRecord, formatMoney, MAX_QUANTITY, recordToEntries } from '../utils';
   import QuantityInput from './QuantityInput.svelte';
   import KeyValueEditor from './KeyValueEditor.svelte';
 
@@ -83,7 +83,7 @@
   }
 
   function formatPrice(cents: number): string {
-    return `$${(cents / 100).toFixed(2)}`;
+    return formatMoney(cents, cart.currency);
   }
 
   function propsCount(properties: Record<string, string> | null): number {
@@ -115,8 +115,9 @@
   }
 
   function isPropertiesModified(itemKey: string, currentProperties: Record<string, string> | null): boolean {
-    if (!(itemKey in propertyEntries)) return false;
-    return JSON.stringify(entriesToRecord(propertyEntries[itemKey])) !== JSON.stringify(currentProperties || {});
+    const entries = propertyEntries[itemKey];
+    if (!entries) return false;
+    return JSON.stringify(entriesToRecord(entries)) !== JSON.stringify(currentProperties || {});
   }
 
   async function saveProperties(itemKey: string, quantity: number) {
@@ -208,9 +209,11 @@
                   <svg class="chevron" class:chevron-open={variantEditKey === item.key} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 {/if}
               </div>
-              {#if variantEditKey === item.key && variantProductCache[item.product_id]}
+              {#if variantEditKey === item.key}
+                {@const cached = variantProductCache[item.product_id]}
+                {#if cached}
                 <div class="variant-picker">
-                  {#each variantProductCache[item.product_id].variants as variant (variant.id)}
+                  {#each cached.variants as variant (variant.id)}
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <div
@@ -230,6 +233,7 @@
                     </div>
                   {/each}
                 </div>
+                {/if}
               {/if}
             {:else if item.variant_title}
               <div class="variant-title">{item.variant_title}</div>
@@ -242,7 +246,7 @@
             <QuantityInput
               value={item.quantity}
               min={0}
-              max={99}
+              max={Math.max(MAX_QUANTITY, item.quantity)}
               disabled={busyKeys.has(item.key)}
               onchange={(qty) => withBusy(item.key, () => onUpdateQuantity(item.key, qty))}
             />
@@ -551,6 +555,7 @@
     color: var(--cs-text-secondary);
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

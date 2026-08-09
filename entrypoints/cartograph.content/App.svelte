@@ -265,6 +265,7 @@
           />
         {:else if activeTab === 'add'}
           <AddItemTab
+            currency={cart.currency}
             onAddItem={async (payload: AddItemPayload) => {
               await mutate(() => api.addItem(payload));
               activeTab = 'items';

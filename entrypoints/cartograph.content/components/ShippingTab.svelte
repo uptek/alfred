@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { CartData, ShippingAddress, ShippingRate } from '../types';
+  import { formatMoney } from '../utils';
 
   let {
     cart,
@@ -15,6 +16,11 @@
   let isCalculating = $state(false);
   let calculateError: string | null = $state(null);
   let rates: ShippingRate[] | null = $state(null);
+
+  // Rates come back as a decimal string in major units, not the cart's cents.
+  function formatRate(price: string): string {
+    return formatMoney(Math.round(Number(price) * 100), cart.currency);
+  }
 
   async function calculateRates() {
     if (!zip.trim() || !country.trim()) return;
@@ -115,7 +121,7 @@
             {#each rates as rate}
               <tr>
                 <td class="rate-name">{rate.name}</td>
-                <td class="rate-price">${rate.price}</td>
+                <td class="rate-price">{formatRate(rate.price)}</td>
                 <td class="rate-delivery">
                   {#if rate.delivery_days}
                     {rate.delivery_days} day{rate.delivery_days !== 1 ? 's' : ''}

@@ -179,19 +179,6 @@ Currently, adding an item requires knowing the product URL or handle upfront. Wi
 - The `getProductByUrl()` bridge method already exists — search just feeds handles into it
 - MCP integration: if the Shopify Storefront MCP server is available, could use it for richer queries (collections, metafields, inventory levels) — but the extension should work standalone without MCP
 
-### Adversarial Review Findings (from /ship 2026-03-23)
-
-**Priority:** P3
-
-Issues identified by 4-pass adversarial review during ship. None are blocking but improve robustness:
-
-- **`applicable` field missing from discount_codes type** — `MetadataTab.svelte` reads `dc.applicable` but `types.ts:15` declares only `{ code, amount, type }`, so every code displays "Not applicable". Fix: add `applicable: boolean`
-- **Product URL path validation too strict** — `getProductByUrl` in `cartograph-world.ts` requires `pathname.startsWith('/products/')`, rejecting `/en/products/` and `/collections/*/products/`. Fix: normalize to extract the handle
-- **Shipping rate polling timeout mismatch** — `cartograph-world.ts` polls 10 × 500ms = 5s while the client allows 30s (`SHIPPING_TIMEOUT_MS`). Fix: raise `maxAttempts` to ~20
-- **Mount failure bricks overlay** — `open()` in `cartograph.content/index.ts` sets `mounted = true` before awaiting the dynamic import, so a failed import leaves it stuck true and the overlay never opens again. Fix: try/catch that resets the flag
-- **USD-only currency formatting** — prices hardcoded as `$` + `toFixed(2)`, ignores `cart.currency`
-- **Quantity input capped at 99** — silent clamp on existing items with qty > 99
-
 ## Storefront Inspector
 
 ### Store Health Check

@@ -16,10 +16,18 @@ export default defineContentScript({
       if (mounted) return;
       mounted = true;
       trackAction('cartograph_open');
-      const { mountCartograph } = await import('./mount');
-      mountCartograph(ctx, () => {
+      try {
+        const { mountCartograph } = await import('./mount');
+        mountCartograph(ctx, () => {
+          mounted = false;
+        });
+      } catch (err) {
+        // The flag is claimed before the await to keep two triggers from racing
+        // into a double mount, so a failed import has to release it or the
+        // overlay can never be opened again on this page.
         mounted = false;
-      });
+        throw err;
+      }
     };
 
     // URL parameter trigger

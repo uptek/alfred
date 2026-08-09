@@ -9,8 +9,7 @@ import type {
   ShippingRate,
   ProductData
 } from './types';
-
-const SHIPPING_TIMEOUT_MS = 30_000;
+import { SHIPPING_TIMEOUT_MS } from './utils';
 
 const cartBridge = createBridgeClient<CartMethods>('cart');
 

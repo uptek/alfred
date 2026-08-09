@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import type { CartData } from '../types';
-  import { entriesToRecord, recordToEntries } from '../utils';
+  import { entriesToRecord, formatMoney, recordToEntries } from '../utils';
   import KeyValueEditor from './KeyValueEditor.svelte';
 
   let {
@@ -180,7 +180,7 @@
             <span class="discount-name">{dc.code}</span>
             <span class="discount-status" class:applicable={dc.applicable} class:not-applicable={!dc.applicable}>
               {#if dc.applicable}
-                -${(dc.amount / 100).toFixed(2)}
+                &minus;{formatMoney(dc.amount, cart.currency)}
               {:else}
                 Not applicable
               {/if}
@@ -203,7 +203,9 @@
           <div class="discount-info">
             <span class="discount-name">{discount.title}</span>
             <span class="discount-status applicable">
-              {discount.value_type === 'percentage' ? `${discount.value}%` : `$${(discount.total_allocated_amount / 100).toFixed(2)}`}
+              {discount.value_type === 'percentage'
+                ? `${discount.value}%`
+                : formatMoney(discount.total_allocated_amount, cart.currency)}
             </span>
           </div>
         </div>
