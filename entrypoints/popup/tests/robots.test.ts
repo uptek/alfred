@@ -122,6 +122,15 @@ describe('isAllowed', () => {
     expect(isAllowed(p, '/caf%C3%A9', 'Googlebot').allowed).toBe(false);
   });
 
+  it('matches an encoded rule whose hex case differs from the page path', () => {
+    // URL.pathname uppercases what it encodes itself, but preserves whatever
+    // case the URL was written in, so both directions have to hold.
+    const lower = parse('User-agent: *\nDisallow: /caf%c3%a9\n');
+    expect(isAllowed(lower, '/caf%C3%A9', 'Googlebot').allowed).toBe(false);
+    const upper = parse('User-agent: *\nDisallow: /caf%C3%A9\n');
+    expect(isAllowed(upper, '/caf%c3%a9', 'Googlebot').allowed).toBe(false);
+  });
+
   it('ranks the encoded and unencoded spellings of a path as equally specific', () => {
     const p = parse('User-agent: *\nDisallow: /caf%C3%A9\nAllow: /café\n');
     // Same encoded length, so the Allow-beats-Disallow tiebreak decides.
@@ -210,6 +219,14 @@ describe('encodePath', () => {
   it('leaves an already-encoded octet alone instead of double-encoding it', () => {
     expect(encodePath('/caf%C3%A9')).toBe('/caf%C3%A9');
     expect(encodePath('/a%20b')).toBe('/a%20b');
+  });
+
+  // RFC 3986 §6.2.2.1: the two hex cases are the same octet, but the matcher
+  // compares strings, so both sides have to land on one spelling.
+  it('uppercases the hex of an already-encoded octet', () => {
+    expect(encodePath('/caf%c3%a9')).toBe('/caf%C3%A9');
+    expect(encodePath('/a%2fb')).toBe('/a%2Fb');
+    expect(encodePath('/caf%c3%A9')).toBe('/caf%C3%A9');
   });
 
   it('encodes a bare percent that is not a valid octet', () => {

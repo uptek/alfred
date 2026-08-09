@@ -201,9 +201,11 @@ const PCT_TRIPLET = /%[0-9A-Fa-f]{2}/g;
 /**
  * Brings a rule path into the same percent-encoded form as `URL.pathname`, so
  * `Disallow: /café` compares against `/caf%C3%A9` (RFC 9309 §2.2.2 requires
- * both sides be encoded consistently). Existing `%XX` octets are left alone
- * rather than re-encoded into `%25XX`, and `*`/`$` pass through `encodeURI`
- * untouched, so the wildcard syntax survives.
+ * both sides be encoded consistently). Existing `%XX` octets are kept rather
+ * than re-encoded into `%25XX`, but their hex is uppercased: RFC 3986 §6.2.2.1
+ * makes the two cases equivalent, while the matcher below compares strings, so
+ * a rule written `%c3%a9` would otherwise miss the `%C3%A9` that `URL.pathname`
+ * produces. `*`/`$` pass through `encodeURI` untouched, so wildcards survive.
  * @param {string} path - A rule path or page path.
  * @returns {string} The path with unencoded non-ASCII and unsafe octets encoded.
  */
@@ -212,7 +214,7 @@ export function encodePath(path: string): string {
   let last = 0;
   PCT_TRIPLET.lastIndex = 0;
   for (let m = PCT_TRIPLET.exec(path); m !== null; m = PCT_TRIPLET.exec(path)) {
-    out += encodeURI(path.slice(last, m.index)) + m[0];
+    out += encodeURI(path.slice(last, m.index)) + m[0].toUpperCase();
     last = m.index + m[0].length;
   }
   return out + encodeURI(path.slice(last));
