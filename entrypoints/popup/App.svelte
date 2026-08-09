@@ -138,7 +138,7 @@
       // Theme and Shopify context relay through the main world (worst case 3s
       // when injection is slow or the page is mid-load); never gate first
       // paint on them. The DOM-only sniff answers isShopify for the initial
-      // tab pick and popup_open, and getTheme corrects it when it lands.
+      // tab pick, and getTheme corrects it when it lands.
       getShopifyContext().then((contextData) => {
         shopifyContext = contextData;
       });
@@ -156,7 +156,6 @@
           getHreflangs(),
           tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
         ]);
-      trackAction('popup_open', { is_shopify: sniffedShopify });
       if (tab?.url) {
         storeInfo = provisionalStoreInfo(tab.url, sniffedShopify);
       }
@@ -179,6 +178,11 @@
       const storeData = await themePromise;
       if (storeData) storeInfo = storeData;
       themeLoading = false;
+      // Reported from the globals, not the sniff: the sniff matches any page
+      // merely referencing a Shopify-hosted asset, and unlike the UI an event
+      // cannot be corrected once written. This runs after first paint, so
+      // waiting for the relay costs the user nothing.
+      trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
       // The sniff can miss either way; settle the default tab from the real
       // answer unless the user already navigated or a restored section won.
       if (!userNavigated && !tabState.restoredActiveSection) {
