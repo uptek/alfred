@@ -334,14 +334,6 @@ Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTF
 - PerformanceObserver is available in content scripts — no main-world injection needed for CWV
 - INP replaces FID as of March 2024 — use INP as the responsiveness metric
 
-### Popup Tabs — Review Follow-ups (from /ship 2026-06-11)
-
-**Priority:** P3
-
-Non-blocking findings from the popup-improvements pre-landing review, deferred to keep the ship moving:
-
-- **Link index stamping is page-visible** — `data-alfred-link-index` lets pages fingerprint the extension; accepted tradeoff for mutation-safe scroll-to-link, revisit with a WeakRef snapshot if it ever matters
-
 ### Robots.txt Tab — Matcher Edge Cases
 
 **Priority:** P3

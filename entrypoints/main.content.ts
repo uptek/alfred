@@ -36,6 +36,18 @@ import {
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
 
 /**
+ * Element snapshots taken by get_links/get_images so scroll_to_link and
+ * scroll_to_image can reach the exact element the popup listed even after the
+ * page reorders or replaces nodes (lazy menus, carousels). Held here rather
+ * than written onto the page as attributes: stamping every anchor fires the
+ * host page's own mutation observers and leaves markers in someone else's
+ * markup. Weak so a page that churns its DOM between popup opens doesn't keep
+ * detached nodes alive.
+ */
+let linkSnapshot: WeakRef<HTMLAnchorElement>[] = [];
+let imageSnapshot: { ref: WeakRef<Element>; source: CollectedImage['source'] }[] = [];
+
+/**
  * Collects all page images in a deterministic order shared by get_images,
  * highlight_images, and scroll_to_image so indices stay consistent across calls.
  * Order: every <img> in DOM order, then every element with a CSS background-image
@@ -339,17 +351,15 @@ export default defineContentScript({
       }
 
       /**
-       * Extracts all anchor links from the page in DOM order. Each anchor is
-       * stamped with its index so scroll_to_link can find it even if the DOM
-       * mutates afterwards (lazy menus, carousels).
+       * Extracts all anchor links from the page in DOM order, recording each
+       * anchor in linkSnapshot so scroll_to_link can find it even if the DOM
+       * mutates afterwards.
        * @returns {RawLink[]}
        */
       if (request.action === 'get_links') {
         const pageHost = location.hostname;
         const anchors = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'));
-        // Stamp in a separate write-only pass: interleaving setAttribute with the
-        // checkVisibility/querySelector reads below risks a style recalc per anchor.
-        anchors.forEach((anchor, i) => anchor.setAttribute('data-alfred-link-index', String(i)));
+        linkSnapshot = anchors.map((anchor) => new WeakRef(anchor));
         // Built lazily on the first getElementById miss; getElementsByName walks the
         // whole document per call, which is O(links x DOM) on hash-router pages.
         let anchorNames: Set<string | null> | null = null;
@@ -540,9 +550,9 @@ export default defineContentScript({
         };
 
         const collected = collectImageEls();
-        // Stamp indices so scroll_to_image can find the element by attribute
-        // instead of re-running the full-DOM walk (mirrors get_links).
-        collected.forEach(({ el }, i) => el.setAttribute('data-alfred-image-index', String(i)));
+        // Recorded so scroll_to_image can reach the same entry without re-running
+        // the full-DOM walk (mirrors get_links).
+        imageSnapshot = collected.map(({ el, source }) => ({ ref: new WeakRef(el), source }));
         const images = collected.map(({ el, source, bg }, i) => {
           if (source === 'background') {
             const src = bg ? capDataUri(resolveUrl(bg)) : '';
@@ -1012,8 +1022,9 @@ export default defineContentScript({
 
       /**
        * Scrolls to a link and applies a brief green dashed outline highlight.
-       * Prefers the index stamped by get_links so DOM mutations since the
-       * snapshot don't shift the target; falls back to the nth a[href].
+       * Prefers the element get_links recorded so DOM mutations since then don't
+       * shift the target; falls back to the nth a[href] when that element has
+       * since been detached or garbage-collected.
        * @param {number} request.index - Zero-based index of the link among all `a[href]` elements.
        */
       if (request.action === 'scroll_to_link') {
@@ -1022,8 +1033,8 @@ export default defineContentScript({
           sendResponse(false);
           return false;
         }
-        const target =
-          document.querySelector(`a[data-alfred-link-index="${index}"]`) ?? document.querySelectorAll('a[href]')[index];
+        const snapped = linkSnapshot[index]?.deref();
+        const target = snapped?.isConnected ? snapped : document.querySelectorAll('a[href]')[index];
         if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
@@ -1077,16 +1088,12 @@ export default defineContentScript({
        */
       if (request.action === 'scroll_to_image') {
         const index = request.index;
-        // Prefer the index stamped by get_images; fall back to the full walk
-        // (an element with several background images keeps only the last stamp).
-        const stamped = document.querySelector(`[data-alfred-image-index="${index}"]`);
-        const item: CollectedImage | undefined = stamped
-          ? {
-              el: stamped,
-              source:
-                stamped.tagName === 'IMG' ? (stamped.closest('picture') ? 'picture' : 'img') : ('background' as const)
-            }
-          : collectImageEls()[index];
+        // Prefer the entry get_images recorded; fall back to the full walk when
+        // that element has since been detached or garbage-collected.
+        const snapped = imageSnapshot[index];
+        const snappedEl = snapped?.ref.deref();
+        const item: CollectedImage | undefined =
+          snapped && snappedEl?.isConnected ? { el: snappedEl, source: snapped.source } : collectImageEls()[index];
         if (item) {
           const { el, source } = item;
           ensureImageHighlightStyle();

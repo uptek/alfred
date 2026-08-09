@@ -147,8 +147,8 @@ numbered links on that page.
 
 ### Summary bar
 
-- [ ] Bottom of the table reads "18 links · 5 external · 3 nofollow ·
-      1 insecure http · 1 broken #" and updates when a filter is active
+- [ ] Bottom of the table reads "21 links · 5 external · 3 nofollow ·
+      1 insecure http · 2 broken #" and updates when a filter is active
 
 ### Scroll to link
 
@@ -156,7 +156,9 @@ numbered links on that page.
 - [ ] Clicking the same row twice quickly does not strip the outline early
 - [ ] Optional, on a real store: open the popup, then open/close a menu or
       slide a carousel (mutating the DOM), then click rows; they should still
-      land on the right links thanks to the index stamped at snapshot time
+      land on the right links, from the element snapshot taken at collection
+- [ ] Inspect any anchor after opening the Links tab: no `data-alfred-*`
+      attribute is added to the page (same for images after the Images tab)
 
 ### Exports
 
