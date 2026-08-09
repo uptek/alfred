@@ -65,6 +65,10 @@ export function createBridgeClient<M extends BridgeMethods>(
   const requestType = `alfred:${namespace}_request`;
   const responseType = `alfred:${namespace}_response`;
   const pending = new Map<string, PendingCall>();
+  // Per-instance prefix: two clients on one namespace in the same window (a
+  // re-injected content script) would otherwise both start counting at 0 and
+  // resolve each other's calls.
+  const idPrefix = `${namespace}_${Math.random().toString(36).slice(2, 8)}`;
   let counter = 0;
 
   window.addEventListener('message', (event) => {
@@ -86,7 +90,7 @@ export function createBridgeClient<M extends BridgeMethods>(
 
   function call(method: string, payload?: unknown, timeoutMs: number = defaultTimeoutMs): Promise<unknown> {
     return new Promise<unknown>((resolve, reject) => {
-      const requestId = `${namespace}_${counter++}`;
+      const requestId = `${idPrefix}_${counter++}`;
 
       const timeoutId = setTimeout(() => {
         pending.delete(requestId);
