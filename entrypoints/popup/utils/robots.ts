@@ -24,7 +24,8 @@ export interface RobotsRule {
 }
 
 export interface RobotsGroup {
-  userAgents: { token: string; line: number }[];
+  /** `token` is the normalized product token used for matching; `raw` is the line as written. */
+  userAgents: { raw: string; token: string; line: number }[];
   rules: RobotsRule[];
   crawlDelay: { value: string; line: number } | null;
 }
@@ -151,7 +152,7 @@ export function parseRobots(text: string): ParsedRobots {
           groupHasRules = false;
           parsed.groups.push(group);
         }
-        group.userAgents.push({ token: value, line });
+        group.userAgents.push({ raw: value, token: value === '*' ? '*' : userAgentToken(value), line });
         break;
       case 'allow':
       case 'disallow': {
@@ -272,14 +273,13 @@ function selectGroups(parsed: ParsedRobots, botToken: string): { groups: RobotsG
   let best = '';
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      if (ua.token === '*') continue;
-      // An empty token would prefix-match every bot; it declares no group at all.
-      const t = userAgentToken(ua.token);
-      if (t !== '' && bot.startsWith(t) && t.length > best.length) best = t;
+      // '' would prefix-match every bot; such a line declares no group at all.
+      if (ua.token === '*' || ua.token === '') continue;
+      if (bot.startsWith(ua.token) && ua.token.length > best.length) best = ua.token;
     }
   }
   if (best) {
-    const groups = parsed.groups.filter((g) => g.userAgents.some((ua) => userAgentToken(ua.token) === best));
+    const groups = parsed.groups.filter((g) => g.userAgents.some((ua) => ua.token === best));
     return { groups, token: best };
   }
   const wildcard = parsed.groups.filter((g) => g.userAgents.some((ua) => ua.token === '*'));
@@ -442,14 +442,14 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
 
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      // Reduces to '' when the value is blank or has no token character at all.
-      // Such a group matches no crawler, so its rules never apply to anyone.
-      if (ua.token !== '*' && userAgentToken(ua.token) === '') {
+      // '' when the value is blank or has no token character at all. Such a
+      // group matches no crawler, so its rules never apply to anyone.
+      if (ua.token === '') {
         findings.push({
           severity: 'info',
           code: 'empty-user-agent',
-          message: ua.token
-            ? `User-agent \`${ua.token}\` has no product token: this group matches no crawler`
+          message: ua.raw
+            ? `User-agent \`${ua.raw}\` has no product token: this group matches no crawler`
             : 'User-agent has no value: this group matches no crawler',
           line: ua.line
         });
@@ -472,7 +472,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
         findings.push({
           severity: 'info',
           code: 'empty-group',
-          message: `Group \`${first.token}\` has no rules: that allows everything, which may be unintended`,
+          message: `Group \`${first.raw}\` has no rules: that allows everything, which may be unintended`,
           line: first.line
         });
       }
@@ -482,17 +482,17 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
   const seenTokens = new Map<string, number>();
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      // Normalized, so `Googlebot` and `Googlebot/2.1` count as the one group
-      // they actually merge into. Tokenless values are reported separately.
-      const t = ua.token === '*' ? '*' : userAgentToken(ua.token);
-      if (t === '') continue;
-      const count = (seenTokens.get(t) ?? 0) + 1;
-      seenTokens.set(t, count);
+      // Keyed on the normalized token, so `Googlebot` and `Googlebot/2.1` count
+      // as the one group they actually merge into. Tokenless values are
+      // reported separately by the empty-user-agent lint.
+      if (ua.token === '') continue;
+      const count = (seenTokens.get(ua.token) ?? 0) + 1;
+      seenTokens.set(ua.token, count);
       if (count === 2) {
         findings.push({
           severity: 'info',
           code: 'duplicate-group',
-          message: `\`${ua.token}\` appears in multiple groups: crawlers merge them, but it is easy to misread`,
+          message: `\`${ua.raw}\` appears in multiple groups: crawlers merge them, but it is easy to misread`,
           line: ua.line
         });
       }
@@ -667,7 +667,7 @@ export function detectShopifyDefault(parsed: ParsedRobots, pageHost: string | nu
 
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      live.push({ entry: normalizeEntry('user-agent', ua.token, pageHost), line: ua.line });
+      live.push({ entry: normalizeEntry('user-agent', ua.raw, pageHost), line: ua.line });
     }
     for (const r of g.rules) live.push({ entry: normalizeEntry(r.type, r.path, pageHost), line: r.line });
     if (g.crawlDelay) {

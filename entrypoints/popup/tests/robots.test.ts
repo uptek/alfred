@@ -26,7 +26,7 @@ describe('parseRobots', () => {
     const p = parse('User-agent: *\nDisallow: /admin\nAllow: /admin/public\n');
     expect(p.groups.length).toBe(1);
     const g = p.groups[0]!;
-    expect(g.userAgents).toEqual([{ token: '*', line: 1 }]);
+    expect(g.userAgents).toEqual([{ raw: '*', token: '*', line: 1 }]);
     expect(g.rules).toEqual([
       { type: 'disallow', path: '/admin', line: 2 },
       { type: 'allow', path: '/admin/public', line: 3 }
@@ -36,7 +36,12 @@ describe('parseRobots', () => {
   it('stacks consecutive User-agent lines into one group', () => {
     const p = parse('User-agent: GPTBot\nUser-agent: CCBot\nDisallow: /\n');
     expect(p.groups.length).toBe(1);
-    expect(p.groups[0]!.userAgents.map((u) => u.token)).toEqual(['GPTBot', 'CCBot']);
+    expect(p.groups[0]!.userAgents.map((u) => u.raw)).toEqual(['GPTBot', 'CCBot']);
+  });
+
+  it('normalizes each declared user-agent to its product token at parse time', () => {
+    const p = parse('User-agent: Googlebot/2.1\nUser-agent:\nDisallow: /\n');
+    expect(p.groups[0]!.userAgents.map((u) => u.token)).toEqual(['googlebot', '']);
   });
 
   it('starts a new group when User-agent follows rules', () => {
