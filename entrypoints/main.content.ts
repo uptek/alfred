@@ -7,7 +7,8 @@ import { Toast } from '@/utils/toast';
 import type { TabMessage } from '@/utils/messages';
 import { createBridgeClient } from '@/utils/mainWorldBridge';
 import { headingText } from './popup/utils/headings';
-import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/utils/links';
+import type { FragmentTargets } from './popup/utils/links';
+import { classifyLink, isBrokenAnchor, isDofollow, isInsecureHttp, linkText, relFlags } from './popup/utils/links';
 import { looksLikeHtml } from './popup/utils/robots';
 import {
   classifySitemap,
@@ -352,22 +353,18 @@ export default defineContentScript({
         // Built lazily on the first getElementById miss; getElementsByName walks the
         // whole document per call, which is O(links x DOM) on hash-router pages.
         let anchorNames: Set<string | null> | null = null;
-        const hasNamedAnchor = (fragment: string): boolean => {
-          anchorNames ??= new Set(Array.from(document.querySelectorAll('[name]'), (el) => el.getAttribute('name')));
-          return anchorNames.has(fragment);
+        const targets: FragmentTargets = {
+          hasId: (id) => document.getElementById(id) !== null,
+          hasNamedAnchor: (name) => {
+            anchorNames ??= new Set(Array.from(document.querySelectorAll('a[name]'), (el) => el.getAttribute('name')));
+            return anchorNames.has(name);
+          }
         };
         const pageUrl = location.href;
         const links = anchors.map((anchor, i) => {
           const href = anchor.href; // serializing getter; read once per anchor
           const rel = anchor.getAttribute('rel') ?? '';
           const { nofollow, sponsored, ugc } = relFlags(rel);
-          const fragment = samePageFragment(href, pageUrl);
-          const isBrokenAnchor =
-            fragment !== null &&
-            fragment !== '' &&
-            fragment !== 'top' && // #top scrolls to the document top even without a target
-            !document.getElementById(fragment) &&
-            !hasNamedAnchor(fragment);
           return {
             index: i,
             href,
@@ -380,7 +377,7 @@ export default defineContentScript({
             isImage: anchor.querySelector('img, svg, picture') !== null,
             isHidden: !anchor.checkVisibility(),
             isInsecure: isInsecureHttp(href),
-            isBrokenAnchor
+            isBrokenAnchor: isBrokenAnchor(href, pageUrl, targets)
           };
         });
         sendResponse(links);

@@ -124,6 +124,30 @@ export function samePageFragment(href: string, pageUrl: string): string | null {
   }
 }
 
+/**
+ * Fragment-target lookups, injected so the predicate below stays DOM-free and
+ * testable while the content script keeps its lazily-built name index.
+ */
+export interface FragmentTargets {
+  hasId(id: string): boolean;
+  /** Matches `<a name>` only — a name attribute on any other element is not a fragment target. */
+  hasNamedAnchor(name: string): boolean;
+}
+
+/**
+ * Flags a same-page `#fragment` link whose target does not exist. Links that
+ * point elsewhere are never broken by this measure. `#top` is exempt: browsers
+ * scroll to the document top for it whether or not a matching element exists.
+ * @param {string} href - Absolute href of the link.
+ * @param {string} pageUrl - URL of the page being analyzed.
+ * @param targets - Lookups against the page's ids and named anchors.
+ */
+export function isBrokenAnchor(href: string, pageUrl: string, targets: FragmentTargets): boolean {
+  const fragment = samePageFragment(href, pageUrl);
+  if (fragment === null || fragment === 'top') return false;
+  return !targets.hasId(fragment) && !targets.hasNamedAnchor(fragment);
+}
+
 /** Hosts browsers treat as potentially-trustworthy origins even over http. */
 const LOOPBACK_HOST = /^(localhost|.+\.localhost|127\.0\.0\.1|\[::1\])$/i;
 

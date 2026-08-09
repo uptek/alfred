@@ -92,8 +92,8 @@ numbered links on that page.
 
 ### Counts and classification
 
-- [ ] Header shows (18/18); the nav link is the 18th
-- [ ] Type filter: Internal 10, External 5, **Other 3** (Other is a new option)
+- [ ] Header shows (21/21); the nav link is the 21st
+- [ ] Type filter: Internal 13, External 5, **Other 3** (Other is a new option)
 - [ ] Row 9 (`www.localhost`) is **Internal** and has no `http` badge
 - [ ] Rows 15, 16, 17 show Type **Mailto**, **Tel**, **Other** and their full
       href in the URL cell
@@ -103,7 +103,7 @@ numbered links on that page.
 - [ ] Row 5 (nofollow): red "No" pill
 - [ ] Row 6 (sponsored): amber "Sponsored" pill
 - [ ] Row 7 (ugc): amber "UGC" pill
-- [ ] Follow filter shows Dofollow 15, Nofollow 1, Sponsored 1, UGC 1
+- [ ] Follow filter shows Dofollow 18, Nofollow 1, Sponsored 1, UGC 1
 - [ ] Sort by Dofollow ascending groups Yes → UGC → Sponsored → No
 
 ### Anchor text (alt and aria-label fallback)
@@ -114,13 +114,18 @@ numbered links on that page.
       with the "img" tag; the text wins over the image
 - [ ] Row 12: red italic "(image without alt text)"
 - [ ] Row 13: "Theme fixture" (from aria-label)
-- [ ] Anchor filter: Text 17, Image 3, None 1
+- [ ] Anchor filter: Text 20, Image 3, None 1
 
 ### Badges
 
 - [ ] Row 8: amber "http" badge (plain-http external link)
-- [ ] Row 3: red "broken #" badge (`#nowhere` has no target)
-- [ ] Row 2 (`#top`): no broken badge (target exists)
+- [ ] Rows 3 (`#nowhere`) and 20 (`#viewport`): red "broken #" badge
+- [ ] Row 2 (`#content`): no broken badge (an element carries that id)
+- [ ] Row 18 (`#top`): no broken badge, even though nothing on the page has
+      `id="top"` — browsers scroll to the document top for it
+- [ ] Row 19 (`#legacy`): no broken badge (`<a name="legacy">` is a target);
+      row 20 proves `name` on a non-anchor element (`<meta name="viewport">`)
+      is not
 - [ ] The three links to `/` (rows 10, 12, nav) each show a ×3 dup badge
 
 ### Hidden links (new surfacing)

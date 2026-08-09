@@ -3,6 +3,7 @@ import type { LinkStatusBucket, LinkStatusResult, RawLink } from '../utils/types
 import {
   classifyLink,
   followRank,
+  isBrokenAnchor,
   isDofollow,
   isInsecureHttp,
   linkText,
@@ -208,6 +209,70 @@ describe('samePageFragment', () => {
 
   it('returns null for unparseable URLs', () => {
     expect(samePageFragment('not a url', page)).toBeNull();
+  });
+});
+
+describe('isBrokenAnchor', () => {
+  const PAGE = 'https://shop.com/products/tee';
+
+  const targets = (ids: string[] = [], names: string[] = []) => ({
+    hasId: (id: string) => ids.includes(id),
+    hasNamedAnchor: (name: string) => names.includes(name)
+  });
+
+  it('flags a same-page fragment with no matching target', () => {
+    expect(isBrokenAnchor(`${PAGE}#nowhere`, PAGE, targets())).toBe(true);
+  });
+
+  it('accepts a fragment matching an element id', () => {
+    expect(isBrokenAnchor(`${PAGE}#reviews`, PAGE, targets(['reviews']))).toBe(false);
+  });
+
+  it('accepts a fragment matching a legacy named anchor', () => {
+    expect(isBrokenAnchor(`${PAGE}#reviews`, PAGE, targets([], ['reviews']))).toBe(false);
+  });
+
+  it('exempts #top, which scrolls to the document top with no target', () => {
+    expect(isBrokenAnchor(`${PAGE}#top`, PAGE, targets())).toBe(false);
+  });
+
+  it('still resolves #top through a real target when one exists', () => {
+    expect(isBrokenAnchor(`${PAGE}#top`, PAGE, targets(['top']))).toBe(false);
+  });
+
+  it('does not exempt other casings of top', () => {
+    expect(isBrokenAnchor(`${PAGE}#Top`, PAGE, targets())).toBe(true);
+  });
+
+  it('never flags a bare href="#"', () => {
+    expect(isBrokenAnchor(`${PAGE}#`, PAGE, targets())).toBe(false);
+  });
+
+  it('never flags a link that points off this page', () => {
+    expect(isBrokenAnchor('https://shop.com/other#nowhere', PAGE, targets())).toBe(false);
+    expect(isBrokenAnchor('https://example.com/#nowhere', PAGE, targets())).toBe(false);
+    expect(isBrokenAnchor(`${PAGE}?variant=2#nowhere`, PAGE, targets())).toBe(false);
+  });
+
+  it('never flags a link with no fragment at all', () => {
+    expect(isBrokenAnchor(PAGE, PAGE, targets())).toBe(false);
+  });
+
+  it('matches the decoded fragment, not the percent-encoded one', () => {
+    expect(isBrokenAnchor(`${PAGE}#size%20guide`, PAGE, targets(['size guide']))).toBe(false);
+    expect(isBrokenAnchor(`${PAGE}#size%20guide`, PAGE, targets(['size%20guide']))).toBe(true);
+  });
+
+  it('does not consult the name index when an id already matched', () => {
+    let consulted = false;
+    isBrokenAnchor(`${PAGE}#reviews`, PAGE, {
+      hasId: () => true,
+      hasNamedAnchor: () => {
+        consulted = true;
+        return false;
+      }
+    });
+    expect(consulted).toBe(false);
   });
 });
 
