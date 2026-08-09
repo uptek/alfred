@@ -2,7 +2,9 @@ import { sendTabMessage } from './messages';
 
 // Define the custom element class
 class AlfredToast extends HTMLElement {
-  private timeout: ReturnType<typeof setTimeout> | null = null;
+  // Not private: Toast.setAutoHide writes this slot through the ToastElement
+  // type, and disconnectedCallback below is what clears it.
+  timeout: ReturnType<typeof setTimeout> | null = null;
 
   connectedCallback() {
     // Set popover attribute and class
