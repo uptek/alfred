@@ -179,6 +179,20 @@ Currently, adding an item requires knowing the product URL or handle upfront. Wi
 - The `getProductByUrl()` bridge method already exists — search just feeds handles into it
 - MCP integration: if the Shopify Storefront MCP server is available, could use it for richer queries (collections, metafields, inventory levels) — but the extension should work standalone without MCP
 
+### Adversarial Review Findings (from /ship 2026-03-23)
+
+**Priority:** P3
+
+Issues identified by 4-pass adversarial review during ship. None are blocking but improve robustness:
+
+- **`applicable` field missing from discount_codes type** — all codes display "Not applicable" even when applied. Fix: add `applicable: boolean` to types.ts
+- **Product URL path validation too strict** — `/en/products/` and `/collections/*/products/` paths rejected. Fix: normalize to extract handle
+- **Shipping rate polling timeout mismatch** — world script polls 5s but client allows 30s. Fix: increase to ~20 polling attempts
+- **replaceItem captures stale originalItem** — should read inside mutate callback, not at enqueue time
+- **Mount failure bricks overlay** — if script injection fails, `mounted` flag never resets. Fix: add try/catch around `mountCartograph()`
+- **USD-only currency formatting** — prices hardcoded as `$` + `toFixed(2)`, ignores `cart.currency`
+- **Quantity input capped at 99** — silent clamp on existing items with qty > 99
+
 ## Storefront Inspector
 
 ### Liquid X-Ray
@@ -389,22 +403,6 @@ Real-time feed of webhook events for the current store. Filter by topic, view pa
 - Consider deferring to a separate product/service rather than building into the extension
 - Marked P4 because the infrastructure cost is high relative to the other features
 
-## Cartograph
-
-### Adversarial Review Findings (from /ship 2026-03-23)
-
-**Priority:** P3
-
-Issues identified by 4-pass adversarial review during ship. None are blocking but improve robustness:
-
-- **`applicable` field missing from discount_codes type** — all codes display "Not applicable" even when applied. Fix: add `applicable: boolean` to types.ts
-- **Product URL path validation too strict** — `/en/products/` and `/collections/*/products/` paths rejected. Fix: normalize to extract handle
-- **Shipping rate polling timeout mismatch** — world script polls 5s but client allows 30s. Fix: increase to ~20 polling attempts
-- **replaceItem captures stale originalItem** — should read inside mutate callback, not at enqueue time
-- **Mount failure bricks overlay** — if script injection fails, `mounted` flag never resets. Fix: add try/catch around `mountCartograph()`
-- **USD-only currency formatting** — prices hardcoded as `$` + `toFixed(2)`, ignores `cart.currency`
-- **Quantity input capped at 99** — silent clamp on existing items with qty > 99
-
 ## Insights
 
 ### Insights Tab (upgrade from Insights Card)
@@ -491,7 +489,7 @@ Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTF
 
 Non-blocking findings from the popup-improvements pre-landing review, deferred to keep the ship moving:
 
-- **Toolbar scaffolding triplicated** — Links/Assets/Images each carry identical facet dropdown, export menu, search bar, sort-icon snippets, and ~250 lines of matching CSS. Extract FacetDropdown/ExportMenu/SearchBar components (or one TableToolbar) the way SummaryBar was extracted, plus a shared `siteSlug`/`downloadFile` helper
+- **Toolbar scaffolding triplicated** — Links/Assets/Images each carry identical facet dropdown, export menu, search bar, sort-icon snippets, and ~250 lines of matching CSS. Extract FacetDropdown/ExportMenu/SearchBar components (or one TableToolbar) the way SummaryBar was extracted. The shared `csvField`/`downloadFile`/`siteSlug` helper landed in `utils/export.ts` in v2026.08.09; the component extraction is what remains
 - **summaryItems aggregation untested** — extract pure `summarizeLinks/Images/Assets` helpers returning SummaryItem[] and pin singular/plural labels, zero-suppression, and warn/err tones with bun tests
 - **Broken-anchor predicate unexercised** — extract `isBrokenAnchorFragment` into links.ts with tests for the `''`/`top`/named-anchor branches, and add a `<a name=...>` row to test-pages/links/mixed.html (the hasNamedAnchor Set path currently has no fixture)
 - **Popup renders non-http(s) hrefs as live anchors** — javascript:/data: links rely on MV3 CSP to stay inert; render `other`-kind schemes as plain text in Links (and the same pattern in Images/Assets open actions)
