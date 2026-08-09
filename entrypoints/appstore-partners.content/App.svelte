@@ -315,7 +315,7 @@
   .table td { position: relative; padding: 16px; vertical-align: top; }
   .app-name { color: #2c6ecb; font-weight: 500; text-decoration: none; display: block; margin-bottom: 4px; }
   .app-name:hover { color: #084e8a; text-decoration: underline; }
-  .app-description { color: #6d7175; font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .app-description { color: #6d7175; font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .rating-container { display: flex; align-items: center; justify-content: center; }
   .status-success { color: #008060; font-weight: 500; }
   .status-neutral { color: #6d7175; }

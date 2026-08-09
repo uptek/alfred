@@ -163,7 +163,7 @@
     const worker = async () => {
       // eslint-disable-next-line no-unmodified-loop-condition
       while (next < urls.length && run === checkRun) {
-        const url = urls[next++];
+        const url = urls[next++]!;
         const res = await checkLinkStatus(url);
         if (run !== checkRun) return;
         for (const href of variantsByTarget.get(url)!) pending.push([href, res]);
