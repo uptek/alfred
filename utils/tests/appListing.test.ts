@@ -69,6 +69,14 @@ describe('formatDetailedAppAge', () => {
     expect(formatDetailedAppAge('2024-02-01T00:00:00Z', NOW)).toBe('2 years, 6 months, 8 days');
   });
 
+  it('clamps month-end anniversaries to the target month', () => {
+    // Jan 31 + 1 month is Feb 28, not Mar 3, so Mar 30 is 30 leftover days.
+    expect(formatDetailedAppAge('2026-01-31T00:00:00Z', new Date('2026-03-30T00:00:00Z'))).toBe('1 month, 30 days');
+    expect(formatDetailedAppAge('2026-01-31T00:00:00Z', new Date('2026-03-01T00:00:00Z'))).toBe('1 month, 1 day');
+    // Mar 31 + 1 month is Apr 30, not May 1, which would shave a day off.
+    expect(formatDetailedAppAge('2026-03-31T00:00:00Z', new Date('2026-05-30T00:00:00Z'))).toBe('1 month, 30 days');
+  });
+
   it('agrees with formatAppAge at the month boundary', () => {
     // Both formatters share calendarAge, so "1 month" short can never pair
     // with a "0 months, 30 days" detailed value.

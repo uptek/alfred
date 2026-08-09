@@ -7,20 +7,24 @@
  * that have their own custom context menus.
  */
 
-import { sniffShopifyDom } from './shopifyDetection';
+import { isDefinitelyShopifyStorefront } from './shopifyDetection';
 
 const blockedEvents = ['contextmenu', 'copy', 'cut', 'paste', 'selectstart', 'dragstart'];
 
 /**
  * Early Shopify detection using HTML elements (available before JS globals).
  * This is more reliable than checking window.Shopify which loads later.
+ *
+ * Deliberately the strict predicate, not the loose `sniffShopifyDom` the popup
+ * uses: this one gates an irreversible prototype patch on a page we may have
+ * misidentified, so a Shopify-hosted asset reference is not enough.
  */
 const isShopifyStorefrontDom = (): boolean => {
   const isAdminUrl = window.location.hostname === 'admin.shopify.com' || window.location.pathname.startsWith('/admin/');
 
   if (isAdminUrl) return false;
 
-  return sniffShopifyDom(document, window.location.hostname);
+  return isDefinitelyShopifyStorefront(document, window.location.hostname);
 };
 
 /**

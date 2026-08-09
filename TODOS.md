@@ -269,32 +269,6 @@ On a collection page, show the collection's sort order, product count, active fi
 
 ## Developer Tools
 
-### Script Injector
-
-**Priority:** P2
-
-Mini code editor overlay for injecting custom JS or CSS on any storefront page. Write a snippet, click "Apply" — it runs immediately. Save named snippets per-store that auto-run on matching URLs.
-
-Like a persistent DevTools console that survives page reloads. Use cases: "hide announcement bar for testing," "log all fetch requests," "force mobile nav breakpoint," "inject custom analytics."
-
-**Scope:**
-
-- Overlay with a code editor (textarea with monospace font, syntax highlighting optional)
-- Two modes: JS and CSS
-- "Apply" runs the snippet on the current page (JS via script injection, CSS via style tag)
-- "Save" stores the snippet with a name, URL pattern (exact/contains/regex), and auto-run toggle
-- Snippets stored per-store domain in extension storage
-- Snippet manager: list, edit, delete, toggle auto-run
-- Import/export snippets as JSON
-
-**Context:**
-
-- JS injection uses the same main-world script pattern as Cartograph (script tag injection)
-- CSS injection can be done via shadow DOM or page-level style tag
-- Security: snippets are user-authored and run with page-level permissions — same trust model as DevTools console
-- Auto-run snippets need a content script that checks URL patterns on page load
-- Similar to Tampermonkey/Greasemonkey but scoped to Shopify stores and integrated into Alfred
-
 ### Quick Notes
 
 **Priority:** P3
@@ -317,26 +291,6 @@ Floating sticky notes attached to a store domain. When you visit a store, your n
 - Could group notes by client/project with tags
 - Minimal implementation: textarea in popup, 50 lines of code
 
-### Redirect Mapper
-
-**Priority:** P4
-
-Visualize URL redirects for the current store. Shows the current page's redirect chain, detects redirect loops, and lets you quick-add redirects from the storefront.
-
-**Scope:**
-
-- Detect redirects on the current page via `performance.getEntriesByType('navigation')` redirect count
-- Show redirect chain for the current URL
-- Link to Admin > Online Store > Navigation > URL Redirects for management
-- Quick-add: "redirect this URL to..." form in the overlay
-
-**Context:**
-
-- Full redirect management requires Admin API access (authentication barrier)
-- v1 can focus on detection and linking to admin, not full CRUD
-- `performance.navigation.redirectCount` and `PerformanceNavigationTiming` provide redirect data
-- Most valuable for agencies doing migrations with hundreds of redirects
-
 ### Customer Session Viewer
 
 **Priority:** P4
@@ -358,86 +312,7 @@ See what Shopify knows about the current visitor: customer ID (if logged in), ca
 - Useful for debugging localization, multi-currency, and market-specific behavior
 - Low effort — mainly reading existing globals and presenting them cleanly
 
-### Webhook Monitor
-
-**Priority:** P4
-
-Real-time feed of webhook events for the current store. Filter by topic, view payloads, replay events. Requires a companion server or Shopify app to receive webhooks and relay to the extension.
-
-**Scope:**
-
-- Companion service that receives webhooks and relays via WebSocket to the extension
-- Live event feed in an overlay (similar to browser DevTools Network tab)
-- Filter by webhook topic (orders/create, products/update, etc.)
-- Click to expand payload
-- "Replay" button to re-send the event to a configurable endpoint
-
-**Context:**
-
-- This is the most complex feature on this list — requires infrastructure beyond the extension
-- Could start with a simple server (Cloudflare Worker + Durable Objects) that stores events temporarily
-- Authentication: store owner would need to install a Shopify app or configure webhooks manually
-- Consider deferring to a separate product/service rather than building into the extension
-- Marked P4 because the infrastructure cost is high relative to the other features
-
-## Insights
-
-### Insights Tab (upgrade from Insights Card)
-
-**Priority:** P3
-
-Promote the Insights Card to a full third popup tab with richer analytics: category breakdown, usage streaks, top stores worked on, trends over time.
-
-**Depends on:** Insights Card shipping + evidence of user engagement via review_nudge_shown/clicked/dismissed analytics.
-
-**Context:**
-
-- Design doc Approach C describes the full vision
-- The InsightsCard component and UsageStats data model are the foundation
-- Would require adding the tab to App.tsx's tab array
-
 ## Popup
-
-### Theme Tab — Feature Tags
-
-**Priority:** P3
-
-Display the theme's supported features from the Shopify Theme Store as grouped tag clouds in the Theme tab. Categories: Cart & Checkout, Marketing & Conversion, Merchandising, Product Discovery. Helps devs quickly see what the theme supports without visiting the Theme Store.
-
-**Scope:**
-
-- Grouped tag layout below the quick links section
-- Data source: scrape or cache from `themes.shopify.com/themes/{handle}` features section
-- Categories map to Shopify's own grouping (cart_and_checkout, marketing_and_conversion, merchandising, product_discovery)
-- Compact pill/tag rendering — no descriptions, just feature names
-
-**Context:**
-
-- Design mockup exists in `designs/popup-theme-v2.html` (removed to keep initial scope tight)
-- Data is publicly available on every theme's Theme Store page
-- Could cache per-theme in extension storage to avoid repeated fetches
-- Features list rarely changes — cache invalidation on theme version change is sufficient
-
-### Theme Tab — Version History
-
-**Priority:** P3
-
-Show the theme's version changelog from the Shopify Theme Store. Compact timeline with version number, release date, and one-line summary. Highlight the currently installed version so devs can see exactly what they're missing.
-
-**Scope:**
-
-- Compact list below other theme tab sections
-- Each row: version number (monospace), date, truncated summary
-- Currently installed version marked with a green indicator
-- Data source: `themes.shopify.com/themes/{handle}/presets/{preset}/modal_version_details` or scrape from the theme page
-- Link to full changelog on Theme Store
-
-**Context:**
-
-- Design mockup exists in `designs/popup-theme-v2.html` (removed to keep initial scope tight)
-- Version data is publicly available on every theme's Theme Store page
-- Useful alongside the existing "update available" badge in the stats row
-- Could show last 5-6 versions by default with "Show all" expand
 
 ### Theme Tab — Performance Widget
 
@@ -466,7 +341,7 @@ Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTF
 
 Non-blocking findings from the popup-improvements pre-landing review, deferred to keep the ship moving:
 
-- **Toolbar scaffolding triplicated** — Links/Assets/Images each carry identical facet dropdown, export menu, search bar, sort-icon snippets, and ~250 lines of matching CSS. Extract FacetDropdown/ExportMenu/SearchBar components (or one TableToolbar) the way SummaryBar was extracted. The shared `csvField`/`downloadFile`/`siteSlug` helper landed in `utils/export.ts` in v2026.08.09; the component extraction is what remains
+- **Toolbar scaffolding triplicated** — Links/Assets/Images each carry identical facet dropdown, export menu, search bar, sort-icon snippets, and ~250 lines of matching CSS. Extract FacetDropdown/ExportMenu/SearchBar components (or one TableToolbar) the way SummaryBar was extracted. The shared `csvField`/`downloadFile`/`siteSlug` helper landed in `utils/export.ts` in the simplify sweep (#93); the component extraction is what remains
 - **summaryItems aggregation untested** — extract pure `summarizeLinks/Images/Assets` helpers returning SummaryItem[] and pin singular/plural labels, zero-suppression, and warn/err tones with bun tests
 - **Broken-anchor predicate unexercised** — extract `isBrokenAnchorFragment` into links.ts with tests for the `''`/`top`/named-anchor branches, and add a `<a name=...>` row to test-pages/links/mixed.html (the hasNamedAnchor Set path currently has no fixture)
 - **Popup renders non-http(s) hrefs as live anchors** — javascript:/data: links rely on MV3 CSP to stay inert; render `other`-kind schemes as plain text in Links (and the same pattern in Images/Assets open actions)

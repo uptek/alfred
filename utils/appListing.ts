@@ -297,6 +297,20 @@ function calendarAge(launchDate: string, now: Date): { launched: Date; years: nu
 }
 
 /**
+ * Adds whole months, landing on the target month's last day when it is shorter
+ * than the source day. Bare `setMonth` rolls Jan 31 + 1 month forward into
+ * March, which would overshoot the anniversary and undercount leftover days.
+ */
+function addMonthsClamped(date: Date, months: number): Date {
+  const result = new Date(date);
+  result.setDate(1);
+  result.setMonth(result.getMonth() + months);
+  const lastDayOfMonth = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+  result.setDate(Math.min(date.getDate(), lastDayOfMonth));
+  return result;
+}
+
+/**
  * Human-readable app age from a launch-date string, e.g. "Today", "3 days",
  * "5 months", "1 year", "1.5 years". Calendar year/month arithmetic, so a
  * whole year reads "1 year" rather than "1.0 years". Undefined when the date
@@ -330,11 +344,10 @@ export function formatDetailedAppAge(launchDate: string, now: Date = new Date())
   if (!age) return undefined;
   const { launched, years, months } = age;
 
-  // Leftover days are measured from the last whole-month anniversary. setMonth
-  // can overflow past `now` for month-end launch dates (Jan 31 + 1 month), so
-  // clamp at zero.
-  const anchor = new Date(launched);
-  anchor.setMonth(anchor.getMonth() + years * 12 + months);
+  // Leftover days are measured from the last whole-month anniversary. Floored
+  // at zero because a launch string parsed as UTC midnight can sit a few hours
+  // ahead of a local-time anniversary.
+  const anchor = addMonthsClamped(launched, years * 12 + months);
   const days = Math.max(0, Math.floor((now.getTime() - anchor.getTime()) / 86_400_000));
 
   const parts: string[] = [];

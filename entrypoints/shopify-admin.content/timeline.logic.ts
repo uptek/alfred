@@ -448,6 +448,31 @@ const readField = (record: Record<string, unknown>, ...keys: string[]): unknown 
   return undefined;
 };
 
+/**
+ * Shopify's events endpoints vary the timestamp shape: a bare key, a JSON:API
+ * `attributes` wrapper, an ISO string or an epoch number. Everything downstream
+ * reads `created_at` as an ISO string, so fold the variants in here.
+ */
+const readCreatedAt = (...records: Record<string, unknown>[]): string => {
+  for (const record of records) {
+    const attributes = record.attributes;
+    const value =
+      readField(record, 'created_at', 'createdAt') ??
+      (attributes && typeof attributes === 'object'
+        ? readField(attributes as Record<string, unknown>, 'created_at', 'createdAt')
+        : undefined);
+
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      // Seconds below the year-2001 millisecond floor, milliseconds above it.
+      return new Date(value < 1e12 ? value * 1000 : value).toISOString();
+    }
+  }
+  return '';
+};
+
 const normalizeEvent = (raw: unknown): TimelineEvent | null => {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -456,9 +481,7 @@ const normalizeEvent = (raw: unknown): TimelineEvent | null => {
   const record = raw as Record<string, unknown>;
   const nested = record.event && typeof record.event === 'object' ? (record.event as Record<string, unknown>) : record;
 
-  const createdAt = coerceString(
-    readField(nested, 'created_at', 'createdAt') ?? readField(record, 'created_at', 'createdAt')
-  );
+  const createdAt = readCreatedAt(nested, record);
 
   const body = readField(nested, 'body') ?? readField(record, 'body');
 

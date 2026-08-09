@@ -231,6 +231,24 @@ describe('parseEventsResponse', () => {
     const events = parseEventsResponse([{ id: 1, verb: 'create', body: { nested: true } }]);
     expect(events[0]?.body).toBeNull();
   });
+
+  it('reads timestamps out of an attributes wrapper', () => {
+    const iso = '2026-02-19T17:46:30.000Z';
+    expect(parseEventsResponse([{ id: 1, verb: 'create', attributes: { created_at: iso } }])[0]?.created_at).toBe(iso);
+    expect(parseEventsResponse([{ id: 1, verb: 'create', attributes: { createdAt: iso } }])[0]?.created_at).toBe(iso);
+  });
+
+  it('converts epoch timestamps to ISO strings', () => {
+    const seconds = parseEventsResponse([{ id: 1, verb: 'create', created_at: 1_755_000_000 }]);
+    const millis = parseEventsResponse([{ id: 1, verb: 'create', created_at: 1_755_000_000_000 }]);
+    expect(Date.parse(seconds[0]!.created_at)).toBe(1_755_000_000_000);
+    expect(Date.parse(millis[0]!.created_at)).toBe(1_755_000_000_000);
+  });
+
+  it('leaves created_at empty when no variant carries a usable value', () => {
+    expect(parseEventsResponse([{ id: 1, verb: 'create', created_at: {} }])[0]?.created_at).toBe('');
+    expect(parseEventsResponse([{ id: 1, verb: 'create', attributes: 'nope' }])[0]?.created_at).toBe('');
+  });
 });
 
 describe('getEventTimestampMs', () => {

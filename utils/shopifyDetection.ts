@@ -30,3 +30,19 @@ export function sniffShopifyDom(doc: Pick<Document, 'querySelector'>, hostname: 
     ) !== null
   );
 }
+
+/**
+ * Strict counterpart to `sniffShopifyDom` for callers whose false-positive cost
+ * is destructive and unrecoverable rather than a refreshable label. Matches only
+ * markup Shopify itself renders into a storefront document, never a reference to
+ * a Shopify-hosted asset, which any third-party page can carry.
+ */
+export function isDefinitelyShopifyStorefront(doc: Pick<Document, 'querySelector'>, hostname: string): boolean {
+  return (
+    hostname.endsWith('.myshopify.com') ||
+    doc.querySelector(
+      '#shopify-features, meta[name="shopify-checkout-api-token"], meta[name="shopify-digital-wallet"], ' +
+        'link[href*="cdn.shopify.com"]'
+    ) !== null
+  );
+}
