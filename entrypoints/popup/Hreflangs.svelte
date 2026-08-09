@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { RawHreflang } from './utils/types';
   import type { HreflangAnalysis } from './utils/hreflang';
+  import { summarizeHreflangs } from './utils/hreflang';
   import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
   import ToolbarButton from './components/ToolbarButton.svelte';
-  import type { SummaryItem } from './components/SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
 
@@ -24,26 +24,7 @@
     () => trackAction('hreflangs_view', { tags: analysis.entries.length, issues: analysis.issues.length })
   );
 
-  const summaryItems = $derived.by(() => {
-    const n = analysis.entries.length;
-    const items: SummaryItem[] = [{ text: `${n} ${n === 1 ? 'alternate' : 'alternates'}` }];
-    items.push(
-      analysis.hasXDefault
-        ? { text: 'x-default' }
-        : { text: 'no x-default', tone: 'warn', title: 'No fallback page for unmatched languages' }
-    );
-    if (pageUrl) {
-      items.push(
-        analysis.hasSelf
-          ? { text: 'self-referencing' }
-          : { text: 'no self-reference', tone: 'err', title: 'The set does not include this page\'s own URL' }
-      );
-    }
-    if (analysis.errorCount > 0) {
-      items.push({ text: `${analysis.errorCount} ${analysis.errorCount === 1 ? 'error' : 'errors'}`, tone: 'err' });
-    }
-    return items;
-  });
+  const summaryItems = $derived(summarizeHreflangs(analysis, pageUrl));
 
   const copyFeedback = createCopyFeedback();
   async function copyAll() {

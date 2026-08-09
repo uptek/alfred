@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { analyzeSchema, schemaTypeName } from '../utils/schema';
-import type { RawSchemaBlock } from '../utils/types';
+import { analyzeSchema, schemaTypeName, summarizeSchema } from '../utils/schema';
+import type { RawSchemaBlock, SchemaAnalysis, SchemaEntity } from '../utils/types';
 
 function block(value: unknown, index = 0, placement: 'head' | 'body' = 'head'): RawSchemaBlock {
   return { index, raw: JSON.stringify(value), parseError: null, placement };
@@ -127,5 +127,33 @@ describe('schemaTypeName — @type normalization', () => {
   });
   it('returns Unknown when @type is absent', () => {
     expect(schemaTypeName({ name: 'x' })).toBe('Unknown');
+  });
+});
+
+describe('summarizeSchema', () => {
+  const analysis = (over: Partial<SchemaAnalysis>): SchemaAnalysis => ({
+    entities: [],
+    invalidBlocks: [],
+    ...over
+  });
+
+  const entity = (type: string): SchemaEntity => ({ type, blockIndex: 0, data: {} });
+
+  it('leads with the entity-type count, singular for one', () => {
+    expect(summarizeSchema(analysis({ entities: [entity('Product')] }))[0]?.text).toBe('1 type');
+    expect(summarizeSchema(analysis({ entities: [entity('Product'), entity('FAQPage')] }))[0]?.text).toBe('2 types');
+  });
+
+  it('keeps the plural noun when nothing parsed', () => {
+    expect(summarizeSchema(analysis({}))).toEqual([{ text: '0 types' }]);
+  });
+
+  it('errors on blocks that failed to parse', () => {
+    const items = summarizeSchema(analysis({ invalidBlocks: [{ blockIndex: 0, error: 'Unexpected token' }] }));
+    expect(items.at(-1)).toEqual({
+      text: '1 invalid',
+      tone: 'err',
+      title: 'Blocks that failed to parse as JSON'
+    });
   });
 });

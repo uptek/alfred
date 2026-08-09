@@ -1,11 +1,10 @@
 <script lang="ts">
   import type { LinkKind, RawLink, LinkStatusResult } from './utils/types';
-  import { followRank, isDofollow, highlightLinks, scrollToLink, checkLinkStatus } from './utils/links';
+  import { followRank, isDofollow, highlightLinks, scrollToLink, checkLinkStatus, summarizeLinks } from './utils/links';
   import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
-  import type { SummaryItem } from './components/SummaryBar.svelte';
   import TableToolbar from './components/TableToolbar.svelte';
   import type { Facet } from './components/TableToolbar.svelte';
   import type { ExportItem } from './components/ExportMenu.svelte';
@@ -262,32 +261,7 @@
     return b ? STATUS_RANK[b] : UNSCANNED_RANK;
   };
 
-  // Summary of the current view, mirroring the Assets and Images tabs.
-  const summaryItems = $derived.by(() => {
-    let external = 0, nofollowish = 0, insecure = 0, broken = 0;
-    let httpRedirect = 0, httpDead = 0;
-    for (const l of filtered) {
-      if (l.kind === 'external') external++;
-      if (!isDofollow(l)) nofollowish++;
-      if (l.isInsecure) insecure++;
-      if (l.isBrokenAnchor) broken++;
-      const st = statuses.get(l.href);
-      if (st) {
-        if (st.bucket === 'redirect') httpRedirect++;
-        else if (st.bucket === 'client-error' || st.bucket === 'server-error' || st.bucket === 'error') httpDead++;
-      }
-    }
-    const items: SummaryItem[] = [
-      { text: `${filtered.length} ${filtered.length === 1 ? 'link' : 'links'}` },
-      { text: `${external} external` }
-    ];
-    if (nofollowish > 0) items.push({ text: `${nofollowish} nofollow`, title: 'Links carrying nofollow, sponsored, or ugc hints' });
-    if (insecure > 0) items.push({ text: `${insecure} insecure http`, tone: 'warn' });
-    if (broken > 0) items.push({ text: `${broken} broken #`, tone: 'err' });
-    if (httpRedirect > 0) items.push({ text: `${httpRedirect} redirect`, tone: 'warn', title: 'Links that respond with a 3xx redirect' });
-    if (httpDead > 0) items.push({ text: `${httpDead} failing`, tone: 'err', title: 'Links returning 4xx/5xx or unreachable (advisory)' });
-    return items;
-  });
+  const summaryItems = $derived(summarizeLinks(filtered, statuses));
 
   const sorted = $derived.by(() => {
     const dir = sortDir === 'asc' ? 1 : -1;

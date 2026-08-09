@@ -1,4 +1,5 @@
-import type { AssetKind, AssetLoad, AssetPlacement, AssetSubtype, RawAsset } from './types';
+import type { AssetKind, AssetLoad, AssetPlacement, AssetSubtype, RawAsset, SummaryItem } from './types';
+import { formatSize } from './format';
 import { queryActiveTab } from './messaging';
 import { normalizeHost } from './links';
 
@@ -198,4 +199,31 @@ export function displaySource(src: string, pageHost: string | null): string {
   if (rest === '/' || rest === '') return host;
   if (pageHost && host === normalizeHost(pageHost)) return rest;
   return host + rest;
+}
+
+/**
+ * Builds the Assets footer summary. Script and style counts always show; total
+ * size and the render-blocking count are suppressed at zero.
+ * @param assets - The rows currently visible (post-filter), not the full set.
+ */
+export function summarizeAssets(assets: RawAsset[]): SummaryItem[] {
+  let scripts = 0,
+    styles = 0,
+    bytes = 0,
+    renderBlocking = 0;
+  for (const a of assets) {
+    if (a.kind === 'script') scripts++;
+    else styles++;
+    bytes += a.size;
+    if (a.renderBlocking) renderBlocking++;
+  }
+  const items: SummaryItem[] = [
+    { text: `${scripts} ${scripts === 1 ? 'script' : 'scripts'}` },
+    { text: `${styles} ${styles === 1 ? 'style' : 'styles'}` }
+  ];
+  if (bytes > 0) {
+    items.push({ text: formatSize(bytes), title: 'Sum of known sizes; opaque cross-origin assets are not included' });
+  }
+  if (renderBlocking > 0) items.push({ text: `${renderBlocking} render-blocking`, tone: 'warn' });
+  return items;
 }

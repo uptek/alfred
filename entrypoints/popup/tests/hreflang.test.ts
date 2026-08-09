@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { analyzeHreflangs, isValidHreflangCode, normalizeUrl } from '../utils/hreflang';
+import { analyzeHreflangs, isValidHreflangCode, normalizeUrl, summarizeHreflangs } from '../utils/hreflang';
+import type { HreflangAnalysis, HreflangEntry } from '../utils/hreflang';
 import type { RawHreflang } from '../utils/types';
 
 const tag = (overrides: Partial<RawHreflang>): RawHreflang => ({
@@ -114,5 +115,48 @@ describe('analyzeHreflangs', () => {
       'https://example.com/en#section'
     );
     expect(a.hasSelf).toBe(true);
+  });
+});
+
+describe('summarizeHreflangs', () => {
+  const analysis = (over: Partial<HreflangAnalysis>): HreflangAnalysis => ({
+    entries: [],
+    issues: [],
+    hasXDefault: false,
+    hasSelf: false,
+    errorCount: 0,
+    warningCount: 0,
+    ...over
+  });
+
+  const entry = (over: Partial<HreflangEntry> = {}): HreflangEntry =>
+    ({ ...tag({}), isSelf: false, ...over }) as HreflangEntry;
+
+  const texts = (items: { text: string }[]) => items.map((i) => i.text);
+
+  test('leads with the alternate count, singular for one', () => {
+    expect(summarizeHreflangs(analysis({ entries: [entry()] }), PAGE)[0]?.text).toBe('1 alternate');
+    expect(summarizeHreflangs(analysis({ entries: [entry(), entry()] }), PAGE)[0]?.text).toBe('2 alternates');
+  });
+
+  test('states the healthy x-default and self-reference cases rather than suppressing them', () => {
+    const items = summarizeHreflangs(analysis({ hasXDefault: true, hasSelf: true }), PAGE);
+    expect(texts(items)).toEqual(['0 alternates', 'x-default', 'self-referencing']);
+    expect(items.every((i) => i.tone === undefined)).toBe(true);
+  });
+
+  test('warns on a missing x-default and errors on a missing self-reference', () => {
+    const items = summarizeHreflangs(analysis({}), PAGE);
+    expect(items.find((i) => i.text === 'no x-default')?.tone).toBe('warn');
+    expect(items.find((i) => i.text === 'no self-reference')?.tone).toBe('err');
+  });
+
+  test('omits the self-reference item entirely without a page URL', () => {
+    expect(texts(summarizeHreflangs(analysis({ hasSelf: false }), null))).toEqual(['0 alternates', 'no x-default']);
+  });
+
+  test('appends the error count, singular for one', () => {
+    expect(summarizeHreflangs(analysis({ errorCount: 1 }), PAGE).at(-1)).toEqual({ text: '1 error', tone: 'err' });
+    expect(summarizeHreflangs(analysis({ errorCount: 2 }), PAGE).at(-1)?.text).toBe('2 errors');
   });
 });

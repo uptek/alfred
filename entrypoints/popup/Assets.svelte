@@ -1,12 +1,11 @@
 <script lang="ts">
   import type { RawAsset } from './utils/types';
   import type { AssetFlag } from './utils/assets';
-  import { displaySource as displaySourceUrl, hasOwnLoad, matchesAssetFlag, typeLabel } from './utils/assets';
+  import { displaySource as displaySourceUrl, hasOwnLoad, matchesAssetFlag, summarizeAssets, typeLabel } from './utils/assets';
   import { csvField, downloadFile, formatSize, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
-  import type { SummaryItem } from './components/SummaryBar.svelte';
   import TableToolbar from './components/TableToolbar.svelte';
   import type { Facet } from './components/TableToolbar.svelte';
   import type { ExportItem } from './components/ExportMenu.svelte';
@@ -307,23 +306,7 @@
     trackAction('assets_filter', { reset: true });
   }
 
-  // Summary of the current view: known sizes only — opaque cross-origin
-  // assets report 0 and are left out of the total.
-  const summaryItems = $derived.by(() => {
-    let scripts = 0, styles = 0, bytes = 0, renderBlocking = 0;
-    for (const a of filtered) {
-      if (a.kind === 'script') scripts++; else styles++;
-      bytes += a.size;
-      if (a.renderBlocking) renderBlocking++;
-    }
-    const items: SummaryItem[] = [
-      { text: `${scripts} ${scripts === 1 ? 'script' : 'scripts'}` },
-      { text: `${styles} ${styles === 1 ? 'style' : 'styles'}` }
-    ];
-    if (bytes > 0) items.push({ text: formatSize(bytes), title: 'Sum of known sizes; opaque cross-origin assets are not included' });
-    if (renderBlocking > 0) items.push({ text: `${renderBlocking} render-blocking`, tone: 'warn' });
-    return items;
-  });
+  const summaryItems = $derived(summarizeAssets(filtered));
 </script>
 
 {#if assets.length === 0}

@@ -1,12 +1,11 @@
 <script lang="ts">
   import type { RawImage, ImageStatus } from './utils/types';
   import type { AltState } from './utils/images';
-  import { altState, fileLabel, imageStatus, highlightImages, scrollToImage } from './utils/images';
+  import { altState, fileLabel, imageStatus, highlightImages, scrollToImage, summarizeImages } from './utils/images';
   import { csvField, downloadFile, formatSize, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
-  import type { SummaryItem } from './components/SummaryBar.svelte';
   import TableToolbar from './components/TableToolbar.svelte';
   import type { Facet } from './components/TableToolbar.svelte';
   import type { ExportItem } from './components/ExportMenu.svelte';
@@ -186,21 +185,7 @@
     return src.startsWith('data:') ? fileLabel(src) : src;
   }
 
-  const summaryItems = $derived.by(() => {
-    let bytes = 0, missingAlt = 0, broken = 0, oversized = 0;
-    for (const img of filtered) {
-      bytes += img.size;
-      const st = statusOf(img);
-      if (st === 'broken') broken++; else if (st === 'missing-alt') missingAlt++;
-      if (img.oversized) oversized++;
-    }
-    const items: SummaryItem[] = [{ text: `${filtered.length} ${filtered.length === 1 ? 'image' : 'images'}` }];
-    if (bytes > 0) items.push({ text: formatSize(bytes), title: 'Sum of known sizes; opaque cross-origin images are not included' });
-    if (missingAlt > 0) items.push({ text: `${missingAlt} missing alt`, tone: 'warn' });
-    if (broken > 0) items.push({ text: `${broken} broken`, tone: 'err' });
-    if (oversized > 0) items.push({ text: `${oversized} oversized`, tone: 'warn' });
-    return items;
-  });
+  const summaryItems = $derived(summarizeImages(filtered, statusByIndex));
 
   function toggleHighlight() {
     highlightOn = !highlightOn;

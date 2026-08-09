@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { RawImage } from '../utils/types';
+import type { ImageStatus, RawImage } from '../utils/types';
 import {
   altState,
   analyzeImages,
@@ -9,7 +9,8 @@ import {
   imageStatus,
   isBrokenImage,
   isOversized,
-  parseBackgroundUrls
+  parseBackgroundUrls,
+  summarizeImages
 } from '../utils/images';
 
 describe('isBrokenImage', () => {
@@ -251,5 +252,53 @@ describe('isOversized', () => {
 
   test('non-positive dpr falls back to 1', () => {
     expect(isOversized(1600, 1000, 160, 100, 0)).toBe(true);
+  });
+});
+
+describe('summarizeImages', () => {
+  const img = (over: Partial<RawImage>): RawImage => ({ index: 0, size: 0, oversized: false, ...over }) as RawImage;
+
+  const NO_STATUS = new Map<number, ImageStatus>();
+  const texts = (items: { text: string }[]) => items.map((i) => i.text);
+
+  test('leads with the row count, singular for one', () => {
+    expect(summarizeImages([img({})], NO_STATUS)[0]?.text).toBe('1 image');
+    expect(summarizeImages([img({ index: 0 }), img({ index: 1 })], NO_STATUS)[0]?.text).toBe('2 images');
+  });
+
+  test('keeps the plural noun for an empty list', () => {
+    expect(texts(summarizeImages([], NO_STATUS))).toEqual(['0 images']);
+  });
+
+  test('suppresses size and every defect count at zero', () => {
+    expect(summarizeImages([img({})], NO_STATUS)).toHaveLength(1);
+  });
+
+  test('totals known sizes and omits the unknown ones', () => {
+    const images = [img({ index: 0, size: 1024 }), img({ index: 1, size: 0 })];
+    expect(summarizeImages(images, NO_STATUS)[1]?.text).toBe('1.0 KB');
+  });
+
+  test('splits the status map into missing-alt and broken counts', () => {
+    const images = [img({ index: 0 }), img({ index: 1 }), img({ index: 2 })];
+    const statuses = new Map<number, ImageStatus>([
+      [0, 'missing-alt'],
+      [1, 'broken'],
+      [2, 'ok']
+    ]);
+    const items = summarizeImages(images, statuses);
+    expect(items.find((i) => i.text === '1 missing alt')?.tone).toBe('warn');
+    expect(items.find((i) => i.text === '1 broken')?.tone).toBe('err');
+  });
+
+  test('treats an image missing from the status map as ok', () => {
+    expect(summarizeImages([img({ index: 7 })], NO_STATUS)).toHaveLength(1);
+  });
+
+  test('warns on oversized images', () => {
+    expect(summarizeImages([img({ oversized: true })], NO_STATUS).at(-1)).toEqual({
+      text: '1 oversized',
+      tone: 'warn'
+    });
   });
 });

@@ -1,11 +1,10 @@
 <script lang="ts">
   import type { RawSchemaBlock, SchemaEntity } from './utils/types';
-  import { analyzeSchema, schemaTypeName } from './utils/schema';
+  import { analyzeSchema, schemaTypeName, summarizeSchema } from './utils/schema';
   import { downloadFile, siteSlug as siteSlugOf } from './utils/format';
   import { createCopyFeedback, createKeyedCopyFeedback } from './utils/copy.svelte';
   import { trackOnce } from './utils/track.svelte';
   import SummaryBar from './components/SummaryBar.svelte';
-  import type { SummaryItem } from './components/SummaryBar.svelte';
   import { trackAction } from '@/utils/analytics';
   import { getTabState } from './stores/tabState.svelte';
 
@@ -91,14 +90,7 @@
       })
   );
 
-  const summaryItems = $derived.by(() => {
-    const n = analysis.entities.length;
-    const items: SummaryItem[] = [{ text: `${n} ${n === 1 ? 'type' : 'types'}` }];
-    if (analysis.invalidBlocks.length > 0) {
-      items.push({ text: `${analysis.invalidBlocks.length} invalid`, tone: 'err', title: 'Blocks that failed to parse as JSON' });
-    }
-    return items;
-  });
+  const summaryItems = $derived(summarizeSchema(analysis));
 
   const copyFeedback = createCopyFeedback();
   async function copyAll() {

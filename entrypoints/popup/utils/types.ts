@@ -1,3 +1,12 @@
+// One segment of a tab's SummaryBar footer, e.g. `{ text: '3 broken', tone: 'err' }`.
+// Lives here rather than beside the component so the per-tab summarize* builders
+// in utils/ don't have to import a type from a .svelte module.
+export interface SummaryItem {
+  text: string;
+  tone?: 'warn' | 'err';
+  title?: string;
+}
+
 export interface RawHeading {
   level: number;
   text: string;

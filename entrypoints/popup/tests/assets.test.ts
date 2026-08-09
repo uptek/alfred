@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import type { RawAsset } from '../utils/types';
 import {
   displaySource,
   hasOwnLoad,
@@ -8,6 +9,7 @@ import {
   matchesAssetFlag,
   scriptLoad,
   scriptSubtype,
+  summarizeAssets,
   typeLabel
 } from '../utils/assets';
 
@@ -266,5 +268,35 @@ describe('displaySource', () => {
 
   test('unparseable src is returned as-is', () => {
     expect(displaySource('not a url', 'example.com')).toBe('not a url');
+  });
+});
+
+describe('summarizeAssets', () => {
+  const asset = (over: Partial<RawAsset>): RawAsset =>
+    ({ kind: 'script', size: 0, renderBlocking: false, ...over }) as RawAsset;
+
+  const texts = (items: { text: string }[]) => items.map((i) => i.text);
+
+  test('always shows both kind counts, singular for one', () => {
+    expect(texts(summarizeAssets([asset({}), asset({ kind: 'style' })]))).toEqual(['1 script', '1 style']);
+  });
+
+  test('shows zeroed kind counts for an empty list', () => {
+    expect(texts(summarizeAssets([]))).toEqual(['0 scripts', '0 styles']);
+  });
+
+  test('suppresses size and render-blocking at zero', () => {
+    expect(summarizeAssets([asset({})])).toHaveLength(2);
+  });
+
+  test('totals known sizes and omits the unknown ones', () => {
+    expect(summarizeAssets([asset({ size: 2048 }), asset({ size: 0 })])[2]?.text).toBe('2.0 KB');
+  });
+
+  test('warns on render-blocking assets', () => {
+    expect(summarizeAssets([asset({ renderBlocking: true })]).at(-1)).toEqual({
+      text: '1 render-blocking',
+      tone: 'warn'
+    });
   });
 });

@@ -1,4 +1,4 @@
-import type { RawHreflang } from './types';
+import type { RawHreflang, SummaryItem } from './types';
 import { queryActiveTab } from './messaging';
 import { normalizeUrl } from './url';
 
@@ -166,4 +166,36 @@ export function analyzeHreflangs(tags: RawHreflang[], pageUrl: string | null): H
     errorCount: issues.filter((i) => i.severity === 'error').length,
     warningCount: issues.filter((i) => i.severity === 'warning').length
   };
+}
+
+/**
+ * Builds the Hreflangs footer summary. Unlike the other tabs the x-default and
+ * self-reference items always render, stating the healthy case too, because
+ * their absence is the defect.
+ * @param analysis - Result of analyzeHreflangs for the current page.
+ * @param pageUrl - URL of the page; null omits the self-reference item entirely,
+ *   since analyzeHreflangs cannot judge it without one.
+ */
+export function summarizeHreflangs(analysis: HreflangAnalysis, pageUrl: string | null): SummaryItem[] {
+  const n = analysis.entries.length;
+  const items: SummaryItem[] = [{ text: `${n} ${n === 1 ? 'alternate' : 'alternates'}` }];
+  items.push(
+    analysis.hasXDefault
+      ? { text: 'x-default' }
+      : { text: 'no x-default', tone: 'warn', title: 'No fallback page for unmatched languages' }
+  );
+  if (pageUrl) {
+    items.push(
+      analysis.hasSelf
+        ? { text: 'self-referencing' }
+        : { text: 'no self-reference', tone: 'err', title: "The set does not include this page's own URL" }
+    );
+  }
+  if (analysis.errorCount > 0) {
+    items.push({
+      text: `${analysis.errorCount} ${analysis.errorCount === 1 ? 'error' : 'errors'}`,
+      tone: 'err'
+    });
+  }
+  return items;
 }
