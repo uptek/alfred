@@ -16,14 +16,20 @@ export default defineContentScript({
 
     applyTheme(mode);
 
+    // Set by injectToggle so a theme picked in another dashboard tab moves the
+    // live toggle too, not just the document.
+    let syncToggle: ((next: ThemeMode) => void) | undefined;
+
     storage.watch<ThemeMode>(`local:${STORAGE_KEY}`, (value) => {
       mode = value ?? 'system';
+      applyTheme(mode);
+      syncToggle?.(mode);
     });
 
     // Inject toggle and re-inject when SPA navigation rebuilds the header
     const tryInject = () => {
       if (document.getElementById('alfred-theme-toggle')) return;
-      injectToggle(mode);
+      syncToggle = injectToggle(mode);
     };
 
     if (document.readyState === 'loading') {
@@ -114,7 +120,8 @@ function removeLightFixesCSS() {
   document.getElementById('alfred-dev-dashboard-light')?.remove();
 }
 
-function injectToggle(currentMode: ThemeMode) {
+/** @returns A setter that moves the toggle to a mode chosen elsewhere, or undefined if the header wasn't ready. */
+function injectToggle(currentMode: ThemeMode): ((next: ThemeMode) => void) | undefined {
   const headerLastDiv = document.querySelector('header > div:last-child');
   if (!headerLastDiv) return;
 
@@ -227,4 +234,9 @@ function injectToggle(currentMode: ThemeMode) {
 
   headerLastDiv.prepend(container);
   updateActive();
+
+  return (next) => {
+    active = next;
+    updateActive();
+  };
 }

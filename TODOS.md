@@ -195,29 +195,6 @@ Issues identified by 4-pass adversarial review during ship. None are blocking bu
 
 ## Storefront Inspector
 
-### Liquid X-Ray
-
-**Priority:** P2
-
-Toggle overlay that shows which Liquid template, section, or snippet rendered each part of the page. Like the browser's "Inspect Element" but for the Liquid layer — shows `sections/header.liquid`, `snippets/product-card.liquid`, etc. instead of DOM elements.
-
-Click any overlay label to open that file directly in the theme code editor (reuses the existing "Open Section in Code Editor" pattern).
-
-**Scope:**
-
-- Toggle button in Alfred's context menu or keyboard shortcut
-- Parse Shopify's section rendering comments (`<!-- BEGIN section__header -->`) to map DOM regions to Liquid files
-- Overlay colored borders + filename labels on each section boundary
-- Click-to-open-in-editor for each identified section/snippet
-- Nested depth indicator (section > block > snippet)
-
-**Context:**
-
-- Shopify injects HTML comments marking section boundaries in development/preview mode — these are the primary data source
-- Shopify's built-in theme inspector does something similar but is unreliable and resets on navigation
-- This overlaps with "Open Section in Code Editor" but extends it to show ALL sections at once, not just the right-clicked one
-- Challenge: snippet-level granularity depends on theme developer adding comments — section-level is reliable
-
 ### Store Health Check
 
 **Priority:** P2
