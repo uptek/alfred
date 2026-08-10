@@ -5,8 +5,11 @@ import type {
   ShippingAddress,
   ShippingRate,
   CartData,
+  CartMethods,
   ProductData
 } from './cartograph.content/types';
+import { resolveProductPath, SHIPPING_POLL_BUDGET_MS, SHIPPING_POLL_INTERVAL_MS } from './cartograph.content/utils';
+import { createBridgeServer } from '~/utils/mainWorldBridge';
 
 export default defineUnlistedScript(() => {
   if ((window as any).__alfredCartApiInitialized) return;
@@ -91,11 +94,10 @@ export default defineUnlistedScript(() => {
     });
     if (!prepRes.ok) throw new Error(`Failed to prepare shipping rates: ${prepRes.status}`);
 
-    const maxAttempts = 10;
-    const pollInterval = 500;
+    const deadline = Date.now() + SHIPPING_POLL_BUDGET_MS;
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, SHIPPING_POLL_INTERVAL_MS));
 
       const ratesRes = await fetchWithRetry(`/cart/async_shipping_rates.json?${params}`);
       if (ratesRes.status === 202) continue;
@@ -109,80 +111,23 @@ export default defineUnlistedScript(() => {
   }
 
   async function getProductByUrl(url: string): Promise<ProductData> {
-    let pathname: string;
+    const path = resolveProductPath(url, window.location.origin);
+    if (!path) throw new Error('Invalid product URL: must be a /products/ path');
 
-    // If it looks like a URL (contains / or .), parse it; otherwise treat as a plain handle
-    if (url.includes('/') || url.includes('.')) {
-      const parsed = new URL(url, window.location.origin);
-      pathname = parsed.pathname;
-    } else {
-      pathname = `/products/${url}`;
-    }
-
-    if (!pathname.endsWith('.js')) {
-      pathname = pathname.replace(/\/$/, '') + '.js';
-    }
-
-    // Security: only allow fetching product endpoints
-    if (!pathname.startsWith('/products/')) {
-      throw new Error('Invalid product URL: must be a /products/ path');
-    }
-
-    const res = await fetchWithRetry(pathname);
+    const res = await fetchWithRetry(path);
     if (!res.ok) throw new Error(`Failed to fetch product: ${res.status}`);
 
     const data = await res.json();
     return data.product || data;
   }
 
-  const methodMap: Record<string, (payload: any) => Promise<any>> = {
-    getCart: () => getCart(),
-    addItem: (payload) => addItem(payload),
-    updateCart: (payload) => updateCart(payload),
-    changeItem: (payload) => changeItem(payload),
-    clearCart: () => clearCart(),
-    getShippingRates: (payload) => getShippingRates(payload),
-    getProductByUrl: (payload) => getProductByUrl(payload)
-  };
-
-  window.addEventListener('message', async (event) => {
-    if (event.source !== window) return;
-    if (event.data?.type !== 'alfred:cart_request') return;
-
-    const { requestId, method, payload } = event.data;
-    const handler = methodMap[method];
-
-    if (!handler) {
-      window.postMessage(
-        {
-          type: 'alfred:cart_response',
-          requestId,
-          error: `Unknown method: ${method}`
-        },
-        window.location.origin
-      );
-      return;
-    }
-
-    try {
-      const data = await handler(payload);
-      window.postMessage(
-        {
-          type: 'alfred:cart_response',
-          requestId,
-          data
-        },
-        window.location.origin
-      );
-    } catch (err) {
-      window.postMessage(
-        {
-          type: 'alfred:cart_response',
-          requestId,
-          error: err instanceof Error ? err.message : String(err)
-        },
-        window.location.origin
-      );
-    }
+  createBridgeServer<CartMethods>('cart', {
+    getCart,
+    addItem,
+    updateCart,
+    changeItem,
+    clearCart,
+    getShippingRates,
+    getProductByUrl
   });
 });

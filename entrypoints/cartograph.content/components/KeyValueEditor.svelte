@@ -7,7 +7,8 @@
     addLabel = 'Add property',
     onchange,
   }: {
-    entries: Array<{ key: string; value: string }>;
+    /** Explicitly undefined-able so callers can bind a Record slot, whose read type includes undefined. */
+    entries?: Array<{ key: string; value: string }> | undefined;
     keyPlaceholder?: string;
     valuePlaceholder?: string;
     disabled?: boolean;

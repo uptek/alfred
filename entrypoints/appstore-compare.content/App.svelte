@@ -7,6 +7,7 @@
   import { cornerStack } from '~/utils/cornerStack';
   import { withCredit } from '~/utils/credit';
   import { Toast } from '~/utils/toast';
+  import { downloadFile } from '~/utils/export';
   import { buildComparisonCsv, buildComparisonJson, buildComparisonMarkdown, COMPARISON_ROWS } from './exporters';
 
   type Column = {
@@ -113,31 +114,20 @@
     }
   }
 
-  function downloadFile(filename: string, content: string, type: string) {
-    const url = URL.createObjectURL(new Blob([content], { type }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
-
   function exportFilename(extension: string): string {
     return `shopify-alfred-compare-${new Date().toISOString().split('T')[0]}.${extension}`;
   }
 
   function downloadCsv() {
     closeExportMenu();
-    downloadFile(exportFilename('csv'), withCsvCredit(buildComparisonCsv(loadedListings)), 'text/csv;charset=utf-8;');
+    downloadFile(withCsvCredit(buildComparisonCsv(loadedListings)), exportFilename('csv'), 'text/csv;charset=utf-8;');
     Toast.success('Comparison downloaded as CSV');
     sendTrackEvent('compare_export_csv', { app_count: loadedListings.length });
   }
 
   function downloadJson() {
     closeExportMenu();
-    downloadFile(exportFilename('json'), buildComparisonJson(loadedListings), 'application/json');
+    downloadFile(buildComparisonJson(loadedListings), exportFilename('json'), 'application/json');
     Toast.success('Comparison downloaded as JSON');
     sendTrackEvent('compare_export_json', { app_count: loadedListings.length });
   }

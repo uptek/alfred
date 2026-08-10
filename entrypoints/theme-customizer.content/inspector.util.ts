@@ -1,4 +1,5 @@
 import { getItem, setItem } from '~/utils/storage';
+import { getSettings } from '~/utils/settings';
 import { waitForElement } from '~/utils/helpers';
 import { sendTrackEvent } from '~/utils/analytics';
 
@@ -6,8 +7,8 @@ const INSPECTOR_BUTTON_SELECTOR = 'div[class*="SidekickToggle"] + div button';
 const INSPECTOR_STATE_KEY = 'theme-inspector-state';
 
 export async function setupInspector(): Promise<void> {
-  const settings = await getItem<AlfredSettings>('settings');
-  const inspectorSetting = settings?.themeCustomizer?.inspector;
+  const settings = await getSettings();
+  const inspectorSetting = settings.themeCustomizer.inspector;
 
   if (!inspectorSetting || inspectorSetting === 'default') {
     return;

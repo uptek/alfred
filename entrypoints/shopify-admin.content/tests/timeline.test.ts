@@ -231,26 +231,41 @@ describe('parseEventsResponse', () => {
     const events = parseEventsResponse([{ id: 1, verb: 'create', body: { nested: true } }]);
     expect(events[0]?.body).toBeNull();
   });
+
+  it('reads timestamps out of an attributes wrapper', () => {
+    const iso = '2026-02-19T17:46:30.000Z';
+    expect(parseEventsResponse([{ id: 1, verb: 'create', attributes: { created_at: iso } }])[0]?.created_at).toBe(iso);
+    expect(parseEventsResponse([{ id: 1, verb: 'create', attributes: { createdAt: iso } }])[0]?.created_at).toBe(iso);
+  });
+
+  it('converts epoch timestamps to ISO strings', () => {
+    const seconds = parseEventsResponse([{ id: 1, verb: 'create', created_at: 1_755_000_000 }]);
+    const millis = parseEventsResponse([{ id: 1, verb: 'create', created_at: 1_755_000_000_000 }]);
+    expect(Date.parse(seconds[0]!.created_at)).toBe(1_755_000_000_000);
+    expect(Date.parse(millis[0]!.created_at)).toBe(1_755_000_000_000);
+  });
+
+  it('leaves created_at empty when no variant carries a usable value', () => {
+    expect(parseEventsResponse([{ id: 1, verb: 'create', created_at: {} }])[0]?.created_at).toBe('');
+    expect(parseEventsResponse([{ id: 1, verb: 'create', attributes: 'nope' }])[0]?.created_at).toBe('');
+  });
 });
 
 describe('getEventTimestampMs', () => {
-  it('parses ISO timestamps and scales epoch seconds to milliseconds', () => {
+  it('parses ISO timestamps', () => {
     expect(getEventTimestampMs(baseEvent({ created_at: '2026-02-19T10:40:57+00:00' }))).toBe(
       Date.parse('2026-02-19T10:40:57+00:00')
     );
-    expect(getEventTimestampMs({ created_at: 1755000000 })).toBe(1755000000000);
-    expect(getEventTimestampMs({ created_at: 1755000000000 })).toBe(1755000000000);
   });
 
-  it('reads camelCase and attribute fallbacks', () => {
-    expect(getEventTimestampMs({ createdAt: '2026-02-19T17:46:30+00:00' })).not.toBeNull();
-    expect(getEventTimestampMs({ attributes: { created_at: '2026-02-19T17:46:30+00:00' } })).not.toBeNull();
+  it('reads camelCase aliases via normalizeEvent', () => {
+    const [event] = parseEventsResponse([{ id: 1, verb: 'create', createdAt: '2026-02-19T17:46:30+00:00' }]);
+    expect(getEventTimestampMs(event!)).not.toBeNull();
   });
 
   it('returns null for missing or unparseable timestamps', () => {
-    expect(getEventTimestampMs({})).toBeNull();
-    expect(getEventTimestampMs({ created_at: '' })).toBeNull();
-    expect(getEventTimestampMs({ created_at: 'not a date' })).toBeNull();
+    expect(getEventTimestampMs(baseEvent({ created_at: '' }))).toBeNull();
+    expect(getEventTimestampMs(baseEvent({ created_at: 'not a date' }))).toBeNull();
   });
 });
 
@@ -262,7 +277,7 @@ describe('formatEventTime', () => {
   });
 
   it('returns an empty string for missing or invalid timestamps', () => {
-    expect(formatEventTime({})).toBe('');
+    expect(formatEventTime(baseEvent({ created_at: '' }))).toBe('');
     expect(formatEventTime(baseEvent({ created_at: 'garbage' }))).toBe('');
   });
 });

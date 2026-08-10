@@ -1,5 +1,35 @@
 # TODOS
 
+## Background
+
+### Remove MV3 keep-alive (fix context menu first-click race properly)
+
+**Priority:** P2 — do as a standalone change, single commit, nothing else mixed in, so it can be reverted cleanly if regressions show up.
+
+The background service worker runs a `setInterval` keep-alive (`entrypoints/background/index.ts:57-65`) that pings `getPlatformInfo()` every 20s so the worker never idles out. It exists because context menu shortcuts didn't fire on the first click after the worker went inactive. That first-click failure is a fixable listener-registration race, not something that needs keep-alive, and Chrome keeps tightening the keep-alive loophole anyway.
+
+**Root cause of the first-click bug:**
+
+- Chrome persists the context menu _items_ across worker shutdowns, but the click _handlers_ live in the in-memory `menus` Map in `utils/contextMenu.ts`.
+- The `contextMenus.onClicked` listener is registered lazily inside `initialize()`, which only runs when `create()` is first called, and `create()` is only reached in `registerShortcuts()` after `await getSettings()` (`entrypoints/background/shortcuts.ts:144`). MV3 requires listeners to be registered synchronously in the worker's first turn; a listener added after an `await` can miss the click event that woke the worker.
+- Even when the listener wins the race, the `menus` Map can still be empty because `registerShortcuts()` hasn't finished rebuilding it, so `menus.get(...)` misses and the click is silently dropped.
+
+**Fix plan (in order):**
+
+1. Register `browser.contextMenus.onClicked` synchronously at module top level in `utils/contextMenu.ts` (import time), removing the lazy `initialize()` path.
+2. Expose the in-flight startup promise from `registerShortcuts()` (it already runs unconditionally at `background/index.ts:73`); in the click listener, `await` that promise before looking up the handler in the Map. Awaiting inside an already-registered listener is fine in MV3; only late listener _registration_ is forbidden.
+3. Keep the startup `removeAll()` + rebuild as is: idempotent, and the handler Map must be rebuilt on every cold start regardless.
+4. Audit `pendingNavigations` (the password-redirect Map in `background/index.ts`): once the worker can die mid-navigation, in-memory state is lost. If the /password redirect flow matters across an idle gap, move it to `storage.session`.
+5. Delete the `keepAlive` function and its `setInterval`.
+
+**Verification (the real repro, not just a smoke test):**
+
+- Load the extension, wait for the worker to show "inactive" on chrome://extensions (or force-stop it via chrome://serviceworker-internals).
+- Right-click once on a Shopify page and confirm the shortcut fires on that _first_ click.
+- Repeat for: popup open, changing a shortcut setting (menus re-register), and the password-store redirect flow from a cold worker.
+
+**Revert story:** one commit, e.g. `fix(background): register menu click listener eagerly, drop keep-alive`. Reverting that commit restores keep-alive and the lazy listener wholesale.
+
 ## Cartograph
 
 ### Cart Permalinks / Checkout Links
@@ -86,7 +116,7 @@ Think of it as a mini DevTools console, but scoped to the cart object and with z
 
 **Context:**
 
-- Current JsonTab.svelte is ~40 lines — this replaces it with ~150-200 lines
+- JsonTab.svelte is ~155 lines today, but almost all of it is a static `<pre>` dump plus a copy button and its styles — the query console is entirely unbuilt
 - No external dependencies needed — autocomplete is a simple filtered list, not a full editor
 - The cart object is already available as a prop — no new API calls
 - Similar UX to browser DevTools console autocomplete or jq playground
@@ -150,29 +180,6 @@ Currently, adding an item requires knowing the product URL or handle upfront. Wi
 - MCP integration: if the Shopify Storefront MCP server is available, could use it for richer queries (collections, metafields, inventory levels) — but the extension should work standalone without MCP
 
 ## Storefront Inspector
-
-### Liquid X-Ray
-
-**Priority:** P2
-
-Toggle overlay that shows which Liquid template, section, or snippet rendered each part of the page. Like the browser's "Inspect Element" but for the Liquid layer — shows `sections/header.liquid`, `snippets/product-card.liquid`, etc. instead of DOM elements.
-
-Click any overlay label to open that file directly in the theme code editor (reuses the existing "Open Section in Code Editor" pattern).
-
-**Scope:**
-
-- Toggle button in Alfred's context menu or keyboard shortcut
-- Parse Shopify's section rendering comments (`<!-- BEGIN section__header -->`) to map DOM regions to Liquid files
-- Overlay colored borders + filename labels on each section boundary
-- Click-to-open-in-editor for each identified section/snippet
-- Nested depth indicator (section > block > snippet)
-
-**Context:**
-
-- Shopify injects HTML comments marking section boundaries in development/preview mode — these are the primary data source
-- Shopify's built-in theme inspector does something similar but is unreliable and resets on navigation
-- This overlaps with "Open Section in Code Editor" but extends it to show ALL sections at once, not just the right-clicked one
-- Challenge: snippet-level granularity depends on theme developer adding comments — section-level is reliable
 
 ### Store Health Check
 
@@ -248,32 +255,6 @@ On a collection page, show the collection's sort order, product count, active fi
 
 ## Developer Tools
 
-### Script Injector
-
-**Priority:** P2
-
-Mini code editor overlay for injecting custom JS or CSS on any storefront page. Write a snippet, click "Apply" — it runs immediately. Save named snippets per-store that auto-run on matching URLs.
-
-Like a persistent DevTools console that survives page reloads. Use cases: "hide announcement bar for testing," "log all fetch requests," "force mobile nav breakpoint," "inject custom analytics."
-
-**Scope:**
-
-- Overlay with a code editor (textarea with monospace font, syntax highlighting optional)
-- Two modes: JS and CSS
-- "Apply" runs the snippet on the current page (JS via script injection, CSS via style tag)
-- "Save" stores the snippet with a name, URL pattern (exact/contains/regex), and auto-run toggle
-- Snippets stored per-store domain in extension storage
-- Snippet manager: list, edit, delete, toggle auto-run
-- Import/export snippets as JSON
-
-**Context:**
-
-- JS injection uses the same main-world script pattern as Cartograph (script tag injection)
-- CSS injection can be done via shadow DOM or page-level style tag
-- Security: snippets are user-authored and run with page-level permissions — same trust model as DevTools console
-- Auto-run snippets need a content script that checks URL patterns on page load
-- Similar to Tampermonkey/Greasemonkey but scoped to Shopify stores and integrated into Alfred
-
 ### Quick Notes
 
 **Priority:** P3
@@ -296,26 +277,6 @@ Floating sticky notes attached to a store domain. When you visit a store, your n
 - Could group notes by client/project with tags
 - Minimal implementation: textarea in popup, 50 lines of code
 
-### Redirect Mapper
-
-**Priority:** P4
-
-Visualize URL redirects for the current store. Shows the current page's redirect chain, detects redirect loops, and lets you quick-add redirects from the storefront.
-
-**Scope:**
-
-- Detect redirects on the current page via `performance.getEntriesByType('navigation')` redirect count
-- Show redirect chain for the current URL
-- Link to Admin > Online Store > Navigation > URL Redirects for management
-- Quick-add: "redirect this URL to..." form in the overlay
-
-**Context:**
-
-- Full redirect management requires Admin API access (authentication barrier)
-- v1 can focus on detection and linking to admin, not full CRUD
-- `performance.navigation.redirectCount` and `PerformanceNavigationTiming` provide redirect data
-- Most valuable for agencies doing migrations with hundreds of redirects
-
 ### Customer Session Viewer
 
 **Priority:** P4
@@ -337,102 +298,7 @@ See what Shopify knows about the current visitor: customer ID (if logged in), ca
 - Useful for debugging localization, multi-currency, and market-specific behavior
 - Low effort — mainly reading existing globals and presenting them cleanly
 
-### Webhook Monitor
-
-**Priority:** P4
-
-Real-time feed of webhook events for the current store. Filter by topic, view payloads, replay events. Requires a companion server or Shopify app to receive webhooks and relay to the extension.
-
-**Scope:**
-
-- Companion service that receives webhooks and relays via WebSocket to the extension
-- Live event feed in an overlay (similar to browser DevTools Network tab)
-- Filter by webhook topic (orders/create, products/update, etc.)
-- Click to expand payload
-- "Replay" button to re-send the event to a configurable endpoint
-
-**Context:**
-
-- This is the most complex feature on this list — requires infrastructure beyond the extension
-- Could start with a simple server (Cloudflare Worker + Durable Objects) that stores events temporarily
-- Authentication: store owner would need to install a Shopify app or configure webhooks manually
-- Consider deferring to a separate product/service rather than building into the extension
-- Marked P4 because the infrastructure cost is high relative to the other features
-
-## Cartograph
-
-### Adversarial Review Findings (from /ship 2026-03-23)
-
-**Priority:** P3
-
-Issues identified by 4-pass adversarial review during ship. None are blocking but improve robustness:
-
-- **`applicable` field missing from discount_codes type** — all codes display "Not applicable" even when applied. Fix: add `applicable: boolean` to types.ts
-- **Product URL path validation too strict** — `/en/products/` and `/collections/*/products/` paths rejected. Fix: normalize to extract handle
-- **Shipping rate polling timeout mismatch** — world script polls 5s but client allows 30s. Fix: increase to ~20 polling attempts
-- **replaceItem captures stale originalItem** — should read inside mutate callback, not at enqueue time
-- **Mount failure bricks overlay** — if script injection fails, `mounted` flag never resets. Fix: add try/catch around `mountCartograph()`
-- **USD-only currency formatting** — prices hardcoded as `$` + `toFixed(2)`, ignores `cart.currency`
-- **Quantity input capped at 99** — silent clamp on existing items with qty > 99
-
-## Insights
-
-### Insights Tab (upgrade from Insights Card)
-
-**Priority:** P3
-
-Promote the Insights Card to a full third popup tab with richer analytics: category breakdown, usage streaks, top stores worked on, trends over time.
-
-**Depends on:** Insights Card shipping + evidence of user engagement via review_nudge_shown/clicked/dismissed analytics.
-
-**Context:**
-
-- Design doc Approach C describes the full vision
-- The InsightsCard component and UsageStats data model are the foundation
-- Would require adding the tab to App.tsx's tab array
-
 ## Popup
-
-### Theme Tab — Feature Tags
-
-**Priority:** P3
-
-Display the theme's supported features from the Shopify Theme Store as grouped tag clouds in the Theme tab. Categories: Cart & Checkout, Marketing & Conversion, Merchandising, Product Discovery. Helps devs quickly see what the theme supports without visiting the Theme Store.
-
-**Scope:**
-
-- Grouped tag layout below the quick links section
-- Data source: scrape or cache from `themes.shopify.com/themes/{handle}` features section
-- Categories map to Shopify's own grouping (cart_and_checkout, marketing_and_conversion, merchandising, product_discovery)
-- Compact pill/tag rendering — no descriptions, just feature names
-
-**Context:**
-
-- Design mockup exists in `designs/popup-theme-v2.html` (removed to keep initial scope tight)
-- Data is publicly available on every theme's Theme Store page
-- Could cache per-theme in extension storage to avoid repeated fetches
-- Features list rarely changes — cache invalidation on theme version change is sufficient
-
-### Theme Tab — Version History
-
-**Priority:** P3
-
-Show the theme's version changelog from the Shopify Theme Store. Compact timeline with version number, release date, and one-line summary. Highlight the currently installed version so devs can see exactly what they're missing.
-
-**Scope:**
-
-- Compact list below other theme tab sections
-- Each row: version number (monospace), date, truncated summary
-- Currently installed version marked with a green indicator
-- Data source: `themes.shopify.com/themes/{handle}/presets/{preset}/modal_version_details` or scrape from the theme page
-- Link to full changelog on Theme Store
-
-**Context:**
-
-- Design mockup exists in `designs/popup-theme-v2.html` (removed to keep initial scope tight)
-- Version data is publicly available on every theme's Theme Store page
-- Useful alongside the existing "update available" badge in the stats row
-- Could show last 5-6 versions by default with "Show all" expand
 
 ### Theme Tab — Performance Widget
 
@@ -450,36 +316,6 @@ Inline Core Web Vitals summary in the Theme tab. Show LCP, FID/INP, CLS, and TTF
 
 **Context:**
 
-- Design mockup exists in `designs/popup-theme-v2.html` (removed from current version to keep scope tight)
+- No mockup in the repo any more; `designs/` holds only `popup-preview.html`, so this needs a fresh design pass
 - Overlaps with Store Health Check but this is a lightweight, always-visible summary vs. a full audit
 - PerformanceObserver is available in content scripts — no main-world injection needed for CWV
-- INP replaces FID as of March 2024 — use INP as the responsiveness metric
-
-### Popup Tabs — Review Follow-ups (from /ship 2026-06-11)
-
-**Priority:** P3
-
-Non-blocking findings from the popup-improvements pre-landing review, deferred to keep the ship moving:
-
-- **Toolbar scaffolding triplicated** — Links/Assets/Images each carry identical facet dropdown, export menu, search bar, sort-icon snippets, and ~250 lines of matching CSS. Extract FacetDropdown/ExportMenu/SearchBar components (or one TableToolbar) the way SummaryBar was extracted, plus a shared `siteSlug`/`downloadFile` helper
-- **summaryItems aggregation untested** — extract pure `summarizeLinks/Images/Assets` helpers returning SummaryItem[] and pin singular/plural labels, zero-suppression, and warn/err tones with bun tests
-- **Broken-anchor predicate unexercised** — extract `isBrokenAnchorFragment` into links.ts with tests for the `''`/`top`/named-anchor branches, and add a `<a name=...>` row to test-pages/links/mixed.html (the hasNamedAnchor Set path currently has no fixture)
-- **Popup renders non-http(s) hrefs as live anchors** — javascript:/data: links rely on MV3 CSP to stay inert; render `other`-kind schemes as plain text in Links (and the same pattern in Images/Assets open actions)
-- **Link index stamping is page-visible** — `data-alfred-link-index` lets pages fingerprint the extension; accepted tradeoff for mutation-safe scroll-to-link, revisit with a WeakRef snapshot if it ever matters
-
-### Robots.txt Tab — Matcher Edge Cases
-
-**Priority:** P3
-
-Refinements flagged by the v2026.06.10 adversarial review as INVESTIGATE (correct enough to ship, worth revisiting):
-
-- Percent-encoding normalization: `Disallow: /café` doesn't match the already-encoded `URL.pathname` `/caf%C3%A9`; Google normalizes both sides, some crawlers don't
-- Versioned user-agent tokens: a group declared as `User-agent: Googlebot/2.1` never prefix-matches the bot token `Googlebot`
-- Empty `User-agent:` value is silently unmatched and unlinted (could be an info-level lint)
-- Decide what `robots_view` means long-term: currently once per popup session (module flag); per-render would overcount the 90s time-saved credit
-
-**Context:**
-
-- All in `entrypoints/popup/robots.ts` / `Robots.svelte`; matcher has full test coverage in `robots.test.ts` to refactor against
-
-## Completed

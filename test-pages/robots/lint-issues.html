@@ -51,6 +51,10 @@
         <li><code>Noindex</code> flagged as unsupported / retired (Sept 2019)</li>
         <li><code>Crawl-delay</code> noted as ignored by Google</li>
         <li><code>example.com/full-path</code> flagged: path must start with <code>/</code></li>
+        <li>
+          The trailing <code>User-agent:</code> with no value is flagged: it has no product token, so its
+          <code>Disallow: /orphan</code> applies to no crawler
+        </li>
         <li>No Sitemap line: informational nudge</li>
       </ul>
     </aside>

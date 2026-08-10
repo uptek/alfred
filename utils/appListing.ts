@@ -267,34 +267,94 @@ export function parseAppListing(html: string, handle: string): AppListing {
   };
 }
 
+/** Whole days between two dates, direction-agnostic. */
+export const daysBetween = (a: Date, b: Date): number => Math.floor(Math.abs(a.getTime() - b.getTime()) / 86_400_000);
+
 /**
- * Human-readable app age from a launch-date string, e.g. "10.9 years",
- * "7 months", "12 days". Undefined when the date can't be parsed.
+ * Calendar year/month decomposition of the time since `launched`, shared by
+ * both age formatters so short and detailed ages can never disagree. A month
+ * only counts once its day-of-month has passed, so 15 days that straddle a
+ * month boundary decompose to 0 months. Null when unparseable or future.
  */
-export function formatAppAge(launchDate: string): string | undefined {
+function calendarAge(launchDate: string, now: Date): { launched: Date; years: number; months: number } | null {
   const launched = new Date(launchDate);
 
-  if (isNaN(launched.getTime())) {
-    return undefined;
+  if (isNaN(launched.getTime()) || launched.getTime() > now.getTime()) {
+    return null;
   }
 
-  const days = Math.floor((Date.now() - launched.getTime()) / 86_400_000);
-
-  if (days < 0) {
-    return undefined;
+  let years = now.getFullYear() - launched.getFullYear();
+  let months = now.getMonth() - launched.getMonth();
+  if (now.getDate() < launched.getDate()) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
   }
 
-  if (days < 30) {
-    return `${days} day${days === 1 ? '' : 's'}`;
+  return { launched, years, months };
+}
+
+/**
+ * Adds whole months, landing on the target month's last day when it is shorter
+ * than the source day. Bare `setMonth` rolls Jan 31 + 1 month forward into
+ * March, which would overshoot the anniversary and undercount leftover days.
+ */
+function addMonthsClamped(date: Date, months: number): Date {
+  const result = new Date(date);
+  result.setDate(1);
+  result.setMonth(result.getMonth() + months);
+  const lastDayOfMonth = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+  result.setDate(Math.min(date.getDate(), lastDayOfMonth));
+  return result;
+}
+
+/**
+ * Human-readable app age from a launch-date string, e.g. "Today", "3 days",
+ * "5 months", "1 year", "1.5 years". Calendar year/month arithmetic, so a
+ * whole year reads "1 year" rather than "1.0 years". Undefined when the date
+ * can't be parsed or is in the future.
+ */
+export function formatAppAge(launchDate: string, now: Date = new Date()): string | undefined {
+  const age = calendarAge(launchDate, now);
+  if (!age) return undefined;
+  const { launched, years, months } = age;
+
+  if (years === 0 && months === 0) {
+    const days = daysBetween(now, launched);
+    return days === 0 ? 'Today' : `${days} day${days === 1 ? '' : 's'}`;
   }
 
-  const months = Math.floor(days / 30.44);
-
-  if (months < 12) {
+  if (years === 0) {
     return `${months} month${months === 1 ? '' : 's'}`;
   }
 
-  return `${(days / 365.25).toFixed(1)} years`;
+  const decimal = months === 0 ? '' : (months / 12).toFixed(1).substring(1);
+  return `${years}${decimal} ${years === 1 && months === 0 ? 'year' : 'years'}`;
+}
+
+/**
+ * Long-form app age like "1 year, 2 months, 3 days". Same calendar
+ * decomposition as formatAppAge. Undefined when the date can't be parsed or
+ * is in the future.
+ */
+export function formatDetailedAppAge(launchDate: string, now: Date = new Date()): string | undefined {
+  const age = calendarAge(launchDate, now);
+  if (!age) return undefined;
+  const { launched, years, months } = age;
+
+  // Leftover days are measured from the last whole-month anniversary. Floored
+  // at zero because a launch string parsed as UTC midnight can sit a few hours
+  // ahead of a local-time anniversary.
+  const anchor = addMonthsClamped(launched, years * 12 + months);
+  const days = Math.max(0, Math.floor((now.getTime() - anchor.getTime()) / 86_400_000));
+
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
+  if (months > 0) parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
+  if (days > 0 || parts.length === 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+  return parts.join(', ');
 }
 
 /**

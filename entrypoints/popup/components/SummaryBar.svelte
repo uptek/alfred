@@ -1,8 +1,6 @@
-<script module lang="ts">
-  export type SummaryItem = { text: string; tone?: 'warn' | 'err'; title?: string };
-</script>
-
 <script lang="ts">
+  import type { SummaryItem } from '../utils/types';
+
   let { items }: { items: SummaryItem[] } = $props();
 </script>
 

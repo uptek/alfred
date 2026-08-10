@@ -4,19 +4,9 @@
  * in tabState.svelte.ts.
  */
 
-export type PopupSection =
-  | 'theme'
-  | 'overview'
-  | 'headings'
-  | 'links'
-  | 'assets'
-  | 'images'
-  | 'robots'
-  | 'hreflangs'
-  | 'schema'
-  | 'social'
-  | 'sitemaps'
-  | 'settings';
+import type { TabId } from '../tabs';
+
+export type PopupSection = TabId;
 
 export const SCHEMA_VERSION = 1;
 

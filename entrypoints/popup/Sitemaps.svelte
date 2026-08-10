@@ -1,29 +1,32 @@
-<script lang="ts" module>
-  // Module scope: once per popup load, not per tab-switch remount.
-  let viewTracked = false;
-</script>
-
 <script lang="ts">
   import {
-    analyzeSitemaps,
     categorizeSitemap,
     getSitemapUrls,
     searchSitemapUrls,
     sitemapFilename,
     type SitemapNode,
     type SitemapSearchResult,
+    type SitemapsAnalysis,
     type SitemapsData
   } from './utils/sitemaps';
-  import { csvField } from './utils/format';
+  import { csvField, downloadFile } from './utils/format';
+  import { getActiveTab } from './utils/messaging';
+  import { createCopyFeedback, createKeyedCopyFeedback } from './utils/copy.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
-  import { untrack, onDestroy } from 'svelte';
-  import ActionButton from './ActionButton.svelte';
+  import { untrack } from 'svelte';
+  import ActionButton from './components/ActionButton.svelte';
+  import ExportMenu from './components/ExportMenu.svelte';
+  import type { ExportItem } from './components/ExportMenu.svelte';
+  import SearchField from './components/SearchField.svelte';
+  import SortHeader from './components/SortHeader.svelte';
 
-  let { data, loading = false }: { data: SitemapsData | null; loading?: boolean } = $props();
-
-  // Same pipeline as the App.svelte tab badge — the two can't disagree.
-  const analysis = $derived(analyzeSitemaps(data));
+  let {
+    data,
+    analysis,
+    loading = false
+  }: { data: SitemapsData | null; analysis: SitemapsAnalysis; loading?: boolean } = $props();
 
   // Flatten for rendering: index children as rows; a flat urlset root is its own row.
   const rows = $derived.by(() => {
@@ -102,43 +105,19 @@
     trackAction('sitemaps_open');
   }
 
-  let copied = $state(false);
-  let copyTimer: ReturnType<typeof setTimeout> | null = null;
+  const copyFeedback = createCopyFeedback();
   async function copyUrls() {
     const text = rows.map(({ node }) => node.finalUrl || node.url).join('\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (copyTimer) clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => {
-        copied = false;
-      }, 1500);
-      trackAction('sitemaps_copy');
-    } catch {
-      // ignore clipboard errors
-    }
-    menuOpen = false;
+    if (await copyFeedback.copy(text)) trackAction('sitemaps_copy');
   }
 
   // Per-row action feedback, keyed by sitemap URL so sorting can't misplace it.
-  let copiedUrlKey = $state<string | null>(null);
-  let copiedLinksKey = $state<string | null>(null);
+  const urlCopy = createKeyedCopyFeedback<string>();
+  const linksCopy = createKeyedCopyFeedback<string>();
   let pendingLinksKey = $state<string | null>(null);
-  let rowUrlTimer: ReturnType<typeof setTimeout> | null = null;
-  let rowLinksTimer: ReturnType<typeof setTimeout> | null = null;
 
   async function copySitemapUrl(node: SitemapNode) {
-    try {
-      await navigator.clipboard.writeText(node.finalUrl || node.url);
-      copiedUrlKey = node.url;
-      if (rowUrlTimer) clearTimeout(rowUrlTimer);
-      rowUrlTimer = setTimeout(() => {
-        copiedUrlKey = null;
-      }, 1500);
-      trackAction('sitemaps_copy');
-    } catch {
-      // ignore clipboard errors
-    }
+    if (await urlCopy.copy(node.finalUrl || node.url, node.url)) trackAction('sitemaps_copy');
   }
 
   async function copySitemapLinks(node: SitemapNode) {
@@ -147,15 +126,11 @@
     try {
       const result = await getSitemapUrls(node.finalUrl || node.url);
       if (!result || result.urls.length === 0) return;
-      await navigator.clipboard.writeText(result.urls.join('\n'));
-      copiedLinksKey = node.url;
-      if (rowLinksTimer) clearTimeout(rowLinksTimer);
-      rowLinksTimer = setTimeout(() => {
-        copiedLinksKey = null;
-      }, 1500);
-      trackAction('sitemaps_copy_urls', { url_count: result.urls.length, truncated: result.truncated });
+      if (await linksCopy.copy(result.urls.join('\n'), node.url)) {
+        trackAction('sitemaps_copy_urls', { url_count: result.urls.length, truncated: result.truncated });
+      }
     } catch {
-      // ignore clipboard errors
+      // ignore fetch errors
     } finally {
       pendingLinksKey = null;
     }
@@ -194,7 +169,7 @@
 
   async function findCurrentPage() {
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      const tab = await getActiveTab();
       if (!tab?.url) return;
       const u = new URL(tab.url);
       query = u.host + u.pathname;
@@ -204,16 +179,6 @@
   }
 
   let menuOpen = $state(false);
-
-  function downloadFile(content: string, filename: string, mime: string) {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
 
   function exportRow(node: SitemapNode) {
     return {
@@ -238,45 +203,37 @@
     });
     downloadFile(withCsvCredit([header, ...csvRows].join('\n')), 'sitemaps.csv', 'text/csv');
     trackAction('sitemaps_export', { format: 'csv' });
-    menuOpen = false;
   }
 
   function exportJson() {
     const data = rows.map(({ node }) => exportRow(node));
     downloadFile(JSON.stringify(data, null, 2), 'sitemaps.json', 'application/json');
     trackAction('sitemaps_export', { format: 'json' });
-    menuOpen = false;
   }
 
   function exportText() {
     const text = rows.map(({ node }) => node.finalUrl || node.url).join('\n');
     downloadFile(text, 'sitemaps.txt', 'text/plain');
     trackAction('sitemaps_export', { format: 'txt' });
-    menuOpen = false;
   }
+
+  const exportItems = $derived<ExportItem[]>([
+    { label: 'CSV', desc: 'All fields', onClick: exportCsv },
+    { label: 'JSON', desc: 'All fields', onClick: exportJson },
+    { label: 'Text', desc: 'URLs only', onClick: exportText },
+    { label: copyFeedback.copied ? 'Copied!' : 'Copy', desc: 'URLs only', onClick: copyUrls, keepOpen: true, dividerBefore: true },
+  ]);
 
   function severityLabel(severity: string): string {
     return severity === 'error' ? 'Error' : severity === 'warning' ? 'Warning' : 'Info';
   }
 
-  $effect(() => {
-    if (viewTracked || data === null) return;
-    viewTracked = true;
-    untrack(() => {
-      trackAction('sitemaps_view', {
-        ok: analysis.ok,
-        sitemap_count: analysis.totalSitemaps,
-        url_count: analysis.totalUrls,
-        error_count: analysis.errorCount
-      });
-    });
-  });
-
-  onDestroy(() => {
-    if (copyTimer) clearTimeout(copyTimer);
-    if (rowUrlTimer) clearTimeout(rowUrlTimer);
-    if (rowLinksTimer) clearTimeout(rowLinksTimer);
-  });
+  trackViewOnce('sitemaps_view', () => data !== null, () => ({
+    ok: analysis.ok,
+    sitemap_count: analysis.totalSitemaps,
+    url_count: analysis.totalUrls,
+    error_count: analysis.errorCount
+  }));
 
   function handleWindowClick(e: MouseEvent) {
     const target = e.target as HTMLElement;
@@ -304,16 +261,6 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
     <polyline points="20 6 9 17 4 12" />
   </svg>
-{/snippet}
-
-{#snippet sortIcon(key: SortKey)}
-  {#if sortKey === key}
-    <svg class="sort-arrow sort-arrow--active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      {#if sortDir === 'asc'}<path d="M18 15l-6-6-6 6"/>{:else}<path d="M6 9l6 6 6-6"/>{/if}
-    </svg>
-  {:else}
-    <svg class="sort-arrow sort-arrow--idle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4-4 4 4"/><path d="M8 14l4 4 4-4"/></svg>
-  {/if}
 {/snippet}
 
 {#if loading}
@@ -367,44 +314,13 @@
           </ActionButton>
         {/if}
         {#if rows.length > 0}
-          <div class="export">
-            <button
-              class="export__trigger"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              aria-label="Download sitemap data"
-              title="Download sitemap data"
-              onclick={() => { menuOpen = !menuOpen; }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="export__icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-            {#if menuOpen}
-              <div class="export__menu" role="menu">
-                <button class="export__item" role="menuitem" onclick={exportCsv}>
-                  <span class="export__item-label">CSV</span>
-                  <span class="export__item-desc">All fields</span>
-                </button>
-                <button class="export__item" role="menuitem" onclick={exportJson}>
-                  <span class="export__item-label">JSON</span>
-                  <span class="export__item-desc">All fields</span>
-                </button>
-                <button class="export__item" role="menuitem" onclick={exportText}>
-                  <span class="export__item-label">Text</span>
-                  <span class="export__item-desc">URLs only</span>
-                </button>
-                <div class="export__divider"></div>
-                <button class="export__item" role="menuitem" onclick={copyUrls}>
-                  <span class="export__item-label">
-                    {#if copied}
-                      <svg class="export__item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    {/if}
-                    Copy
-                  </span>
-                  <span class="export__item-desc">URLs only</span>
-                </button>
-              </div>
-            {/if}
-          </div>
+          <ExportMenu
+            items={exportItems}
+            label="Download sitemap data"
+            open={menuOpen}
+            onToggle={() => { menuOpen = !menuOpen; }}
+            onClose={() => { menuOpen = false; }}
+          />
         {/if}
       </div>
     </div>
@@ -422,23 +338,13 @@
       {/if}
 
       {#if rows.length > 0}
-        <div class="search">
-          <svg class="search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input
-            class="search__input"
-            type="text"
-            placeholder="Search URLs across all sitemaps"
-            bind:value={query}
-          />
-          {#if query}
-            <button class="search__clear" aria-label="Clear search" title="Clear search" onclick={() => { query = ''; }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <SearchField bind:value={query} placeholder="Search URLs across all sitemaps" clearLabel="Clear search">
+          {#snippet trailing()}
+            <button class="search__find" title="Search for the page open in this tab" onclick={findCurrentPage}>
+              This page
             </button>
-          {/if}
-          <button class="search__find" title="Search for the page open in this tab" onclick={findCurrentPage}>
-            This page
-          </button>
-        </div>
+          {/snippet}
+        </SearchField>
       {/if}
 
       {#if searchActive}
@@ -480,28 +386,20 @@
         {/if}
       {:else if rows.length > 0}
         <div class="sitemaps-table-wrap">
-          <table class="sitemaps-table">
+          <table class="table">
             <thead>
               <tr>
                 <th class="th th--sitemap">
-                  <button class="th-btn" class:th-btn--active={sortKey === 'name'} onclick={() => toggleSort('name')} title="Sort by name">
-                    Sitemap{@render sortIcon('name')}
-                  </button>
+                  <SortHeader label="Sitemap" active={sortKey === 'name'} dir={sortDir} onclick={() => toggleSort('name')} title="Sort by name" />
                 </th>
                 <th class="th th--urls">
-                  <button class="th-btn" class:th-btn--active={sortKey === 'urls'} onclick={() => toggleSort('urls')} title="Sort by URL count">
-                    URLs{@render sortIcon('urls')}
-                  </button>
+                  <SortHeader label="URLs" active={sortKey === 'urls'} dir={sortDir} onclick={() => toggleSort('urls')} title="Sort by URL count" />
                 </th>
                 <th class="th th--modified">
-                  <button class="th-btn" class:th-btn--active={sortKey === 'modified'} onclick={() => toggleSort('modified')} title="Sort by last modified">
-                    Modified{@render sortIcon('modified')}
-                  </button>
+                  <SortHeader label="Modified" active={sortKey === 'modified'} dir={sortDir} onclick={() => toggleSort('modified')} title="Sort by last modified" />
                 </th>
                 <th class="th th--status">
-                  <button class="th-btn" class:th-btn--active={sortKey === 'status'} onclick={() => toggleSort('status')} title="Sort by status">
-                    Status{@render sortIcon('status')}
-                  </button>
+                  <SortHeader label="Status" active={sortKey === 'status'} dir={sortDir} onclick={() => toggleSort('status')} title="Sort by status" />
                 </th>
                 <th class="th th--actions"><span class="visually-hidden">Actions</span></th>
               </tr>
@@ -549,14 +447,14 @@
                     <div class="row-actions">
                       <button
                         class="row-action"
-                        class:row-action--copied={copiedUrlKey === node.url}
-                        title={copiedUrlKey === node.url ? 'Copied' : 'Copy sitemap URL'}
+                        class:row-action--copied={urlCopy.key === node.url}
+                        title={urlCopy.key === node.url ? 'Copied' : 'Copy sitemap URL'}
                         onclick={(e) => {
                           e.stopPropagation();
                           copySitemapUrl(node);
                         }}
                       >
-                        {#if copiedUrlKey === node.url}
+                        {#if urlCopy.key === node.url}
                           {@render checkIcon()}
                         {:else}
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
@@ -568,15 +466,15 @@
                       {#if node.ok}
                         <button
                           class="row-action"
-                          class:row-action--copied={copiedLinksKey === node.url}
+                          class:row-action--copied={linksCopy.key === node.url}
                           class:row-action--pending={pendingLinksKey === node.url}
-                          title={copiedLinksKey === node.url ? 'Copied' : 'Copy all links in this sitemap'}
+                          title={linksCopy.key === node.url ? 'Copied' : 'Copy all links in this sitemap'}
                           onclick={(e) => {
                             e.stopPropagation();
                             copySitemapLinks(node);
                           }}
                         >
-                          {#if copiedLinksKey === node.url}
+                          {#if linksCopy.key === node.url}
                             {@render checkIcon()}
                           {:else}
                             {@render copyLinksIcon()}
@@ -652,17 +550,7 @@
   .issue__dot--info { background: var(--text-faint); }
   .issue__msg { flex: 1; min-width: 0; }
 
-  /* Search — same control as the Links tab */
-  /* Right padding is 3px because the This-page button carries 7px of its own;
-     3 + 7 keeps the text 10px from the edge, matching the icon on the left. */
-  .search { display: flex; align-items: center; gap: 6px; margin: 12px 20px 2px; padding: 5px 3px 5px 10px; border: 1px solid var(--border-strong); border-radius: 6px; transition: border-color 0.12s; }
-  .search:focus-within { border-color: var(--border-hover); }
-  .search__icon { width: 14px; height: 14px; flex-shrink: 0; stroke-width: 1.8; color: var(--text-muted); }
-  .search__input { flex: 1; border: none; outline: none; background: none; font-family: inherit; font-size: 12px; color: var(--text); }
-  .search__input::placeholder { color: var(--text-placeholder); }
-  .search__clear { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0; border: none; background: none; cursor: pointer; color: var(--text-muted); border-radius: 3px; transition: all 0.12s; }
-  .search__clear:hover { color: var(--text-secondary); background: var(--bg-hover); }
-  .search__clear svg { width: 12px; height: 12px; stroke-width: 2; }
+  /* Search — the "This page" control the shared SearchField renders as `trailing` */
   .search__find { flex-shrink: 0; padding: 2px 7px; border: none; background: none; cursor: pointer; font-family: inherit; font-size: 10.5px; font-weight: 600; white-space: nowrap; color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; border-radius: 4px; transition: all 0.12s; }
   .search__find:hover { color: var(--text); background: var(--bg-hover); }
 
@@ -682,27 +570,15 @@
   /* Table — full-bleed rows like Links/Assets: no wrapper side padding, gutter
      lives on the edge cells so hover background spans the popup's full width */
   .sitemaps-table-wrap { padding: 6px 0 20px; }
-  .sitemaps-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-  .th:first-child, .td:first-child { padding-left: 20px; }
-  .th:last-child, .td:last-child { padding-right: 20px; }
-  .th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); padding: 8px 8px 8px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-canvas); z-index: 1; }
   .th--sitemap { width: auto; }
   .th--urls { width: 92px; text-align: right; }
   .th--modified { width: 78px; }
   .th--status { width: 56px; text-align: right; }
   .th--actions { width: 82px; }
-  .th-btn { display: inline-flex; align-items: center; gap: 2px; padding: 0; border: none; background: none; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; transition: color 0.12s; }
-  .th-btn:hover { color: var(--text-secondary); }
-  .th-btn--active { color: var(--text-secondary); }
-  .th--urls .th-btn { justify-content: flex-end; }
-  .sort-arrow { width: 11px; height: 11px; stroke-width: 2.5; flex-shrink: 0; }
-  .sort-arrow--idle { opacity: 0.4; transition: opacity 0.12s; }
-  .th-btn:hover .sort-arrow--idle { opacity: 0.75; }
 
-  .row { cursor: pointer; transition: background 0.1s; }
+  .row { cursor: pointer; }
   .row:hover { background: var(--bg-hover); }
   .row--failed .td { color: var(--text-muted); }
-  .td { padding: 9px 8px 9px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border-muted); vertical-align: middle; }
   .td--urls-cell { text-align: right; }
   .td--status-cell { text-align: right; }
 
@@ -731,22 +607,11 @@
   .row-action--copied { color: var(--success); }
   .row-action--copied:hover { color: var(--success); background: none; border-color: transparent; box-shadow: none; }
 
-  .sitemaps-table tfoot .td { border-bottom: none; border-top: 1px solid var(--border); font-weight: 600; color: var(--text-secondary); }
+  .table tfoot .td { border-bottom: none; border-top: 1px solid var(--border); font-weight: 600; color: var(--text-secondary); }
 
   .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   /* Export dropdown */
-  .export { position: relative; }
-  .export__trigger { white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .export__trigger:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
-  .export__icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 1.8; }
-  .export__menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-pop); z-index: 10; min-width: 150px; padding: 4px; }
-  .export__item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 10px; border: none; background: none; font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 5px; transition: background 0.1s; }
-  .export__item:hover { background: var(--bg-hover); }
-  .export__item-label { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--text); }
-  .export__item-check { width: 11px; height: 11px; stroke-width: 2.4; color: var(--success-strong); flex-shrink: 0; }
-  .export__item-desc { font-size: 11px; color: var(--text-muted); }
-  .export__divider { height: 1px; margin: 4px 6px; background: var(--border); }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }

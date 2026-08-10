@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { CartData, CartItem, ProductData } from '../types';
-  import { entriesToRecord, recordToEntries } from '../utils';
+  import { entriesToRecord, formatMoney, MAX_QUANTITY, recordToEntries } from '../utils';
   import QuantityInput from './QuantityInput.svelte';
   import KeyValueEditor from './KeyValueEditor.svelte';
 
@@ -83,7 +83,7 @@
   }
 
   function formatPrice(cents: number): string {
-    return `$${(cents / 100).toFixed(2)}`;
+    return formatMoney(cents, cart.currency);
   }
 
   function propsCount(properties: Record<string, string> | null): number {
@@ -91,15 +91,12 @@
     return Object.keys(properties).length;
   }
 
-  const propsToEntries = recordToEntries;
-  const entriesToProps = entriesToRecord;
-
   // Local entries state for expanded property editors, keyed by item key
   let propertyEntries: Record<string, Array<{ key: string; value: string }>> = $state({});
 
   function initEntries(itemKey: string, properties: Record<string, string> | null) {
     if (!(itemKey in propertyEntries)) {
-      propertyEntries[itemKey] = propsToEntries(properties);
+      propertyEntries[itemKey] = recordToEntries(properties);
     }
   }
 
@@ -118,8 +115,9 @@
   }
 
   function isPropertiesModified(itemKey: string, currentProperties: Record<string, string> | null): boolean {
-    if (!(itemKey in propertyEntries)) return false;
-    return JSON.stringify(entriesToProps(propertyEntries[itemKey])) !== JSON.stringify(currentProperties || {});
+    const entries = propertyEntries[itemKey];
+    if (!entries) return false;
+    return JSON.stringify(entriesToRecord(entries)) !== JSON.stringify(currentProperties || {});
   }
 
   async function saveProperties(itemKey: string, quantity: number) {
@@ -129,7 +127,7 @@
     // Shopify's change.js overwrites the entire properties object, so sending
     // only the remaining keys drops any removed ones. However, setting properties
     // to {} is a no-op — the parent handler deals with that via remove+re-add.
-    const newProps = entriesToProps(entries);
+    const newProps = entriesToRecord(entries);
 
     const didSave = await withBusy(itemKey, () => onUpdateProperties(itemKey, quantity, newProps));
     if (!didSave) return;
@@ -139,7 +137,7 @@
     // clean up orphaned state and collapse the editor.
     const updatedItem = cart.items.find((item) => item.key === itemKey);
     if (updatedItem) {
-      propertyEntries[itemKey] = propsToEntries(updatedItem.properties);
+      propertyEntries[itemKey] = recordToEntries(updatedItem.properties);
     } else {
       // Item key changed after replaceItem — clean up stale state
       delete propertyEntries[itemKey];
@@ -211,9 +209,11 @@
                   <svg class="chevron" class:chevron-open={variantEditKey === item.key} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 {/if}
               </div>
-              {#if variantEditKey === item.key && variantProductCache[item.product_id]}
+              {#if variantEditKey === item.key}
+                {@const cached = variantProductCache[item.product_id]}
+                {#if cached}
                 <div class="variant-picker">
-                  {#each variantProductCache[item.product_id].variants as variant (variant.id)}
+                  {#each cached.variants as variant (variant.id)}
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <div
@@ -233,6 +233,7 @@
                     </div>
                   {/each}
                 </div>
+                {/if}
               {/if}
             {:else if item.variant_title}
               <div class="variant-title">{item.variant_title}</div>
@@ -245,7 +246,7 @@
             <QuantityInput
               value={item.quantity}
               min={0}
-              max={99}
+              max={Math.max(MAX_QUANTITY, item.quantity)}
               disabled={busyKeys.has(item.key)}
               onchange={(qty) => withBusy(item.key, () => onUpdateQuantity(item.key, qty))}
             />
@@ -554,6 +555,7 @@
     color: var(--cs-text-secondary);
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

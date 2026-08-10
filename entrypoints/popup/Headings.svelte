@@ -1,21 +1,19 @@
 <script lang="ts">
   import type { RawHeading, HeadingIssue } from './utils/types';
   import { scrollToHeading } from './utils/headings';
+  import { createCopyFeedback } from './utils/copy.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCredit } from '@/utils/credit';
-  import { untrack } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
 
   let { headings, issues }: { headings: RawHeading[]; issues: HeadingIssue[] } = $props();
 
-  let tracked = false;
-  $effect(() => {
-    if (tracked || headings.length === 0) return;
-    tracked = true;
-    untrack(() => {
-      trackAction('headings_view', { heading_count: headings.length, issue_count: issues.length, hidden_count: headings.filter(h => h.isHidden).length });
-    });
-  });
+  trackViewOnce('headings_view', () => headings.length > 0, () => ({
+    heading_count: headings.length,
+    issue_count: issues.length,
+    hidden_count: headings.filter(h => h.isHidden).length
+  }));
 
   interface HeadingsPersisted {
     showHidden: boolean;
@@ -38,13 +36,13 @@
       .filter(({ heading }) => showHidden || !heading.isHidden)
   );
 
-  const counts = $derived({
-    h1: headings.filter(h => h.level === 1).length,
-    h2: headings.filter(h => h.level === 2).length,
-    h3: headings.filter(h => h.level === 3).length,
-    h4: headings.filter(h => h.level === 4).length,
-    h5: headings.filter(h => h.level === 5).length,
-    h6: headings.filter(h => h.level === 6).length,
+  const counts = $derived.by(() => {
+    const c = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 };
+    for (const h of headings) {
+      const key = `h${h.level}` as keyof typeof c;
+      if (key in c) c[key]++;
+    }
+    return c;
   });
 
   const issuesByIndex = $derived(
@@ -67,7 +65,7 @@
     }
   }
 
-  let copyState = $state<'idle' | 'copied'>('idle');
+  const copyFeedback = createCopyFeedback();
 
   function handleClick(index: number) {
     scrollToHeading(index);
@@ -79,13 +77,8 @@
     const text = source
       .map(h => `${'  '.repeat(h.level - 1)}H${h.level}: ${h.text || '(empty)'}${h.isHidden ? ' [hidden]' : ''}`)
       .join('\n');
-    try {
-      await navigator.clipboard.writeText(withCredit(text));
-      copyState = 'copied';
+    if (await copyFeedback.copy(withCredit(text))) {
       trackAction('headings_copy', { heading_count: headings.length, issue_count: issues.length });
-      setTimeout(() => (copyState = 'idle'), 1500);
-    } catch {
-      // silent fail
     }
   }
 </script>
@@ -115,7 +108,7 @@
           </button>
         {/if}
         <button class="copy-btn" onclick={handleCopy} aria-label="Copy headings to clipboard" title="Copy headings to clipboard">
-          {#if copyState === 'copied'}
+          {#if copyFeedback.copied}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="copy-btn__icon"><polyline points="20 6 9 17 4 12"/></svg>
           {:else}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="copy-btn__icon"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
@@ -152,7 +145,7 @@
             {:else}
               <span class="tree__text tree__text--empty">(empty)</span>
             {/if}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="tree__hidden-icon" title="Hidden"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="tree__hidden-icon"><title>Hidden</title><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             {#if issuesByIndex[originalIndex]}
               <span class="tree__issue-dot"></span>
             {/if}

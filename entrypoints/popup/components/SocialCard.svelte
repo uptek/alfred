@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { PlatformPreview, SocialPlatform } from './utils/social';
-  import { graphemeSlice } from './utils/social';
+  import type { PlatformPreview, SocialPlatform } from '../utils/social';
+  import { graphemeSlice } from '../utils/social';
 
   let { preview, platform }: { preview: PlatformPreview; platform: SocialPlatform } = $props();
 
@@ -190,6 +190,7 @@
   .card__desc--clamp {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

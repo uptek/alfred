@@ -2,6 +2,11 @@
   import { getSettingsStore } from '../../stores/settings.svelte';
 
   const store = getSettingsStore();
+
+  function selectedInspector(e: Event): 'default' | 'disable' | 'restore' {
+    const values = (e.currentTarget as HTMLElement & { values: string[] }).values;
+    return (values[0] ?? 'default') as 'default' | 'disable' | 'restore';
+  }
 </script>
 
 <s-section heading="Theme inspector">
@@ -12,9 +17,9 @@
     label="Theme inspector"
     labelAccessibilityVisibility="exclusive"
     name="theme-inspector"
-    value={store.settings.themeCustomizer?.inspector ?? 'default'}
+    values={[store.settings.themeCustomizer.inspector ?? 'default']}
     onchange={(e: Event) => store.updateSettings({
-      themeCustomizer: { ...store.settings.themeCustomizer, inspector: (e.currentTarget as HTMLElement & { value: string }).value as 'default' | 'disable' | 'restore' }
+      themeCustomizer: { ...store.settings.themeCustomizer, inspector: selectedInspector(e) }
     })}
   >
     <s-choice value="default">Default behavior</s-choice>

@@ -1,11 +1,9 @@
 import { createIntegratedUi } from '#imports';
 import { mount, unmount } from 'svelte';
-import { getItem } from '~/utils/storage';
-import { COMPARE_TRAY_LIMIT } from '~/utils/compareTray';
+import { getSettings, isEnabled } from '~/utils/settings';
+import { COMPARE_TRAY_LIMIT, isAppHandle } from '~/utils/compareTray';
 import App from './App.svelte';
 import './style.css';
-
-const HANDLE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
 /** Lift the pre-paint curtain from style.css (shows whatever main holds). */
 function revealMain() {
@@ -16,8 +14,8 @@ export default defineContentScript({
   matches: ['*://apps.shopify.com/compare/*'],
   async main(ctx) {
     // Check if compare apps is enabled
-    const settings = await getItem<AlfredSettings>('settings');
-    const isCompareAppsEnabled = settings?.appStore?.compareApps !== false;
+    const settings = await getSettings();
+    const isCompareAppsEnabled = isEnabled(settings.appStore.compareApps);
 
     if (!isCompareAppsEnabled) {
       revealMain();
@@ -30,7 +28,7 @@ export default defineContentScript({
           .replace(/^\/compare\//, '')
           .split(',')
           .map((handle) => decodeURIComponent(handle).trim().toLowerCase())
-          .filter((handle) => HANDLE_PATTERN.test(handle))
+          .filter(isAppHandle)
       )
     ].slice(0, COMPARE_TRAY_LIMIT);
 

@@ -1,6 +1,10 @@
+import { sendTabMessage } from './messages';
+
 // Define the custom element class
 class AlfredToast extends HTMLElement {
-  private timeout: ReturnType<typeof setTimeout> | null = null;
+  // Not private: Toast.setAutoHide writes this slot through the ToastElement
+  // type, and disconnectedCallback below is what clears it.
+  timeout: ReturnType<typeof setTimeout> | null = null;
 
   connectedCallback() {
     // Set popover attribute and class
@@ -9,36 +13,11 @@ class AlfredToast extends HTMLElement {
   }
 
   disconnectedCallback() {
-    // Cleanup when removed from DOM
+    // Clear the auto-hide timer Toast attached to this element
     if (this.timeout) {
       clearTimeout(this.timeout);
       this.timeout = null;
     }
-  }
-
-  setAutoHide(duration: number) {
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-    }
-    this.timeout = setTimeout(() => {
-      this.hide();
-    }, duration);
-  }
-
-  hide() {
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-      this.timeout = null;
-    }
-
-    // Add hide class and remove show class for hide animation
-    this.classList.remove('alfred-toast--show');
-    this.classList.add('alfred-toast--hide');
-
-    setTimeout(() => {
-      this.hidePopover();
-      this.remove();
-    }, 400);
   }
 }
 
@@ -303,7 +282,7 @@ export async function showTabToast(
 ): Promise<void> {
   if (tabId == null) return;
   try {
-    await browser.tabs.sendMessage(tabId, { action: 'alfred_toast', message, toastType });
+    await sendTabMessage(tabId, 'alfred_toast', { message, toastType });
   } catch {
     // No Alfred content script on this page to surface the toast.
   }

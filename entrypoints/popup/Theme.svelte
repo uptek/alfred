@@ -1,8 +1,8 @@
 <script lang="ts">
   import { trackAction } from '@/utils/analytics';
-  import CopyIcon from './CopyIcon.svelte';
-  import Tooltip from './Tooltip.svelte';
-  import { untrack } from 'svelte';
+  import { trackViewOnce } from './utils/track.svelte';
+  import CopyIcon from './components/CopyIcon.svelte';
+  import Tooltip from './components/Tooltip.svelte';
   import { getTabState } from './stores/tabState.svelte';
   import type { StoreInfo } from './utils/types';
 
@@ -17,25 +17,18 @@
 
   let copying = $state(false);
   let disablePreviewBar = $state(restored?.disablePreviewBar ?? false);
-  let tracked = false;
 
   $effect(() => {
     tabState.saveSection('theme', { disablePreviewBar });
   });
 
-  $effect(() => {
-    if (tracked) return;
-    tracked = true;
-    untrack(() => {
-      trackAction('detect_theme', {
-        is_shopify: storeInfo.isShopify,
-        page_url: storeInfo.page_url ?? '',
-        shop_domain: storeInfo.shopDomain ?? '',
-        theme_name: storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? '',
-        theme_version: storeInfo.theme?.schema_version ?? ''
-      });
-    });
-  });
+  trackViewOnce('detect_theme', () => true, () => ({
+    is_shopify: storeInfo.isShopify,
+    page_url: storeInfo.page_url ?? '',
+    shop_domain: storeInfo.shopDomain ?? '',
+    theme_name: storeInfo.theme?.schema_name ?? storeInfo.theme?.name ?? '',
+    theme_version: storeInfo.theme?.schema_version ?? ''
+  }));
 
   function withUtm(url: string, content: string): string {
     try {
@@ -110,11 +103,6 @@
       ? storeInfo.theme.name
       : null
   );
-  // const developerThemesUrl = $derived(
-  //   developerUrl
-  //     ? (developerUrl.startsWith('/') ? `https://themes.shopify.com${developerUrl}` : developerUrl)
-  //     : null
-  // );
 </script>
 
 <!-- Hero -->
@@ -251,176 +239,6 @@
     </div>
   </div>
 
-  <!-- Reviews (enable when review data is available)
-  <div class="section">
-    <div class="section__title">Reviews</div>
-    <div class="reviews__headline">
-      <span class="reviews__pct">35% positive</span>
-    </div>
-    <div class="reviews__meta">
-      <span class="reviews__count">272 reviews</span>
-      {#if themeStoreUrl}
-        <a href={withUtm(themeStoreUrl, 'reviews')} target="_blank" rel="noopener noreferrer" class="reviews__link">View all &rarr;</a>
-      {/if}
-    </div>
-    <div class="reviews__bars">
-      <div class="reviews__bar">
-        <svg viewBox="0 0 20 20" width="18" height="18" class="reviews__icon reviews__icon--positive"><path fill-rule="evenodd" fill="currentColor" d="M12.539 14.57a9.25 9.25 0 0 1-4.074-.838l-.307-.141a3.751 3.751 0 0 0-1.158-.32v-5.222a1.5 1.5 0 0 0 .15-.099 6.489 6.489 0 0 0 2.475-3.95 1.41 1.41 0 0 1 1.378 1.557l-.133 1.26a1.75 1.75 0 0 0 1.74 1.933h1.595c.758 0 1.342.67 1.239 1.42l-.338 2.449a2.25 2.25 0 0 1-2.176 1.942l-.391.01Zm-7.039-6.32h-1v5h1v-5Zm2.34 6.845a10.75 10.75 0 0 0 4.735.975l.391-.01a3.75 3.75 0 0 0 3.626-3.236l.337-2.448a2.75 2.75 0 0 0-2.724-3.126h-1.594a.25.25 0 0 1-.249-.276l.133-1.26a2.91 2.91 0 0 0-2.894-3.214h-.364c-.5 0-.928.357-1.017.849l-.055.303a4.989 4.989 0 0 1-1.915 3.098h-2c-.69 0-1.25.56-1.25 1.25v5.5c0 .69.56 1.25 1.25 1.25h2.345c.324 0 .644.07.938.205l.307.14Z"/></svg>
-        <div class="reviews__track"><div class="reviews__fill" style="width:35%"></div></div>
-        <span class="reviews__bar-count">96</span>
-      </div>
-      <div class="reviews__bar">
-        <svg viewBox="0 0 20 20" width="18" height="18" class="reviews__icon reviews__icon--neutral"><path fill="currentColor" d="M10 2c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Zm0 14.4c-3.5 0-6.4-2.9-6.4-6.4S6.5 3.6 10 3.6s6.4 2.9 6.4 6.4-2.9 6.4-6.4 6.4ZM7.6 9.2c.4 0 .8-.4.8-.8s-.4-.8-.8-.8-.8.4-.8.8.4.8.8.8Zm4.8-1.6c-.4 0-.8.4-.8.8s.4.8.8.8.8-.4.8-.8-.4-.8-.8-.8Zm0 4H7.6c-.4 0-.8.4-.8.8s.4.8.8.8h4.8c.4 0 .8-.4.8-.8s-.4-.8-.8-.8Z"/></svg>
-        <div class="reviews__track"><div class="reviews__fill" style="width:24%"></div></div>
-        <span class="reviews__bar-count">66</span>
-      </div>
-      <div class="reviews__bar">
-        <svg viewBox="0 0 20 20" width="18" height="18" class="reviews__icon reviews__icon--negative"><path fill-rule="evenodd" fill="currentColor" d="M12.16 4.904a10.75 10.75 0 0 0-4.735-.974l-.391.01a3.75 3.75 0 0 0-3.626 3.236l-.337 2.448a2.75 2.75 0 0 0 2.724 3.126h1.594a.25.25 0 0 1 .249.276l-.133 1.26a2.91 2.91 0 0 0 2.894 3.214h.364c.5 0 .928-.358 1.017-.85l.055-.302a4.989 4.989 0 0 1 1.915-3.098h2c.69 0 1.25-.56 1.25-1.25v-5.5c0-.69-.56-1.25-1.25-1.25h-2.345a2.25 2.25 0 0 1-.938-.205l-.307-.14Zm-4.699.525a9.25 9.25 0 0 1 4.074.839l.307.14a3.75 3.75 0 0 0 1.158.32v5.223c-.052.03-.102.062-.15.098a6.49 6.49 0 0 0-2.475 3.95 1.41 1.41 0 0 1-1.378-1.557l.133-1.26a1.75 1.75 0 0 0-1.74-1.932h-1.595a1.25 1.25 0 0 1-1.238-1.421l.337-2.448a2.25 2.25 0 0 1 2.176-1.942l.391-.01Zm7.039 6.32h1v-5h-1v5Z"/></svg>
-        <div class="reviews__track"><div class="reviews__fill" style="width:40%"></div></div>
-        <span class="reviews__bar-count">110</span>
-      </div>
-    </div>
-  </div>
-  -->
-
-  <!-- Quick Links (enable when data sources are wired up)
-  {#if themeStoreUrl || developerThemesUrl}
-    <div class="section">
-      <div class="section__title">Quick Links</div>
-      <div class="links">
-        {#if themeStoreUrl}
-          <a class="links__item" href={withUtm(themeStoreUrl, 'quick_link_docs')} target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
-            Docs
-          </a>
-        {/if}
-        <a class="links__item" href="https://support.shopify.com/" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
-          Support
-        </a>
-        {#if developerThemesUrl}
-          <a class="links__item" href={withUtm(developerThemesUrl, 'quick_link_developer')} target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            More by {developer}
-          </a>
-        {/if}
-      </div>
-    </div>
-  {/if}
-  -->
-
-  <!-- Feature Tags (enable when feature data is available)
-  <div class="section">
-    <div class="section__title">Features</div>
-    <div class="features">
-      <div class="features__group">
-        <span class="features__label">Cart & Checkout</span>
-        <div class="features__tags">
-          <span class="features__tag">Cart notes</span>
-          <span class="features__tag">Quick buy</span>
-          <span class="features__tag">Slide-out cart</span>
-          <span class="features__tag">Sticky cart</span>
-        </div>
-      </div>
-      <div class="features__group">
-        <span class="features__label">Marketing & Conversion</span>
-        <div class="features__tags">
-          <span class="features__tag">Cross-selling</span>
-          <span class="features__tag">EU translations</span>
-          <span class="features__tag">Product badges</span>
-          <span class="features__tag">Product reviews</span>
-          <span class="features__tag">Trust badges</span>
-        </div>
-      </div>
-      <div class="features__group">
-        <span class="features__label">Merchandising</span>
-        <div class="features__tags">
-          <span class="features__tag">Color swatches</span>
-          <span class="features__tag">High-res images</span>
-          <span class="features__tag">Image galleries</span>
-          <span class="features__tag">Lookbooks</span>
-          <span class="features__tag">Product tabs</span>
-          <span class="features__tag">Product videos</span>
-        </div>
-      </div>
-      <div class="features__group">
-        <span class="features__label">Product Discovery</span>
-        <div class="features__tags">
-          <span class="features__tag">Mega menu</span>
-          <span class="features__tag">Product filtering</span>
-          <span class="features__tag">Recommended products</span>
-          <span class="features__tag">Search</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  -->
-
-  <!-- Version History (enable when version data is available)
-  <div class="section">
-    <div class="section__title">Version History</div>
-    <div class="versions">
-      <div class="versions__row versions__row--current">
-        <span class="versions__dot"></span>
-        <span class="versions__number">15.0.0</span>
-        <span class="versions__date">Mar 2026</span>
-        <span class="versions__summary">Major update with new sections architecture</span>
-      </div>
-      <div class="versions__row">
-        <span class="versions__dot"></span>
-        <span class="versions__number">14.0.0</span>
-        <span class="versions__date">Jan 2026</span>
-        <span class="versions__summary">Performance improvements and bug fixes</span>
-      </div>
-      <div class="versions__row">
-        <span class="versions__dot"></span>
-        <span class="versions__number">13.0.0</span>
-        <span class="versions__date">Oct 2025</span>
-        <span class="versions__summary">New color scheme system</span>
-      </div>
-      <div class="versions__row">
-        <span class="versions__dot"></span>
-        <span class="versions__number">12.0.0</span>
-        <span class="versions__date">Jul 2025</span>
-        <span class="versions__summary">Combined listing support</span>
-      </div>
-      <div class="versions__row">
-        <span class="versions__dot"></span>
-        <span class="versions__number">11.0.0</span>
-        <span class="versions__date">Apr 2025</span>
-        <span class="versions__summary">Markets and B2B improvements</span>
-      </div>
-    </div>
-  </div>
-  -->
-
-  <!-- Performance (enable when CWV measurement is implemented)
-  <div class="section">
-    <div class="section__title">Performance</div>
-    <div class="perf">
-      <div class="perf__card perf__card--good">
-        <span class="perf__label">LCP</span>
-        <span class="perf__value">1.8s</span>
-        <span class="perf__threshold">Good &lt; 2.5s</span>
-      </div>
-      <div class="perf__card perf__card--good">
-        <span class="perf__label">INP</span>
-        <span class="perf__value">92ms</span>
-        <span class="perf__threshold">Good &lt; 200ms</span>
-      </div>
-      <div class="perf__card perf__card--needs-work">
-        <span class="perf__label">CLS</span>
-        <span class="perf__value">0.18</span>
-        <span class="perf__threshold">Good &lt; 0.1</span>
-      </div>
-      <div class="perf__card perf__card--good">
-        <span class="perf__label">TTFB</span>
-        <span class="perf__value">320ms</span>
-        <span class="perf__threshold">Good &lt; 800ms</span>
-      </div>
-    </div>
-  </div>
-  -->
 </div>
 
 <style>
@@ -494,55 +312,6 @@
   .toggle__knob { width: 12px; height: 12px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.15s; box-shadow: var(--shadow-knob); }
   .toggle__track.on .toggle__knob { transform: translateX(12px); }
   .toggle__text { font-size: 11.5px; color: var(--text-muted); font-weight: 450; }
-
-  /* Reviews block */
-  .reviews__headline { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-  .reviews__pct { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -0.03em; }
-  .reviews__meta { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-  .reviews__count { font-size: 13px; color: var(--text-muted); font-weight: 450; }
-  .reviews__link { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 500; }
-  .reviews__bars { display: flex; flex-direction: column; gap: 10px; }
-  .reviews__bar { display: flex; align-items: center; gap: 10px; }
-  .reviews__icon { flex-shrink: 0; }
-  .reviews__icon--positive { color: var(--success-strong); }
-  .reviews__icon--neutral { color: var(--text-muted); }
-  .reviews__icon--negative { color: var(--error); }
-  .reviews__track { flex: 1; height: 7px; border-radius: 4px; background: var(--bg-inset); overflow: hidden; }
-  .reviews__fill { height: 100%; border-radius: 4px; background: var(--text); }
-  .reviews__bar-count { font-size: 13px; font-weight: 500; color: var(--text-secondary); min-width: 32px; text-align: right; }
-
-  /* Links block */
-  .links { display: flex; gap: 6px; flex-wrap: wrap; }
-  .links__item { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; font-size: 11.5px; font-weight: 500; color: var(--text-secondary); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; text-decoration: none; cursor: pointer; transition: all 0.12s; }
-  .links__item:hover { border-color: var(--border-hover); color: var(--text); box-shadow: var(--shadow-sm); }
-  .links__item svg { width: 12px; height: 12px; opacity: 0.55; }
-
-  /* Features block */
-  .features { display: flex; flex-direction: column; gap: 14px; }
-  .features__group { }
-  .features__label { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.02em; }
-  .features__tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-  .features__tag { font-size: 11.5px; font-weight: 500; padding: 3px 9px; border-radius: 20px; background: var(--bg-inset); color: var(--text-secondary); }
-
-  /* Versions block */
-  .versions { display: flex; flex-direction: column; }
-  .versions__row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-muted); }
-  .versions__row:last-child { border-bottom: none; }
-  .versions__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-hover); flex-shrink: 0; }
-  .versions__row--current .versions__dot { background: var(--accent); }
-  .versions__number { font-family: 'SF Mono', ui-monospace, monospace; font-size: 12.5px; font-weight: 600; color: var(--text); min-width: 52px; }
-  .versions__date { font-size: 12px; color: var(--text-muted); min-width: 68px; }
-  .versions__summary { font-size: 12.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  /* Perf block */
-  .perf { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px var(--border); }
-  .perf__card { background: var(--bg); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
-  .perf__label { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.02em; }
-  .perf__value { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
-  .perf__card--good .perf__value { color: var(--success-strong); }
-  .perf__card--needs-work .perf__value { color: var(--warning); }
-  .perf__card--poor .perf__value { color: var(--error); }
-  .perf__threshold { font-size: 10.5px; color: var(--text-faint); font-weight: 450; }
 
   /* Animations */
   @keyframes fadeUp {

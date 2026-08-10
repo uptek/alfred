@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fetchAppData, downloadCSV, getResourceIcon } from './utils';
   import { sendTrackEvent } from '@/utils/analytics';
+  import { sleep } from '@/utils/helpers';
   import CreditChip from '@/components/CreditChip.svelte';
   import type { App } from './types';
 
@@ -82,13 +83,11 @@
 
         sendTrackEvent('appstore_partner_table_view', { app_count: initialApps.length, page_url: window.location.href, page_type: 'appstore_partners' });
 
-        const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
         for (const app of initialApps) {
           try {
             const appData = await fetchAppData(app.link);
             apps = apps.map((a) => a.handle === app.handle ? { ...a, ...appData } : a);
-            await delay(250);
+            await sleep(250);
           } catch (err) {
             console.error(`Error fetching additional data for ${app.name}:`, err);
           }
@@ -316,7 +315,7 @@
   .table td { position: relative; padding: 16px; vertical-align: top; }
   .app-name { color: #2c6ecb; font-weight: 500; text-decoration: none; display: block; margin-bottom: 4px; }
   .app-name:hover { color: #084e8a; text-decoration: underline; }
-  .app-description { color: #6d7175; font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .app-description { color: #6d7175; font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .rating-container { display: flex; align-items: center; justify-content: center; }
   .status-success { color: #008060; font-weight: 500; }
   .status-neutral { color: #6d7175; }

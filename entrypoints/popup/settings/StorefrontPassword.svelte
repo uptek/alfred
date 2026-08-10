@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import { getPasswordEntry, savePassword, deletePassword, setPasswordEnabled } from '@/utils/storefrontPasswords';
-  import type { StoreInfo } from '../types';
+  import type { StoreInfo } from '../utils/types';
 
   let { storeInfo }: { storeInfo: StoreInfo } = $props();
 

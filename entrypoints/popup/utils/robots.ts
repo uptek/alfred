@@ -24,7 +24,8 @@ export interface RobotsRule {
 }
 
 export interface RobotsGroup {
-  userAgents: { token: string; line: number }[];
+  /** `token` is the normalized product token used for matching; `raw` is the line as written. */
+  userAgents: { raw: string; token: string; line: number }[];
   rules: RobotsRule[];
   crawlDelay: { value: string; line: number } | null;
 }
@@ -151,7 +152,7 @@ export function parseRobots(text: string): ParsedRobots {
           groupHasRules = false;
           parsed.groups.push(group);
         }
-        group.userAgents.push({ token: value, line });
+        group.userAgents.push({ raw: value, token: value === '*' ? '*' : userAgentToken(value), line });
         break;
       case 'allow':
       case 'disallow': {
@@ -194,11 +195,38 @@ export function looksLikeHtml(text: string): boolean {
   return /<html|<!doctype/i.test(text.slice(0, 1024));
 }
 
+/** A percent-encoded octet, the one form already-encoded input must survive as-is. */
+const PCT_TRIPLET = /%[0-9A-Fa-f]{2}/g;
+
+/**
+ * Brings a rule path into the same percent-encoded form as `URL.pathname`, so
+ * `Disallow: /café` compares against `/caf%C3%A9` (RFC 9309 §2.2.2 requires
+ * both sides be encoded consistently). Existing `%XX` octets are kept rather
+ * than re-encoded into `%25XX`, but their hex is uppercased: RFC 3986 §6.2.2.1
+ * makes the two cases equivalent, while the matcher below compares strings, so
+ * a rule written `%c3%a9` would otherwise miss the `%C3%A9` that `URL.pathname`
+ * produces. `*`/`$` pass through `encodeURI` untouched, so wildcards survive.
+ * @param {string} path - A rule path or page path.
+ * @returns {string} The path with unencoded non-ASCII and unsafe octets encoded.
+ */
+export function encodePath(path: string): string {
+  let out = '';
+  let last = 0;
+  PCT_TRIPLET.lastIndex = 0;
+  for (let m = PCT_TRIPLET.exec(path); m !== null; m = PCT_TRIPLET.exec(path)) {
+    out += encodeURI(path.slice(last, m.index)) + m[0].toUpperCase();
+    last = m.index + m[0].length;
+  }
+  return out + encodeURI(path.slice(last));
+}
+
 /**
  * RFC 9309 pattern match: `*` matches any sequence, `$` is only special at
- * the end. Greedy two-pointer scan — linear in path length, so hostile
- * patterns with many wildcards can't trigger regex-style catastrophic
- * backtracking (the file comes from the site being inspected, i.e. untrusted).
+ * the end. Both arguments must already have been through encodePath, so an
+ * unencoded rule compares against the browser's encoded path. Greedy
+ * two-pointer scan — linear in path length, so hostile patterns with many
+ * wildcards can't trigger regex-style catastrophic backtracking (the file comes
+ * from the site being inspected, i.e. untrusted).
  */
 function matchesPattern(pattern: string, path: string): boolean {
   let p = pattern;
@@ -228,17 +256,32 @@ function matchesPattern(pattern: string, path: string): boolean {
   return true;
 }
 
+/**
+ * Reduces a declared `User-agent:` value to the product token crawlers match
+ * on: lowercased, truncated at the first character outside RFC 9309's
+ * `[A-Za-z_-]` set. That drops the version suffix so a group declared as
+ * `Googlebot/2.1` still applies to the bot token `Googlebot`, matching how
+ * Google's own parser reads the line.
+ * @param {string} raw - The value as written in robots.txt.
+ * @returns {string} The bare product token, '' when the value has no leading
+ *   token character (an empty or punctuation-only User-agent line).
+ */
+export function userAgentToken(raw: string): string {
+  return /^[A-Za-z_-]*/.exec(raw.trim())![0]!.toLowerCase();
+}
+
 function selectGroups(parsed: ParsedRobots, botToken: string): { groups: RobotsGroup[]; token: string | null } {
-  const bot = botToken.toLowerCase();
+  const bot = userAgentToken(botToken);
   let best = '';
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      const t = ua.token.toLowerCase();
-      if (t !== '*' && bot.startsWith(t) && t.length > best.length) best = t;
+      // '' would prefix-match every bot; such a line declares no group at all.
+      if (ua.token === '*' || ua.token === '') continue;
+      if (bot.startsWith(ua.token) && ua.token.length > best.length) best = ua.token;
     }
   }
   if (best) {
-    const groups = parsed.groups.filter((g) => g.userAgents.some((ua) => ua.token.toLowerCase() === best));
+    const groups = parsed.groups.filter((g) => g.userAgents.some((ua) => ua.token === best));
     return { groups, token: best };
   }
   const wildcard = parsed.groups.filter((g) => g.userAgents.some((ua) => ua.token === '*'));
@@ -255,13 +298,17 @@ export function isAllowed(parsed: ParsedRobots, path: string, botToken: string):
   const { groups, token } = selectGroups(parsed, botToken);
   if (groups.length === 0) return { allowed: true, rule: null, group: null };
 
+  // Encoded once here rather than per rule; both sides must be in the same form.
+  const target = encodePath(path);
   let best: RobotsRule | null = null;
   let bestLen = -1;
   for (const g of groups) {
     for (const rule of g.rules) {
       if (rule.path === '') continue; // empty Disallow = no restriction
-      if (!matchesPattern(rule.path, path)) continue;
-      const len = byteLength(rule.path);
+      const pattern = encodePath(rule.path);
+      if (!matchesPattern(pattern, target)) continue;
+      // Encoded length, so `/café` and `/caf%C3%A9` rank as the same specificity.
+      const len = byteLength(pattern);
       if (len > bestLen) {
         best = rule;
         bestLen = len;
@@ -396,6 +443,20 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
   }
 
   for (const g of parsed.groups) {
+    for (const ua of g.userAgents) {
+      // '' when the value is blank or has no token character at all. Such a
+      // group matches no crawler, so its rules never apply to anyone.
+      if (ua.token === '') {
+        findings.push({
+          severity: 'info',
+          code: 'empty-user-agent',
+          message: ua.raw
+            ? `User-agent \`${ua.raw}\` has no product token: this group matches no crawler`
+            : 'User-agent has no value: this group matches no crawler',
+          line: ua.line
+        });
+      }
+    }
     if (g.crawlDelay) {
       const numeric = /^\d+(\.\d+)?$/.test(g.crawlDelay.value);
       findings.push({
@@ -413,7 +474,7 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
         findings.push({
           severity: 'info',
           code: 'empty-group',
-          message: `Group \`${first.token}\` has no rules: that allows everything, which may be unintended`,
+          message: `Group \`${first.raw}\` has no rules: that allows everything, which may be unintended`,
           line: first.line
         });
       }
@@ -423,14 +484,17 @@ export function lintRobots(parsed: ParsedRobots, meta: { size: number }): LintFi
   const seenTokens = new Map<string, number>();
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      const t = ua.token.toLowerCase();
-      const count = (seenTokens.get(t) ?? 0) + 1;
-      seenTokens.set(t, count);
+      // Keyed on the normalized token, so `Googlebot` and `Googlebot/2.1` count
+      // as the one group they actually merge into. Tokenless values are
+      // reported separately by the empty-user-agent lint.
+      if (ua.token === '') continue;
+      const count = (seenTokens.get(ua.token) ?? 0) + 1;
+      seenTokens.set(ua.token, count);
       if (count === 2) {
         findings.push({
           severity: 'info',
           code: 'duplicate-group',
-          message: `\`${ua.token}\` appears in multiple groups: crawlers merge them, but it is easy to misread`,
+          message: `\`${ua.raw}\` appears in multiple groups: crawlers merge them, but it is easy to misread`,
           line: ua.line
         });
       }
@@ -605,7 +669,7 @@ export function detectShopifyDefault(parsed: ParsedRobots, pageHost: string | nu
 
   for (const g of parsed.groups) {
     for (const ua of g.userAgents) {
-      live.push({ entry: normalizeEntry('user-agent', ua.token, pageHost), line: ua.line });
+      live.push({ entry: normalizeEntry('user-agent', ua.raw, pageHost), line: ua.line });
     }
     for (const r of g.rules) live.push({ entry: normalizeEntry(r.type, r.path, pageHost), line: r.line });
     if (g.crawlDelay) {

@@ -1,3 +1,4 @@
+import { storage } from '#imports';
 import { getItem, setItem } from '@/utils/storage';
 
 type ThemeMode = 'light' | 'dark' | 'system';
@@ -9,22 +10,26 @@ export default defineContentScript({
 
   async main() {
     const saved = await getItem<ThemeMode>(STORAGE_KEY);
-    const mode = saved ?? 'system';
+    // Kept current via storage.watch so SPA header rebuilds don't hit storage
+    // or re-apply unchanged styles on every tryInject.
+    let mode: ThemeMode = saved ?? 'system';
 
     applyTheme(mode);
 
+    // Set by injectToggle so a theme picked in another dashboard tab moves the
+    // live toggle too, not just the document.
+    let syncToggle: ((next: ThemeMode) => void) | undefined;
+
+    storage.watch<ThemeMode>(`local:${STORAGE_KEY}`, (value) => {
+      mode = value ?? 'system';
+      applyTheme(mode);
+      syncToggle?.(mode);
+    });
+
     // Inject toggle and re-inject when SPA navigation rebuilds the header
-    let injecting = false;
-    const tryInject = async () => {
-      if (injecting || document.getElementById('alfred-theme-toggle')) return;
-      injecting = true;
-      try {
-        const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'system';
-        applyTheme(current);
-        injectToggle(current);
-      } finally {
-        injecting = false;
-      }
+    const tryInject = () => {
+      if (document.getElementById('alfred-theme-toggle')) return;
+      syncToggle = injectToggle(mode);
     };
 
     if (document.readyState === 'loading') {
@@ -44,9 +49,8 @@ export default defineContentScript({
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
     // Listen for system color scheme changes once (not per-injection)
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
-      const current = (await getItem<ThemeMode>(STORAGE_KEY)) ?? 'system';
-      if (current === 'system') {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (mode === 'system') {
         applyTheme('system');
       }
     });
@@ -116,7 +120,8 @@ function removeLightFixesCSS() {
   document.getElementById('alfred-dev-dashboard-light')?.remove();
 }
 
-function injectToggle(currentMode: ThemeMode) {
+/** @returns A setter that moves the toggle to a mode chosen elsewhere, or undefined if the header wasn't ready. */
+function injectToggle(currentMode: ThemeMode): ((next: ThemeMode) => void) | undefined {
   const headerLastDiv = document.querySelector('header > div:last-child');
   if (!headerLastDiv) return;
 
@@ -229,4 +234,9 @@ function injectToggle(currentMode: ThemeMode) {
 
   headerLastDiv.prepend(container);
   updateActive();
+
+  return (next) => {
+    active = next;
+    updateActive();
+  };
 }

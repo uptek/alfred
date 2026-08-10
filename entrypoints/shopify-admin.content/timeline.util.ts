@@ -1,5 +1,5 @@
-import { getItem } from '~/utils/storage';
 import { CWS_REVIEW_URL } from '~/utils/constants';
+import { isEnabled, type ResolvedSettings } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 import {
   composeEventSentence,
@@ -487,9 +487,8 @@ const injectTimeline = (): void => {
 };
 
 /** Inject the activity timeline on product, page, and collection admin screens. */
-export const setupTimeline = async (): Promise<void> => {
-  const settings = await getItem<AlfredSettings>('settings');
-  if (settings?.admin?.timeline === false) {
+export const setupTimeline = (settings: ResolvedSettings): void => {
+  if (!isEnabled(settings.admin.timeline)) {
     return;
   }
 

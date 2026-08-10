@@ -1,4 +1,4 @@
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 
 const INJECTED_ATTR = 'data-alfred-theme-list';
@@ -115,8 +115,8 @@ export const setupThemeList = async () => {
     return;
   }
 
-  const settings = await getItem<AlfredSettings>('settings');
-  if (settings?.admin?.themeListUtils === false) {
+  const settings = await getSettings();
+  if (!isEnabled(settings.admin.themeListUtils)) {
     return;
   }
 

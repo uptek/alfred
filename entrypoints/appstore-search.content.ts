@@ -1,11 +1,11 @@
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 
 export default defineContentScript({
   matches: ['https://apps.shopify.com/search?*'],
   async main(ctx) {
     // Check if search indexing is enabled
-    const settings = await getItem<AlfredSettings>('settings');
-    const isSearchIndexingEnabled = settings?.appStore?.searchIndexing !== false;
+    const settings = await getSettings();
+    const isSearchIndexingEnabled = isEnabled(settings.appStore.searchIndexing);
 
     if (!isSearchIndexingEnabled) {
       return; // Exit early if indexing is disabled
@@ -48,22 +48,33 @@ export default defineContentScript({
       });
     }
 
+    // One pending pass at a time: a mutation burst coalesces into a single run.
+    let pendingIndexTimeout: number | undefined;
+    function scheduleIndexing(delay: number) {
+      clearTimeout(pendingIndexTimeout);
+      pendingIndexTimeout = window.setTimeout(() => {
+        pendingIndexTimeout = undefined;
+        addIndexesToAppCards();
+      }, delay);
+    }
+
     function observePageChanges() {
       const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-            const hasNewAppCards = Array.from(mutation.addedNodes).some(
-              (node) =>
-                node.nodeType === Node.ELEMENT_NODE &&
-                ((node as Element).matches('[data-controller="app-card"]') ||
-                  (node as Element).querySelector('[data-controller="app-card"]'))
-            );
-
-            if (hasNewAppCards) {
-              setTimeout(addIndexesToAppCards, 100);
+        for (const mutation of mutations) {
+          if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) {
+            continue;
+          }
+          for (const node of mutation.addedNodes) {
+            if (
+              node.nodeType === Node.ELEMENT_NODE &&
+              ((node as Element).matches('[data-controller="app-card"]') ||
+                (node as Element).querySelector('[data-controller="app-card"]'))
+            ) {
+              scheduleIndexing(100);
+              return;
             }
           }
-        });
+        }
       });
 
       observer.observe(document.body, {
@@ -74,32 +85,16 @@ export default defineContentScript({
       observers.push(observer);
     }
 
-    function observeUrlChanges() {
-      let lastUrl = location.href;
-
-      const urlObserver = new MutationObserver(() => {
-        const url = location.href;
-        if (url !== lastUrl) {
-          lastUrl = url;
-          calculateStartingIndex();
-          setTimeout(addIndexesToAppCards, 500);
-        }
-      });
-
-      urlObserver.observe(document, {
-        subtree: true,
-        childList: true
-      });
-
-      observers.push(urlObserver);
-    }
-
     function init() {
       calculateStartingIndex();
       addIndexesToAppCards();
       observePageChanges();
-      observeUrlChanges();
     }
+
+    ctx.addEventListener(window, 'wxt:locationchange', () => {
+      calculateStartingIndex();
+      scheduleIndexing(500);
+    });
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
@@ -109,6 +104,7 @@ export default defineContentScript({
 
     // Cleanup observers on unmount to prevent memory leaks
     ctx.onInvalidated(() => {
+      clearTimeout(pendingIndexTimeout);
       observers.forEach((obs) => obs.disconnect());
     });
   }

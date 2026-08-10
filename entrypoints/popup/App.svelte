@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getTheme } from './utils/theme';
+  import { getTheme, provisionalStoreInfo, sniffShopify } from './utils/theme';
   import { getHeadings, analyzeHeadings } from './utils/headings';
   import { getLinks } from './utils/links';
   import { getAssets } from './utils/assets';
@@ -10,6 +10,7 @@
   import { getSocial, resolveSocial, badgeCount } from './utils/social';
   import { getHreflangs, analyzeHreflangs } from './utils/hreflang';
   import { getSitemaps, analyzeSitemaps } from './utils/sitemaps';
+  import { getActiveTab } from './utils/messaging';
   import { trackAction } from '@/utils/analytics';
   import { onSuccessNudge, recordPassiveValue } from '@/utils/successNudge';
   import Theme from './Theme.svelte';
@@ -24,9 +25,10 @@
   import Hreflangs from './Hreflangs.svelte';
   import Sitemaps from './Sitemaps.svelte';
   import Settings from './Settings.svelte';
-  import ReviewPrompt from './ReviewPrompt.svelte';
-  import SuccessNudge from './SuccessNudge.svelte';
-  import { getTabState, type PopupSection } from './stores/tabState.svelte';
+  import ReviewPrompt from './components/ReviewPrompt.svelte';
+  import SuccessNudge from './components/SuccessNudge.svelte';
+  import { getTabState } from './stores/tabState.svelte';
+  import { tabsInGroup, type Tab, type TabId } from './tabs';
   import type {
     StoreInfo,
     RawHeading,
@@ -43,24 +45,11 @@
   } from './utils/types';
   import type { SitemapsData } from './utils/sitemaps';
 
-  type TabId = PopupSection;
   const tabState = getTabState();
-  // Future tabs: 'apps' | 'products'
 
-  interface Tab {
-    id: TabId;
-    label: string;
-    icon: string;
-    badge?: { count: number; color: 'red' | 'green' };
-  }
-
-  const shopifyTabs: Tab[] = [
-    { id: 'theme', label: 'Theme', icon: 'theme' },
-    // { id: 'apps', label: 'Apps', icon: 'apps' },
-    // { id: 'products', label: 'Products', icon: 'products' },
-  ];
-
-  const settingsTab: Tab = { id: 'settings', label: 'Settings', icon: 'settings' };
+  const shopifyTabs = tabsInGroup('shopify');
+  const seoTabs = tabsInGroup('seo');
+  const utilityTabs = tabsInGroup('utility');
 
   let activeTab = $state<TabId>('theme');
   let storeInfo = $state<StoreInfo | null>(null);
@@ -81,7 +70,10 @@
   let overviewNetworkLoading = $state(true);
   let llmsTxt = $state<boolean | null>(null);
   let loading = $state(true);
+  let themeLoading = $state(true);
   let showSuccessNudge = $state(false);
+  // Once the user picks a tab themselves, the late theme answer must not move them.
+  let userNavigated = false;
 
   $effect(() => {
     onSuccessNudge(() => (showSuccessNudge = true));
@@ -98,64 +90,29 @@
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));
   const imageIssueCount = $derived(analyzeImages(rawImages));
-  const robotsErrorCount = $derived(
-    analyzeRobots(rawRobots, storeInfo?.isShopify ?? false, storeInfo?.page_url ?? null).errorCount
+  // Full analyses live here so badge counts and the tab components share one
+  // computation instead of re-running the analyzers on every tab mount.
+  const robotsAnalysis = $derived(
+    analyzeRobots(rawRobots, storeInfo?.isShopify ?? false, storeInfo?.page_url ?? null)
   );
   const overviewAnalysis = $derived(
-    analyzeOverview(rawOverview, overviewNetwork, shopifyContext, rawRobots, rawSchema, llmsTxt)
+    analyzeOverview(rawOverview, overviewNetwork, shopifyContext, rawRobots, llmsTxt)
   );
   // Tag-level errors only, probe excluded — badge must stay synchronous.
-  const socialBadgeCount = $derived(rawSocial ? badgeCount(resolveSocial(rawSocial)) : 0);
-  const hreflangErrorCount = $derived(analyzeHreflangs(rawHreflangs, storeInfo?.page_url ?? null).errorCount);
-  const sitemapsErrorCount = $derived(analyzeSitemaps(rawSitemaps).errorCount);
+  const socialResolved = $derived(rawSocial ? resolveSocial(rawSocial) : null);
+  const socialBadgeCount = $derived(socialResolved ? badgeCount(socialResolved) : 0);
+  const hreflangAnalysis = $derived(analyzeHreflangs(rawHreflangs, storeInfo?.page_url ?? null));
+  const sitemapsAnalysis = $derived(analyzeSitemaps(rawSitemaps));
 
-  const seoTabs = $derived<Tab[]>([
-    {
-      id: 'overview' as TabId,
-      label: 'Overview',
-      icon: 'overview',
-      ...(overviewAnalysis.errorCount > 0 ? { badge: { count: overviewAnalysis.errorCount, color: 'red' as const } } : {})
-    },
-    {
-      id: 'headings' as TabId,
-      label: 'Headings',
-      icon: 'headings',
-      ...(headingIssues.length > 0 ? { badge: { count: headingIssues.length, color: 'red' as const } } : {})
-    },
-    { id: 'links' as TabId, label: 'Links', icon: 'links' },
-    { id: 'assets' as TabId, label: 'Assets', icon: 'assets' },
-    {
-      id: 'images' as TabId,
-      label: 'Images',
-      icon: 'images',
-      ...(imageIssueCount > 0 ? { badge: { count: imageIssueCount, color: 'red' as const } } : {})
-    },
-    {
-      id: 'robots' as TabId,
-      label: 'Robots.txt',
-      icon: 'robots',
-      ...(robotsErrorCount > 0 ? { badge: { count: robotsErrorCount, color: 'red' as const } } : {})
-    },
-    {
-      id: 'hreflangs' as TabId,
-      label: 'Hreflangs',
-      icon: 'hreflangs',
-      ...(hreflangErrorCount > 0 ? { badge: { count: hreflangErrorCount, color: 'red' as const } } : {})
-    },
-    { id: 'schema' as TabId, label: 'Schema', icon: 'schema' },
-    {
-      id: 'social' as TabId,
-      label: 'Social',
-      icon: 'social',
-      ...(socialBadgeCount > 0 ? { badge: { count: socialBadgeCount, color: 'red' as const } } : {})
-    },
-    {
-      id: 'sitemaps' as TabId,
-      label: 'Sitemaps',
-      icon: 'sitemaps',
-      ...(sitemapsErrorCount > 0 ? { badge: { count: sitemapsErrorCount, color: 'red' as const } } : {})
-    },
-  ]);
+  const badgeCounts = $derived<Partial<Record<TabId, number>>>({
+    overview: overviewAnalysis.errorCount,
+    headings: headingIssues.length,
+    images: imageIssueCount,
+    robots: robotsAnalysis.errorCount,
+    hreflangs: hreflangAnalysis.errorCount,
+    social: socialBadgeCount,
+    sitemaps: sitemapsAnalysis.errorCount
+  });
 
   $effect(() => {
     // Robots.txt is a real network fetch (slow origins take seconds, timeout
@@ -177,39 +134,60 @@
       sitemapsLoading = false;
     });
     const fetchData = async () => {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      const [storeData, headingsData, linksData, assetsData, imagesData, schemaData, overviewData, contextData, socialData, hreflangsData] =
+      const tab = await getActiveTab();
+      // Theme and Shopify context relay through the main world (worst case 3s
+      // when injection is slow or the page is mid-load); never gate first
+      // paint on them. The DOM-only sniff answers isShopify for the initial
+      // tab pick, and getTheme corrects it when it lands.
+      getShopifyContext().then((contextData) => {
+        shopifyContext = contextData;
+      });
+      const themePromise = getTheme();
+      const [sniffedShopify, headingsData, linksData, assetsData, imagesData, schemaData, overviewData, socialData, hreflangsData] =
         await Promise.all([
-          getTheme(),
+          sniffShopify(),
           getHeadings(),
           getLinks(),
           getAssets(),
           getImages(),
           getSchema(),
           getOverview(),
-          getShopifyContext(),
           getSocial(),
           getHreflangs(),
           tab?.id != null && tab.url ? tabState.hydrate(tab.id, tab.url) : Promise.resolve()
         ]);
-      trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
-      storeInfo = storeData;
+      if (tab?.url) {
+        storeInfo = provisionalStoreInfo(tab.url, sniffedShopify);
+      }
       rawHeadings = headingsData;
       rawLinks = linksData;
       rawAssets = assetsData;
       rawImages = imagesData;
       rawSchema = schemaData;
       rawOverview = overviewData;
-      shopifyContext = contextData;
       rawSocial = socialData;
       rawHreflangs = hreflangsData;
       // A restored section wins; otherwise non-Shopify pages land on Overview.
       if (tabState.restoredActiveSection) {
         activeTab = tabState.restoredActiveSection;
-      } else if (!storeData?.isShopify) {
+      } else if (!sniffedShopify) {
         activeTab = 'overview';
       }
       loading = false;
+
+      const storeData = await themePromise;
+      if (storeData) storeInfo = storeData;
+      themeLoading = false;
+      // Reported from the globals, not the sniff: the sniff matches any page
+      // merely referencing a Shopify-hosted asset, and unlike the UI an event
+      // cannot be corrected once written. This runs after first paint, so
+      // waiting for the relay costs the user nothing.
+      trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
+      // The sniff can miss either way; settle the default tab from the real
+      // answer unless the user already navigated or a restored section won.
+      if (!userNavigated && !tabState.restoredActiveSection) {
+        activeTab = (storeData?.isShopify ?? false) ? 'theme' : 'overview';
+      }
     };
     fetchData();
   });
@@ -255,19 +233,18 @@
 {/snippet}
 
 {#snippet sidebarTab(tab: Tab)}
+  {@const badgeCount = badgeCounts[tab.id] ?? 0}
   <button
     class="tab"
     class:active={activeTab === tab.id}
     role="tab"
     aria-selected={activeTab === tab.id}
-    onclick={() => { activeTab = tab.id; }}
+    onclick={() => { userNavigated = true; activeTab = tab.id; }}
   >
-    {@render tabIcon(tab.icon)}
+    {@render tabIcon(tab.id)}
     {tab.label}
-    {#if tab.badge}
-      <span class="tab__badge" class:tab__badge--red={tab.badge.color === 'red'} class:tab__badge--green={tab.badge.color === 'green'}>
-        {tab.badge.count}
-      </span>
+    {#if badgeCount > 0}
+      <span class="tab__badge tab__badge--red">{badgeCount}</span>
     {/if}
   </button>
 {/snippet}
@@ -316,7 +293,9 @@
 
         <!-- Bottom -->
         <div class="sidebar__bottom" role="tablist" aria-label="Utility tabs">
-          {@render sidebarTab(settingsTab)}
+          {#each utilityTabs as tab}
+            {@render sidebarTab(tab)}
+          {/each}
           <a href="https://github.com/uptek/alfred/issues" target="_blank" class="sidebar__suggest">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             Suggest a feature
@@ -327,7 +306,12 @@
       <!-- Content -->
       <div class="content" role="main">
         {#if activeTab === 'theme'}
-          {#if storeInfo?.isShopify}
+          {#if themeLoading}
+            <div class="loading">
+              <div class="loading__spinner"></div>
+              <span>Detecting theme...</span>
+            </div>
+          {:else if storeInfo?.isShopify}
             <Theme {storeInfo} />
           {:else}
             <div class="not-shopify">
@@ -357,13 +341,13 @@
         {:else if activeTab === 'schema'}
           <Schema schema={rawSchema} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'hreflangs'}
-          <Hreflangs tags={rawHreflangs} pageUrl={storeInfo?.page_url ?? null} domain={storeInfo?.domain ?? null} />
+          <Hreflangs tags={rawHreflangs} analysis={hreflangAnalysis} pageUrl={storeInfo?.page_url ?? null} domain={storeInfo?.domain ?? null} />
         {:else if activeTab === 'social'}
-          <Social raw={rawSocial} />
+          <Social raw={rawSocial} resolved={socialResolved} />
         {:else if activeTab === 'robots'}
-          <Robots robots={rawRobots} loading={robotsLoading} pageUrl={storeInfo?.page_url ?? null} isShopify={storeInfo?.isShopify ?? false} />
+          <Robots robots={rawRobots} analysis={robotsAnalysis} loading={robotsLoading} pageUrl={storeInfo?.page_url ?? null} />
         {:else if activeTab === 'sitemaps'}
-          <Sitemaps data={rawSitemaps} loading={sitemapsLoading} />
+          <Sitemaps data={rawSitemaps} analysis={sitemapsAnalysis} loading={sitemapsLoading} />
         {:else if activeTab === 'settings'}
           <div class="content__pad">
             <Settings storeInfo={storeInfo ?? { isShopify: false, shopDomain: null, domain: null, page_url: null, theme: null }} />
@@ -412,7 +396,6 @@
   .tab.active :global(svg) { opacity: 0.9; }
   .tab__badge { margin-left: auto; font-size: 10px; font-weight: 600; padding: 0px 5px; border-radius: 8px; min-width: 16px; text-align: center; line-height: 16px; border: 1px solid transparent; }
   .tab__badge--red { background: var(--error-bg); color: var(--error-strong); border-color: color-mix(in srgb, var(--error-strong) var(--pill-border-strength), transparent); }
-  .tab__badge--green { background: var(--success-bg); color: var(--success-strong); border-color: color-mix(in srgb, var(--success-strong) var(--pill-border-strength), transparent); }
 
   /* Content block */
   .content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg); scrollbar-gutter: stable; }

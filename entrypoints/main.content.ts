@@ -1,9 +1,14 @@
-import { getItem } from '@/utils/storage';
+import { getSettings } from '@/utils/settings';
 import { sendTrackEvent } from '@/utils/analytics';
+import { ANALYTICS_ACTIONS, type AnalyticsAction } from '@/utils/analytics-actions';
 import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
+import { sniffShopifyDom } from '@/utils/shopifyDetection';
 import { Toast } from '@/utils/toast';
+import type { TabMessage } from '@/utils/messages';
+import { createBridgeClient } from '@/utils/mainWorldBridge';
 import { headingText } from './popup/utils/headings';
-import { classifyLink, isDofollow, isInsecureHttp, linkText, relFlags, samePageFragment } from './popup/utils/links';
+import type { FragmentTargets } from './popup/utils/links';
+import { classifyLink, isBrokenAnchor, isDofollow, isInsecureHttp, linkText, relFlags } from './popup/utils/links';
 import { looksLikeHtml } from './popup/utils/robots';
 import {
   classifySitemap,
@@ -29,6 +34,29 @@ import {
 } from './popup/utils/images';
 
 type CollectedImage = { el: Element; source: 'img' | 'picture' | 'background'; bg?: string };
+
+/**
+ * Element snapshots taken by get_links/get_images so scroll_to_link and
+ * scroll_to_image can reach the exact element the popup listed even after the
+ * page reorders or replaces nodes (lazy menus, carousels). Held here rather
+ * than written onto the page as attributes: stamping every anchor fires the
+ * host page's own mutation observers and leaves markers in someone else's
+ * markup. Weak so a page that churns its DOM between popup opens doesn't keep
+ * detached nodes alive.
+ */
+let linkSnapshot: WeakRef<HTMLAnchorElement>[] = [];
+let imageSnapshot: { ref: WeakRef<Element>; source: CollectedImage['source'] }[] = [];
+
+/**
+ * The snapshotted element, or undefined once the page has dropped it. The
+ * isConnected check matters as much as the deref: a detached node stays
+ * strongly reachable from any handler that still holds it, so deref alone
+ * would hand back an element no longer in the document.
+ */
+function liveRef<T extends Element>(ref: WeakRef<T> | undefined): T | undefined {
+  const el = ref?.deref();
+  return el?.isConnected ? el : undefined;
+}
 
 /**
  * Collects all page images in a deterministic order shared by get_images,
@@ -158,7 +186,36 @@ export default defineContentScript({
     // shows a loading state meanwhile, so waiting is free.
     const RELAY_TIMEOUT_MS = 3000;
 
-    // Listen for tracking events from the main world
+    const alfredBridge = createBridgeClient<{ getTheme(): unknown; getShopifyContext(): unknown }>('alfred');
+
+    /**
+     * Relays a popup request to the main world over the bridge and forwards
+     * the response (or `fallback` on timeout/error) through sendResponse.
+     * Waits for mainWorldReady so a request posted before the main-world
+     * handlers are registered isn't silently lost; the deadline still runs
+     * from request receipt, so an unready main world can't hang the popup.
+     */
+    const relayToMainWorld = (
+      method: 'getTheme' | 'getShopifyContext',
+      fallback: unknown,
+      sendResponse: (response?: unknown) => void
+    ): true => {
+      let settled = false;
+      const finish = (data: unknown) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(deadline);
+        sendResponse(data ?? fallback);
+      };
+      const deadline = setTimeout(() => finish(fallback), RELAY_TIMEOUT_MS);
+      mainWorldReady
+        .then(() => alfredBridge.call(method, undefined, RELAY_TIMEOUT_MS))
+        .then(finish, () => finish(fallback));
+      return true;
+    };
+
+    // Listen for tracking events from the main world. The event detail crosses
+    // a world boundary, so validate the action instead of trusting the cast.
     window.addEventListener('alfred:track', (event: Event) => {
       const { action, metadata } = (
         event as CustomEvent<{
@@ -166,34 +223,16 @@ export default defineContentScript({
           metadata?: Record<string, unknown>;
         }>
       ).detail;
-      sendTrackEvent(action as import('@/utils/analytics-actions').AnalyticsAction, metadata);
+      if ((ANALYTICS_ACTIONS as readonly string[]).includes(action)) {
+        sendTrackEvent(action as AnalyticsAction, metadata);
+      }
     });
 
-    // Listen for postMessage responses from main world
-    window.addEventListener('message', (event: MessageEvent<{ type: string; requestId: string; data: unknown }>) => {
+    // The main world announces its bridge server is registered.
+    window.addEventListener('message', (event: MessageEvent<{ type?: string }>) => {
       if (event.source !== window) return;
-
       if (event.data?.type === 'alfred:main_world_ready') {
         mainWorldReadyResolve();
-      }
-
-      if (event.data?.type === 'alfred:theme_response') {
-        const { requestId, data } = event.data;
-        // Dispatch custom event with the response data
-        window.dispatchEvent(
-          new CustomEvent(`alfred:theme_response_${requestId}`, {
-            detail: data
-          })
-        );
-      }
-
-      if (event.data?.type === 'alfred:shopify_context_response') {
-        const { requestId, data } = event.data;
-        window.dispatchEvent(
-          new CustomEvent(`alfred:shopify_context_response_${requestId}`, {
-            detail: data
-          })
-        );
       }
     });
 
@@ -202,14 +241,10 @@ export default defineContentScript({
      * relay them to the main world script,
      * and send the response back to the registered script
      */
-    browser.runtime.onMessage.addListener((request: { action: string }, _sender, sendResponse) => {
+    browser.runtime.onMessage.addListener((request: TabMessage, _sender, sendResponse) => {
       // Surface a toast on behalf of the background, which has no DOM of its own.
       if (request.action === 'alfred_toast') {
-        const { message, toastType } = request as {
-          action: string;
-          message?: string;
-          toastType?: 'success' | 'error';
-        };
+        const { message, toastType } = request;
         if (message) Toast.show(message, toastType === 'success' ? 'success' : 'error');
         return false;
       }
@@ -219,62 +254,18 @@ export default defineContentScript({
        * @returns {{ isShopify: boolean, theme: object | null, shop: string | null }}
        */
       if (request.action === 'get_theme') {
-        // Create a unique request ID
-        const requestId = Date.now() + '_' + Math.random();
+        return relayToMainWorld('getTheme', { isShopify: false, theme: null, shop: null }, sendResponse);
+      }
 
-        // Set up listener for response
-        let responseHandled = false;
-
-        const handleThemeResponse = (event: Event) => {
-          if (responseHandled) return;
-          responseHandled = true;
-
-          window.removeEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
-          clearTimeout(timeoutId);
-
-          sendResponse(
-            (
-              event as CustomEvent<{
-                isShopify: boolean;
-                theme: unknown;
-                shop: unknown;
-              }>
-            ).detail ?? {
-              isShopify: false,
-              theme: null,
-              shop: null
-            }
-          );
-        };
-
-        // Add timeout fallback
-        const timeoutId = setTimeout(() => {
-          if (responseHandled) return;
-          responseHandled = true;
-
-          window.removeEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
-          sendResponse({
-            isShopify: false,
-            theme: null,
-            shop: null
-          });
-        }, RELAY_TIMEOUT_MS);
-
-        window.addEventListener(`alfred:theme_response_${requestId}`, handleThemeResponse);
-
-        // Request theme data once the main-world handler is listening
-        void mainWorldReady.then(() => {
-          window.postMessage(
-            {
-              type: 'alfred:request_theme',
-              requestId: requestId
-            },
-            '*'
-          );
-        });
-
-        // Return true to indicate async response
-        return true;
+      /**
+       * Synchronous DOM-only Shopify check for the popup's first paint — no
+       * main-world round trip, so it answers before the (relayed, worst-case
+       * 3s) get_theme response. A miss is corrected when get_theme resolves.
+       * @returns {boolean}
+       */
+      if (request.action === 'sniff_shopify') {
+        sendResponse(sniffShopifyDom(document, window.location.hostname));
+        return false;
       }
 
       /**
@@ -296,41 +287,7 @@ export default defineContentScript({
           designMode: false
         };
 
-        const requestId = Date.now() + '_' + Math.random();
-
-        let responseHandled = false;
-
-        const handleContextResponse = (event: Event) => {
-          if (responseHandled) return;
-          responseHandled = true;
-
-          window.removeEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
-          clearTimeout(contextTimeoutId);
-
-          sendResponse((event as CustomEvent<unknown>).detail ?? emptyContext);
-        };
-
-        const contextTimeoutId = setTimeout(() => {
-          if (responseHandled) return;
-          responseHandled = true;
-
-          window.removeEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
-          sendResponse(emptyContext);
-        }, RELAY_TIMEOUT_MS);
-
-        window.addEventListener(`alfred:shopify_context_response_${requestId}`, handleContextResponse);
-
-        void mainWorldReady.then(() => {
-          window.postMessage(
-            {
-              type: 'alfred:request_shopify_context',
-              requestId: requestId
-            },
-            '*'
-          );
-        });
-
-        return true;
+        return relayToMainWorld('getShopifyContext', emptyContext, sendResponse);
       }
 
       /**
@@ -405,36 +362,30 @@ export default defineContentScript({
       }
 
       /**
-       * Extracts all anchor links from the page in DOM order. Each anchor is
-       * stamped with its index so scroll_to_link can find it even if the DOM
-       * mutates afterwards (lazy menus, carousels).
+       * Extracts all anchor links from the page in DOM order, recording each
+       * anchor in linkSnapshot so scroll_to_link can find it even if the DOM
+       * mutates afterwards.
        * @returns {RawLink[]}
        */
       if (request.action === 'get_links') {
         const pageHost = location.hostname;
         const anchors = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'));
-        // Stamp in a separate write-only pass: interleaving setAttribute with the
-        // checkVisibility/querySelector reads below risks a style recalc per anchor.
-        anchors.forEach((anchor, i) => anchor.setAttribute('data-alfred-link-index', String(i)));
+        linkSnapshot = anchors.map((anchor) => new WeakRef(anchor));
         // Built lazily on the first getElementById miss; getElementsByName walks the
         // whole document per call, which is O(links x DOM) on hash-router pages.
         let anchorNames: Set<string | null> | null = null;
-        const hasNamedAnchor = (fragment: string): boolean => {
-          anchorNames ??= new Set(Array.from(document.querySelectorAll('[name]'), (el) => el.getAttribute('name')));
-          return anchorNames.has(fragment);
+        const targets: FragmentTargets = {
+          hasId: (id) => document.getElementById(id) !== null,
+          hasNamedAnchor: (name) => {
+            anchorNames ??= new Set(Array.from(document.querySelectorAll('a[name]'), (el) => el.getAttribute('name')));
+            return anchorNames.has(name);
+          }
         };
         const pageUrl = location.href;
         const links = anchors.map((anchor, i) => {
           const href = anchor.href; // serializing getter; read once per anchor
           const rel = anchor.getAttribute('rel') ?? '';
           const { nofollow, sponsored, ugc } = relFlags(rel);
-          const fragment = samePageFragment(href, pageUrl);
-          const isBrokenAnchor =
-            fragment !== null &&
-            fragment !== '' &&
-            fragment !== 'top' && // #top scrolls to the document top even without a target
-            !document.getElementById(fragment) &&
-            !hasNamedAnchor(fragment);
           return {
             index: i,
             href,
@@ -447,7 +398,7 @@ export default defineContentScript({
             isImage: anchor.querySelector('img, svg, picture') !== null,
             isHidden: !anchor.checkVisibility(),
             isInsecure: isInsecureHttp(href),
-            isBrokenAnchor
+            isBrokenAnchor: isBrokenAnchor(href, pageUrl, targets)
           };
         });
         sendResponse(links);
@@ -609,7 +560,11 @@ export default defineContentScript({
           }
         };
 
-        const images = collectImageEls().map(({ el, source, bg }, i) => {
+        const collected = collectImageEls();
+        // Recorded so scroll_to_image can reach the same entry without re-running
+        // the full-DOM walk (mirrors get_links).
+        imageSnapshot = collected.map(({ el, source }) => ({ ref: new WeakRef(el), source }));
+        const images = collected.map(({ el, source, bg }, i) => {
           if (source === 'background') {
             const src = bg ? capDataUri(resolveUrl(bg)) : '';
             const t = src ? timingByUrl.get(src) : undefined;
@@ -975,7 +930,7 @@ export default defineContentScript({
        */
       if (request.action === 'get_sitemap_urls') {
         const MAX_URLS = 10_000;
-        const { url } = request as { action: string; url?: string };
+        const { url } = request;
         if (!url || !/^https?:\/\//i.test(url)) {
           sendResponse(null);
           return true;
@@ -1002,7 +957,7 @@ export default defineContentScript({
       if (request.action === 'search_sitemap_urls') {
         const MAX_MATCHES = 200;
         const MAX_SITEMAPS = 50;
-        const { urls, query } = request as { action: string; urls?: string[]; query?: string };
+        const { urls, query } = request;
         if (!Array.isArray(urls) || typeof query !== 'string' || !query.trim()) {
           sendResponse(null);
           return true;
@@ -1040,7 +995,7 @@ export default defineContentScript({
        * @param {boolean} request.enabled - Whether to apply or remove highlights.
        */
       if (request.action === 'highlight_links') {
-        const { enabled } = request as { action: string; enabled: boolean };
+        const { enabled } = request;
         const styleId = 'alfred-link-highlights';
         const existing = document.getElementById(styleId);
         if (!enabled) {
@@ -1078,18 +1033,18 @@ export default defineContentScript({
 
       /**
        * Scrolls to a link and applies a brief green dashed outline highlight.
-       * Prefers the index stamped by get_links so DOM mutations since the
-       * snapshot don't shift the target; falls back to the nth a[href].
+       * Prefers the element get_links recorded so DOM mutations since then don't
+       * shift the target; falls back to the nth a[href] when that element has
+       * since been detached or garbage-collected.
        * @param {number} request.index - Zero-based index of the link among all `a[href]` elements.
        */
       if (request.action === 'scroll_to_link') {
-        const index = Number((request as { action: string; index: number }).index);
+        const index = Number(request.index);
         if (!Number.isInteger(index) || index < 0) {
           sendResponse(false);
           return false;
         }
-        const target =
-          document.querySelector(`a[data-alfred-link-index="${index}"]`) ?? document.querySelectorAll('a[href]')[index];
+        const target = liveRef(linkSnapshot[index]) ?? document.querySelectorAll('a[href]')[index];
         if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
@@ -1097,7 +1052,7 @@ export default defineContentScript({
 
       if (request.action === 'scroll_to_heading') {
         const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        const target = allHeadings[(request as { action: string; index: number }).index];
+        const target = allHeadings[request.index];
         if (target instanceof HTMLElement) flashOutline(target);
         sendResponse(true);
         return false;
@@ -1109,7 +1064,7 @@ export default defineContentScript({
        * @param {boolean} request.enabled - Whether to apply or remove highlights.
        */
       if (request.action === 'highlight_images') {
-        const { enabled } = request as { action: string; enabled: boolean };
+        const { enabled } = request;
         if (!enabled) {
           document.getElementById(IMAGE_HIGHLIGHT_STYLE_ID)?.remove();
           document.querySelectorAll('[data-alfred-image-highlight]').forEach((el) => {
@@ -1142,7 +1097,13 @@ export default defineContentScript({
        * @param {number} request.index - Zero-based index in collectImageEls() order.
        */
       if (request.action === 'scroll_to_image') {
-        const item = collectImageEls()[(request as { action: string; index: number }).index];
+        const index = request.index;
+        // Prefer the entry get_images recorded; fall back to the full walk when
+        // that element has since been detached or garbage-collected.
+        const snapped = imageSnapshot[index];
+        const el = snapped && liveRef(snapped.ref);
+        const item: CollectedImage | undefined =
+          snapped && el ? { el, source: snapped.source } : collectImageEls()[index];
         if (item) {
           const { el, source } = item;
           ensureImageHighlightStyle();
@@ -1175,7 +1136,7 @@ export default defineContentScript({
     }
 
     // Get settings before injecting the script
-    const settings = await getItem<AlfredSettings>('settings');
+    const settings = await getSettings();
 
     await injectScript('/alfred-main-world.js', {
       keepInDom: true

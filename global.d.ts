@@ -19,7 +19,8 @@ declare namespace ContextMenu {
 
   interface Options {
     id: string;
-    title: string;
+    // Optional because separators have no label
+    title?: string;
     contexts?: ContextType[];
     parentId?: string;
     type?: chrome.contextMenus.ItemType;
@@ -137,16 +138,6 @@ declare interface CompareTrayItem {
   handle: string;
   name: string;
   iconUrl?: string | undefined;
-}
-
-declare interface SettingItem {
-  key: string;
-  label: string;
-  details?: string;
-  type?: 'checkbox' | 'switch' | 'choice' | 'text' | 'number'; // defaults to 'checkbox'
-  choices?: { label: string; value: string; details?: string }[]; // for choice type
-  defaultValue?: unknown;
-  subSettingItems?: SettingItem[];
 }
 
 declare interface WindowWithAlfred {

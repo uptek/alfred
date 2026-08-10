@@ -1,6 +1,6 @@
 import { createIntegratedUi } from '#imports';
 import { mount, unmount } from 'svelte';
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 import { waitForElement } from '@/utils/helpers';
 import App from './App.svelte';
 import type { ContentScriptContext } from '#imports';
@@ -10,8 +10,8 @@ const ALFRED_SENTINEL_ID = 'alfred-collaborator-access';
 export default defineContentScript({
   matches: ['*://dev.shopify.com/dashboard/*'],
   async main(ctx) {
-    const settings = await getItem<AlfredSettings>('settings');
-    const isPresetsEnabled = settings?.collaboratorAccess?.presets !== false;
+    const settings = await getSettings();
+    const isPresetsEnabled = isEnabled(settings.collaboratorAccess.presets);
 
     if (!isPresetsEnabled) {
       return;
@@ -27,10 +27,6 @@ export default defineContentScript({
       debounceTimer = setTimeout(() => tryInject(ctx), 200);
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
-
-    browser.runtime.onMessage.addListener((event: { type: string }) => {
-      if (event.type === 'MOUNT_UI') tryInject(ctx);
-    });
   }
 });
 

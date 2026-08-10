@@ -1,6 +1,6 @@
 import { createIntegratedUi } from '#imports';
 import { mount, unmount } from 'svelte';
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 import { waitForElement } from '@/utils/helpers';
 import App from './App.svelte';
 
@@ -8,8 +8,8 @@ export default defineContentScript({
   matches: ['*://apps.shopify.com/partners/*'],
   async main(ctx) {
     // Check if enhanced partner pages are enabled
-    const settings = await getItem<AlfredSettings>('settings');
-    const isEnhancedPartnerPagesEnabled = settings?.appStore?.enhancedPartnerPages !== false;
+    const settings = await getSettings();
+    const isEnhancedPartnerPagesEnabled = isEnabled(settings.appStore.enhancedPartnerPages);
 
     if (!isEnhancedPartnerPagesEnabled) {
       return; // Exit early if enhanced partner pages are disabled
@@ -51,14 +51,6 @@ export default defineContentScript({
       }
     });
 
-    // Explicitly mount the UI
     ui.mount();
-
-    browser.runtime.onMessage.addListener((event: { type?: string; [key: string]: unknown }) => {
-      if (event.type === 'MOUNT_UI') {
-        // dynamic mount by user action via messaging.
-        ui.mount();
-      }
-    });
   }
 });

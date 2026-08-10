@@ -7,21 +7,24 @@
  * that have their own custom context menus.
  */
 
+import { isDefinitelyShopifyStorefront } from './shopifyDetection';
+
 const blockedEvents = ['contextmenu', 'copy', 'cut', 'paste', 'selectstart', 'dragstart'];
 
 /**
  * Early Shopify detection using HTML elements (available before JS globals).
  * This is more reliable than checking window.Shopify which loads later.
+ *
+ * Deliberately the strict predicate, not the loose `sniffShopifyDom` the popup
+ * uses: this one gates an irreversible prototype patch on a page we may have
+ * misidentified, so a Shopify-hosted asset reference is not enough.
  */
-const isShopifyStorefront = (): boolean => {
+const isShopifyStorefrontDom = (): boolean => {
   const isAdminUrl = window.location.hostname === 'admin.shopify.com' || window.location.pathname.startsWith('/admin/');
 
   if (isAdminUrl) return false;
 
-  return (
-    !!document.querySelector('link[href*="cdn.shopify.com"]') ||
-    !!document.querySelector('meta[name="shopify-checkout-api-token"]')
-  );
+  return isDefinitelyShopifyStorefront(document, window.location.hostname);
 };
 
 /**
@@ -30,7 +33,7 @@ const isShopifyStorefront = (): boolean => {
  */
 export const initRestoreRightClick = (): void => {
   // Only run on Shopify sites to avoid conflicts with apps like Google Docs
-  if (!isShopifyStorefront()) {
+  if (!isShopifyStorefrontDom()) {
     return;
   }
 

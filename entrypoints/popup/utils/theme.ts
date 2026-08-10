@@ -1,5 +1,27 @@
 import type { StoreInfo, Theme } from './types';
+import { getActiveTab, queryActiveTab } from './messaging';
 import { lookupThemeStoreEntry } from './themeStoreLookup';
+import { sendTabMessage } from '@/utils/messages';
+
+/**
+ * Fast DOM-only Shopify check from the isolated world — no main-world relay,
+ * so it answers in one message round trip. Used for the popup's initial tab
+ * pick and the popup_open event; getTheme() refines the answer when it lands.
+ */
+export const sniffShopify = (): Promise<boolean> =>
+  queryActiveTab('sniff_shopify', false, (response) => typeof response === 'boolean');
+
+/**
+ * Provisional StoreInfo from the DOM sniff so domain/page_url consumers can
+ * render before the theme relay resolves; replaced wholesale when it does.
+ */
+export const provisionalStoreInfo = (tabUrl: string, isShopify: boolean): StoreInfo => ({
+  isShopify,
+  domain: new URL(tabUrl).hostname,
+  shopDomain: null,
+  page_url: tabUrl,
+  theme: null
+});
 
 /**
  * Detects Shopify theme info from the active tab via content script and enriches it with Theme Store metadata.
@@ -7,10 +29,7 @@ import { lookupThemeStoreEntry } from './themeStoreLookup';
  */
 export const getTheme = async (): Promise<StoreInfo | null> => {
   try {
-    const [tab] = await browser.tabs.query({
-      active: true,
-      currentWindow: true
-    });
+    const tab = await getActiveTab();
 
     if (tab?.id && tab?.url) {
       interface ThemeResponse {
@@ -19,9 +38,7 @@ export const getTheme = async (): Promise<StoreInfo | null> => {
         theme?: Theme;
       }
 
-      const response: ThemeResponse = await browser.tabs.sendMessage(tab.id, {
-        action: 'get_theme'
-      });
+      const response = (await sendTabMessage(tab.id, 'get_theme')) as ThemeResponse;
 
       const theme = response?.theme ?? null;
 

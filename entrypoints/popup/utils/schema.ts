@@ -1,4 +1,4 @@
-import type { RawSchemaBlock, SchemaAnalysis, SchemaEntity } from './types';
+import type { RawSchemaBlock, SchemaAnalysis, SchemaEntity, SummaryItem } from './types';
 import { queryActiveTab } from './messaging';
 
 /**
@@ -96,4 +96,18 @@ export function analyzeSchema(blocks: RawSchemaBlock[]): SchemaAnalysis {
   }
 
   return { entities, invalidBlocks };
+}
+
+/** Builds the Schema footer summary: entity-type count, plus invalid blocks when any failed to parse. */
+export function summarizeSchema(analysis: SchemaAnalysis): SummaryItem[] {
+  const n = analysis.entities.length;
+  const items: SummaryItem[] = [{ text: `${n} ${n === 1 ? 'type' : 'types'}` }];
+  if (analysis.invalidBlocks.length > 0) {
+    items.push({
+      text: `${analysis.invalidBlocks.length} invalid`,
+      tone: 'err',
+      title: 'Blocks that failed to parse as JSON'
+    });
+  }
+  return items;
 }

@@ -1,3 +1,12 @@
+// One segment of a tab's SummaryBar footer, e.g. `{ text: '3 broken', tone: 'err' }`.
+// Lives here rather than beside the component so the per-tab summarize* builders
+// in utils/ don't have to import a type from a .svelte module.
+export interface SummaryItem {
+  text: string;
+  tone?: 'warn' | 'err';
+  title?: string;
+}
+
 export interface RawHeading {
   level: number;
   text: string;
@@ -108,16 +117,6 @@ export interface HeadingIssue {
   details?: string;
   index?: number; // single affected heading (position in the full headings array)
   indexes?: number[]; // all affected headings (multiple-h1: every H1 gets a row marker)
-}
-
-export type InfoItemType = 'url' | 'text';
-
-export interface InfoItemProps {
-  label: string;
-  value: string | undefined | null;
-  type?: InfoItemType;
-  isLast?: boolean;
-  copyable?: boolean;
 }
 
 export interface Theme {
@@ -292,5 +291,4 @@ export interface OverviewAnalysis {
   canonical: CanonicalInfo;
   directives: RobotsDirective[];
   pageType: string | null; // Shopify page type, URL-derived fallback
-  dates: { published: string | null; modified: string | null };
 }

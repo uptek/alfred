@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Navigation from './components/Navigation.svelte';
   import ReviewRequest from './components/ReviewRequest.svelte';
   import Settings from './components/pages/Settings.svelte';
@@ -7,7 +8,7 @@
   let currentPage = $state('settings');
   let isLoading = $state(true);
 
-  $effect(() => {
+  onMount(() => {
     const params = new URLSearchParams(window.location.search);
     const page = params.get('page');
     if (page && ['settings', 'changelog'].includes(page)) {

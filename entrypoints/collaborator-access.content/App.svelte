@@ -4,13 +4,11 @@
   import {
     buildHotlinkUrl, generatePresetId, getPresets, savePreset,
     deletePreset, exportPresets, importPresets, normalizePresetHandle,
-    setupPermissionSearch, createAdapter
+    setupPermissionSearch, createAdapter,
+    HOTLINK_PRESET_PARAM, HOTLINK_AUTOSUBMIT_PARAM
   } from './presets';
   import { Toast } from '@/utils/toast';
   import type { PermissionPreset, PermissionSearchController } from './presets';
-
-  const AUTO_APPLY_PRESET_PARAM = 'alfred_preset';
-  const AUTO_SUBMIT_PARAM = 'alfred_submit';
 
   const adapter = createAdapter();
 
@@ -39,13 +37,7 @@
 
   // Hotlink URLs reactively reflect the selected preset handle and the auto-submit checkbox.
   let hotlinkUrl = $derived(hotlinkHandle ? buildHotlinkUrl(hotlinkHandle, hotlinkAutoSubmit) : '');
-  let hotlinkBareUrl = $derived.by(() => {
-    if (!hotlinkHandle) return '';
-    const bare = new URL(window.location.href);
-    bare.searchParams.set(AUTO_APPLY_PRESET_PARAM, hotlinkHandle);
-    if (hotlinkAutoSubmit) bare.searchParams.set(AUTO_SUBMIT_PARAM, '1');
-    return bare.toString();
-  });
+  let hotlinkBareUrl = $derived(hotlinkHandle ? buildHotlinkUrl(hotlinkHandle, hotlinkAutoSubmit, { bare: true }) : '');
 
   // Load saved presets from extension storage on mount.
   $effect(() => {
@@ -65,14 +57,14 @@
     if (autoApplyAttempted || presets.length === 0) return;
 
     const params = new URLSearchParams(window.location.search);
-    const presetNameFromUrl = params.get(AUTO_APPLY_PRESET_PARAM);
+    const presetNameFromUrl = params.get(HOTLINK_PRESET_PARAM);
     if (!presetNameFromUrl?.trim()) {
       autoApplyAttempted = true;
       return;
     }
 
     autoApplyAttempted = true;
-    const autoSubmit = params.get(AUTO_SUBMIT_PARAM) === '1';
+    const autoSubmit = params.get(HOTLINK_AUTOSUBMIT_PARAM) === '1';
 
     const matchingByHandle = presets.filter((p) => p.handle === normalizePresetHandle(presetNameFromUrl));
     if (matchingByHandle.length === 1) {
@@ -99,7 +91,7 @@
   $effect(() => {
     const params = new URLSearchParams(window.location.search);
     if (!params.get('store_url')) return;
-    if (params.get(AUTO_APPLY_PRESET_PARAM)?.trim()) return;
+    if (params.get(HOTLINK_PRESET_PARAM)?.trim()) return;
     const timer = setTimeout(() => adapter.triggerStoreUrlValidation(), 150);
     return () => clearTimeout(timer);
   });
@@ -301,6 +293,15 @@
   }
 </script>
 
+{#snippet checkmark(checked: boolean, onchange: (e: Event) => void, extraClass: string = '')}
+  <span class="relative inline-flex h-4 w-4 shrink-0 items-center justify-center {extraClass}">
+    <input type="checkbox" class="checkbox peer absolute inset-0 m-0" {checked} {onchange} />
+    <svg viewBox="0 0 20 20" width="16" height="16" class="icon success hidden peer-checked:block pointer-events-none absolute inset-0">
+      <path fill-rule="evenodd" d="M14.03 7.22a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-2.25-2.25a.75.75 0 1 1 1.06-1.06l1.72 1.72 3.97-3.97a.75.75 0 0 1 1.06 0Z"></path>
+    </svg>
+  </span>
+{/snippet}
+
 {#if showHotlinkModal}
 <div
   style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);"
@@ -320,16 +321,7 @@
       <em>Note: Renaming the preset changes the handle and breaks existing hotlinks.</em>
     </p>
     <label class="flex items-start gap-2 cursor-pointer mb-4">
-      <span class="relative inline-flex h-4 w-4 shrink-0 items-center justify-center mt-0.5">
-        <input
-          type="checkbox"
-          class="checkbox peer absolute inset-0 m-0"
-          bind:checked={hotlinkAutoSubmit}
-        />
-        <svg viewBox="0 0 20 20" width="16" height="16" class="icon success hidden peer-checked:block pointer-events-none absolute inset-0">
-          <path fill-rule="evenodd" d="M14.03 7.22a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-2.25-2.25a.75.75 0 1 1 1.06-1.06l1.72 1.72 3.97-3.97a.75.75 0 0 1 1.06 0Z"></path>
-        </svg>
-      </span>
+      {@render checkmark(hotlinkAutoSubmit, (e) => { hotlinkAutoSubmit = (e.target as HTMLInputElement).checked; }, 'mt-0.5')}
       <span class="text-body-sm">
         <strong>Auto-submit the request</strong>
         <span class="block text-text-subdued text-body-sm mt-1">
@@ -404,23 +396,16 @@
         <tr style="border-bottom:1px solid var(--color-border-default,#333);">
           <th style="padding:8px 12px;text-align:left;width:40px;">
             {#if presets.length > 0}
-              <span class="relative inline-flex h-4 w-4 shrink-0 items-center justify-center">
-                <input
-                  type="checkbox"
-                  class="checkbox peer absolute inset-0 m-0"
-                  checked={presets.length > 0 && checkedPresets.size === presets.length}
-                  onchange={(e) => {
-                    if ((e.target as HTMLInputElement).checked) {
-                      checkedPresets = new Set(presets.map((p) => p.id));
-                    } else {
-                      checkedPresets = new Set();
-                    }
-                  }}
-                />
-                <svg viewBox="0 0 20 20" width="16" height="16" class="icon success hidden peer-checked:block pointer-events-none absolute inset-0">
-                  <path fill-rule="evenodd" d="M14.03 7.22a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-2.25-2.25a.75.75 0 1 1 1.06-1.06l1.72 1.72 3.97-3.97a.75.75 0 0 1 1.06 0Z"></path>
-                </svg>
-              </span>
+              {@render checkmark(
+                presets.length > 0 && checkedPresets.size === presets.length,
+                (e) => {
+                  if ((e.target as HTMLInputElement).checked) {
+                    checkedPresets = new Set(presets.map((p) => p.id));
+                  } else {
+                    checkedPresets = new Set();
+                  }
+                }
+              )}
             {/if}
           </th>
           <th class="text-heading-xs" style="padding:8px 12px;text-align:left;">Name</th>
@@ -441,25 +426,18 @@
           {#each presets as preset (preset.id)}
             <tr style="border-bottom:1px solid var(--color-border-default,#333);">
               <td style="padding:8px 12px;">
-                <span class="relative inline-flex h-4 w-4 shrink-0 items-center justify-center">
-                  <input
-                    type="checkbox"
-                    class="checkbox peer absolute inset-0 m-0"
-                    checked={checkedPresets.has(preset.id)}
-                    onchange={(e) => {
-                      const newChecked = new Set(checkedPresets);
-                      if ((e.target as HTMLInputElement).checked) {
-                        newChecked.add(preset.id);
-                      } else {
-                        newChecked.delete(preset.id);
-                      }
-                      checkedPresets = newChecked;
-                    }}
-                  />
-                  <svg viewBox="0 0 20 20" width="16" height="16" class="icon success hidden peer-checked:block pointer-events-none absolute inset-0">
-                    <path fill-rule="evenodd" d="M14.03 7.22a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-2.25-2.25a.75.75 0 1 1 1.06-1.06l1.72 1.72 3.97-3.97a.75.75 0 0 1 1.06 0Z"></path>
-                  </svg>
-                </span>
+                {@render checkmark(
+                  checkedPresets.has(preset.id),
+                  (e) => {
+                    const newChecked = new Set(checkedPresets);
+                    if ((e.target as HTMLInputElement).checked) {
+                      newChecked.add(preset.id);
+                    } else {
+                      newChecked.delete(preset.id);
+                    }
+                    checkedPresets = newChecked;
+                  }
+                )}
               </td>
               <td class="text-body-sm" style="padding:8px 12px;">{preset.name}</td>
               <td style="padding:8px 12px;">

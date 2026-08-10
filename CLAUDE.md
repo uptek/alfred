@@ -44,10 +44,11 @@ in page chrome, referer-based robots.txt fixtures).
 - Test files live in a `tests/` subfolder beside the code they cover (e.g.
   `entrypoints/popup/tests/`, `utils/tests/`) with a `.test.ts` suffix, and are
   excluded from `tsconfig.json`
-- Analytics events must exist in both `utils/analytics-actions.ts`
-  (`ANALYTICS_ACTIONS`, the source of truth) and `VALID_ACTIONS` in
-  `supabase/functions/track/index.ts`; a parity test fails `bun test` when the
-  two lists drift
+- Analytics events live in `utils/analytics-actions.ts` (`ANALYTICS_ACTIONS`,
+  the source of truth); the Supabase track function imports
+  `valid-actions.gen.ts`, generated from it via `bun run track:gen` (run
+  automatically by `bun run deploy:track`). A parity test fails `bun test`
+  when the generated file is stale
 
 ## Version Bumping & Changelog
 

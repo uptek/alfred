@@ -1,6 +1,7 @@
 import { create, createSeparator, removeAll } from '@/utils/contextMenu';
-import { getItem } from '@/utils/storage';
+import { getSettings, isEnabled, mergeSettings } from '@/utils/settings';
 import { trackAction } from '@/utils/analytics';
+import { sendTabMessage } from '@/utils/messages';
 import {
   getPresets,
   normalizePresetHandle,
@@ -8,28 +9,140 @@ import {
   type PermissionPreset
 } from '@/entrypoints/collaborator-access.content/presets';
 
+type AlfredMainWorldMethod =
+  | 'openInAdmin'
+  | 'openInCustomizer'
+  | 'openSectionInCodeEditor'
+  | 'copyThemePreviewUrl'
+  | 'exitThemePreview'
+  | 'copyProductJson'
+  | 'copyCartJson'
+  | 'clearCart';
+
+/** Invoke a no-arg Alfred main-world method in the given tab. */
+const execInMain = async (tabId: number, method: AlfredMainWorldMethod) => {
+  await browser.scripting.executeScript({
+    target: { tabId },
+    func: (m: string) => {
+      void (window as unknown as WindowWithAlfred).Alfred[m as AlfredMainWorldMethod]();
+    },
+    args: [method],
+    world: 'MAIN'
+  });
+};
+
+interface ShortcutMenuItem {
+  settingKey: keyof NonNullable<AlfredSettings['shortcuts']>;
+  id: string;
+  title: string;
+  method: AlfredMainWorldMethod;
+  errorLabel: string;
+}
+
+const navigationItems: ShortcutMenuItem[] = [
+  {
+    settingKey: 'openInAdmin',
+    id: 'open-in-admin',
+    title: 'Open in Admin',
+    method: 'openInAdmin',
+    errorLabel: 'Error opening in admin:'
+  },
+  {
+    settingKey: 'openInCustomizer',
+    id: 'open-in-customizer',
+    title: 'Open in Customizer',
+    method: 'openInCustomizer',
+    errorLabel: 'Error opening customizer:'
+  },
+  {
+    settingKey: 'openSectionInCodeEditor',
+    id: 'open-section-in-editor',
+    title: 'Open Section in Code Editor',
+    method: 'openSectionInCodeEditor',
+    errorLabel: 'Error opening section in editor:'
+  }
+];
+
+const themeItems: ShortcutMenuItem[] = [
+  {
+    settingKey: 'copyThemePreviewUrl',
+    id: 'copy-theme-preview-url',
+    title: 'Copy Theme Preview URL',
+    method: 'copyThemePreviewUrl',
+    errorLabel: 'Error copying theme preview URL:'
+  },
+  {
+    settingKey: 'exitThemePreview',
+    id: 'exit-theme-preview',
+    title: 'Exit Theme Preview',
+    method: 'exitThemePreview',
+    errorLabel: 'Error exiting theme preview:'
+  }
+];
+
+const dataItems: ShortcutMenuItem[] = [
+  {
+    settingKey: 'copyProductJson',
+    id: 'copy-product-json',
+    title: 'Copy Product JSON',
+    method: 'copyProductJson',
+    errorLabel: 'Error copying product JSON:'
+  },
+  {
+    settingKey: 'copyCartJson',
+    id: 'copy-cart-json',
+    title: 'Copy Cart JSON',
+    method: 'copyCartJson',
+    errorLabel: 'Error copying cart JSON:'
+  }
+];
+
+const clearCartItem: ShortcutMenuItem = {
+  settingKey: 'clearCart',
+  id: 'clear-cart',
+  title: 'Clear Cart',
+  method: 'clearCart',
+  errorLabel: 'Error clearing cart:'
+};
+
+const registerItems = (
+  items: ShortcutMenuItem[],
+  shortcuts: NonNullable<AlfredSettings['shortcuts']>,
+  parentId: string
+) => {
+  for (const item of items) {
+    if (!isEnabled(shortcuts[item.settingKey])) continue;
+    create(
+      {
+        id: item.id,
+        title: item.title,
+        parentId
+      },
+      (_info, tab: Browser.tabs.Tab) => {
+        void (async () => {
+          try {
+            await execInMain(tab.id!, item.method);
+          } catch (error) {
+            console.error(item.errorLabel, error);
+          }
+        })();
+      }
+    );
+  }
+};
+
 /**
- * Register shortcuts (context menu items) for the extension
+ * Register shortcuts (context menu items) for the extension.
+ * @param providedSettings - Pass when the caller already has fresh settings
+ *   (e.g. a storage watcher) to avoid a redundant read.
  */
-export const registerShortcuts = async () => {
+export const registerShortcuts = async (providedSettings?: AlfredSettings | null) => {
   // Remove all context menus
   removeAll();
 
   // Get settings to determine which shortcuts to show
-  const settings = await getItem<AlfredSettings>('settings');
-  const shortcuts = settings?.shortcuts ?? {
-    openInAdmin: true,
-    openInCustomizer: true,
-    openSectionInCodeEditor: true,
-    openImageInAdmin: true,
-    copyThemePreviewUrl: true,
-    exitThemePreview: true,
-    copyProductJson: true,
-    copyCartJson: true,
-    clearCart: true,
-    cartograph: true,
-    requestStoreAccess: true
-  };
+  const settings = providedSettings !== undefined ? mergeSettings(providedSettings) : await getSettings();
+  const shortcuts = settings.shortcuts;
 
   // Create main menu
   const alfredMenuId = create({
@@ -39,86 +152,10 @@ export const registerShortcuts = async () => {
 
   // ── Navigation ──
 
-  // Open in Admin
-  if (shortcuts.openInAdmin !== false) {
-    create(
-      {
-        id: 'open-in-admin',
-        title: 'Open in Admin',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (window as unknown as WindowWithAlfred).Alfred.openInAdmin();
-              },
-              world: 'MAIN'
-            });
-          } catch (error) {
-            console.error('Error opening in admin:', error);
-          }
-        })();
-      }
-    );
-  }
-
-  // Open in Customizer
-  if (shortcuts.openInCustomizer !== false) {
-    create(
-      {
-        id: 'open-in-customizer',
-        title: 'Open in Customizer',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (window as unknown as WindowWithAlfred).Alfred.openInCustomizer();
-              },
-              world: 'MAIN'
-            });
-          } catch (error) {
-            console.error('Error opening customizer:', error);
-          }
-        })();
-      }
-    );
-  }
-
-  // Open Section in Editor
-  if (shortcuts.openSectionInCodeEditor !== false) {
-    create(
-      {
-        id: 'open-section-in-editor',
-        title: 'Open Section in Code Editor',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (window as unknown as WindowWithAlfred).Alfred.openSectionInCodeEditor();
-              },
-              world: 'MAIN'
-            });
-          } catch (error) {
-            console.error('Error opening section in editor:', error);
-          }
-        })();
-      }
-    );
-  }
+  registerItems(navigationItems, shortcuts, alfredMenuId);
 
   // Open Image in Admin > Files
-  if (shortcuts.openImageInAdmin !== false) {
+  if (isEnabled(shortcuts.openImageInAdmin)) {
     create(
       {
         id: 'open-image-in-admin',
@@ -163,121 +200,19 @@ export const registerShortcuts = async () => {
   // ── Theme ──
 
   createSeparator('separator-theme', alfredMenuId);
-
-  // Copy Theme Preview URL
-  if (shortcuts.copyThemePreviewUrl !== false) {
-    create(
-      {
-        id: 'copy-theme-preview-url',
-        title: 'Copy Theme Preview URL',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (window as unknown as WindowWithAlfred).Alfred.copyThemePreviewUrl();
-              },
-              world: 'MAIN'
-            });
-          } catch (error) {
-            console.error('Error copying theme preview URL:', error);
-          }
-        })();
-      }
-    );
-  }
-
-  // Exit Theme Preview
-  if (shortcuts.exitThemePreview !== false) {
-    create(
-      {
-        id: 'exit-theme-preview',
-        title: 'Exit Theme Preview',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (window as unknown as WindowWithAlfred).Alfred.exitThemePreview();
-              },
-              world: 'MAIN'
-            });
-          } catch (error) {
-            console.error('Error exiting theme preview:', error);
-          }
-        })();
-      }
-    );
-  }
+  registerItems(themeItems, shortcuts, alfredMenuId);
 
   // ── Data ──
 
   createSeparator('separator-data', alfredMenuId);
-
-  // Copy Product JSON
-  if (shortcuts.copyProductJson !== false) {
-    create(
-      {
-        id: 'copy-product-json',
-        title: 'Copy Product JSON',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (window as unknown as WindowWithAlfred).Alfred.copyProductJson();
-              },
-              world: 'MAIN'
-            });
-          } catch (error) {
-            console.error('Error copying product JSON:', error);
-          }
-        })();
-      }
-    );
-  }
-
-  // Copy Cart JSON
-  if (shortcuts.copyCartJson !== false) {
-    create(
-      {
-        id: 'copy-cart-json',
-        title: 'Copy Cart JSON',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (window as unknown as WindowWithAlfred).Alfred.copyCartJson();
-              },
-              world: 'MAIN'
-            });
-          } catch (error) {
-            console.error('Error copying cart JSON:', error);
-          }
-        })();
-      }
-    );
-  }
+  registerItems(dataItems, shortcuts, alfredMenuId);
 
   // ── Cart ──
 
   createSeparator('separator-cart', alfredMenuId);
 
   // Cartograph
-  if (shortcuts.cartograph !== false) {
+  if (isEnabled(shortcuts.cartograph)) {
     create(
       {
         id: 'cartograph',
@@ -287,9 +222,7 @@ export const registerShortcuts = async () => {
       (_info, tab: Browser.tabs.Tab) => {
         void (async () => {
           try {
-            await browser.tabs.sendMessage(tab.id!, {
-              action: 'open_cartograph'
-            });
+            await sendTabMessage(tab.id!, 'open_cartograph');
           } catch (error) {
             console.error('Error opening Cartograph:', error);
           }
@@ -298,38 +231,14 @@ export const registerShortcuts = async () => {
     );
   }
 
-  // Clear Cart
-  if (shortcuts.clearCart !== false) {
-    create(
-      {
-        id: 'clear-cart',
-        title: 'Clear Cart',
-        parentId: alfredMenuId
-      },
-      (_info, tab: Browser.tabs.Tab) => {
-        void (async () => {
-          try {
-            await browser.scripting.executeScript({
-              target: { tabId: tab.id! },
-              func: () => {
-                void (window as unknown as WindowWithAlfred).Alfred.clearCart();
-              },
-              world: 'MAIN'
-            });
-          } catch (error) {
-            console.error('Error clearing cart:', error);
-          }
-        })();
-      }
-    );
-  }
+  registerItems([clearCartItem], shortcuts, alfredMenuId);
 
   // ── Collaborator Access ──
   // Request store access for the storefront under the cursor, optionally with a preset.
   // Laid out as a flat group under the Alfred menu to match its separator-group idiom:
   // a general "Request Store Access" action, then each saved preset as a child-styled
   // item directly below it. It's a right-click shortcut, so it's gated by its shortcut flag.
-  if (shortcuts.requestStoreAccess !== false) {
+  if (isEnabled(shortcuts.requestStoreAccess)) {
     createSeparator('separator-collab', alfredMenuId);
 
     create(

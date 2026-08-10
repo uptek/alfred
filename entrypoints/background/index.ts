@@ -3,11 +3,11 @@ import { registerShortcuts } from './shortcuts';
 import { checkLinkStatus } from './linkStatus';
 import { keyFor } from '@/entrypoints/popup/stores/tabState';
 import { trackAction } from '@/utils/analytics';
-import type { AnalyticsAction } from '@/utils/analytics-actions';
+import type { RuntimeMessage } from '@/utils/messages';
 import { saveReturnUrl, isValidReturnUrl } from '@/utils/storefrontPasswordRedirect';
 import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
 import { captureOrganizationId } from '@/entrypoints/collaborator-access.content/presets';
-import { getItem } from '@/utils/storage';
+import { getSettings, isEnabled, watchSettings } from '@/utils/settings';
 
 const UNINSTALL_SURVEY_URL = 'https://tally.so/r/zx79O8';
 
@@ -64,8 +64,10 @@ export default defineBackground(() => {
   // Set up periodic keep-alive (every 20 seconds)
   setInterval(keepAlive, 20000);
 
-  // Keep track of current shortcuts in memory to avoid unnecessary re-registration
-  let currentShortcuts: unknown = null;
+  // Keep track of current shortcuts (as their serialized form, so each settings
+  // write compares against a cached string) to avoid unnecessary re-registration
+  // 'null' matches the never-seen sentinel so the first watch event always re-registers
+  let currentShortcutsJson: string | undefined = 'null';
   let currentPresetMenuItemHandles: string | undefined;
 
   registerShortcuts();
@@ -73,19 +75,14 @@ export default defineBackground(() => {
   // Re-register shortcuts when they change. The "Request store access" menu is a
   // shortcut flag too, and its preset list/order depends on presetMenuItemHandles, so a
   // change to either rebuilds the menus.
-  storage.watch<AlfredSettings>('local:settings', (newValue) => {
-    void (async () => {
-      const newShortcuts = newValue?.shortcuts;
-      const newPresetMenuItemHandles = newValue?.collaboratorAccess?.presetMenuItemHandles;
-      if (
-        JSON.stringify(newShortcuts) !== JSON.stringify(currentShortcuts) ||
-        newPresetMenuItemHandles !== currentPresetMenuItemHandles
-      ) {
-        currentShortcuts = newShortcuts;
-        currentPresetMenuItemHandles = newPresetMenuItemHandles;
-        await registerShortcuts();
-      }
-    })();
+  watchSettings((settings) => {
+    const newShortcutsJson = JSON.stringify(settings.shortcuts);
+    const newPresetMenuItemHandles = settings.collaboratorAccess.presetMenuItemHandles;
+    if (newShortcutsJson !== currentShortcutsJson || newPresetMenuItemHandles !== currentPresetMenuItemHandles) {
+      currentShortcutsJson = newShortcutsJson;
+      currentPresetMenuItemHandles = newPresetMenuItemHandles;
+      void registerShortcuts(settings);
+    }
   });
 
   // Saved presets appear as items under the "Request store access" menu —
@@ -94,25 +91,26 @@ export default defineBackground(() => {
     void registerShortcuts();
   });
 
-  // Listen for tracking messages from content scripts
-  browser.runtime.onMessage.addListener((message: { type?: string; [key: string]: unknown }) => {
-    if (message.type === 'track_action') {
-      try {
-        trackAction(message.action as AnalyticsAction, message.metadata as Record<string, unknown>);
-      } catch (error) {
-        console.error('Failed to track action:', error);
-      }
-    }
-  });
-
-  // Resolve link HTTP statuses for the popup. Fetching here (not in the popup)
+  // Single message dispatcher: tracking events from content scripts, and link
+  // HTTP status checks for the popup. Fetching statuses here (not in the popup)
   // keeps checks alive after the popup closes and uses host permissions to read
   // cross-origin status codes. Returning true keeps the channel open for the
   // async sendResponse.
-  browser.runtime.onMessage.addListener((message: { action?: string; url?: string }, sender, sendResponse) => {
-    // Only honor requests from the extension's own contexts (popup/content scripts).
+  browser.runtime.onMessage.addListener((rawMessage: unknown, sender, sendResponse) => {
+    // Only honor messages from the extension's own contexts (popup/content scripts).
     if (sender.id !== browser.runtime.id) return false;
-    if (message.action === 'check_link_status' && typeof message.url === 'string') {
+    const message = rawMessage as RuntimeMessage;
+
+    if (message.type === 'track_action') {
+      try {
+        trackAction(message.action, message.metadata);
+      } catch (error) {
+        console.error('Failed to track action:', error);
+      }
+      return false;
+    }
+
+    if (message.type === 'check_link_status' && typeof message.url === 'string') {
       checkLinkStatus(message.url).then(sendResponse);
       return true;
     }
@@ -132,8 +130,8 @@ export default defineBackground(() => {
 
     // Open changelog page when extension is updated, unless disabled in settings
     if (!import.meta.env.DEV && details.reason === 'update') {
-      const settings = await getItem<AlfredSettings>('settings');
-      if (settings?.general?.openChangelogOnUpdate !== false) {
+      const settings = await getSettings();
+      if (isEnabled(settings.general.openChangelogOnUpdate)) {
         browser.tabs.create({
           url: browser.runtime.getURL('/options.html?page=changelog')
         });

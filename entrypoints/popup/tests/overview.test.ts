@@ -14,18 +14,10 @@ import {
   computeIndexability,
   detectPageType,
   shopifyFindings,
-  schemaDates,
   socialProfiles,
   analyzeOverview
 } from '../utils/overview';
-import type {
-  RawOverview,
-  OverviewNetwork,
-  RobotsResponse,
-  ShopifyContext,
-  RawLink,
-  RawSchemaBlock
-} from '../utils/types';
+import type { RawOverview, OverviewNetwork, RobotsResponse, ShopifyContext, RawLink } from '../utils/types';
 
 export const baseRaw = (over: Partial<RawOverview> = {}): RawOverview => ({
   url: 'https://shop.example.com/products/widget',
@@ -522,8 +514,6 @@ const mkLink = (href: string): RawLink => ({
   isBrokenAnchor: false
 });
 
-const mkSchema = (raw: string): RawSchemaBlock => ({ index: 0, raw, parseError: null, placement: 'head' });
-
 describe('detectPageType', () => {
   test('prefers the ShopifyAnalytics page type', () => {
     expect(detectPageType('https://a.com/whatever', 'collection')).toBe('collection');
@@ -671,25 +661,6 @@ describe('shopifyFindings', () => {
   });
 });
 
-describe('schemaDates', () => {
-  test('finds dates nested inside @graph', () => {
-    const block = mkSchema(
-      JSON.stringify({
-        '@graph': [{ '@type': 'Article', datePublished: '2026-01-01', dateModified: '2026-02-01' }]
-      })
-    );
-    expect(schemaDates([block])).toEqual({ published: '2026-01-01', modified: '2026-02-01' });
-  });
-
-  test('returns nulls when absent and skips malformed blocks', () => {
-    expect(schemaDates([])).toEqual({ published: null, modified: null });
-    expect(schemaDates([{ index: 0, raw: '{bad', parseError: 'x', placement: 'head' }])).toEqual({
-      published: null,
-      modified: null
-    });
-  });
-});
-
 describe('socialProfiles', () => {
   test('detects profile links and dedupes per network', () => {
     const profiles = socialProfiles([
@@ -782,11 +753,6 @@ describe('coverage: edge cases', () => {
     expect(detectPageType('https://a.com/search', null)).toBe('searchresults');
     expect(detectPageType('not a url', null)).toBe(null);
   });
-
-  test('schemaDates finds a dateModified with no datePublished present', () => {
-    const block = mkSchema(JSON.stringify({ '@type': 'Article', dateModified: '2026-04-01' }));
-    expect(schemaDates([block])).toEqual({ published: null, modified: '2026-04-01' });
-  });
 });
 
 describe('analyzeOverview', () => {
@@ -795,8 +761,7 @@ describe('analyzeOverview', () => {
       baseRaw(),
       baseNetwork(),
       baseShopify(),
-      robotsResponse('User-agent: *\nAllow: /'),
-      []
+      robotsResponse('User-agent: *\nAllow: /')
     );
     expect(analysis.indexability.status).toBe('indexable');
     expect(analysis.errorCount).toBe(0);
@@ -805,39 +770,33 @@ describe('analyzeOverview', () => {
   });
 
   test('robots.txt 5xx makes the verdict unknown; 404 stays indexable', () => {
-    const err = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 503 }, []);
+    const err = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 503 });
     expect(err.indexability.status).toBe('unknown');
-    const notFound = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 404 }, []);
+    const notFound = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 404 });
     expect(notFound.indexability.status).toBe('indexable');
   });
 
   test('robots.txt 429 is treated as a server error', () => {
-    const analysis = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 429 }, []);
+    const analysis = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 429 });
     expect(analysis.indexability.status).toBe('unknown');
     expect(analysis.indexability.reasons[0]).toContain('server error');
   });
 
   test('robots.txt error outranks a canonicalized verdict', () => {
     const raw = baseRaw({ url: 'https://shop.example.com/products/widget?variant=123' });
-    const analysis = analyzeOverview(raw, baseNetwork(), null, { ...robotsResponse(''), status: 503 }, []);
+    const analysis = analyzeOverview(raw, baseNetwork(), null, { ...robotsResponse(''), status: 503 });
     expect(analysis.indexability.status).toBe('unknown');
   });
 
   test('robots.txt network failure reads as unfetchable, not a server error', () => {
-    const analysis = analyzeOverview(
-      baseRaw(),
-      baseNetwork(),
-      null,
-      { ...robotsResponse(''), ok: false, status: 0 },
-      []
-    );
+    const analysis = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), ok: false, status: 0 });
     expect(analysis.indexability.status).toBe('unknown');
     expect(analysis.indexability.reasons[0]).toContain('could not be fetched');
   });
 
   test('counts error findings and sorts findings by severity', () => {
     const raw = baseRaw({ titles: [], descriptions: [], robotsMeta: ['noindex'], canonicals: [] });
-    const analysis = analyzeOverview(raw, null, null, null, []);
+    const analysis = analyzeOverview(raw, null, null, null);
     expect(analysis.errorCount).toBe(3); // title-missing, description-missing, noindex
     const severities = analysis.findings.map((f) => f.severity);
     expect(severities.indexOf('info')).toBeGreaterThan(severities.lastIndexOf('error'));
@@ -845,7 +804,7 @@ describe('analyzeOverview', () => {
 
   test('errors with no visible UI representation are excluded from errorCount', () => {
     const raw = baseRaw({ titles: ['One', 'Two'], viewport: null });
-    const analysis = analyzeOverview(raw, null, null, null, []);
+    const analysis = analyzeOverview(raw, null, null, null);
     const errorCodes = analysis.findings.filter((f) => f.severity === 'error').map((f) => f.code);
     expect(errorCodes).toContain('title-multiple');
     expect(errorCodes).toContain('viewport-missing');
@@ -857,8 +816,7 @@ describe('analyzeOverview', () => {
       baseRaw({ url: 'https://shop.example.com/private/x', robotsMeta: ['noindex'], canonicals: [] }),
       null,
       null,
-      robotsResponse('User-agent: *\nDisallow: /private/'),
-      []
+      robotsResponse('User-agent: *\nDisallow: /private/')
     );
     expect(codes(blockedNoindex.findings)).toContain('robots-noindex-conflict');
 
@@ -866,23 +824,15 @@ describe('analyzeOverview', () => {
       baseRaw({ url: 'https://shop.example.com/products/widget?variant=1', robotsMeta: ['noindex'] }),
       null,
       null,
-      null,
-      []
+      null
     );
     expect(codes(noindexCanonical.findings)).toContain('noindex-canonical-conflict');
   });
 
   test('password-protected store overrides an otherwise indexable verdict', () => {
     const raw = baseRaw({ url: 'https://shop.example.com/password', canonicals: [] });
-    const analysis = analyzeOverview(raw, baseNetwork(), baseShopify({ pageType: 'password' }), null, []);
+    const analysis = analyzeOverview(raw, baseNetwork(), baseShopify({ pageType: 'password' }), null);
     expect(analysis.indexability.status).toBe('not-indexable');
     expect(codes(analysis.findings)).toContain('password-page');
-  });
-
-  test('falls back to schema dates when article meta is absent', () => {
-    const analysis = analyzeOverview(baseRaw(), null, null, null, [
-      mkSchema(JSON.stringify({ '@type': 'Article', datePublished: '2026-03-01' }))
-    ]);
-    expect(analysis.dates.published).toBe('2026-03-01');
   });
 });

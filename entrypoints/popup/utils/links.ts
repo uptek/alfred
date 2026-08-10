@@ -1,5 +1,6 @@
-import type { LinkKind, RawLink, LinkStatusResult } from './types';
+import type { LinkKind, RawLink, LinkStatusResult, SummaryItem } from './types';
 import { queryActiveTab, sendToActiveTab } from './messaging';
+import { sendRuntimeMessage } from '@/utils/messages';
 import type { TextSourceElement } from './dom-text';
 import { accessibleText } from './dom-text';
 
@@ -29,7 +30,7 @@ export const scrollToLink = (index: number): Promise<void> => sendToActiveTab('s
  */
 export const checkLinkStatus = async (url: string): Promise<LinkStatusResult> => {
   try {
-    const res = await browser.runtime.sendMessage({ action: 'check_link_status', url });
+    const res = (await sendRuntimeMessage({ type: 'check_link_status', url })) as LinkStatusResult | undefined;
     return res ?? { status: 0, bucket: 'error' };
   } catch {
     return { status: 0, bucket: 'error' };
@@ -123,6 +124,30 @@ export function samePageFragment(href: string, pageUrl: string): string | null {
   }
 }
 
+/**
+ * Fragment-target lookups, injected so the predicate below stays DOM-free and
+ * testable while the content script keeps its lazily-built name index.
+ */
+export interface FragmentTargets {
+  hasId(id: string): boolean;
+  /** Matches `<a name>` only — a name attribute on any other element is not a fragment target. */
+  hasNamedAnchor(name: string): boolean;
+}
+
+/**
+ * Flags a same-page `#fragment` link whose target does not exist. Links that
+ * point elsewhere are never broken by this measure. `#top` is exempt: browsers
+ * scroll to the document top for it whether or not a matching element exists.
+ * @param {string} href - Absolute href of the link.
+ * @param {string} pageUrl - URL of the page being analyzed.
+ * @param targets - Lookups against the page's ids and named anchors.
+ */
+export function isBrokenAnchor(href: string, pageUrl: string, targets: FragmentTargets): boolean {
+  const fragment = samePageFragment(href, pageUrl);
+  if (fragment === null || fragment === 'top') return false;
+  return !targets.hasId(fragment) && !targets.hasNamedAnchor(fragment);
+}
+
 /** Hosts browsers treat as potentially-trustworthy origins even over http. */
 const LOOPBACK_HOST = /^(localhost|.+\.localhost|127\.0\.0\.1|\[::1\])$/i;
 
@@ -156,3 +181,49 @@ export const isDofollow = (link: FollowFlags): boolean => !link.isNofollow && !l
 /** Sort rank for the Dofollow column: dofollow, then ugc, sponsored, nofollow. */
 export const followRank = (link: FollowFlags): number =>
   link.isNofollow ? 3 : link.isSponsored ? 2 : link.isUgc ? 1 : 0;
+
+/**
+ * Builds the Links footer summary. Count and external total always show; every
+ * defect count is suppressed at zero so a clean page reads as a short bar.
+ * @param links - The rows currently visible (post-filter), not the full set.
+ * @param statuses - Checked HTTP statuses keyed by href; unchecked links are absent.
+ */
+export function summarizeLinks(links: RawLink[], statuses: ReadonlyMap<string, LinkStatusResult>): SummaryItem[] {
+  let external = 0,
+    nofollowish = 0,
+    insecure = 0,
+    broken = 0;
+  let httpRedirect = 0,
+    httpDead = 0;
+  for (const l of links) {
+    if (l.kind === 'external') external++;
+    if (!isDofollow(l)) nofollowish++;
+    if (l.isInsecure) insecure++;
+    if (l.isBrokenAnchor) broken++;
+    const st = statuses.get(l.href);
+    if (st) {
+      if (st.bucket === 'redirect') httpRedirect++;
+      else if (st.bucket === 'client-error' || st.bucket === 'server-error' || st.bucket === 'error') httpDead++;
+    }
+  }
+  const items: SummaryItem[] = [
+    { text: `${links.length} ${links.length === 1 ? 'link' : 'links'}` },
+    { text: `${external} external` }
+  ];
+  if (nofollowish > 0) {
+    items.push({ text: `${nofollowish} nofollow`, title: 'Links carrying nofollow, sponsored, or ugc hints' });
+  }
+  if (insecure > 0) items.push({ text: `${insecure} insecure http`, tone: 'warn' });
+  if (broken > 0) items.push({ text: `${broken} broken #`, tone: 'err' });
+  if (httpRedirect > 0) {
+    items.push({ text: `${httpRedirect} redirect`, tone: 'warn', title: 'Links that respond with a 3xx redirect' });
+  }
+  if (httpDead > 0) {
+    items.push({
+      text: `${httpDead} failing`,
+      tone: 'err',
+      title: 'Links returning 4xx/5xx or unreachable (advisory)'
+    });
+  }
+  return items;
+}

@@ -1,27 +1,23 @@
-<script lang="ts" module>
-  // Module scope: once per popup load, not per tab-switch remount — the
-  // component remounts on every tab change and would re-fire social_view
-  // (and its time-saved credit) each time.
-  let viewTracked = false;
-</script>
-
 <script lang="ts">
   import type { RawSocial } from './utils/types';
-  import type { SocialPlatform, SocialSeverity } from './utils/social';
-  import { resolveSocial, lintSocial, previewModel, probeTargetUrl } from './utils/social';
+  import type { ResolvedSocial, SocialPlatform, SocialSeverity } from './utils/social';
+  import { lintSocial, previewModel, probeTargetUrl } from './utils/social';
   import type { SocialProbeResult } from './utils/social';
   import { probeImage } from './utils/social-probe';
-  import SocialCard from './SocialCard.svelte';
-  import ActionButton from './ActionButton.svelte';
-  import SegmentedControl from './SegmentedControl.svelte';
+  import { createKeyedCopyFeedback } from './utils/copy.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
+  import SocialCard from './components/SocialCard.svelte';
+  import ActionButton from './components/ActionButton.svelte';
+  import SegmentedControl from './components/SegmentedControl.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCredit } from '@/utils/credit';
-  import { untrack } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
 
-  let { raw, loading = false }: { raw: RawSocial | null; loading?: boolean } = $props();
-
-  const resolved = $derived(raw ? resolveSocial(raw) : null);
+  let {
+    raw,
+    resolved,
+    loading = false
+  }: { raw: RawSocial | null; resolved: ResolvedSocial | null; loading?: boolean } = $props();
 
   let probe = $state<SocialProbeResult | null>(null);
   let probeLoading = $state(false);
@@ -63,17 +59,11 @@
     tabState.saveSection('social', { platform });
   });
 
-  $effect(() => {
-    if (viewTracked || raw === null) return;
-    viewTracked = true;
-    untrack(() => {
-      trackAction('social_view', {
-        error_count: findings.filter((f) => f.severity === 'error').length,
-        warning_count: findings.filter((f) => f.severity === 'warning').length,
-        platform
-      });
-    });
-  });
+  trackViewOnce('social_view', () => raw !== null, () => ({
+    error_count: findings.filter((f) => f.severity === 'error').length,
+    warning_count: findings.filter((f) => f.severity === 'warning').length,
+    platform
+  }));
 
   const PLATFORMS: { id: SocialPlatform; label: string }[] = [
     { id: 'facebook', label: 'Facebook' },
@@ -144,17 +134,11 @@
     return copyRows.map((r) => `${r.key}: ${r.value}`).join('\n');
   }
 
-  let copiedFormat = $state<'html' | 'text' | null>(null);
-  let copiedTimer: ReturnType<typeof setTimeout> | undefined;
+  const copyFeedback = createKeyedCopyFeedback<'html' | 'text'>();
 
   async function copyTags(format: 'html' | 'text') {
-    try {
-      await navigator.clipboard.writeText(format === 'html' ? tagsAsHtml() : withCredit(tagsAsText()));
-      copiedFormat = format;
-      clearTimeout(copiedTimer);
-      copiedTimer = setTimeout(() => (copiedFormat = null), 1500);
-      trackAction('social_copy_tags', { platform, format });
-    } catch { /* clipboard permission denied */ }
+    const text = format === 'html' ? tagsAsHtml() : withCredit(tagsAsText());
+    if (await copyFeedback.copy(text, format)) trackAction('social_copy_tags', { platform, format });
   }
 
   const duplicateNotes = $derived(
@@ -208,7 +192,7 @@
         <span class="copy-actions">
           {#each [{ format: 'html', label: 'Copy HTML' }, { format: 'text', label: 'Copy text' }] as const as btn}
             <ActionButton onclick={() => copyTags(btn.format)}>
-              {#if copiedFormat === btn.format}
+              {#if copyFeedback.key === btn.format}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" class="icon-copied"><polyline points="20 6 9 17 4 12"/></svg>
               {:else}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>

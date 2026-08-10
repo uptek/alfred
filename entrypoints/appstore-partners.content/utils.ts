@@ -1,5 +1,7 @@
 import { sendTrackEvent } from '@/utils/analytics';
+import { formatAppAge, formatDetailedAppAge } from '@/utils/appListing';
 import { withCsvCredit } from '@/utils/credit';
+import { csvField, downloadFile } from '@/utils/export';
 import defaultIcon from '@/assets/icon-default.svg';
 import privacyIcon from '@/assets/icon-privacy.svg';
 import tutorialIcon from '@/assets/icon-tutorial.svg';
@@ -114,51 +116,8 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
         }
 
         appData.launchDate = launchDateText;
-
-        // Calculate app age in years and months
-        const launchDate = new Date(launchDateText ?? '');
-        if (!isNaN(launchDate.getTime())) {
-          const currentDate = new Date();
-
-          // Calculate differences
-          const diffTime = Math.abs(currentDate.getTime() - launchDate.getTime());
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-          // Calculate difference in years and months
-          let years = currentDate.getFullYear() - launchDate.getFullYear();
-          let months = currentDate.getMonth() - launchDate.getMonth();
-
-          // Adjust years and months if needed
-          if (months < 0) {
-            years--;
-            months += 12;
-          }
-
-          // Create age string based on timeframe
-          let ageString = '';
-          if (years === 0 && months === 0) {
-            // Less than a month - show in days
-            if (diffDays === 0) {
-              ageString = 'Today';
-            } else if (diffDays === 1) {
-              ageString = '1 day';
-            } else {
-              ageString = diffDays + ' days';
-            }
-          } else if (years === 0) {
-            // Less than a year - show in months
-            ageString = months + (months === 1 ? ' month' : ' months');
-          } else {
-            // More than a year - show as X.Y years
-            const decimalMonths = (months / 12).toFixed(1).substring(1) || '';
-            ageString = years + decimalMonths + (years === 1 && months === 0 ? ' year' : ' years');
-          }
-
-          appData.age = ageString.trim() || null;
-
-          // Also add detailed age format
-          appData.detailedAge = formatDetailedAge(launchDateText ?? '');
-        }
+        appData.age = formatAppAge(launchDateText ?? '') ?? null;
+        appData.detailedAge = formatDetailedAppAge(launchDateText ?? '') ?? null;
       }
     }
   } catch (error) {
@@ -167,52 +126,6 @@ export const fetchAppData = async (link: string): Promise<AppRaw> => {
   }
 
   return appData;
-};
-
-/**
- * Format the detailed age
- * @param launchDateStr {string} - The launch date
- * @returns {string} The detailed age
- */
-const formatDetailedAge = (launchDateStr: string) => {
-  if (!launchDateStr) return null;
-
-  const launchDate = new Date(launchDateStr);
-  if (isNaN(launchDate.getTime())) return null;
-
-  const currentDate = new Date();
-
-  // Calculate time difference in milliseconds
-  const diffTime = Math.abs(currentDate.getTime() - launchDate.getTime());
-
-  // Calculate total days difference
-  const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  // Calculate years, months, and remaining days
-  const years = Math.floor(totalDays / 365);
-  let remainingDays = totalDays % 365;
-
-  // Approximate months (using 30.4 days as average month length)
-  const months = Math.floor(remainingDays / 30.4);
-  remainingDays = Math.floor(remainingDays % 30.4);
-
-  // Format the result
-  let formattedAge = '';
-  if (years > 0) {
-    formattedAge += `${years} ${years === 1 ? 'year' : 'years'}`;
-  }
-
-  if (months > 0) {
-    if (formattedAge) formattedAge += ', ';
-    formattedAge += `${months} ${months === 1 ? 'month' : 'months'}`;
-  }
-
-  if (remainingDays > 0 || (years === 0 && months === 0)) {
-    if (formattedAge) formattedAge += ', ';
-    formattedAge += `${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
-  }
-
-  return formattedAge;
 };
 
 /**
@@ -256,31 +169,19 @@ const convertToCSV = (apps: App[]) => {
 
   // Add each app as a row in the CSV
   apps.forEach((app) => {
-    // Format the values and handle special cases
     const values = [
-      // Escape quotes in name and wrap in quotes
-      '"' + (app.name ?? '').replace(/"/g, '""') + '"',
-      // Rating
+      app.name ?? '',
       app.rating ?? 'N/A',
-      // Review count
       app.reviewCount ?? '0',
-      // Escape quotes in pricing and wrap in quotes
-      '"' + (app.pricing ?? '').replace(/"/g, '""') + '"',
-      // Launch date - properly quoted to prevent CSV issues with commas
-      '"' + (app.launchDate ?? '').replace(/"/g, '""') + '"',
-      // Installed status (Yes/No)
+      app.pricing ?? '',
+      app.launchDate ?? '',
       app.isInstalled ? 'Yes' : 'No',
-      // Built for Shopify status (Yes/No)
       app.isBuiltForShopify ? 'Yes' : 'No',
-      // Escape quotes in description and wrap in quotes
-      '"' + (app.description ?? '').replace(/"/g, '""') + '"',
-      // App URL
+      app.description ?? '',
       app.link?.split('?')[0]?.split('#')[0] ?? '',
-      // Website URL
       app.developer?.website ?? ''
-    ];
+    ].map(csvField);
 
-    // Add the row to the CSV
     csv += values.join(',') + '\n';
   });
 
@@ -294,33 +195,9 @@ const convertToCSV = (apps: App[]) => {
 export const downloadCSV = (apps: App[]) => {
   const csv = withCsvCredit(convertToCSV(apps));
 
-  // Create a blob with the CSV data
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-
-  // Create a link to download the blob
-  const link = document.createElement('a');
-
-  // Create the download URL
-  const url = URL.createObjectURL(blob);
-
-  // Generate filename
   const pageTitle = getPageTitle();
   const date = new Date().toISOString().split('T')[0];
-  const filename = `shopify-alfred-${pageTitle}-${date}.csv`;
-
-  // Setup the link properties
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-
-  // Add the link to the DOM
-  document.body.appendChild(link);
-
-  // Click the link to trigger the download
-  link.click();
-
-  // Clean up
-  document.body.removeChild(link);
+  downloadFile(csv, `shopify-alfred-${pageTitle}-${date}.csv`, 'text/csv;charset=utf-8;');
 
   sendTrackEvent('appstore_partner_table_export', {
     app_count: apps.length,

@@ -1,15 +1,17 @@
 <script lang="ts">
   import type { RawSchemaBlock, SchemaEntity } from './utils/types';
-  import { analyzeSchema, schemaTypeName } from './utils/schema';
-  import SummaryBar from './SummaryBar.svelte';
-  import type { SummaryItem } from './SummaryBar.svelte';
+  import { analyzeSchema, schemaTypeName, summarizeSchema } from './utils/schema';
+  import { downloadFile, siteSlug as siteSlugOf } from './utils/format';
+  import { createCopyFeedback, createKeyedCopyFeedback } from './utils/copy.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
+  import SummaryBar from './components/SummaryBar.svelte';
+  import ToolbarButton from './components/ToolbarButton.svelte';
   import { trackAction } from '@/utils/analytics';
-  import { untrack, onDestroy } from 'svelte';
   import { getTabState } from './stores/tabState.svelte';
 
   let { schema, domain }: { schema: RawSchemaBlock[]; domain: string | null } = $props();
 
-  const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
+  const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
   const analysis = $derived(analyzeSchema(schema));
 
@@ -79,51 +81,18 @@
     return rows;
   }
 
-  let tracked = false;
-  $effect(() => {
-    const { entities, invalidBlocks } = analysis;
-    if (tracked || (entities.length === 0 && invalidBlocks.length === 0)) return;
-    tracked = true;
-    untrack(() => {
-      trackAction('schema_view', {
-        blocks: schema.length,
-        entities: entities.length,
-        invalid: invalidBlocks.length
-      });
-    });
-  });
+  trackViewOnce(
+    'schema_view',
+    () => analysis.entities.length > 0 || analysis.invalidBlocks.length > 0,
+    () => ({ blocks: schema.length, entities: analysis.entities.length, invalid: analysis.invalidBlocks.length })
+  );
 
-  const summaryItems = $derived.by(() => {
-    const n = analysis.entities.length;
-    const items: SummaryItem[] = [{ text: `${n} ${n === 1 ? 'type' : 'types'}` }];
-    if (analysis.invalidBlocks.length > 0) {
-      items.push({ text: `${analysis.invalidBlocks.length} invalid`, tone: 'err', title: 'Blocks that failed to parse as JSON' });
-    }
-    return items;
-  });
+  const summaryItems = $derived(summarizeSchema(analysis));
 
-  let copied = $state(false);
-  let copyTimer: ReturnType<typeof setTimeout> | null = null;
-  function downloadFile(content: string, filename: string, mime: string) {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  const copyFeedback = createCopyFeedback();
   async function copyAll() {
     const text = schema.map((b) => b.raw).join('\n\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (copyTimer) clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => { copied = false; }, 1500);
-      trackAction('schema_copy', { scope: 'all', blocks: schema.length });
-    } catch {
-      // ignore clipboard errors
-    }
+    if (await copyFeedback.copy(text)) trackAction('schema_copy', { scope: 'all', blocks: schema.length });
   }
   function exportJson() {
     const data = analysis.entities.map((e) => e.data);
@@ -131,24 +100,12 @@
     trackAction('schema_export', { format: 'json', entities: analysis.entities.length });
   }
 
-  let copiedIndex = $state<number | null>(null);
-  let entityTimer: ReturnType<typeof setTimeout> | null = null;
+  const entityCopy = createKeyedCopyFeedback<number>();
   async function copyEntity(i: number, entity: SchemaEntity) {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(entity.data, null, 2));
-      copiedIndex = i;
-      if (entityTimer) clearTimeout(entityTimer);
-      entityTimer = setTimeout(() => { copiedIndex = null; }, 1500);
+    if (await entityCopy.copy(JSON.stringify(entity.data, null, 2), i)) {
       trackAction('schema_copy', { scope: 'entity', type: entity.type });
-    } catch {
-      // ignore clipboard errors
     }
   }
-
-  onDestroy(() => {
-    if (copyTimer) clearTimeout(copyTimer);
-    if (entityTimer) clearTimeout(entityTimer);
-  });
 </script>
 
 {#if schema.length === 0}
@@ -161,16 +118,16 @@
     <div class="toolbar">
       <span class="toolbar__hint">JSON-LD structured data</span>
       <div class="toolbar__actions">
-        <button class="toolbar-btn" onclick={copyAll} aria-label="Copy all JSON-LD" title={copied ? 'Copied!' : 'Copy all JSON-LD'}>
-          {#if copied}
+        <ToolbarButton onclick={copyAll} ariaLabel="Copy all JSON-LD" title={copyFeedback.copied ? 'Copied!' : 'Copy all JSON-LD'}>
+          {#if copyFeedback.copied}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           {:else}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           {/if}
-        </button>
-        <button class="toolbar-btn" onclick={exportJson} aria-label="Download JSON-LD" title="Download JSON-LD">
+        </ToolbarButton>
+        <ToolbarButton onclick={exportJson} ariaLabel="Download JSON-LD" title="Download JSON-LD">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
+        </ToolbarButton>
       </div>
     </div>
 
@@ -186,12 +143,12 @@
             </button>
             <button
               class="entity__copy"
-              class:entity__copy--done={copiedIndex === i}
+              class:entity__copy--done={entityCopy.key === i}
               title="Copy this type's JSON"
               aria-label="Copy {entity.type} JSON"
               onclick={() => copyEntity(i, entity)}
             >
-              {#if copiedIndex === i}
+              {#if entityCopy.key === i}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               {:else}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
@@ -265,9 +222,6 @@
   .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .toolbar__hint { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); }
   .toolbar__actions { display: flex; align-items: center; gap: 6px; }
-  .toolbar-btn { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .toolbar-btn:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
-  .toolbar-btn svg { width: 13px; height: 13px; stroke-width: 1.8; flex-shrink: 0; }
 
   /* List */
   .list { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 20px 12px; }

@@ -1,4 +1,5 @@
-import type { ImageSource, ImageStatus, RawImage } from './types';
+import type { ImageSource, ImageStatus, RawImage, SummaryItem } from './types';
+import { formatSize } from './format';
 import { queryActiveTab, sendToActiveTab } from './messaging';
 
 /**
@@ -194,4 +195,35 @@ export function isOversized(
   const natural = naturalWidth * naturalHeight;
   const needed = displayWidth * displayHeight * ratio * ratio;
   return natural > needed * 4 && natural - needed > OVERSIZED_WASTE_FLOOR;
+}
+
+/**
+ * Builds the Images footer summary. Total always shows; size and every defect
+ * count are suppressed at zero.
+ * @param images - The rows currently visible (post-filter), not the full set.
+ * @param statuses - Resolved status keyed by RawImage.index; missing reads as 'ok'.
+ */
+export function summarizeImages(images: RawImage[], statuses: ReadonlyMap<number, ImageStatus>): SummaryItem[] {
+  let bytes = 0,
+    missingAlt = 0,
+    broken = 0,
+    oversized = 0;
+  for (const img of images) {
+    bytes += img.size;
+    const st = statuses.get(img.index) ?? 'ok';
+    if (st === 'broken') broken++;
+    else if (st === 'missing-alt') missingAlt++;
+    if (img.oversized) oversized++;
+  }
+  const items: SummaryItem[] = [{ text: `${images.length} ${images.length === 1 ? 'image' : 'images'}` }];
+  if (bytes > 0) {
+    items.push({
+      text: formatSize(bytes),
+      title: 'Sum of known sizes; opaque cross-origin images are not included'
+    });
+  }
+  if (missingAlt > 0) items.push({ text: `${missingAlt} missing alt`, tone: 'warn' });
+  if (broken > 0) items.push({ text: `${broken} broken`, tone: 'err' });
+  if (oversized > 0) items.push({ text: `${oversized} oversized`, tone: 'warn' });
+  return items;
 }

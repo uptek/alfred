@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { StoreInfo } from './utils/types';
   import StorefrontPassword from './settings/StorefrontPassword.svelte';
-  import SegmentedControl from './SegmentedControl.svelte';
+  import SegmentedControl from './components/SegmentedControl.svelte';
   import { getThemeStore } from './stores/theme.svelte';
   import { THEME_OPTIONS, type ThemePreference } from './stores/theme';
 

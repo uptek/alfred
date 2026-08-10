@@ -2,11 +2,14 @@
   import type { AddItemPayload, ProductData, ProductVariant } from '../types';
   import QuantityInput from './QuantityInput.svelte';
   import KeyValueEditor from './KeyValueEditor.svelte';
+  import { formatMoney, MAX_QUANTITY } from '../utils';
 
   let {
+    currency,
     onAddItem,
     onFetchProduct,
   }: {
+    currency: string;
     onAddItem: (payload: AddItemPayload) => Promise<void>;
     onFetchProduct: (url: string) => Promise<ProductData>;
   } = $props();
@@ -157,7 +160,7 @@
             onclick={() => selectVariant(variant)}
           >
             <span class="variant-title">{variant.title}</span>
-            <span class="variant-price">${(variant.price / 100).toFixed(2)}</span>
+            <span class="variant-price">{formatMoney(variant.price, currency)}</span>
             {#if !variant.available}
               <span class="variant-badge out-of-stock">Out of stock</span>
             {/if}
@@ -176,7 +179,7 @@
     <div class="config-row config-row-inline">
       <div class="config-field">
         <span class="config-label">Quantity</span>
-        <QuantityInput bind:value={quantity} min={1} max={99} />
+        <QuantityInput bind:value={quantity} min={1} max={MAX_QUANTITY} />
       </div>
 
       {#if selectedVariant && selectedVariant.selling_plan_allocations.length > 0}
@@ -194,7 +197,7 @@
                   {#each availablePlans as plan}
                     {@const allocation = selectedVariant.selling_plan_allocations.find(a => a.selling_plan_id === plan.id)}
                     <option value={plan.id}>
-                      {plan.name}{allocation ? ` ($${(allocation.price / 100).toFixed(2)})` : ''}
+                      {plan.name}{allocation ? ` (${formatMoney(allocation.price, currency)})` : ''}
                     </option>
                   {/each}
                 </optgroup>
@@ -228,7 +231,7 @@
         {/if}
       </button>
       <span class="add-summary">
-        {quantity}&times; {selectedVariant.title} &mdash; ${((selectedVariant.price * quantity) / 100).toFixed(2)}
+        {quantity}&times; {selectedVariant.title} &mdash; {formatMoney(selectedVariant.price * quantity, currency)}
       </span>
     </div>
   </div>

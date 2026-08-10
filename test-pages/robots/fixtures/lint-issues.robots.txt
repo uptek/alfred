@@ -7,3 +7,6 @@ Noindex: /retired
 Crawl-delay: 10
 Disallow: example.com/full-path
 Allow: /public
+
+User-agent:
+Disallow: /orphan

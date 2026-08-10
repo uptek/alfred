@@ -150,7 +150,7 @@ export function extractRobotsSitemaps(robotsText: string): string[] {
 export function sitemapFilename(url: string): string {
   try {
     const u = new URL(url);
-    const segment = u.pathname.split('/').filter(Boolean).pop();
+    const segment = u.pathname.split('/').findLast(Boolean);
     return segment ?? u.host;
   } catch {
     return url;

@@ -1,4 +1,5 @@
 import { getItem, setItem } from '~/utils/storage';
+import { isEnabled, type ResolvedSettings } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 
 type SidebarState = 'collapsed' | 'expanded';
@@ -63,16 +64,6 @@ const STYLES = `
 `;
 
 /**
- * Checks if the feature is enabled in settings
- * @returns {boolean}
- */
-const isEnabled = async (): Promise<boolean> => {
-  const DEFAULT_VALUE = true;
-  const settings = await getItem<AlfredSettings>('settings');
-  return settings?.admin?.collapsibleSidebar ?? DEFAULT_VALUE;
-};
-
-/**
  * Injects styles to the document
  */
 const injectStyles = (): void => {
@@ -108,11 +99,6 @@ const removeStyles = (): void => {
  * Injects the toggle element into the document
  */
 const injectToggleElement = (): void => {
-  if (!document.body || !(document as unknown as Document).querySelector(TOGGLE_WRAPPER_SELECTOR)) {
-    setTimeout(injectToggleElement, 100);
-    return;
-  }
-
   const toggleElement = document.createElement('li');
   toggleElement.id = TOGGLE_ELEMENT_ID;
   toggleElement.classList.add('Polaris-Navigation__ListItem');
@@ -153,32 +139,33 @@ const injectToggleElement = (): void => {
     })();
   });
 
-  let attempts = 0;
-  const maxAttempts = 10;
-
-  const insertInterval = setInterval(() => {
-    attempts++;
-
-    const wrapper = (document as unknown as Document).querySelector(TOGGLE_WRAPPER_SELECTOR);
-    if (wrapper && !document.getElementById(TOGGLE_ELEMENT_ID)) {
+  const insertToggle = (): boolean => {
+    const wrapper = document.querySelector(TOGGLE_WRAPPER_SELECTOR);
+    if (!wrapper) return false;
+    if (!document.getElementById(TOGGLE_ELEMENT_ID)) {
       wrapper.prepend(toggleElement);
     }
+    return true;
+  };
 
-    if (attempts >= maxAttempts) {
-      clearInterval(insertInterval);
-    }
-  }, 500);
+  // The nav renders after document_end; watch for it and disconnect on match
+  // rather than polling the expensive :has() selector on a timer forever.
+  if (!insertToggle()) {
+    const observer = new MutationObserver(() => {
+      if (insertToggle()) {
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+  }
 };
 
 /**
  * Sets up the toggle sidebar feature
  * @returns {void}
  */
-export const setupToggleSidebar = async (): Promise<void> => {
-  // Check if the feature is enabled in settings
-  const enabled = await isEnabled();
-
-  if (!enabled) {
+export const setupToggleSidebar = async (settings: ResolvedSettings): Promise<void> => {
+  if (!isEnabled(settings.admin.collapsibleSidebar)) {
     return;
   }
 

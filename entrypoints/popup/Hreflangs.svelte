@@ -1,81 +1,45 @@
 <script lang="ts">
   import type { RawHreflang } from './utils/types';
-  import { analyzeHreflangs } from './utils/hreflang';
-  import SummaryBar from './SummaryBar.svelte';
-  import type { SummaryItem } from './SummaryBar.svelte';
+  import type { HreflangAnalysis } from './utils/hreflang';
+  import { summarizeHreflangs } from './utils/hreflang';
+  import { csvField, downloadFile, siteSlug as siteSlugOf } from './utils/format';
+  import { createCopyFeedback } from './utils/copy.svelte';
+  import { trackViewOnce } from './utils/track.svelte';
+  import SummaryBar from './components/SummaryBar.svelte';
+  import ToolbarButton from './components/ToolbarButton.svelte';
+  import UrlCell from './components/UrlCell.svelte';
   import { trackAction } from '@/utils/analytics';
   import { withCsvCredit } from '@/utils/credit';
-  import { untrack, onDestroy } from 'svelte';
 
-  let { tags, pageUrl, domain }: { tags: RawHreflang[]; pageUrl: string | null; domain: string | null } = $props();
+  let {
+    tags,
+    analysis,
+    pageUrl,
+    domain
+  }: { tags: RawHreflang[]; analysis: HreflangAnalysis; pageUrl: string | null; domain: string | null } = $props();
 
-  const siteSlug = $derived(domain?.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '') ?? 'site');
-  const analysis = $derived(analyzeHreflangs(tags, pageUrl));
+  const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  let tracked = false;
-  $effect(() => {
-    const { entries, issues } = analysis;
-    if (tracked || entries.length === 0) return;
-    tracked = true;
-    untrack(() => {
-      trackAction('hreflangs_view', { tags: entries.length, issues: issues.length });
-    });
-  });
+  trackViewOnce('hreflangs_view', () => analysis.entries.length > 0, () => ({
+    tags: analysis.entries.length,
+    issues: analysis.issues.length
+  }));
 
-  const summaryItems = $derived.by(() => {
-    const n = analysis.entries.length;
-    const items: SummaryItem[] = [{ text: `${n} ${n === 1 ? 'alternate' : 'alternates'}` }];
-    items.push(
-      analysis.hasXDefault
-        ? { text: 'x-default' }
-        : { text: 'no x-default', tone: 'warn', title: 'No fallback page for unmatched languages' }
-    );
-    if (pageUrl) {
-      items.push(
-        analysis.hasSelf
-          ? { text: 'self-referencing' }
-          : { text: 'no self-reference', tone: 'err', title: 'The set does not include this page\'s own URL' }
-      );
-    }
-    if (analysis.errorCount > 0) {
-      items.push({ text: `${analysis.errorCount} ${analysis.errorCount === 1 ? 'error' : 'errors'}`, tone: 'err' });
-    }
-    return items;
-  });
+  const summaryItems = $derived(summarizeHreflangs(analysis, pageUrl));
 
-  let copied = $state(false);
-  let copyTimer: ReturnType<typeof setTimeout> | null = null;
+  const copyFeedback = createCopyFeedback();
   async function copyAll() {
     const text = tags.map((t) => `${t.hreflang}\t${t.href || t.rawHref}`).join('\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (copyTimer) clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => { copied = false; }, 1500);
-      trackAction('hreflangs_copy', { tags: tags.length });
-    } catch {
-      // ignore clipboard errors
-    }
+    if (await copyFeedback.copy(text)) trackAction('hreflangs_copy', { tags: tags.length });
   }
   function exportCsv() {
-    const csvField = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
     const rows = analysis.entries.map((e) =>
-      [e.hreflang, e.href || e.rawHref, e.isSelf, e.invalidCode, e.relativeHref, e.inHead].map(String).map(csvField).join(',')
+      [e.hreflang, e.href || e.rawHref, e.isSelf, e.invalidCode, e.relativeHref, e.inHead].map(csvField).join(',')
     );
     const content = withCsvCredit(['Hreflang,URL,Self,Invalid Code,Relative URL,In Head', ...rows].join('\n'));
-    const blob = new Blob([content], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `alfred-hreflangs-${siteSlug}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(content, `alfred-hreflangs-${siteSlug}.csv`, 'text/csv');
     trackAction('hreflangs_export', { tags: tags.length });
   }
-
-  onDestroy(() => {
-    if (copyTimer) clearTimeout(copyTimer);
-  });
 </script>
 
 {#if tags.length === 0}
@@ -89,20 +53,20 @@
     <div class="toolbar">
       <span class="toolbar__hint">Language &amp; region alternates</span>
       <div class="toolbar__actions">
-        <button class="toolbar-btn" onclick={copyAll} aria-label="Copy all hreflang tags" title={copied ? 'Copied!' : 'Copy as tab-separated list'}>
-          {#if copied}
+        <ToolbarButton onclick={copyAll} ariaLabel="Copy all hreflang tags" title={copyFeedback.copied ? 'Copied!' : 'Copy as tab-separated list'}>
+          {#if copyFeedback.copied}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           {:else}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           {/if}
-        </button>
-        <button class="toolbar-btn" onclick={exportCsv} aria-label="Download as CSV" title="Download as CSV">
+        </ToolbarButton>
+        <ToolbarButton onclick={exportCsv} ariaLabel="Download as CSV" title="Download as CSV">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
+        </ToolbarButton>
       </div>
     </div>
 
-    <div class="scroll">
+    <div class="table-wrap">
       {#if analysis.issues.length > 0}
         <div class="issues">
           {#each analysis.issues as issue (issue.id + issue.message)}
@@ -137,9 +101,9 @@
               <td class="td td--url">
                 <div class="url-row">
                   {#if entry.href}
-                    <a href={entry.href} target="_blank" rel="noopener noreferrer" class="url" title={entry.href}>{entry.href}</a>
+                    <UrlCell href={entry.href} text={entry.href} />
                   {:else}
-                    <span class="url url--dead" title="Could not be resolved to a URL">{entry.rawHref || '(empty)'}</span>
+                    <span class="url--dead" title="Could not be resolved to a URL">{entry.rawHref || '(empty)'}</span>
                   {/if}
                   {#if entry.isSelf}
                     <span class="flag flag--green" title="References the page you're on">self</span>
@@ -180,13 +144,6 @@
   .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .toolbar__hint { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); }
   .toolbar__actions { display: flex; align-items: center; gap: 6px; }
-  .toolbar-btn { display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg); font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-  .toolbar-btn:hover { border-color: var(--action-hover-border); color: var(--action-hover-fg); background: var(--action-hover-bg); box-shadow: var(--action-hover-shadow); }
-  .toolbar-btn svg { width: 13px; height: 13px; stroke-width: 1.8; flex-shrink: 0; }
-
-  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
-  .scroll::-webkit-scrollbar { width: 3px; }
-  .scroll::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 
   /* Issue callouts */
   .issues { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); }
@@ -200,25 +157,17 @@
   .issue__msg { color: var(--text-secondary); }
 
   /* Table — full-bleed rows: gutter lives on the edge cells */
-  .table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-  .th:first-child, .td:first-child { padding-left: 20px; }
-  .th:last-child, .td:last-child { padding-right: 20px; }
 
-  .th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-label); padding: 8px 8px 8px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-canvas); z-index: 1; }
   .th--num { width: 30px; padding-right: 0; }
   .th--code { width: 110px; }
 
-  .row { transition: background 0.1s; }
   .row:hover { background: var(--bg-hover); }
 
-  .td { padding: 9px 8px 9px 0; color: var(--text-secondary); border-bottom: 1px solid var(--border-muted); vertical-align: middle; }
   .td--num { color: var(--text-muted); font-size: 12px; padding-right: 0; }
   .td--url { overflow: hidden; }
 
   .url-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .url { color: var(--accent); text-decoration: none; font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .url:hover { text-decoration: underline; }
-  .url--dead { color: var(--text-muted); }
+  .url--dead { font-family: 'SF Mono', ui-monospace, monospace; font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
   .flag { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 0 5px; border-radius: 8px; line-height: 16px; }
   .flag--green { background: var(--success-bg); color: var(--success-strong); }

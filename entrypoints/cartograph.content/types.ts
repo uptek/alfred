@@ -12,7 +12,8 @@ export interface CartData {
   currency: string;
   items_subtotal_price: number;
   cart_level_discount_applications: DiscountApplication[];
-  discount_codes: Array<{ code: string; amount: number; type: string }>;
+  /** `applicable` is false when the code is present but the cart does not qualify. */
+  discount_codes: Array<{ code: string; amount: number; type: string; applicable: boolean }>;
 }
 
 export interface CartItem {
@@ -216,3 +217,14 @@ export interface SellingPlanGroup {
 }
 
 export type TabId = 'items' | 'add' | 'metadata' | 'shipping' | 'json';
+
+/** Cart RPC contract shared by the content-script client and main-world server. */
+export type CartMethods = {
+  getCart(): Promise<CartData>;
+  addItem(items: AddItemPayload | AddItemPayload[]): Promise<CartData>;
+  updateCart(updates: UpdatePayload): Promise<CartData>;
+  changeItem(change: ChangePayload): Promise<CartData>;
+  clearCart(): Promise<CartData>;
+  getShippingRates(address: ShippingAddress): Promise<ShippingRate[]>;
+  getProductByUrl(url: string): Promise<ProductData>;
+};

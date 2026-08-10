@@ -2,6 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <!-- Row 20 links to #viewport: a name attribute outside <a> is not a fragment target. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Internal, external, rel hints, image, hidden, broken-anchor, and non-web links</title>
     <style>
       body {
@@ -55,13 +57,13 @@
     <aside class="expected">
       <div class="t">Expected: Links tab</div>
       <ul>
-        <li>18 links total (the 17 below plus the "← all test pages" nav link)</li>
+        <li>21 links total (the 20 below plus the "← all test pages" nav link)</li>
         <li>
-          Type: Internal ×10 (www.localhost counts as internal), External ×5, Other ×3 (mailto, tel, javascript),
+          Type: Internal ×13 (www.localhost counts as internal), External ×5, Other ×3 (mailto, tel, javascript),
           "Other" appears in the Type filter
         </li>
         <li>
-          Follow column: Dofollow ×15; "No" on the nofollow link, "Sponsored" and "UGC" amber pills on those rel hints
+          Follow column: Dofollow ×18; "No" on the nofollow link, "Sponsored" and "UGC" amber pills on those rel hints
           (both in the Follow filter)
         </li>
         <li>
@@ -69,22 +71,27 @@
           (13); 12 shows "(image without alt text)"; image links carry a small "img" tag
         </li>
         <li>
-          Badges: amber "http" on the plain-http external (8); red "broken #" on the #nowhere anchor (3); ×3 dup badge
-          on the three links to "/"
+          Badges: amber "http" on the plain-http external (8); red "broken #" on 3 (#nowhere) and 20 (#viewport) only —
+          2 (id target), 18 (#top exemption), and 19 (&lt;a name&gt; target) all resolve; ×3 dup badge on the three
+          links to "/"
+        </li>
+        <li>
+          URL column: 17 (javascript:) renders as muted plain text, not a clickable link; every other row opens in a new
+          tab, including mailto (15) and tel (16)
         </li>
         <li>"1 hidden" toolbar toggle; the hidden row (14) is dimmed with an eye icon</li>
         <li>"Highlight" outlines: green internal, purple external/other, red for nofollow/sponsored/ugc</li>
         <li>Clicking a row scrolls to that link (the hidden link cannot scroll)</li>
         <li>
-          Summary bar (follows the active filter): 18 links · 5 external · 3 nofollow · 1 insecure http (amber) · 1
+          Summary bar (follows the active filter): 21 links · 5 external · 3 nofollow · 1 insecure http (amber) · 2
           broken # (red)
         </li>
       </ul>
     </aside>
-    <main id="top">
+    <main id="content">
       <ul>
         <li><a href="/headings/clean.html">1. Internal link to another fixture</a></li>
-        <li><a href="#top">2. Internal anchor link (same page, valid target)</a></li>
+        <li><a href="#content">2. Internal anchor link (same page, valid id target)</a></li>
         <li><a href="#nowhere">3. Broken same-page anchor (no #nowhere element)</a></li>
         <li><a href="https://example.com/">4. External link, plain</a></li>
         <li><a href="https://example.com/partner" rel="nofollow">5. External link, rel=nofollow</a></li>
@@ -115,7 +122,13 @@
         <li><a href="mailto:hello@example.com">15. mailto link (Other)</a></li>
         <li><a href="tel:+15551234567">16. tel link (Other)</a></li>
         <li><a href="javascript:void(0)">17. javascript pseudo-link (Other)</a></li>
+        <li><a href="#top">18. #top with no id="top" here (browsers scroll to the document top anyway)</a></li>
+        <li><a href="#legacy">19. Legacy named anchor (the &lt;a name="legacy"&gt; target sits below)</a></li>
+        <li>
+          <a href="#viewport">20. Broken anchor: the only "viewport" name is on a &lt;meta&gt;, not an &lt;a&gt;</a>
+        </li>
       </ul>
+      <a name="legacy"></a>
     </main>
     <a class="back" href="/">← all test pages</a>
   </body>

@@ -26,7 +26,7 @@ function initialize(): void {
  * Create a new context menu item
  */
 export function create(options: ContextMenu.Options, handler?: ContextMenu.ClickHandler): string {
-  if (!initialized) initialize();
+  initialize();
 
   const id = options.id;
   const menuOptions = {
@@ -55,62 +55,10 @@ export function create(options: ContextMenu.Options, handler?: ContextMenu.Click
 }
 
 /**
- * Update an existing context menu item
- */
-export function update(id: string, options: Partial<ContextMenu.Options>): boolean {
-  if (!initialized) initialize();
-
-  if (!menus.has(id)) {
-    console.error(`Cannot update menu item: ${id} does not exist`);
-    return false;
-  }
-
-  const updateProperties: Record<string, unknown> = {};
-
-  if (options.title !== undefined) updateProperties.title = options.title;
-  if (options.contexts !== undefined) updateProperties.contexts = options.contexts;
-  if (options.parentId !== undefined) updateProperties.parentId = options.parentId;
-  if (options.type !== undefined) updateProperties.type = options.type;
-  if (options.documentUrlPatterns !== undefined) updateProperties.documentUrlPatterns = options.documentUrlPatterns;
-  if (options.targetUrlPatterns !== undefined) updateProperties.targetUrlPatterns = options.targetUrlPatterns;
-  if (options.enabled !== undefined) updateProperties.enabled = options.enabled;
-  if (options.checked !== undefined) updateProperties.checked = options.checked;
-
-  try {
-    browser.contextMenus.update(id, updateProperties);
-    return true;
-  } catch (error) {
-    console.error(`Failed to update context menu item ${id}:`, error);
-    return false;
-  }
-}
-
-/**
- * Remove a context menu item
- */
-export function remove(id: string): boolean {
-  if (!initialized) initialize();
-
-  if (!menus.has(id)) {
-    console.error(`Cannot remove menu item: ${id} does not exist`);
-    return false;
-  }
-
-  try {
-    browser.contextMenus.remove(id);
-    menus.delete(id);
-    return true;
-  } catch (error) {
-    console.error(`Failed to remove context menu item ${id}:`, error);
-    return false;
-  }
-}
-
-/**
  * Remove all context menu items
  */
 export function removeAll(): void {
-  if (!initialized) initialize();
+  initialize();
 
   try {
     browser.contextMenus.removeAll();
@@ -121,36 +69,8 @@ export function removeAll(): void {
 }
 
 /**
- * Check if a menu item exists by ID
- */
-export function exists(id: string): boolean {
-  if (!initialized) initialize();
-  return menus.has(id);
-}
-
-/**
  * Create a separator menu item
  */
 export function createSeparator(id: string, parentId?: string): string {
-  if (!initialized) initialize();
-
-  const options = {
-    id,
-    type: 'separator',
-    contexts: contexts
-  } as Browser.contextMenus.CreateProperties;
-
-  if (parentId) {
-    options.parentId = parentId;
-  }
-
-  try {
-    browser.contextMenus.create(options);
-    // Add a dummy handler since separators don't have clicks
-    menus.set(id, () => undefined);
-  } catch (error) {
-    console.error('Failed to create separator:', error);
-  }
-
-  return id;
+  return create({ id, type: 'separator', ...(parentId !== undefined && { parentId }) });
 }

@@ -18,10 +18,11 @@
   stroke="currentColor"
   viewBox="0 0 24 24"
   onclick={handleCopy}
-  title={copied ? 'Copied!' : 'Click to copy'}
+  aria-label={copied ? 'Copied!' : 'Click to copy'}
   role="button"
   tabindex="0"
-  onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.click(); }}>
+  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCopy(); } }}>
+  <title>{copied ? 'Copied!' : 'Click to copy'}</title>
   {#if copied}
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
   {:else}

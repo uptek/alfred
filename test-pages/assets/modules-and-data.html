@@ -50,7 +50,7 @@
     <aside class="expected">
       <div class="t">Expected: Assets tab</div>
       <ul>
-        <li>Scripts ×6, Styles ×1 (this page's inline style block)</li>
+        <li>Scripts ×6, Styles ×2 (this page's inline style block and the data: stylesheet in body)</li>
         <li>
           Type column: blocking.js = Script, module.js = Module, nomodule.js = Script, plus Map (importmap), JSON-LD,
           and Rules (speculationrules)
@@ -62,7 +62,11 @@
         <li>nomodule.js: NOT render-blocking, and no size/time (modern browsers never fetch it)</li>
         <li>The three inline data blocks (Map, JSON-LD, Rules) load "inline" and are never render-blocking</li>
         <li>Only blocking.js carries the render-blocking pill; Flags filter shows Render-blocking 1</li>
-        <li>Summary bar: 6 scripts · 1 style · total size · 1 render-blocking</li>
+        <li>
+          The data: stylesheet shows its Source as muted plain text, not a link, and clicking its row does nothing
+          (browsers block top-frame navigation to data: URLs)
+        </li>
+        <li>Summary bar: 6 scripts · 2 styles · total size · 1 render-blocking</li>
       </ul>
     </aside>
     <main>
@@ -72,6 +76,8 @@
       </p>
     </main>
     <a class="back" href="/">← all test pages</a>
+    <!-- In body on purpose: a head stylesheet would add a second render-blocking row. -->
+    <link rel="stylesheet" href="data:text/css,.data-uri-sheet{}" />
     <script type="application/ld+json">
       { "@context": "https://schema.org", "@type": "WebPage", "name": "Assets fixture" }
     </script>

@@ -1,6 +1,8 @@
 import { getUserId, getVersion } from './helpers';
 import { getItem, setItem } from './storage';
+import { getSettings, isEnabled } from './settings';
 import { recordSuccess } from './successNudge';
+import { sendRuntimeMessage } from './messages';
 
 const SUPABASE_URL = 'https://obrjirdnqoiailhbsnmu.supabase.co';
 const SUPABASE_ANON_KEY =
@@ -49,17 +51,22 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
   // the user has opted out of tracking or in dev mode.
   recordSuccess(action).catch(() => {});
   try {
+    const cooldown = COOLDOWN_MS[action];
+    const cooldownKey = `cooldown_${action}`;
+
+    // Settings and cooldown reads are independent — fetch them in parallel
+    const [settings, lastFired] = await Promise.all([
+      getSettings(),
+      cooldown ? getItem<number>(cooldownKey) : Promise.resolve(null)
+    ]);
+
     // Respect user's privacy opt-out
-    const settings = await getItem<AlfredSettings>('settings');
-    if (settings?.general?.analytics === false) return;
+    if (!isEnabled(settings.general.analytics)) return;
 
     // Cooldown check — skip the event if fired too recently
-    const cooldown = COOLDOWN_MS[action];
     if (cooldown) {
-      const key = `cooldown_${action}`;
-      const lastFired = (await getItem<number>(key)) ?? 0;
-      if (Date.now() - lastFired < cooldown) return;
-      await setItem(key, Date.now());
+      if (Date.now() - (lastFired ?? 0) < cooldown) return;
+      await setItem(cooldownKey, Date.now());
     }
 
     // Get all required data
@@ -105,7 +112,7 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
  * Falls back to calling trackAction() directly if the background is unavailable.
  */
 export function sendTrackEvent(action: AnalyticsAction, metadata?: Record<string, unknown>): void {
-  browser.runtime.sendMessage({ type: 'track_action', action, metadata }).catch(() => {
+  sendRuntimeMessage({ type: 'track_action', action, metadata }).catch(() => {
     trackAction(action, metadata);
   });
 }

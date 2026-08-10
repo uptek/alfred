@@ -119,6 +119,7 @@
     border-right: 1px solid var(--cs-border);
     font-variant-numeric: tabular-nums;
     -moz-appearance: textfield;
+    appearance: textfield;
   }
 
   .qty-input::-webkit-inner-spin-button,

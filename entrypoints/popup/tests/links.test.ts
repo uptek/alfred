@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'bun:test';
+import type { LinkStatusBucket, LinkStatusResult, RawLink } from '../utils/types';
 import {
   classifyLink,
   followRank,
+  isBrokenAnchor,
   isDofollow,
   isInsecureHttp,
   linkText,
   relFlags,
-  samePageFragment
+  samePageFragment,
+  summarizeLinks
 } from '../utils/links';
 
 describe('isDofollow', () => {
@@ -209,6 +212,70 @@ describe('samePageFragment', () => {
   });
 });
 
+describe('isBrokenAnchor', () => {
+  const PAGE = 'https://shop.com/products/tee';
+
+  const targets = (ids: string[] = [], names: string[] = []) => ({
+    hasId: (id: string) => ids.includes(id),
+    hasNamedAnchor: (name: string) => names.includes(name)
+  });
+
+  it('flags a same-page fragment with no matching target', () => {
+    expect(isBrokenAnchor(`${PAGE}#nowhere`, PAGE, targets())).toBe(true);
+  });
+
+  it('accepts a fragment matching an element id', () => {
+    expect(isBrokenAnchor(`${PAGE}#reviews`, PAGE, targets(['reviews']))).toBe(false);
+  });
+
+  it('accepts a fragment matching a legacy named anchor', () => {
+    expect(isBrokenAnchor(`${PAGE}#reviews`, PAGE, targets([], ['reviews']))).toBe(false);
+  });
+
+  it('exempts #top, which scrolls to the document top with no target', () => {
+    expect(isBrokenAnchor(`${PAGE}#top`, PAGE, targets())).toBe(false);
+  });
+
+  it('still resolves #top through a real target when one exists', () => {
+    expect(isBrokenAnchor(`${PAGE}#top`, PAGE, targets(['top']))).toBe(false);
+  });
+
+  it('does not exempt other casings of top', () => {
+    expect(isBrokenAnchor(`${PAGE}#Top`, PAGE, targets())).toBe(true);
+  });
+
+  it('never flags a bare href="#"', () => {
+    expect(isBrokenAnchor(`${PAGE}#`, PAGE, targets())).toBe(false);
+  });
+
+  it('never flags a link that points off this page', () => {
+    expect(isBrokenAnchor('https://shop.com/other#nowhere', PAGE, targets())).toBe(false);
+    expect(isBrokenAnchor('https://example.com/#nowhere', PAGE, targets())).toBe(false);
+    expect(isBrokenAnchor(`${PAGE}?variant=2#nowhere`, PAGE, targets())).toBe(false);
+  });
+
+  it('never flags a link with no fragment at all', () => {
+    expect(isBrokenAnchor(PAGE, PAGE, targets())).toBe(false);
+  });
+
+  it('matches the decoded fragment, not the percent-encoded one', () => {
+    expect(isBrokenAnchor(`${PAGE}#size%20guide`, PAGE, targets(['size guide']))).toBe(false);
+    expect(isBrokenAnchor(`${PAGE}#size%20guide`, PAGE, targets(['size%20guide']))).toBe(true);
+  });
+
+  it('does not consult the name index when an id already matched', () => {
+    let consulted = false;
+    isBrokenAnchor(`${PAGE}#reviews`, PAGE, {
+      hasId: () => true,
+      hasNamedAnchor: () => {
+        consulted = true;
+        return false;
+      }
+    });
+    expect(consulted).toBe(false);
+  });
+});
+
 describe('isInsecureHttp', () => {
   it('flags plain-http links', () => {
     expect(isInsecureHttp('http://example.com/old-page')).toBe(true);
@@ -237,5 +304,90 @@ describe('isInsecureHttp', () => {
 
   it('does not flag unparseable hrefs', () => {
     expect(isInsecureHttp('not a url')).toBe(false);
+  });
+});
+
+describe('summarizeLinks', () => {
+  const link = (over: Partial<RawLink>): RawLink =>
+    ({
+      index: 0,
+      href: 'https://example.com/a',
+      text: 'a',
+      rel: '',
+      kind: 'internal',
+      isNofollow: false,
+      isSponsored: false,
+      isUgc: false,
+      isImage: false,
+      isHidden: false,
+      isInsecure: false,
+      isBrokenAnchor: false,
+      ...over
+    }) as RawLink;
+
+  const status = (bucket: LinkStatusBucket): LinkStatusResult => ({ status: 0, bucket });
+  const NO_STATUS = new Map<string, LinkStatusResult>();
+
+  const texts = (items: { text: string }[]) => items.map((i) => i.text);
+
+  it('always leads with the row count and external total', () => {
+    expect(texts(summarizeLinks([link({}), link({ kind: 'external' })], NO_STATUS))).toEqual(['2 links', '1 external']);
+  });
+
+  it('uses the singular noun for one link', () => {
+    expect(summarizeLinks([link({})], NO_STATUS)[0]?.text).toBe('1 link');
+  });
+
+  it('keeps the plural noun for an empty list', () => {
+    expect(texts(summarizeLinks([], NO_STATUS))).toEqual(['0 links', '0 external']);
+  });
+
+  it('suppresses every defect count at zero', () => {
+    expect(summarizeLinks([link({})], NO_STATUS)).toHaveLength(2);
+  });
+
+  it('counts sponsored and ugc as nofollow-class hints', () => {
+    const links = [link({ isNofollow: true }), link({ isSponsored: true }), link({ isUgc: true }), link({})];
+    expect(texts(summarizeLinks(links, NO_STATUS))).toContain('3 nofollow');
+  });
+
+  it('leaves the nofollow item untoned but titled', () => {
+    const item = summarizeLinks([link({ isNofollow: true })], NO_STATUS).find((i) => i.text === '1 nofollow');
+    expect(item?.tone).toBeUndefined();
+    expect(item?.title).toBe('Links carrying nofollow, sponsored, or ugc hints');
+  });
+
+  it('warns on insecure http and errors on broken fragments', () => {
+    const items = summarizeLinks([link({ isInsecure: true, isBrokenAnchor: true })], NO_STATUS);
+    expect(items.find((i) => i.text === '1 insecure http')?.tone).toBe('warn');
+    expect(items.find((i) => i.text === '1 broken #')?.tone).toBe('err');
+  });
+
+  it('warns on redirects', () => {
+    const statuses = new Map([['https://example.com/a', status('redirect')]]);
+    expect(summarizeLinks([link({})], statuses).find((i) => i.text === '1 redirect')?.tone).toBe('warn');
+  });
+
+  it('folds 4xx, 5xx, and unreachable into one failing count', () => {
+    const links = [
+      link({ href: 'https://example.com/1' }),
+      link({ href: 'https://example.com/2' }),
+      link({ href: 'https://example.com/3' })
+    ];
+    const statuses = new Map([
+      ['https://example.com/1', status('client-error')],
+      ['https://example.com/2', status('server-error')],
+      ['https://example.com/3', status('error')]
+    ]);
+    expect(summarizeLinks(links, statuses).find((i) => i.text === '3 failing')?.tone).toBe('err');
+  });
+
+  it('ignores links that came back ok', () => {
+    const statuses = new Map([['https://example.com/a', status('ok')]]);
+    expect(summarizeLinks([link({})], statuses)).toHaveLength(2);
+  });
+
+  it('ignores links that were never checked', () => {
+    expect(summarizeLinks([link({ href: 'https://example.com/unchecked' })], NO_STATUS)).toHaveLength(2);
   });
 });

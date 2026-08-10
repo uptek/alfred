@@ -1,4 +1,4 @@
-import { getItem } from '~/utils/storage';
+import { getSettings, isEnabled } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 
 interface Dimensions {
@@ -77,8 +77,7 @@ const onMouseUp = () => {
 
 const onMouseDown = (e: MouseEvent, resizer: Resizer) => {
   e.preventDefault();
-  const { main, primarySidebar, secondarySidebar } = queryElements();
-  const { frame } = queryElements();
+  const { main, frame, primarySidebar, secondarySidebar } = queryElements();
   if (main && resizer.isMainResizer) main.style.pointerEvents = 'none';
   if (!resizer.isMainResizer && frame) frame.style.transition = 'none';
   activeResizer = resizer;
@@ -114,7 +113,6 @@ const createResizer = (
     ...styles
   });
   element.appendChild(resizerEl);
-  console.log(`[Alfred Resizers] Created resizer: ${type ?? 'primary'}`);
 
   const resizer: Resizer = {
     element: resizerEl,
@@ -194,30 +192,17 @@ const createDimensionsBadge = (main: HTMLElement) => {
   ro.observe(main);
 };
 
-let settingsCache: Record<string, boolean> | null = null;
+let settingsCache: NonNullable<NonNullable<AlfredSettings['themeCustomizer']>['resizers']> | null = null;
 
 const getResizerSettings = async () => {
   if (!settingsCache) {
-    const settings = await getItem<AlfredSettings>('settings');
-    settingsCache = settings?.themeCustomizer?.resizers ?? {
-      primarySidebar: true,
-      secondarySidebar: true,
-      previewHorizontal: true,
-      previewVertical: true
-    };
+    settingsCache = (await getSettings()).themeCustomizer.resizers ?? {};
   }
   return settingsCache;
 };
 
 const Resizers = async () => {
   const { frame, main, primarySidebar, secondarySidebar } = queryElements();
-
-  console.log('[Alfred Resizers] Element check:', {
-    frame: !!frame,
-    main: !!main,
-    primarySidebar: !!primarySidebar,
-    secondarySidebar: !!secondarySidebar
-  });
 
   if (!frame && !main) return false;
 
@@ -230,34 +215,31 @@ const Resizers = async () => {
   }
 
   const resizerSettings = await getResizerSettings();
-  let newlyAttached = false;
 
   // Primary Sidebar Resizer
   if (
     frame &&
     primarySidebar &&
-    resizerSettings.primarySidebar !== false &&
+    isEnabled(resizerSettings.primarySidebar) &&
     !primarySidebar.hasAttribute(`${RESIZER_ATTR_PREFIX}primary`)
   ) {
     primarySidebar.setAttribute(`${RESIZER_ATTR_PREFIX}primary`, 'true');
     createSidebarResizer(frame, primarySidebar, true);
-    newlyAttached = true;
   }
 
   // Secondary Sidebar Resizer
   if (
     frame &&
     secondarySidebar &&
-    resizerSettings.secondarySidebar !== false &&
+    isEnabled(resizerSettings.secondarySidebar) &&
     !secondarySidebar.hasAttribute(`${RESIZER_ATTR_PREFIX}secondary`)
   ) {
     secondarySidebar.setAttribute(`${RESIZER_ATTR_PREFIX}secondary`, 'true');
     createSidebarResizer(frame, secondarySidebar, false);
-    newlyAttached = true;
   }
 
   // Main Horizontal Resizer
-  if (main && resizerSettings.previewHorizontal !== false && !main.hasAttribute(`${RESIZER_ATTR_PREFIX}horizontal`)) {
+  if (main && isEnabled(resizerSettings.previewHorizontal) && !main.hasAttribute(`${RESIZER_ATTR_PREFIX}horizontal`)) {
     main.setAttribute(`${RESIZER_ATTR_PREFIX}horizontal`, 'true');
     createResizer(
       main,
@@ -276,11 +258,10 @@ const Resizers = async () => {
       true,
       'main-horizontal'
     );
-    newlyAttached = true;
   }
 
   // Main Vertical Resizer
-  if (main && resizerSettings.previewVertical !== false && !main.hasAttribute(`${RESIZER_ATTR_PREFIX}vertical`)) {
+  if (main && isEnabled(resizerSettings.previewVertical) && !main.hasAttribute(`${RESIZER_ATTR_PREFIX}vertical`)) {
     main.setAttribute(`${RESIZER_ATTR_PREFIX}vertical`, 'true');
     createResizer(
       main,
@@ -301,7 +282,6 @@ const Resizers = async () => {
       true,
       'main-vertical'
     );
-    newlyAttached = true;
   }
 
   // Dimensions badge in top bar
@@ -309,20 +289,23 @@ const Resizers = async () => {
     createDimensionsBadge(main);
   }
 
-  if (newlyAttached) {
-    console.log('[Alfred Resizers] Attached new resizers');
-  }
   return true;
 };
 
+const allResizersAttached = (): boolean =>
+  ['primary', 'secondary', 'horizontal', 'vertical'].every(
+    (kind) => document.querySelector(`[${RESIZER_ATTR_PREFIX}${kind}]`) !== null
+  );
+
 export const setupResizers = async () => {
-  console.log('[Alfred Resizers] setupResizers called');
   await Resizers();
 
   // Keep watching permanently. Shopify's React app destroys and recreates
   // sidebar panels when they hide/show, so we need to re-attach resizers.
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   const observer = new MutationObserver(() => {
+    // Everything is already attached — skip the debounce/re-run entirely.
+    if (allResizersAttached()) return;
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       void Resizers();
