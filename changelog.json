@@ -1,5 +1,19 @@
 [
   {
+    "version": "2026.08.22",
+    "date": "2026-08-22",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Admin Sidebar Toggle Is Back"
+      },
+      {
+        "type": "paragraph",
+        "content": "Shopify recently rebuilt the admin's left navigation, which quietly broke Alfred's collapse button. The toggle now adapts to the new admin, so you can shrink the sidebar to a tidy icon rail again, and it stays put as you move around the admin."
+      }
+    ]
+  },
+  {
     "version": "2026.08.08.3",
     "date": "2026-08-08",
     "changes": [
@@ -1049,7 +1063,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Fix: Improved theme detection for stores with strict security protocols."]
+        "content": [
+          "Fix: Improved theme detection for stores with strict security protocols."
+        ]
       }
     ]
   },
@@ -1077,7 +1093,9 @@
       },
       {
         "type": "list",
-        "content": ["Fix: Background service worker becoming inactive interrupting shortcuts."]
+        "content": [
+          "Fix: Background service worker becoming inactive interrupting shortcuts."
+        ]
       }
     ]
   },
@@ -1160,7 +1178,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["[BTS] Options page migrated to Preact for improved performance and maintainability"]
+        "content": [
+          "[BTS] Options page migrated to Preact for improved performance and maintainability"
+        ]
       }
     ]
   },
@@ -1170,7 +1190,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Fix changelog page on extension update"]
+        "content": [
+          "Fix changelog page on extension update"
+        ]
       }
     ]
   },
@@ -1216,7 +1238,9 @@
       },
       {
         "type": "list",
-        "content": ["[BTS] Integrated a new build process to automatically generate and update the changelog."]
+        "content": [
+          "[BTS] Integrated a new build process to automatically generate and update the changelog."
+        ]
       }
     ]
   },
@@ -1230,7 +1254,11 @@
       },
       {
         "type": "list",
-        "content": ["Resizable primary sidebar", "Resizable secondary sidebar", "Resizable main preview area"]
+        "content": [
+          "Resizable primary sidebar",
+          "Resizable secondary sidebar",
+          "Resizable main preview area"
+        ]
       },
       {
         "type": "video",
@@ -1244,7 +1272,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Add indexer for Shopify app search results"]
+        "content": [
+          "Add indexer for Shopify app search results"
+        ]
       },
       {
         "type": "video",
@@ -1255,7 +1285,9 @@
       },
       {
         "type": "list",
-        "content": ["[BTS] Switch to CalVer for versioning from SemVer 1.2.5"]
+        "content": [
+          "[BTS] Switch to CalVer for versioning from SemVer 1.2.5"
+        ]
       }
     ]
   },
@@ -1265,7 +1297,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Open Section shortcut: Add support for main sections by appending page type to the name"]
+        "content": [
+          "Open Section shortcut: Add support for main sections by appending page type to the name"
+        ]
       }
     ]
   },
@@ -1275,7 +1309,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Use `.shopify-section` to identify section wrapper for Open Section shortcut"]
+        "content": [
+          "Use `.shopify-section` to identify section wrapper for Open Section shortcut"
+        ]
       }
     ]
   },
@@ -1285,7 +1321,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Add apply button to presets table actions column"]
+        "content": [
+          "Add apply button to presets table actions column"
+        ]
       }
     ]
   },
@@ -1295,7 +1333,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Add shortcut to open sections in code editor"]
+        "content": [
+          "Add shortcut to open sections in code editor"
+        ]
       },
       {
         "type": "video",
@@ -1309,14 +1349,19 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Add import/export for permissions presets", "Add bulk delete for permissions presets"]
+        "content": [
+          "Add import/export for permissions presets",
+          "Add bulk delete for permissions presets"
+        ]
       },
       {
         "type": "divider"
       },
       {
         "type": "list",
-        "content": ["[BTS] Fix analytics disabling in development"]
+        "content": [
+          "[BTS] Fix analytics disabling in development"
+        ]
       }
     ]
   },
@@ -1326,7 +1371,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Add custom message support in permission presets"]
+        "content": [
+          "Add custom message support in permission presets"
+        ]
       },
       {
         "type": "video",
@@ -1337,7 +1384,9 @@
       },
       {
         "type": "list",
-        "content": ["[BTS] Add analytics tracking system for user actions and time savings"]
+        "content": [
+          "[BTS] Add analytics tracking system for user actions and time savings"
+        ]
       }
     ]
   },
@@ -1347,7 +1396,10 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Rename extension to Alfred", "Add collaborator permission presets"]
+        "content": [
+          "Rename extension to Alfred",
+          "Add collaborator permission presets"
+        ]
       },
       {
         "type": "video",
@@ -1361,7 +1413,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["New Shortcut: Clear Cart"]
+        "content": [
+          "New Shortcut: Clear Cart"
+        ]
       }
     ]
   },
@@ -1371,7 +1425,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["New Shortcut: Copy Theme Preview URL"]
+        "content": [
+          "New Shortcut: Copy Theme Preview URL"
+        ]
       },
       {
         "type": "video",
@@ -1382,7 +1438,9 @@
       },
       {
         "type": "list",
-        "content": ["[BTS] Fix: Run main.content at document_start to avoid race condition"]
+        "content": [
+          "[BTS] Fix: Run main.content at document_start to avoid race condition"
+        ]
       }
     ]
   },
@@ -1406,7 +1464,9 @@
     "changes": [
       {
         "type": "list",
-        "content": ["Add context menu to copy product JSON"]
+        "content": [
+          "Add context menu to copy product JSON"
+        ]
       }
     ]
   },
@@ -1443,7 +1503,10 @@
     "changes": [
       {
         "type": "list",
-        "content": ["[BTS] Add @wxt-dev/auto-icons", "[BTS] Add Chrome extension icon"]
+        "content": [
+          "[BTS] Add @wxt-dev/auto-icons",
+          "[BTS] Add Chrome extension icon"
+        ]
       }
     ]
   }
