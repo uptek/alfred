@@ -1,5 +1,19 @@
 [
   {
+    "version": "2026.08.22",
+    "date": "2026-08-22",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Admin Sidebar Toggle Is Back"
+      },
+      {
+        "type": "paragraph",
+        "content": "Shopify recently rebuilt the admin's left navigation, which quietly broke Alfred's collapse button. The toggle now adapts to the new admin, so you can shrink the sidebar to a tidy icon rail again, and it stays put as you move around the admin."
+      }
+    ]
+  },
+  {
     "version": "2026.08.08.3",
     "date": "2026-08-08",
     "changes": [
