@@ -1,3 +1,4 @@
+import { getSearchStartingIndex } from '~/utils/appstore-search';
 import { getSettings, isEnabled } from '~/utils/settings';
 
 export default defineContentScript({
@@ -14,14 +15,8 @@ export default defineContentScript({
     let globalIndex = 1;
     const observers: MutationObserver[] = [];
 
-    function getCurrentPage() {
-      const urlParams = new URLSearchParams(window.location.search);
-      return parseInt(urlParams.get('page') ?? '1', 10);
-    }
-
-    function calculateStartingIndex() {
-      const currentPage = getCurrentPage();
-      globalIndex = (currentPage - 1) * 24 + 1;
+    function calculateStartingIndex(url: URL | Location) {
+      globalIndex = getSearchStartingIndex(url.search);
     }
 
     function addIndexesToAppCards() {
@@ -86,13 +81,15 @@ export default defineContentScript({
     }
 
     function init() {
-      calculateStartingIndex();
+      calculateStartingIndex(window.location);
       addIndexesToAppCards();
       observePageChanges();
     }
 
-    ctx.addEventListener(window, 'wxt:locationchange', () => {
-      calculateStartingIndex();
+    // Fired from the Navigation API's navigate event, before the new URL is
+    // committed: window.location still holds the previous page here.
+    ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
+      calculateStartingIndex(newUrl);
       scheduleIndexing(500);
     });
 
