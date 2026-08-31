@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.09.01
+@ 2026-09-01
+
+### Correct App Store Search Numbering Across Pages
+Result numbers on the Shopify App Store search page kept counting from the previous page when you clicked through to page 2 or 3 without reloading. Numbering now picks up where the last page left off, so position 25 is always the first result on page 2.
+
+
 ## 2026.08.22
 @ 2026-08-22
 
