@@ -53,7 +53,8 @@ in page chrome, referer-based robots.txt fixtures).
 ## Version Bumping & Changelog
 
 When bumping the version or updating the changelog, use the `/version-bump`
-skill. It handles CalVer format, file updates, and changelog entries.
+skill, including inside `/ship`. It handles CalVer format, file updates, and
+changelog entries.
 
 ## Pruning Theme Data
 
