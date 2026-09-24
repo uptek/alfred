@@ -73,7 +73,6 @@ declare interface AlfredSettings {
     presetMenuItemHandles?: string;
   };
   admin?: {
-    collapsibleSidebar?: boolean;
     warnBeforeClosingCodeEditor?: boolean;
     themeListUtils?: boolean;
     timeline?: boolean;

@@ -37,6 +37,7 @@
     "@wxt-dev/auto-icons": "^1.1.1",
     "@wxt-dev/module-svelte": "^2.0.5",
     "chokidar-cli": "^3.0.0",
+    "linkedom": "^0.18.12",
     "oxfmt": "^0.54.0",
     "oxlint": "^1.69.0",
     "svelte": "^5.56.3",

@@ -25,6 +25,8 @@ type ToastElement = HTMLElement & {
   timeout?: ReturnType<typeof setTimeout> | null;
 };
 
+type ToastVariant = 'default' | 'announcement';
+
 export class Toast {
   private static toastCounter = 0;
   private static customElementDefined = false;
@@ -83,6 +85,26 @@ export class Toast {
 
     .alfred-toast__content--error {
       background: rgb(199, 10, 36);
+    }
+
+    /* Announcement variant: larger and centered */
+    :host(.alfred-toast--announcement) {
+      /* left: 50% caps a shrink-to-fit popover at half the viewport; size to content instead */
+      width: max-content;
+    }
+
+    :host(.alfred-toast--announcement) .alfred-toast__content {
+      max-width: min(800px, calc(100vw - 32px));
+      padding: 16px;
+      gap: 12px;
+    }
+
+    :host(.alfred-toast--announcement) .alfred-toast__text {
+      font-size: 15px;
+      line-height: 22px;
+      text-align: center;
+      /* Matches the close button plus gap so the text centers on the toast */
+      padding-left: 32px;
     }
 
     .alfred-toast__text {
@@ -170,7 +192,12 @@ export class Toast {
     }, 400);
   }
 
-  static show(message: string, type: 'success' | 'error' = 'success', duration: number = this.defaults.duration) {
+  static show(
+    message: string,
+    type: 'success' | 'error' = 'success',
+    duration: number = this.defaults.duration,
+    variant: ToastVariant = 'default'
+  ) {
     // Ensure custom element is defined
     this.defineCustomElement();
 
@@ -185,22 +212,23 @@ export class Toast {
 
       // Delay showing new toast until old one has mostly faded out
       setTimeout(() => {
-        this.create(message, type, duration);
+        this.create(message, type, duration, variant);
       }, 100);
       return;
     }
 
     // No existing toasts, show immediately
-    this.create(message, type, duration);
+    this.create(message, type, duration, variant);
   }
 
-  private static create(message: string, type: 'success' | 'error', duration: number) {
+  private static create(message: string, type: 'success' | 'error', duration: number, variant: ToastVariant) {
     // Create new toast element
     const toastElement = document.createElement(this.defaults.hostTag) as ToastElement;
     const toastId = `alfred-toast-${++this.toastCounter}`;
     toastElement.id = toastId;
     toastElement.setAttribute('popover', 'manual');
     toastElement.classList.add('alfred-toast');
+    if (variant === 'announcement') toastElement.classList.add('alfred-toast--announcement');
 
     // Check for PBarNextFrameWrapper and adjust bottom position
     const pBarWrapper = document.querySelector<HTMLElement>('#PBarNextFrameWrapper');
@@ -230,9 +258,18 @@ export class Toast {
       </button>
     `;
 
-    // Use textContent to prevent XSS
+    // Messages go in as text so user data (preset names, etc.) can't inject
+    // HTML. Announcements also turn <br> into line breaks; nothing else
+    // becomes markup.
     const content = toast.querySelector('.alfred-toast__text')!;
-    content.textContent = message;
+    if (variant === 'announcement') {
+      message.split(/<br\s*\/?>/i).forEach((line, i) => {
+        if (i > 0) content.append(document.createElement('br'));
+        content.append(line);
+      });
+    } else {
+      content.textContent = message;
+    }
 
     // Add event listener to close button
     const closeBtn = toast.querySelector('.alfred-toast__close')!;

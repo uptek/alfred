@@ -25,8 +25,6 @@ who got tired of clicking through endless menus.
   - Draggable panel resizers for the customizer layout
   - Theme inspector auto-toggle (always on/off/remember last state)
   - Theme list utilities: copy preview URLs, quick actions per theme
-- **Admin Sidebar Collapse**: toggle the Shopify admin sidebar for more
-  screen space
 - **Code Editor Close Warning**: prevents accidental tab close (Cmd+W) in the
   theme code editor
 - **Collaborator Permission Presets**

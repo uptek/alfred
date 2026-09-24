@@ -20,6 +20,9 @@ mock.module('wxt/utils/storage', () => ({
       }
       store.set(key, value);
     },
+    removeItem: async (key: string) => {
+      store.delete(key);
+    },
     watch: (_key: string, callback: (newValue: unknown) => void) => {
       watcher = callback;
       return () => {
