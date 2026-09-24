@@ -78,11 +78,15 @@ Unit tests use Bun's built-in test runner:
 bun test
 ```
 
-Test files live next to the code they cover with a `.test.ts` suffix (e.g.
-`entrypoints/popup/robots.test.ts`) and are excluded from `tsconfig.json`. If
-you add or rename an analytics event in `utils/analytics-actions.ts`, update
-`VALID_ACTIONS` in `supabase/functions/track/index.ts` too — a parity test
-fails `bun test` when the two lists drift.
+Test files live in a `tests/` subfolder beside the code they cover, with a
+`.test.ts` suffix (e.g. `entrypoints/popup/tests/robots.test.ts`), and are
+excluded from `tsconfig.json`. Bun has no DOM, so tests that need one build it
+with [linkedom](https://github.com/WebReflection/linkedom).
+
+If you add, rename, or remove an analytics event in
+`utils/analytics-actions.ts`, run `bun run track:gen` to regenerate
+`supabase/functions/track/valid-actions.gen.ts`. A parity test fails `bun test`
+when the generated file is stale.
 
 ## Submitting Changes
 
