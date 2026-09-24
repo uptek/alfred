@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.09.24
+@ 2026-09-24
+
+### Farewell, Admin Sidebar Toggle
+Shopify's new admin dashboard now has its own sidebar toggle, and it does the job far better than ours did. Collapse or expand the navigation from the admin itself, or press ⌘B (Ctrl+B on Windows). Alfred's toggle has retired, and anyone who used it will see a short goodbye the next time they open the admin.
+
+
 ## 2026.09.01
 @ 2026-09-01
 

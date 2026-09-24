@@ -44,6 +44,10 @@ in page chrome, referer-based robots.txt fixtures).
 - Test files live in a `tests/` subfolder beside the code they cover (e.g.
   `entrypoints/popup/tests/`, `utils/tests/`) with a `.test.ts` suffix, and are
   excluded from `tsconfig.json`
+- Bun has no DOM. Tests that need one use `linkedom` (`parseHTML`): assign its
+  globals to `globalThis` before importing the module under test and restore
+  them in `afterAll`, since all test files share one process (see
+  `utils/tests/toast.test.ts`)
 - Analytics events live in `utils/analytics-actions.ts` (`ANALYTICS_ACTIONS`,
   the source of truth); the Supabase track function imports
   `valid-actions.gen.ts`, generated from it via `bun run track:gen` (run
@@ -53,7 +57,8 @@ in page chrome, referer-based robots.txt fixtures).
 ## Version Bumping & Changelog
 
 When bumping the version or updating the changelog, use the `/version-bump`
-skill. It handles CalVer format, file updates, and changelog entries.
+skill, including inside `/ship`. It handles CalVer format, file updates, and
+changelog entries.
 
 ## Pruning Theme Data
 

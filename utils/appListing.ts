@@ -214,12 +214,10 @@ export function parseAppListing(html: string, handle: string): AppListing {
       continue;
     }
     const items = Array.from(heading.parentElement?.querySelectorAll('ul li') ?? [])
-      .map(
-        (item): AppListingDataAccessItem => ({
-          name: cleanText(item.querySelector('h4')?.textContent) ?? '',
-          details: cleanText(item.querySelector('p')?.textContent)
-        })
-      )
+      .map((item): AppListingDataAccessItem => ({
+        name: cleanText(item.querySelector('h4')?.textContent) ?? '',
+        details: cleanText(item.querySelector('p')?.textContent)
+      }))
       .filter((item) => item.name);
     dataAccess.push({
       group: text.slice(0, -1),

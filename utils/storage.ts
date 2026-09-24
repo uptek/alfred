@@ -20,3 +20,11 @@ export async function getItem<T>(key: string): Promise<T | null> {
 export async function setItem<T>(key: string, value: T): Promise<void> {
   await storage.setItem(`local:${key}`, value);
 }
+
+/**
+ * Removes an item from local storage.
+ * @param key - The storage key (without 'local:' prefix)
+ */
+export async function removeItem(key: string): Promise<void> {
+  await storage.removeItem(`local:${key}`);
+}

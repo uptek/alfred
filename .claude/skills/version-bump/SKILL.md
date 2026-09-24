@@ -51,9 +51,7 @@ mixing the content block types below in any order.
 {
   "version": "YYYY.MM.DD",
   "date": "YYYY-MM-DD",
-  "changes": [
-    /* content blocks */
-  ]
+  "changes": [/* content blocks */]
 }
 ```
 

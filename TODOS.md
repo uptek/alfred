@@ -30,6 +30,20 @@ The background service worker runs a `setInterval` keep-alive (`entrypoints/back
 
 **Revert story:** one commit, e.g. `fix(background): register menu click listener eagerly, drop keep-alive`. Reverting that commit restores keep-alive and the lazy listener wholesale.
 
+## Shopify Admin
+
+### Retire the one-time sidebar toggle goodbye toast
+
+**Priority:** P3. Do it once most toggle users have opened the admin on v2026.09.24 or later (a few months after release, e.g. December 2026).
+
+`entrypoints/shopify-admin.content/index.ts` shows a one-time goodbye toast to merchants who still have the `admin-sidebar-state` storage key left by the retired sidebar toggle. Once the goodbye has done its job, remove:
+
+- The farewell block and `SIDEBAR_STATE_KEY` in `entrypoints/shopify-admin.content/index.ts`, plus the farewell tests in `entrypoints/shopify-admin.content/tests/index.test.ts`.
+- The `'announcement'` toast variant in `utils/toast.ts` (scoped CSS and `<br>` splitting) and its tests in `utils/tests/toast.test.ts`, if nothing else uses it by then.
+- `removeItem` in `utils/storage.ts`, if the farewell is still its only caller.
+
+Leftover `admin-sidebar-state` keys for merchants who never saw the goodbye are harmless and can stay.
+
 ## Cartograph
 
 ### Cart Permalinks / Checkout Links

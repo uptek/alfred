@@ -23,7 +23,6 @@ export const VALID_ACTIONS = [
   'open_section_in_code_editor',
   'disable_theme_inspector',
   'resize_theme_customizer',
-  'toggle_admin_sidebar',
   'detect_theme',
   'autofill_storefront_password',
   'open_image_in_admin',

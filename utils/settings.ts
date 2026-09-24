@@ -45,7 +45,6 @@ export const defaultSettings: ResolvedSettings = {
     presetMenuItemBehavior: 'apply'
   },
   admin: {
-    collapsibleSidebar: true,
     warnBeforeClosingCodeEditor: true,
     themeListUtils: true,
     timeline: true
