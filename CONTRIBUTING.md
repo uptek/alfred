@@ -5,7 +5,7 @@ started.
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) (v1.2+)
+- [Bun](https://bun.sh/) (v1.4+)
 - Chrome
 
 ## Development Setup

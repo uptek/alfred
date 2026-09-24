@@ -49,7 +49,7 @@ who got tired of clicking through endless menus.
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) (v1.2+)
+- [Bun](https://bun.sh/) (v1.4+)
 - Chrome
 
 ### Setup
