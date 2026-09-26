@@ -33,11 +33,21 @@ This project uses WXT - a modern framework for building browser extensions.
 `entrypoints/dev-dashboard.content/` adds a light/dark/system toggle to
 dev.shopify.com, which runs Shopify's Altair design system: `--ui-*` tokens
 resolve from the nearest `data-altair-theme` attribute (`body`,
-`.altair-app-frame`). Light mode keeps the dashboard's identity: `nav.side-nav`
-stays pinned to dark, and dark fills (primary buttons) come from the dark
-palette (`--altair-button-secondary*`), not the admin's neutrals. The
-catalogs page is legacy Tailwind with hardcoded dark colors, remapped to Altair
-tokens in `style.css`.
+`.altair-app-frame`). Light mode mirrors the Shopify admin layout:
+`.altair-app-frame` (and the nav) stays pinned to dark and
+`.altair-app-frame__main` becomes a light rounded canvas. Dark fills on light
+surfaces (rail, primary buttons, checked boxes) use the dashboard's dark palette
+(`--altair-ink-surface-1`, `--altair-button-secondary-*`), not the admin's
+neutrals. The catalogs page is legacy Tailwind with hardcoded dark colors,
+remapped to Altair tokens in `style.css`.
+
+`sidebar.ts` adds an admin-style nav collapse toggle (logo row button, ⌘B /
+Ctrl+B). Altair already ships the collapsed rail: setting the nav's
+`data-altair--side-nav-state-value` to `collapsed` makes its Stimulus
+controller set `data-state`, which the dashboard CSS styles. Second-level nav
+links (inside an app) are text only, so `sidebar.ts` gives them rail-only icons. Dashboard
+charts redraw their SVG on every canvas resize, so the toggle pins chart
+canvases until the nav width transition ends.
 
 ## Visual Test Pages
 
@@ -59,6 +69,12 @@ in page chrome, referer-based robots.txt fixtures).
   globals to `globalThis` before importing the module under test and restore
   them in `afterAll`, since all test files share one process (see
   `utils/tests/toast.test.ts`)
+- linkedom differs from browsers in ways tests have to work around: its
+  MutationObserver reports attribute changes on descendants only when
+  `childList` is observed too, `:disabled` doesn't match controls inside a
+  disabled `<fieldset>`, and a `tabIndex` of 0 reads back as -1
+- `bun run build` starts with `rm -rf .output`, which also deletes the dev
+  build (`.output/chrome-mv3-dev`) that Chrome may have loaded unpacked
 - Analytics events live in `utils/analytics-actions.ts` (`ANALYTICS_ACTIONS`,
   the source of truth); the Supabase track function imports
   `valid-actions.gen.ts`, generated from it via `bun run track:gen` (run

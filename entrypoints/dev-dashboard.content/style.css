@@ -1,41 +1,88 @@
+/* Shared tooltip look, after the Shopify admin's: compact dark bubble */
+#alfred-theme-toggle button::after,
+#alfred-nav-toggle .altair-tooltip__bubble {
+  padding: 5px 8px;
+  border: var(--ui-border-width-025) solid var(--ui-border);
+  border-radius: var(--ui-border-radius-250);
+  background: var(--ui-tooltip-bg);
+  box-shadow: var(--ui-shadow-popover);
+  color: var(--ui-text);
+  font: 400 0.8125rem/1.125rem var(--ui-font-family-sans);
+  white-space: nowrap;
+}
+
 /* Theme toggle: a segmented control above the side nav footer, drawn only
-   with Altair control tokens so it sits flush in the nav in either theme. */
+   with Altair control tokens so it sits flush in the nav in either theme.
+   Buttons and the active pill are placed in absolute slots, a row of three
+   or a column of three in the collapsed rail, so the switch between the two
+   animates alongside the nav width. */
 #alfred-theme-toggle {
+  /* Slot height in the row, and slot pitch in the rail's roomier column */
+  --alfred-theme-slot: 26px;
+  --alfred-theme-rail-slot: 32px;
+  /* The toggle's width in the collapsed rail, and how much wider it gets in
+     the expanded nav */
+  --alfred-theme-narrow: calc(var(--ui-size-1600) - 2 * var(--ui-border-width-025) - 2 * var(--ui-nav-pad-inline));
+  --alfred-theme-span: calc(var(--altair-side-nav-rail-width) - var(--ui-size-1600));
   position: relative;
-  display: flex;
+  height: 0;
+  /* Padding percentages resolve against the parent's width, which lets the
+     height follow the width: a column of three when narrow, a row when wide */
+  padding-top: clamp(
+    calc(var(--alfred-theme-slot) + 4px),
+    calc(
+      4px + 3 * var(--alfred-theme-rail-slot) - (3 * var(--alfred-theme-rail-slot) - var(--alfred-theme-slot)) *
+        (100% - 2 * var(--ui-nav-pad-inline) - var(--alfred-theme-narrow)) / var(--alfred-theme-span)
+    ),
+    calc(3 * var(--alfred-theme-rail-slot) + 4px)
+  );
   margin: 0 var(--ui-nav-pad-inline) var(--ui-size-300);
-  padding: 2px;
   border-radius: var(--ui-border-radius-200);
   background: var(--ui-control-bg-secondary);
   box-shadow: inset 0 0 0 var(--ui-border-width-025) var(--ui-border);
-  /* side-nav__label clips its content; the tooltips need to escape */
-  overflow: visible;
+}
+
+/* Slots morph from a column (collapsed rail) to a row (expanded nav) as a
+   pure function of the toggle's live width, so they move in lockstep with the
+   nav's own width animation. --p is that progress, 0 in the rail and 1 when
+   expanded; left, width and margin percentages all resolve against the
+   toggle's width. */
+#alfred-theme-toggle::before,
+#alfred-theme-toggle button {
+  --p: clamp(0, (100% - var(--alfred-theme-narrow)) / var(--alfred-theme-span), 1);
+  position: absolute;
+  top: 2px;
+  left: calc(2px + var(--i) * var(--p) * (100% - 4px) / 3);
+  width: calc((100% - 4px) * (1 - 2 * var(--p) / 3));
+  box-sizing: content-box;
+  height: var(--alfred-theme-slot);
+  /* Grows each slot to the rail pitch as the toggle narrows (padding, since
+     its percentages resolve against width like the rest) */
+  padding-block: calc((1 - var(--p)) * (var(--alfred-theme-rail-slot) - var(--alfred-theme-slot)) / 2);
+  margin-top: calc(var(--i) * (1 - var(--p)) * var(--alfred-theme-rail-slot));
+  border-radius: var(--ui-border-radius-150);
 }
 
 /* Sliding indicator behind the active mode */
 #alfred-theme-toggle::before {
+  --i: var(--alfred-theme-index, 0);
   content: '';
-  position: absolute;
-  inset-block: 2px;
-  left: 2px;
-  width: calc((100% - 4px) / 3);
-  border-radius: var(--ui-border-radius-150);
   background: var(--ui-control-bg-selected);
-  transform: translateX(calc(var(--alfred-theme-index, 0) * 100%));
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Mode changes slide it via index.ts */
 }
 
 #alfred-theme-toggle button {
-  position: relative;
-  flex: 1;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 3px 0;
+  padding-inline: 0;
   border: 0;
-  border-radius: var(--ui-border-radius-150);
   background: none;
   color: var(--ui-text-tertiary);
   cursor: pointer;
+  /* Anchors each button's own tooltip */
+  anchor-name: --alfred-theme-mode;
+  anchor-scope: --alfred-theme-mode;
   transition: color 0.15s ease;
 }
 
@@ -52,36 +99,227 @@
   outline-offset: -2px;
 }
 
-/* Tooltip, opening upward since the toggle sits at the bottom of the nav */
+/* Tooltip above the button, or beside it in the collapsed rail. Fixed and
+   anchored so the nav's overflow doesn't clip it. */
 #alfred-theme-toggle button::after {
   content: attr(data-label);
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  z-index: 50;
-  padding: 4px 8px;
-  border: var(--ui-border-width-025) solid var(--ui-border);
-  border-radius: var(--ui-border-radius-200);
-  background: var(--ui-tooltip-bg);
-  color: var(--ui-text);
-  font: var(--ui-text-body-sm-font);
-  white-space: nowrap;
+  position: fixed;
+  position-anchor: --alfred-theme-mode;
+  position-area: top;
+  z-index: var(--ui-z-index-tooltip);
+  margin-bottom: var(--ui-tooltip-offset);
   pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, 2px);
+  translate: 0 2px;
   transition:
     opacity 0.15s ease,
-    transform 0.15s ease;
+    translate 0.15s ease;
 }
 
-#alfred-theme-toggle button:hover::after {
+.side-nav[data-state='collapsed'] #alfred-theme-toggle button::after {
+  position-area: right;
+  margin: 0 0 0 calc(var(--ui-nav-pad-inline) + var(--ui-tooltip-offset));
+  translate: -2px 0;
+}
+
+#alfred-theme-toggle button:is(:hover, :focus-visible)::after {
   opacity: 1;
-  transform: translate(-50%, 0);
+  translate: 0;
+}
+
+/* Sidebar toggle (sidebar.ts): an Altair tooltip wrapping an icon button. It
+   sits at the end of the logo row, and over the logo in the collapsed rail,
+   where it only shows on hover, like the Shopify admin. */
+.side-nav__scroll {
+  position: relative;
+}
+
+#alfred-nav-toggle {
+  --alfred-nav-toggle-size: 28px;
+  /* No z-index: a stacking context here would put the tooltip under the canvas */
+  position: absolute;
+  /* Centered on the logo row, the first row of the scroll area */
+  top: calc(var(--ui-size-500) + var(--altair-side-nav-icon-box) / 2);
+  right: var(--ui-nav-pad-inline);
+  /* Not translate: a transform would trap the fixed tooltip inside the nav */
+  margin-top: calc(var(--alfred-nav-toggle-size) / -2);
+  transition: right var(--altair-side-nav-width-duration) var(--altair-side-nav-width-ease);
+}
+
+/* Centers the button on the logo mark: rail width, less the nav's borders, the
+   scroll padding, the brand padding and half the mark */
+.side-nav[data-state='collapsed'] #alfred-nav-toggle {
+  right: calc(
+    var(--ui-size-1600) - 2 * var(--ui-border-width-025) - var(--ui-nav-pad-inline) - var(--ui-size-200) -
+      var(--altair-side-nav-icon-box) / 2 - var(--alfred-nav-toggle-size) / 2
+  );
+}
+
+#alfred-nav-toggle button {
+  display: grid;
+  place-items: center;
+  width: var(--alfred-nav-toggle-size);
+  height: var(--alfred-nav-toggle-size);
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-border-radius-200);
+  background: none;
+  color: var(--ui-text-secondary);
+  cursor: pointer;
+  anchor-name: --alfred-nav-toggle;
+  transition:
+    background-color var(--ui-motion-fast),
+    color var(--ui-motion-fast),
+    opacity var(--ui-motion-fast);
+}
+
+#alfred-nav-toggle button:hover {
+  background: var(--ui-control-bg-hover);
+  color: var(--ui-text);
+}
+
+#alfred-nav-toggle button:focus-visible {
+  outline: var(--ui-border-width-050) solid var(--ui-border-focus);
+  outline-offset: -2px;
+}
+
+.side-nav[data-state='collapsed'] #alfred-nav-toggle button:not(:hover, :focus-visible) {
+  opacity: 0;
+}
+
+.side-nav__brand-mark {
+  transition:
+    transform var(--ui-motion-panel) var(--ui-motion-ease-out),
+    opacity var(--ui-motion-fast);
+}
+
+.side-nav[data-state='collapsed']:has(#alfred-nav-toggle button:is(:hover, :focus-visible)) .side-nav__brand-mark {
+  opacity: 0;
+}
+
+/* The drawer nav below 48rem has no collapsed layout */
+@media not (min-width: 48rem) {
+  #alfred-nav-toggle {
+    display: none;
+  }
+}
+
+#alfred-nav-toggle .altair-tooltip__bubble {
+  position-anchor: --alfred-nav-toggle;
+  padding-right: 5px;
+}
+
+.alfred-nav-toggle__tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alfred-nav-toggle__keys {
+  display: flex;
+  gap: 4px;
+}
+
+#alfred-nav-toggle kbd {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  background: var(--ui-field-bg);
+  color: var(--ui-text-secondary);
+  font: 500 0.75rem/1rem var(--ui-font-family-sans);
+}
+
+/* Rail layout for second-level links (sidebar.ts). Every change animates on
+   the nav's own width timing, so the rows morph with it instead of jumping. */
+.side-nav {
+  --alfred-nav-motion: var(--altair-side-nav-width-duration) var(--altair-side-nav-width-ease);
+}
+
+/* Rail-only icons stay in the flow at zero width when expanded (the negative
+   margin cancels the link gap), so collapsing grows them in */
+.alfred-rail-icon {
+  overflow: hidden;
+  transition:
+    width var(--alfred-nav-motion),
+    margin var(--alfred-nav-motion),
+    opacity var(--alfred-nav-motion);
+}
+
+.side-nav:not([data-state='collapsed']) .alfred-rail-icon {
+  width: 0;
+  margin-inline-end: calc(-1 * var(--ui-size-300));
+  opacity: 0;
+}
+
+/* The glyph scales with its box, so it shrinks away rather than being clipped */
+.alfred-rail-icon > * {
+  transition: scale var(--alfred-nav-motion);
+}
+
+.side-nav:not([data-state='collapsed']) .alfred-rail-icon > * {
+  scale: 0;
+}
+
+/* Second-level links indent past the back chevron; the rail lines them up
+   with the top-level links instead */
+.side-nav__list--secondary .side-nav-link {
+  transition:
+    color var(--ui-motion-fast) var(--ui-motion-ease),
+    background var(--ui-motion-fast) var(--ui-motion-ease),
+    inline-size var(--alfred-nav-motion),
+    margin-inline-start var(--alfred-nav-motion),
+    padding-inline-start var(--alfred-nav-motion);
+}
+
+.side-nav[data-state='collapsed'] .side-nav__list--secondary .side-nav-link {
+  inline-size: 100%;
+  margin-inline-start: 0;
+  padding-inline-start: var(--ui-size-200);
+}
+
+.side-nav__back {
+  transition: padding-inline var(--alfred-nav-motion);
+}
+
+.side-nav[data-state='collapsed'] .side-nav__back {
+  padding-inline: var(--ui-size-200);
+}
+
+.side-nav__back .side-nav__icon {
+  transition:
+    transform var(--ui-motion-panel) var(--ui-motion-ease-out),
+    width var(--alfred-nav-motion);
+}
+
+.side-nav[data-state='collapsed'] .side-nav__back .side-nav__icon {
+  width: var(--altair-side-nav-icon-box);
+}
+
+.alfred-rail-monogram {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--ui-border-radius-150);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  font: 600 0.6875rem/1 var(--ui-font-family-sans);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #alfred-theme-toggle::before,
-  #alfred-theme-toggle button::after {
+  .alfred-rail-icon,
+  .alfred-rail-icon > *,
+  .side-nav__list--secondary .side-nav-link,
+  .side-nav__back,
+  .side-nav__back .side-nav__icon,
+  #alfred-theme-toggle button,
+  #alfred-theme-toggle button::after,
+  #alfred-nav-toggle,
+  #alfred-nav-toggle button,
+  .side-nav__brand-mark {
     transition: none;
   }
 }

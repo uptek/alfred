@@ -1,5 +1,6 @@
 import { storage } from '#imports';
 import { getItem, setItem } from '@/utils/storage';
+import { initSidebar, syncSidebar } from './sidebar';
 import './style.css';
 
 type ThemeMode = 'light' | 'dark' | 'system';
@@ -15,7 +16,7 @@ export default defineContentScript({
   runAt: 'document_start',
 
   async main() {
-    const saved = await getItem<ThemeMode>(STORAGE_KEY);
+    const [saved] = await Promise.all([getItem<ThemeMode>(STORAGE_KEY), initSidebar()]);
     // Kept current via storage.watch so DOM mutations don't hit storage.
     let mode: ThemeMode = saved ?? 'system';
 
@@ -31,9 +32,18 @@ export default defineContentScript({
       syncToggle?.(mode);
     });
 
+    // The observer re-applies `mode` on every theme attribute change, so a pick
+    // updates it before touching the page.
+    const pick = (next: ThemeMode) => {
+      mode = next;
+      applyTheme(next);
+      setItem(STORAGE_KEY, next);
+    };
+
     const tryInject = () => {
+      syncSidebar();
       if (document.getElementById('alfred-theme-toggle')) return;
-      syncToggle = injectToggle(mode);
+      syncToggle = injectToggle(mode, pick);
     };
 
     if (document.readyState === 'loading') {
@@ -43,14 +53,20 @@ export default defineContentScript({
     }
 
     // Turbo navigation swaps <body>, which arrives with the server's dark theme
-    // and without our toggle. Theme is re-applied immediately to avoid a flash;
-    // the toggle re-inject is debounced to skip rapid DOM churn.
-    let debounceTimer: ReturnType<typeof setTimeout>;
-    const observer = new MutationObserver(() => {
-      applyTheme(mode);
-      if (document.getElementById('alfred-theme-toggle')) return;
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(tryInject, 200);
+    // and without our toggles, so theme, nav state and toggles are re-applied
+    // before the next paint.
+    const observer = new MutationObserver((records) => {
+      // Charts redraw their SVG on hover and resize, so the document-wide theme
+      // pass only runs for mutations that can bring in a themed element.
+      if (records.some(bringsThemedElement)) applyTheme(mode);
+      tryInject();
+    });
+
+    // Back/Forward and preview visits render a cached clone of the page, whose
+    // toggle has no listeners, so it is rebuilt. sidebar.ts does the same.
+    document.addEventListener('turbo:render', () => {
+      document.getElementById('alfred-theme-toggle')?.remove();
+      tryInject();
     });
     observer.observe(document.documentElement, {
       childList: true,
@@ -59,7 +75,7 @@ export default defineContentScript({
     });
 
     // Listen for system color scheme changes once (not per-injection)
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    PREFERS_DARK.addEventListener('change', () => {
       if (mode === 'system') {
         applyTheme('system');
       }
@@ -67,18 +83,28 @@ export default defineContentScript({
   }
 });
 
+const PREFERS_DARK = window.matchMedia('(prefers-color-scheme: dark)');
+const THEMED = `[data-altair-theme], ${CANVAS}`;
+
+function bringsThemedElement(record: MutationRecord) {
+  if (record.type === 'attributes') return true;
+  return [...record.addedNodes].some(
+    (node) => node instanceof Element && (node.matches(THEMED) || node.querySelector(THEMED))
+  );
+}
+
 function applyTheme(mode: ThemeMode) {
-  const resolved =
-    mode === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : mode;
+  const resolved = mode === 'system' ? (PREFERS_DARK.matches ? 'dark' : 'light') : mode;
 
   const html = document.documentElement;
-  // Dashboard CSS still keys a few light variants off html.light.
+  // style.css scopes the light theme under html.light, as do a few dashboard
+  // light variants.
   html.classList.toggle('light', resolved === 'light');
   html.classList.toggle('dark', resolved === 'dark');
   html.style.colorScheme = resolved;
 
   // Altair design tokens resolve from the nearest data-altair-theme ancestor.
-  document.querySelectorAll<HTMLElement>(`[data-altair-theme], ${CANVAS}`).forEach((el) => {
+  document.querySelectorAll<HTMLElement>(THEMED).forEach((el) => {
     const target = el.matches(DARK_ONLY) ? 'dark' : resolved;
     // Guarded write: the observer watches this attribute, so an unconditional set would loop.
     if (el.dataset.altairTheme !== target) el.dataset.altairTheme = target;
@@ -86,6 +112,8 @@ function applyTheme(mode: ThemeMode) {
 }
 
 const MODES: ThemeMode[] = ['light', 'dark', 'system'];
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
+const ARROW_STEPS: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 
 // Polaris SunIcon, MoonIcon and DesktopIcon, matching the dashboard nav icons.
 const icon = (paths: string) =>
@@ -106,41 +134,81 @@ const ICONS: Record<ThemeMode, string> = {
 /**
  * Builds the segmented light/dark/system control above the side nav footer.
  * Visuals live in style.css; this only wires the markup and state.
+ * @param onPick Applies and saves a mode the user picked.
  * @returns A setter that moves the toggle to a mode chosen elsewhere, or undefined if the side nav wasn't ready.
  */
-function injectToggle(currentMode: ThemeMode): ((next: ThemeMode) => void) | undefined {
+function injectToggle(
+  currentMode: ThemeMode,
+  onPick: (mode: ThemeMode) => void
+): ((next: ThemeMode) => void) | undefined {
   const footer = document.querySelector('nav.side-nav > .side-nav__footer');
   if (!footer) return;
 
   const container = document.createElement('div');
   container.id = 'alfred-theme-toggle';
-  // side-nav__label fades the toggle out with the labels when the nav collapses.
-  container.className = 'side-nav__label';
   container.setAttribute('role', 'radiogroup');
   container.setAttribute('aria-label', 'Theme');
 
-  const buttons = MODES.map((mode) => {
+  const buttons = MODES.map((mode, index) => {
     const label = mode.charAt(0).toUpperCase() + mode.slice(1);
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.innerHTML = ICONS[mode];
     btn.dataset.mode = mode;
+    // Slot position, read by style.css
+    btn.style.setProperty('--i', String(index));
     btn.dataset.label = label;
     btn.setAttribute('role', 'radio');
     btn.setAttribute('aria-label', `${label} theme`);
     btn.addEventListener('click', () => {
       setActive(mode);
-      setItem(STORAGE_KEY, mode);
-      applyTheme(mode);
+      onPick(mode);
     });
     return btn;
   });
 
-  // The sliding indicator (::before in style.css) reads its slot from this index.
+  // The sliding indicator (::before in style.css) reads its slot from this
+  // index. Its slot geometry is relative to the toggle's width, which CSS
+  // transitions interpolate from a wrong start, so the slide is animated here
+  // instead: from the old position to the new one, in pixels.
   function setActive(mode: ThemeMode) {
+    const before = pillPosition();
     container.style.setProperty('--alfred-theme-index', String(MODES.indexOf(mode)));
-    buttons.forEach((btn) => btn.setAttribute('aria-checked', String(btn.dataset.mode === mode)));
+    buttons.forEach((btn) => {
+      const checked = btn.dataset.mode === mode;
+      btn.setAttribute('aria-checked', String(checked));
+      // Only the checked radio is a Tab stop; arrow keys move between them
+      btn.tabIndex = checked ? 0 : -1;
+    });
+    const after = pillPosition();
+    if (!before || !after || REDUCED_MOTION.matches) return;
+    const [dx, dy] = [before[0] - after[0], before[1] - after[1]];
+    if (!dx && !dy) return;
+    container.animate(
+      { translate: [`${dx}px ${dy}px`, '0 0'] },
+      { duration: 250, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', pseudoElement: '::before' }
+    );
   }
+
+  function pillPosition(): [number, number] | undefined {
+    if (!container.isConnected) return;
+    const style = getComputedStyle(container, '::before');
+    return [parseFloat(style.left), parseFloat(style.marginTop)];
+  }
+
+  container.addEventListener('keydown', (e) => {
+    const step = ARROW_STEPS[e.key];
+    // Modified arrows stay with the browser, e.g. Alt+Left goes back
+    if (!step || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    e.preventDefault();
+    // A held arrow moves once instead of flashing through every theme
+    if (e.repeat) return;
+    const focused = buttons.indexOf(e.target as HTMLButtonElement);
+    const current = focused >= 0 ? focused : buttons.findIndex((btn) => btn.tabIndex === 0);
+    const next = buttons[(current + step + buttons.length) % buttons.length]!;
+    next.focus();
+    next.click();
+  });
 
   container.append(...buttons);
   setActive(currentMode);
