@@ -81,7 +81,13 @@ bun test
 Test files live in a `tests/` subfolder beside the code they cover, with a
 `.test.ts` suffix (e.g. `entrypoints/popup/tests/robots.test.ts`), and are
 excluded from `tsconfig.json`. Bun has no DOM, so tests that need one build it
-with [linkedom](https://github.com/WebReflection/linkedom).
+with [linkedom](https://github.com/WebReflection/linkedom): assign its globals to
+`globalThis` before importing the module under test and restore them in
+`afterAll`, since all test files share one process (see
+`utils/tests/toast.test.ts`). linkedom differs from browsers in ways tests have
+to work around: its MutationObserver reports attribute changes on descendants
+only when `childList` is observed too, `:disabled` doesn't match controls inside
+a disabled `<fieldset>`, and a `tabIndex` of 0 reads back as -1.
 
 If you add, rename, or remove an analytics event in
 `utils/analytics-actions.ts`, run `bun run track:gen` to regenerate

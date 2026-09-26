@@ -36,8 +36,11 @@ who got tired of clicking through endless menus.
 - **App Store Search Indexing**: adds position numbers to app search results
 - **Storefront Password Autofill**: auto-fill storefront passwords on
   password-protected stores
-- **Dev Dashboard Dark Mode**: adds a light/dark/system theme toggle to
-  dev.shopify.com
+- **Dev Dashboard Enhancements**
+  - Light/dark/system theme toggle for dev.shopify.com, with a light mode styled
+    like the Shopify admin
+  - Collapsible sidebar: shrink the nav to an icon rail with the button beside
+    the logo or Cmd+B / Ctrl+B, remembered across tabs
 - **Cartograph**: visual cart editor for inspecting and modifying cart contents,
   metadata, and shipping details
 
