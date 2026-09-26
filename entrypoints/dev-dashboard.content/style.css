@@ -1,0 +1,256 @@
+/* Theme toggle: a segmented control above the side nav footer, drawn only
+   with Altair control tokens so it sits flush in the nav in either theme. */
+#alfred-theme-toggle {
+  position: relative;
+  display: flex;
+  margin: 0 var(--ui-nav-pad-inline) var(--ui-size-300);
+  padding: 2px;
+  border-radius: var(--ui-border-radius-200);
+  background: var(--ui-control-bg-secondary);
+  box-shadow: inset 0 0 0 var(--ui-border-width-025) var(--ui-border);
+  /* side-nav__label clips its content; the tooltips need to escape */
+  overflow: visible;
+}
+
+/* Sliding indicator behind the active mode */
+#alfred-theme-toggle::before {
+  content: '';
+  position: absolute;
+  inset-block: 2px;
+  left: 2px;
+  width: calc((100% - 4px) / 3);
+  border-radius: var(--ui-border-radius-150);
+  background: var(--ui-control-bg-selected);
+  transform: translateX(calc(var(--alfred-theme-index, 0) * 100%));
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#alfred-theme-toggle button {
+  position: relative;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 3px 0;
+  border: 0;
+  border-radius: var(--ui-border-radius-150);
+  background: none;
+  color: var(--ui-text-tertiary);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+#alfred-theme-toggle button:hover {
+  color: var(--ui-text-secondary);
+}
+
+#alfred-theme-toggle button[aria-checked='true'] {
+  color: var(--ui-text);
+}
+
+#alfred-theme-toggle button:focus-visible {
+  outline: var(--ui-border-width-050) solid var(--ui-border-focus);
+  outline-offset: -2px;
+}
+
+/* Tooltip, opening upward since the toggle sits at the bottom of the nav */
+#alfred-theme-toggle button::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 50;
+  padding: 4px 8px;
+  border: var(--ui-border-width-025) solid var(--ui-border);
+  border-radius: var(--ui-border-radius-200);
+  background: var(--ui-tooltip-bg);
+  color: var(--ui-text);
+  font: var(--ui-text-body-sm-font);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 2px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+#alfred-theme-toggle button:hover::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #alfred-theme-toggle::before,
+  #alfred-theme-toggle button::after {
+    transition: none;
+  }
+}
+
+/* Light mode, modeled on the Shopify admin: the app frame stays on the dark
+   palette (index.ts pins its data-altair-theme) so the nav reads as a dark
+   rail, and the main area becomes a rounded light canvas inset from it. */
+html.light .altair-app-frame__main {
+  background: var(--ui-bg);
+  /* Otherwise inherits the dark frame's white text */
+  color: var(--ui-text);
+}
+
+/* The rail takes the dark nav panel color, not the darker page background */
+html.light .altair-app-frame {
+  background: var(--altair-ink-surface-1);
+}
+
+/* Dark fills on light surfaces reuse the same dark dashboard palette */
+html.light [data-altair-theme='light'] {
+  --ui-button-primary-bg: var(--altair-ink-surface-1);
+  --ui-button-primary-bg-hover: var(--altair-button-secondary-hover);
+  --ui-button-primary-bg-active: var(--altair-button-secondary-active);
+  --ui-choice-bg-checked: var(--altair-ink-surface-1);
+  --ui-choice-border-checked: var(--altair-ink-surface-1);
+}
+
+/* Below 48rem the nav is a drawer that needs its own background */
+@media (min-width: 48rem) {
+  html.light .altair-app-frame__main {
+    border-radius: 16px;
+    margin: 4px 4px 4px 0;
+  }
+
+  html.light .altair-app-frame__nav .side-nav {
+    background: transparent;
+    border-color: transparent;
+  }
+}
+
+/* Credential fields force --ui-field-bg via bg-ui-field-bg!, which is white in
+   light mode and vanishes on white cards. Use Altair's own readonly fill. */
+html.light .field__input[readonly] {
+  background-color: var(--ui-field-bg-readonly) !important;
+}
+
+/* The catalogs page is legacy Tailwind markup with dark colors hardcoded as
+   arbitrary values. Remap each one to the matching Altair light token. */
+html.light .legacy-catalogs-scope {
+  :is(
+    [class~='text-white'],
+    [class~='text-[#e7ece9]'],
+    [class~='text-[#dbe5df]'],
+    [class~='text-[#d7e0dc]'],
+    [class~='text-[#c9d4cf]'],
+    [class~='text-[#c7d0ca]'],
+    [class~='hover:text-white']:hover
+  ) {
+    color: var(--ui-text);
+  }
+
+  :is([class~='text-[#8d9a94]'], [class~='text-[#7e8c85]'], [class~='text-[#8ea099]'], [class~='text-[#74827b]']) {
+    color: var(--ui-text-secondary);
+  }
+
+  [class~='placeholder:text-[#74827b]']::placeholder {
+    color: var(--ui-text-tertiary);
+  }
+
+  :is([class~='bg-[#0d1713]'], [class~='bg-[#0c1612]']) {
+    background-color: var(--ui-surface);
+  }
+
+  /* Panels carry a heavy dark drop shadow; the border is enough on light */
+  [class~='bg-[#0d1713]'] {
+    box-shadow: none;
+  }
+
+  :is([class~='border-white/10'], [class~='border-[#8ea099]']) {
+    border-color: var(--ui-border);
+  }
+
+  :is(
+    [class~='focus:border-white/25']:focus,
+    [class~='focus:border-[#a9b8b0]']:focus,
+    [class~='focus-within:border-[#a9b8b0]']:focus-within
+  ) {
+    border-color: var(--ui-field-border-focus);
+  }
+
+  /* Fields and select buttons */
+  :is([class~='bg-white/[0.05]'], [class~='bg-white/[0.06]']) {
+    background-color: var(--ui-field-bg);
+  }
+
+  :is([class~='bg-white/[0.04]'], [class~='bg-white/[0.08]']) {
+    background-color: var(--ui-control-bg-selected);
+  }
+
+  :is(
+    [class~='hover:bg-white/[0.04]'],
+    [class~='hover:bg-white/[0.06]'],
+    [class~='hover:bg-white/[0.08]'],
+    [class~='hover:bg-white/[0.09]']
+  ):hover,
+  :is([class~='focus:bg-white/[0.08]']:focus, [class~='focus-within:bg-white/[0.08]']:focus-within) {
+    background-color: var(--ui-control-bg-hover);
+  }
+
+  /* Inverted primary buttons: white on dark becomes dark on light */
+  :is([class~='bg-white'][class~='text-[#0f1b17]'], [class~='bg-[#f4f7f5]']) {
+    background-color: var(--ui-button-primary-bg);
+    color: var(--ui-button-primary-text);
+  }
+
+  [class~='hover:bg-white']:hover {
+    background-color: var(--ui-button-primary-bg-hover);
+    color: var(--ui-button-primary-text);
+  }
+
+  [class~='accent-white'] {
+    accent-color: var(--ui-choice-bg-checked);
+  }
+
+  /* Category tree picker */
+  .tx-row {
+    color: var(--ui-text);
+  }
+
+  .tx-caret {
+    color: var(--ui-text-secondary);
+  }
+
+  .tx-cb {
+    border-color: var(--ui-choice-border);
+  }
+
+  .tx-cb:is(:checked, :indeterminate) {
+    border-color: var(--ui-choice-border-checked);
+    background-color: var(--ui-choice-bg-checked);
+  }
+
+  .tx-cb:is(:checked, :indeterminate)::after {
+    color: var(--ui-choice-icon-checked);
+  }
+
+  [class~='aria-selected:border-[#4BFE85]'][aria-selected='true'] {
+    border-color: var(--ui-accent);
+  }
+
+  [class~='ring-white/40'] {
+    --tw-ring-color: var(--ui-border-strong);
+  }
+
+  [class~='bg-[#3a1f22]'] {
+    background-color: var(--ui-bg-fill-critical);
+    border-color: var(--ui-border-critical);
+    color: var(--ui-text-critical);
+  }
+
+  [class~='hover:bg-[#4a2528]']:hover {
+    background-color: var(--ui-bg-fill-critical);
+  }
+
+  :is(.token.punctuation, .token.operator) {
+    color: var(--ui-text-secondary);
+  }
+
+  .token.number {
+    color: var(--ui-text-success);
+  }
+}

@@ -28,6 +28,17 @@ This project uses WXT - a modern framework for building browser extensions.
 - Options page uses Shopify Polaris web components (custom elements, not Svelte
   components) with polyfill helpers in `utils/polaris.polyfill.ts`
 
+## Dev Dashboard Theme
+
+`entrypoints/dev-dashboard.content/` adds a light/dark/system toggle to
+dev.shopify.com, which runs Shopify's Altair design system: `--ui-*` tokens
+resolve from the nearest `data-altair-theme` attribute (`body`,
+`.altair-app-frame`). Light mode keeps the dashboard's identity: `nav.side-nav`
+stays pinned to dark, and dark fills (primary buttons) come from the dark
+palette (`--altair-button-secondary*`), not the admin's neutrals. The
+catalogs page is legacy Tailwind with hardcoded dark colors, remapped to Altair
+tokens in `style.css`.
+
 ## Visual Test Pages
 
 `bun run testpages` serves `test-pages/` at http://localhost:4242 — a fixture
