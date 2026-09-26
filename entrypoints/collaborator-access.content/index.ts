@@ -34,10 +34,22 @@ function isCollaborationNewPage(): boolean {
   return window.location.pathname.includes('/stores/collaborations/new');
 }
 
-async function tryInject(ctx: ContentScriptContext) {
-  if (!isCollaborationNewPage()) return;
-  if (document.getElementById(ALFRED_SENTINEL_ID)) return;
+// The sentinel only exists once inject() has waited for the submit button, so
+// this stops observer batches from starting more injections in the meantime.
+let injecting = false;
 
+async function tryInject(ctx: ContentScriptContext) {
+  if (injecting || !isCollaborationNewPage()) return;
+  if (document.getElementById(ALFRED_SENTINEL_ID)) return;
+  injecting = true;
+  try {
+    await inject(ctx);
+  } finally {
+    injecting = false;
+  }
+}
+
+async function inject(ctx: ContentScriptContext) {
   let app: Record<string, unknown> | undefined;
 
   const ui = createIntegratedUi(ctx, {
@@ -75,12 +87,17 @@ async function tryInject(ctx: ContentScriptContext) {
     const bottomSubmitBtn = altairButton('Request access', 'primary');
     bottomSubmitBtn.type = 'submit';
     bottomSubmitBtn.setAttribute('form', 'collaboration-request-form');
-    bottomSubmitBtn.disabled = submitBtn.disabled;
-
+    // :disabled also covers the form's disabled fieldset, which the button's
+    // own disabled property doesn't reflect.
     const syncDisabled = () => {
-      bottomSubmitBtn.disabled = submitBtn.disabled;
+      bottomSubmitBtn.disabled = submitBtn.matches(':disabled');
     };
-    new MutationObserver(syncDisabled).observe(submitBtn, { attributes: true, attributeFilter: ['disabled'] });
+    syncDisabled();
+    new MutationObserver(syncDisabled).observe(form, {
+      attributes: true,
+      attributeFilter: ['disabled'],
+      subtree: true
+    });
 
     bottomBar.appendChild(bottomSaveBtn);
     bottomBar.appendChild(bottomSubmitBtn);

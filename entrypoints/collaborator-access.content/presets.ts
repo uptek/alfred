@@ -413,12 +413,13 @@ const SUBHEADING_SELECTOR = '[data-permissions-tree-target="panel"] > div > div'
 const HIDDEN_CLASS = 'alfred-perm-filter-hidden';
 
 /**
- * Injects a search input above the permissions card and wires up
+ * Injects a search input at the top of the permissions card and wires up
  * real-time filtering. Returns a controller to clear or tear down the search.
  */
 export function setupPermissionSearch(): PermissionSearchController | null {
   const permissionsCard = document.querySelector<HTMLElement>('[data-controller="permissions-tree"]');
-  if (!permissionsCard) return null;
+  const cardContent = permissionsCard?.querySelector('.altair-card__content');
+  if (!permissionsCard || !cardContent) return null;
 
   const PERM_SELECTOR = 'input[type="checkbox"][name="permissions[]"]';
   const autoExpandedSections = new Set<string>();
@@ -461,11 +462,11 @@ export function setupPermissionSearch(): PermissionSearchController | null {
   control.appendChild(clearBtn);
   wrapper.appendChild(control);
   wrapper.appendChild(countLabel);
-  permissionsCard.querySelector('.altair-card__content')?.prepend(wrapper);
+  cardContent.prepend(wrapper);
 
-  const selectAllBtn = permissionsCard
-    .closest('[data-controller="permissions-tree"]')
-    ?.querySelector<HTMLButtonElement>('[data-permissions-tree-target="selectAllButton"]');
+  const selectAllBtn = permissionsCard.querySelector<HTMLButtonElement>(
+    '[data-permissions-tree-target="selectAllButton"]'
+  );
   if (selectAllBtn) {
     // Same plain Altair button as the page's own "Select all"
     const plainButton = (text: string) => {
@@ -635,6 +636,9 @@ export function setupPermissionSearch(): PermissionSearchController | null {
   clearBtn.addEventListener('click', clearFilter);
 
   input.addEventListener('keydown', (e) => {
+    // The field sits inside the request form, where Enter would submit the
+    // access request
+    if (e.key === 'Enter') e.preventDefault();
     if (e.key === 'Escape') {
       clearFilter();
       input.blur();
@@ -766,7 +770,9 @@ export function createAdapter() {
     waitForSubmitEnabled(timeoutMs = 3000): Promise<boolean> {
       const button = document.querySelector<HTMLButtonElement>('#collaboration-request-submit-button');
       if (!button) return Promise.resolve(false);
-      if (!button.disabled) return Promise.resolve(true);
+      // :disabled also covers the form's disabled fieldset, which the button's
+      // own disabled property doesn't reflect
+      if (!button.matches(':disabled')) return Promise.resolve(true);
 
       return new Promise((resolve) => {
         let settled = false;
@@ -778,9 +784,9 @@ export function createAdapter() {
           resolve(value);
         };
         const observer = new MutationObserver(() => {
-          if (!button.disabled) finish(true);
+          if (!button.matches(':disabled')) finish(true);
         });
-        observer.observe(button, { attributes: true, attributeFilter: ['disabled'] });
+        observer.observe(button.form ?? button, { attributes: true, attributeFilter: ['disabled'], subtree: true });
         const timer = setTimeout(() => finish(false), timeoutMs);
       });
     },
@@ -791,7 +797,7 @@ export function createAdapter() {
      */
     submit(): boolean {
       const button = document.querySelector<HTMLButtonElement>('#collaboration-request-submit-button');
-      if (button && !button.disabled) {
+      if (button && !button.matches(':disabled')) {
         button.click();
         return true;
       }

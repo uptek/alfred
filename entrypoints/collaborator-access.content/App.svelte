@@ -35,6 +35,9 @@
   let hotlinkAutoSubmit = $state(false);
   let autoApplyAttempted = $state(false);
   let hotlinkDialog = $state<HTMLDialogElement>();
+  // Backdrop clicks close the dialog only when the press started there too, so
+  // a text selection dragged out of the panel doesn't
+  let pressedBackdrop = false;
   let searchController: PermissionSearchController | null = null;
 
   // Hotlink URLs reactively reflect the selected preset handle and the auto-submit checkbox.
@@ -394,7 +397,8 @@
   bind:this={hotlinkDialog}
   class="altair-modal__dialog"
   aria-labelledby="alfred-hotlink-title"
-  onclick={(e) => { if (e.target === e.currentTarget) hotlinkDialog?.close(); }}>
+  onpointerdown={(e) => { pressedBackdrop = e.target === e.currentTarget; }}
+  onclick={(e) => { if (pressedBackdrop && e.target === e.currentTarget) hotlinkDialog?.close(); }}>
   <div class="altair-modal__panel">
     <div class="altair-modal__header">
       <div class="altair-modal__heading">
@@ -520,16 +524,16 @@
                   </td>
                   <td class="altair-data-table__td">
                     {#if preset.customMessage}
-                      <span class="message-yes" aria-label="Has message">&#10003;</span>
+                      <span class="message-yes" role="img" aria-label="Has message">&#10003;</span>
                     {:else}
-                      <span class="message-no" aria-label="No message">&#10007;</span>
+                      <span class="message-no" role="img" aria-label="No message">&#10007;</span>
                     {/if}
                   </td>
                   <td class="altair-data-table__td altair-data-table__td--end">
                     <div class="actions row-actions">
                       {@render button('Apply', () => handleApplyPreset(preset), { icon: applyIcon })}
-                      {@render button('Edit preset', () => handleEditPreset(preset), { icon: editIcon, iconOnly: true })}
-                      {@render button('Delete preset', () => handleDeletePreset(preset.id), { variant: 'critical', icon: deleteIcon, iconOnly: true })}
+                      {@render button(`Edit ${preset.name}`, () => handleEditPreset(preset), { icon: editIcon, iconOnly: true })}
+                      {@render button(`Delete ${preset.name}`, () => handleDeletePreset(preset.id), { variant: 'critical', icon: deleteIcon, iconOnly: true })}
                       {@render button('Hotlink', () => handleOpenHotlinkModal(preset))}
                     </div>
                   </td>
