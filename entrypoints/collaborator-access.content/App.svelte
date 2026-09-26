@@ -9,19 +9,21 @@
   } from './presets';
   import { Toast } from '@/utils/toast';
   import type { PermissionPreset, PermissionSearchController } from './presets';
+  import type { Snippet } from 'svelte';
 
   const adapter = createAdapter();
 
-  // Subtle background-tint flash on a field whenever its bound value changes
+  // Subtle tint flash on a field whenever its bound value changes
   // (e.g. toggling auto-submit rewrites the hotlink URLs) — light UX feedback.
+  // Painted as an inset shadow because readonly field backgrounds are pinned.
   function flashOnChange(node: HTMLElement, _value: string) {
     return {
       update() {
         node.style.transition = 'none';
-        node.style.backgroundColor = 'rgba(67, 179, 142, 0.22)';
+        node.style.boxShadow = 'inset 0 0 0 100vmax rgba(67, 179, 142, 0.22)';
         void node.offsetWidth; // force reflow so the fade restarts each time
-        node.style.transition = 'background-color 1000ms ease-out';
-        node.style.backgroundColor = '';
+        node.style.transition = 'box-shadow 1000ms ease-out';
+        node.style.boxShadow = '';
       }
     };
   }
@@ -32,7 +34,7 @@
   let hotlinkHandle = $state('');
   let hotlinkAutoSubmit = $state(false);
   let autoApplyAttempted = $state(false);
-  let showHotlinkModal = $state(false);
+  let hotlinkDialog = $state<HTMLDialogElement>();
   let searchController: PermissionSearchController | null = null;
 
   // Hotlink URLs reactively reflect the selected preset handle and the auto-submit checkbox.
@@ -222,14 +224,21 @@
   function handleOpenHotlinkModal(preset: PermissionPreset) {
     hotlinkHandle = preset.handle;
     hotlinkAutoSubmit = false;
-    showHotlinkModal = true;
+    hotlinkDialog?.showModal();
   }
 
-  /** Copies the current hotlink URL to the clipboard. */
-  async function handleCopyHotlinkUrl() {
-    if (!hotlinkUrl) return;
+  /** Label of the hotlink URL field whose copy button shows the copied state. */
+  let copiedField = $state<string | null>(null);
+  let copiedTimer: ReturnType<typeof setTimeout>;
+
+  /** Copies a hotlink URL and flags its button as copied for 2s, like the dashboard's copy buttons. */
+  async function copyHotlinkUrl(url: string, field: string) {
+    if (!url) return;
     try {
-      await navigator.clipboard.writeText(hotlinkUrl);
+      await navigator.clipboard.writeText(url);
+      copiedField = field;
+      clearTimeout(copiedTimer);
+      copiedTimer = setTimeout(() => (copiedField = null), 2000);
       Toast.success('URL copied');
     } catch (error) {
       console.error('Failed to copy hotlink URL:', error);
@@ -293,191 +302,327 @@
   }
 </script>
 
-{#snippet checkmark(checked: boolean, onchange: (e: Event) => void, extraClass: string = '')}
-  <span class="relative inline-flex h-4 w-4 shrink-0 items-center justify-center {extraClass}">
-    <input type="checkbox" class="checkbox peer absolute inset-0 m-0" {checked} {onchange} />
-    <svg viewBox="0 0 20 20" width="16" height="16" class="icon success hidden peer-checked:block pointer-events-none absolute inset-0">
-      <path fill-rule="evenodd" d="M14.03 7.22a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-2.25-2.25a.75.75 0 1 1 1.06-1.06l1.72 1.72 3.97-3.97a.75.75 0 0 1 1.06 0Z"></path>
-    </svg>
-  </span>
+{#snippet checkmark(checked: boolean, onchange: (e: Event) => void, ariaLabel: string)}
+  <label class="choice-checkbox-container">
+    <input type="checkbox" class="choice-input-sr-only" {checked} {onchange} aria-label={ariaLabel} />
+    <span class="choice-checkbox-indicator" aria-hidden="true">
+      <span class="choice-checkbox-check">{@render checkIcon()}</span>
+    </span>
+  </label>
 {/snippet}
 
-{#if showHotlinkModal}
-<div
-  style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);"
-  onclick={(e) => { if (e.target === e.currentTarget) showHotlinkModal = false; }}
-  onkeydown={(e) => { if (e.key === 'Escape') showHotlinkModal = false; }}
-  role="dialog"
-  tabindex="-1"
->
-  <div class="card p-6" style="max-width:500px;width:100%;">
-    <h2 class="text-heading-md font-bold mb-4">Preset hotlink</h2>
-    <p class="text-body-sm mb-3">
-      Auto-apply this preset using the URL parameter
-      <code class="font-mono text-caption">alfred_preset={hotlinkHandle}</code>.
-      Use it as a bookmark, a shared link, or a platform integration.
-    </p>
-    <p class="text-body-sm text-text-subdued mb-4">
-      <em>Note: Renaming the preset changes the handle and breaks existing hotlinks.</em>
-    </p>
-    <label class="flex items-start gap-2 cursor-pointer mb-4">
-      {@render checkmark(hotlinkAutoSubmit, (e) => { hotlinkAutoSubmit = (e.target as HTMLInputElement).checked; }, 'mt-0.5')}
-      <span class="text-body-sm">
-        <strong>Auto-submit the request</strong>
-        <span class="block text-text-subdued text-body-sm mt-1">
-          When this hotlink is opened, the permissions and message are filled in and the access request is submitted automatically. Leave unchecked to review the request before submitting it yourself.
+<!-- Markup mirrors the dashboard's Altair Button so it themes with the page -->
+{#snippet button(label: string, onclick: () => void, opts: { variant?: 'primary' | 'secondary' | 'critical'; size?: 'micro' | 'default'; icon?: Snippet; iconOnly?: boolean } = {})}
+  {@const variant = opts.variant ?? 'secondary'}
+  {@const size = opts.size ?? 'micro'}
+  <button
+    type="button"
+    class="altair-button altair-button--{variant}"
+    class:altair-button--micro={size === 'micro'}
+    class:altair-button--icon-only={opts.iconOnly}
+    class:altair-button--with-leading-icon={opts.icon && !opts.iconOnly}
+    data-altair-component="Button"
+    data-altair-variant={variant}
+    data-altair-size={size}
+    data-state="idle"
+    aria-label={opts.iconOnly ? label : undefined}
+    {onclick}>
+    <span class="altair-button__content">
+      {#if opts.icon}
+        <span class="altair-button__icon" data-altair-slot="leading" aria-hidden="true">
+          <span class="altair-icon altair-icon--small">{@render opts.icon()}</span>
+        </span>
+      {/if}
+      {#if !opts.iconOnly}<span class="altair-button__label">{label}</span>{/if}
+    </span>
+  </button>
+{/snippet}
+
+{#snippet checkIcon()}
+  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.78 5.97a.75.75 0 0 1 0 1.06l-6.5 6.5a.75.75 0 0 1-1.06 0l-3.25-3.25a.75.75 0 1 1 1.06-1.06l2.72 2.72 5.97-5.97a.75.75 0 0 1 1.06 0Z"></path></svg>
+{/snippet}
+
+{#snippet applyIcon()}
+  <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 15a7 7 0 1 0 0-14 7 7 0 0 0 0 14m3.079-8.523a.75.75 0 1 0-1.158-.954l-2.858 3.47-.939-1.409a.75.75 0 0 0-1.248.832l1.21 1.815c.042.063.097.146.153.215.062.078.18.21.371.297a1 1 0 0 0 .728.037 1 1 0 0 0 .4-.258c.062-.063.125-.14.173-.198z"></path></svg>
+{/snippet}
+
+{#snippet editIcon()}
+  <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M13.655 2.344a2.694 2.694 0 0 0-3.81 0l-.599.599-.009-.009-1.06 1.06.009.01-5.88 5.88a2.75 2.75 0 0 0-.806 1.944v1.922a.75.75 0 0 0 .75.75h1.922a2.75 2.75 0 0 0 1.944-.806l7.54-7.54a2.694 2.694 0 0 0 0-3.81Zm-4.409 2.72-5.88 5.88a1.25 1.25 0 0 0-.366.884v1.172h1.172c.331 0 .65-.132.883-.366l5.88-5.88zm2.75.629.599-.599a1.196 1.196 0 0 0-1.69-1.69l-.598.6z"></path></svg>
+{/snippet}
+
+{#snippet deleteIcon()}
+  <svg viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 6.25a.75.75 0 0 1 .75.75v4.25a.75.75 0 0 1-1.5 0v-4.25a.75.75 0 0 1 .75-.75"></path><path d="M7.25 7a.75.75 0 0 0-1.5 0v4.25a.75.75 0 0 0 1.5 0z"></path><path fill-rule="evenodd" d="M5.25 3.25a2.75 2.75 0 1 1 5.5 0h3a.75.75 0 0 1 0 1.5h-.75v5.45c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311c-.642.327-1.482.327-3.162.327h-.4c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311c-.327-.642-.327-1.482-.327-3.162v-5.45h-.75a.75.75 0 0 1 0-1.5zm1.5 0a1.25 1.25 0 0 1 2.5 0zm-2.25 1.5h7v5.45c0 .865-.001 1.423-.036 1.848-.033.408-.09.559-.128.633a1.5 1.5 0 0 1-.655.655c-.074.038-.225.095-.633.128-.425.035-.983.036-1.848.036h-.4c-.865 0-1.423-.001-1.848-.036-.408-.033-.559-.09-.633-.128a1.5 1.5 0 0 1-.656-.655c-.037-.074-.094-.225-.127-.633-.035-.425-.036-.983-.036-1.848z"></path></svg>
+{/snippet}
+
+{#snippet urlField(value: string, ariaLabel: string)}
+  {@const copied = copiedField === ariaLabel}
+  <div class="url-row">
+    <div class="field">
+      <div class="field__control">
+        <input type="text" class="field__input font-mono" {value} use:flashOnChange={value} aria-label={ariaLabel} readonly />
+      </div>
+    </div>
+    <!-- The dashboard's own copy button: its CSS swaps the icons while data-copied is set -->
+    <button
+      type="button"
+      class="altair-button altair-button--secondary altair-button--icon-only developer-dashboard-copy-button"
+      data-altair-component="Button"
+      data-altair-variant="secondary"
+      data-altair-size="default"
+      data-state="idle"
+      data-copied={copied || undefined}
+      aria-label={copied ? 'Copied to clipboard' : `Copy ${ariaLabel}`}
+      onclick={() => copyHotlinkUrl(value, ariaLabel)}>
+      <span class="altair-button__content">
+        <span class="altair-button__label">
+          <span class="copy-icons" aria-hidden="true">
+            <span class="altair-icon altair-icon--small developer-dashboard-copy-button__icon developer-dashboard-copy-button__copy-icon">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="9" height="9" rx="2"></rect><path d="M5 13h-.5A1.5 1.5 0 0 1 3 11.5v-7A1.5 1.5 0 0 1 4.5 3h7A1.5 1.5 0 0 1 13 4.5V5"></path></svg>
+            </span>
+            <span class="altair-icon altair-icon--small developer-dashboard-copy-button__icon developer-dashboard-copy-button__check-icon">
+              {@render checkIcon()}
+            </span>
+          </span>
         </span>
       </span>
-    </label>
-    <div class="flex gap-2 items-center mb-4">
-      <input
-        type="text"
-        class="w-full h-8 rounded bg-background-surface-default px-3 text-body-sm"
-        style="border:1px solid #59767A;flex:1;"
-        value={hotlinkBareUrl}
-        use:flashOnChange={hotlinkBareUrl}
-        readonly
-      >
-      <button class="button button-variant-secondary button-size-medium button-icon-only" onclick={() => navigator.clipboard.writeText(hotlinkBareUrl).then(() => Toast.success('URL copied')).catch(() => Toast.error('Failed to copy URL'))} aria-label="Copy URL">
-        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path fill-rule="evenodd" d="M6.515 4.75a2 2 0 0 1 1.985-1.75h3a2 2 0 0 1 1.985 1.75h.265a2.25 2.25 0 0 1 2.25 2.25v7.75a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-7.75a2.25 2.25 0 0 1 2.25-2.25h.265Zm1.985-.25h3a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5Zm-1.987 1.73.002.02h-.265a.75.75 0 0 0-.75.75v7.75c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75v-7.75a.75.75 0 0 0-.75-.75h-.265a2 2 0 0 1-1.985 1.75h-3a2 2 0 0 1-1.987-1.77Z"></path></svg>
-      </button>
-    </div>
-    <div style="border-top:1px solid var(--color-border-default,#333);margin-bottom:16px;"></div>
-    <p class="text-body-sm mb-3">
-      <strong>Mantle</strong>: Use as a Mantle custom action by pasting the following URL into the custom action's URL field.
-    </p>
-    <div class="flex gap-2 items-center">
-      <input
-        type="text"
-        class="w-full h-8 rounded bg-background-surface-default px-3 text-body-sm"
-        style="border:1px solid #59767A;flex:1;"
-        value={hotlinkUrl}
-        use:flashOnChange={hotlinkUrl}
-        readonly
-      >
-      <button class="button button-variant-secondary button-size-medium button-icon-only" onclick={handleCopyHotlinkUrl} aria-label="Copy Mantle URL">
-        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path fill-rule="evenodd" d="M6.515 4.75a2 2 0 0 1 1.985-1.75h3a2 2 0 0 1 1.985 1.75h.265a2.25 2.25 0 0 1 2.25 2.25v7.75a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-7.75a2.25 2.25 0 0 1 2.25-2.25h.265Zm1.985-.25h3a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5Zm-1.987 1.73.002.02h-.265a.75.75 0 0 0-.75.75v7.75c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75v-7.75a.75.75 0 0 0-.75-.75h-.265a2 2 0 0 1-1.985 1.75h-3a2 2 0 0 1-1.987-1.77Z"></path></svg>
-      </button>
-    </div>
-    <div class="flex justify-end mt-4">
-      <button class="button button-variant-secondary button-size-medium" onclick={() => showHotlinkModal = false}>
-        Close
-      </button>
-    </div>
-  </div>
-</div>
-{/if}
-
-<div class="card p-4 w-full max-w-[768px] mb-4">
-  <div class="block text-heading-xs mb-2">
-    <strong>Presets</strong>
-  </div>
-
-  <div class="flex justify-between items-center mb-3">
-    <div class="flex gap-2">
-      <button class="button button-variant-critical button-size-medium" onclick={handleDeleteMultiple}>
-        {checkedPresets.size === 0 ? 'Delete all' : `Delete ${checkedPresets.size} selected`}
-      </button>
-      <button class="button button-variant-secondary button-size-medium" onclick={() => exportPresets(checkedPresets.size === 0 ? presets : presets.filter((p) => checkedPresets.has(p.id)))}>
-        {checkedPresets.size === 0 ? 'Export all' : `Export ${checkedPresets.size} selected`}
-      </button>
-      <button class="button button-variant-secondary button-size-medium" onclick={handleImport}>
-        Import
-      </button>
-    </div>
-    <button class="button button-variant-secondary button-size-medium" onclick={handleSavePreset}>
-      Save preset
     </button>
   </div>
+{/snippet}
 
-  <div class="rounded-md border border-border-default overflow-hidden bg-background-surface-default">
-    <table style="width:100%;border-collapse:collapse;">
-      <thead>
-        <tr style="border-bottom:1px solid var(--color-border-default,#333);">
-          <th style="padding:8px 12px;text-align:left;width:40px;">
-            {#if presets.length > 0}
-              {@render checkmark(
-                presets.length > 0 && checkedPresets.size === presets.length,
-                (e) => {
-                  if ((e.target as HTMLInputElement).checked) {
-                    checkedPresets = new Set(presets.map((p) => p.id));
-                  } else {
-                    checkedPresets = new Set();
-                  }
-                }
-              )}
-            {/if}
-          </th>
-          <th class="text-heading-xs" style="padding:8px 12px;text-align:left;">Name</th>
-          <th class="text-heading-xs" style="padding:8px 12px;text-align:left;">Handle</th>
-          <th class="text-heading-xs" style="padding:8px 12px;text-align:left;">Permissions</th>
-          <th class="text-heading-xs" style="padding:8px 12px;text-align:left;">Message</th>
-          <th class="text-heading-xs" style="padding:8px 12px;text-align:left;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#if presets.length === 0}
-          <tr>
-            <td colspan="6" class="text-body-sm text-text-subdued" style="padding:12px;">
-              No permissions presets saved yet.
-            </td>
-          </tr>
-        {:else}
-          {#each presets as preset (preset.id)}
-            <tr style="border-bottom:1px solid var(--color-border-default,#333);">
-              <td style="padding:8px 12px;">
-                {@render checkmark(
-                  checkedPresets.has(preset.id),
-                  (e) => {
-                    const newChecked = new Set(checkedPresets);
-                    if ((e.target as HTMLInputElement).checked) {
-                      newChecked.add(preset.id);
-                    } else {
-                      newChecked.delete(preset.id);
-                    }
-                    checkedPresets = newChecked;
-                  }
-                )}
-              </td>
-              <td class="text-body-sm" style="padding:8px 12px;">{preset.name}</td>
-              <td style="padding:8px 12px;">
-                <code class="font-mono text-caption text-text-subdued">{preset.handle}</code>
-              </td>
-              <td class="text-body-sm" style="padding:8px 12px;">
-                {(Array.isArray(preset.permissions) ? preset.permissions : []).length}
-              </td>
-              <td style="padding:8px 12px;text-align:center;">
-                {#if preset.customMessage}
-                  <span style="color:#43B38E;">&#10003;</span>
-                {:else}
-                  <span class="text-text-subdued">&#10007;</span>
-                {/if}
-              </td>
-              <td style="padding:8px 12px;">
-                <div class="flex gap-2 items-center flex-wrap">
-                  <button class="button button-variant-primary button-size-medium" onclick={() => handleApplyPreset(preset)}>
-                    <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path fill-rule="evenodd" d="M8 15a7 7 0 1 0 0-14 7 7 0 0 0 0 14m3.079-8.523a.75.75 0 1 0-1.158-.954l-2.858 3.47-.939-1.409a.75.75 0 0 0-1.248.832l1.21 1.815c.042.063.097.146.153.215.062.078.18.21.371.297a1 1 0 0 0 .728.037 1 1 0 0 0 .4-.258c.062-.063.125-.14.173-.198z"></path></svg>
-                    Apply
-                  </button>
-                  <button class="button button-variant-secondary button-size-medium button-icon-only" onclick={() => handleEditPreset(preset)} aria-label="Edit preset">
-                    <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path fill-rule="evenodd" d="M13.655 2.344a2.694 2.694 0 0 0-3.81 0l-.599.599-.009-.009-1.06 1.06.009.01-5.88 5.88a2.75 2.75 0 0 0-.806 1.944v1.922a.75.75 0 0 0 .75.75h1.922a2.75 2.75 0 0 0 1.944-.806l7.54-7.54a2.694 2.694 0 0 0 0-3.81Zm-4.409 2.72-5.88 5.88a1.25 1.25 0 0 0-.366.884v1.172h1.172c.331 0 .65-.132.883-.366l5.88-5.88zm2.75.629.599-.599a1.196 1.196 0 0 0-1.69-1.69l-.598.6z"></path></svg>
-                  </button>
-                  <button class="button button-variant-critical button-size-medium button-icon-only" onclick={() => handleDeletePreset(preset.id)} aria-label="Delete preset">
-                    <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M9.5 6.25a.75.75 0 0 1 .75.75v4.25a.75.75 0 0 1-1.5 0v-4.25a.75.75 0 0 1 .75-.75"></path><path d="M7.25 7a.75.75 0 0 0-1.5 0v4.25a.75.75 0 0 0 1.5 0z"></path><path fill-rule="evenodd" d="M5.25 3.25a2.75 2.75 0 1 1 5.5 0h3a.75.75 0 0 1 0 1.5h-.75v5.45c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311c-.642.327-1.482.327-3.162.327h-.4c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311c-.327-.642-.327-1.482-.327-3.162v-5.45h-.75a.75.75 0 0 1 0-1.5zm1.5 0a1.25 1.25 0 0 1 2.5 0zm-2.25 1.5h7v5.45c0 .865-.001 1.423-.036 1.848-.033.408-.09.559-.128.633a1.5 1.5 0 0 1-.655.655c-.074.038-.225.095-.633.128-.425.035-.983.036-1.848.036h-.4c-.865 0-1.423-.001-1.848-.036-.408-.033-.559-.09-.633-.128a1.5 1.5 0 0 1-.656-.655c-.037-.074-.094-.225-.127-.633-.035-.425-.036-.983-.036-1.848z"></path></svg>
-                  </button>
-                  <button class="button button-variant-secondary button-size-medium" onclick={() => handleOpenHotlinkModal(preset)}>
-                    Hotlink
-                  </button>
-                </div>
-              </td>
-            </tr>
-          {/each}
-        {/if}
-      </tbody>
-    </table>
+<div class="altair-modal">
+<dialog
+  bind:this={hotlinkDialog}
+  class="altair-modal__dialog"
+  aria-labelledby="alfred-hotlink-title"
+  onclick={(e) => { if (e.target === e.currentTarget) hotlinkDialog?.close(); }}>
+  <div class="altair-modal__panel">
+    <div class="altair-modal__header">
+      <div class="altair-modal__heading">
+        <h2 class="altair-modal__title" id="alfred-hotlink-title">Preset hotlink</h2>
+      </div>
+      <button type="button" class="altair-modal__close" aria-label="Close" onclick={() => hotlinkDialog?.close()}>
+        <span class="altair-modal__close-glyph" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+        </span>
+      </button>
+    </div>
+    <div class="altair-modal__body">
+      <p class="altair-text" data-altair-role="body-minor" data-altair-tone="secondary">
+        Auto-apply this preset using the URL parameter
+        <code class="altair-text" data-altair-role="code" data-altair-tone="primary">alfred_preset={hotlinkHandle}</code>.
+        Use it as a bookmark, a shared link, or a platform integration.
+      </p>
+      <p class="altair-text" data-altair-role="body-minor" data-altair-tone="tertiary">
+        <em>Note: Renaming the preset changes the handle and breaks existing hotlinks.</em>
+      </p>
+      <label class="choice-checkbox-container">
+        <input
+          type="checkbox"
+          class="choice-input-sr-only"
+          checked={hotlinkAutoSubmit}
+          onchange={(e) => { hotlinkAutoSubmit = (e.target as HTMLInputElement).checked; }} />
+        <span class="choice-checkbox-indicator" aria-hidden="true">
+          <span class="choice-checkbox-check">{@render checkIcon()}</span>
+        </span>
+        <span class="choice-text">
+          <span class="choice-label">Auto-submit the request</span>
+          <span class="choice-description">
+            When this hotlink is opened, the permissions and message are filled in and the access request is submitted automatically. Leave unchecked to review the request before submitting it yourself.
+          </span>
+        </span>
+      </label>
+      {@render urlField(hotlinkBareUrl, 'URL')}
+      <hr class="divider" />
+      <p class="altair-text" data-altair-role="body-minor" data-altair-tone="secondary">
+        <strong>Mantle</strong>: Use as a Mantle custom action by pasting the following URL into the custom action's URL field.
+      </p>
+      {@render urlField(hotlinkUrl, 'Mantle URL')}
+    </div>
+    <div class="altair-modal__footer">
+      {@render button('Close', () => hotlinkDialog?.close(), { size: 'default' })}
+    </div>
+  </div>
+</dialog>
+</div>
+
+<div
+  class="altair-card"
+  data-altair-component="Card"
+  data-altair-tier="primary"
+  data-altair-padding="compact"
+  data-altair-radius="card"
+  data-altair-border="default">
+  <div class="altair-card__header" data-altair-part="header">
+    <h2 class="altair-card__title" data-altair-part="title">Presets</h2>
+    <div class="altair-card__action" data-altair-part="action">
+      <div class="actions">
+        {@render button(checkedPresets.size === 0 ? 'Delete all' : `Delete ${checkedPresets.size} selected`, handleDeleteMultiple, { variant: 'critical' })}
+        {@render button(checkedPresets.size === 0 ? 'Export all' : `Export ${checkedPresets.size} selected`, () => exportPresets(checkedPresets.size === 0 ? presets : presets.filter((p) => checkedPresets.has(p.id))))}
+        {@render button('Import', handleImport)}
+        {@render button('Save preset', handleSavePreset)}
+      </div>
+    </div>
   </div>
 
-  <div class="flex justify-end mt-3">
-    <CreditChip source="collaborator_access" variant="plain" />
+  <div class="altair-card__content" data-altair-part="content">
+    <div class="altair-data-table" data-altair-component="DataTable">
+      <div class="altair-data-table__scroller">
+        <table class="altair-data-table__table">
+          <thead>
+            <tr>
+              <th class="altair-data-table__select-cell">
+                {#if presets.length > 0}
+                  {@render checkmark(
+                    checkedPresets.size === presets.length,
+                    (e) => {
+                      checkedPresets = (e.target as HTMLInputElement).checked ? new Set(presets.map((p) => p.id)) : new Set();
+                    },
+                    'Select all presets'
+                  )}
+                {/if}
+              </th>
+              <th class="altair-data-table__th altair-data-table__th--start">Name</th>
+              <th class="altair-data-table__th altair-data-table__th--start">Handle</th>
+              <th class="altair-data-table__th altair-data-table__th--end">Permissions</th>
+              <th class="altair-data-table__th">Message</th>
+              <th class="altair-data-table__th altair-data-table__th--end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#if presets.length === 0}
+              <tr class="altair-data-table__row">
+                <td colspan="6" class="altair-data-table__td">No permissions presets saved yet.</td>
+              </tr>
+            {:else}
+              {#each presets as preset (preset.id)}
+                <tr class="altair-data-table__row" class:altair-data-table__row--selected={checkedPresets.has(preset.id)}>
+                  <td class="altair-data-table__select-cell">
+                    {@render checkmark(
+                      checkedPresets.has(preset.id),
+                      (e) => {
+                        const newChecked = new Set(checkedPresets);
+                        if ((e.target as HTMLInputElement).checked) {
+                          newChecked.add(preset.id);
+                        } else {
+                          newChecked.delete(preset.id);
+                        }
+                        checkedPresets = newChecked;
+                      },
+                      `Select ${preset.name}`
+                    )}
+                  </td>
+                  <td class="altair-data-table__td altair-data-table__td--primary altair-data-table__td--nowrap">{preset.name}</td>
+                  <td class="altair-data-table__td">
+                    <code class="altair-text" data-altair-role="code" data-altair-tone="secondary">{preset.handle}</code>
+                  </td>
+                  <td class="altair-data-table__td altair-data-table__td--end">
+                    {(Array.isArray(preset.permissions) ? preset.permissions : []).length}
+                  </td>
+                  <td class="altair-data-table__td">
+                    {#if preset.customMessage}
+                      <span class="message-yes" aria-label="Has message">&#10003;</span>
+                    {:else}
+                      <span class="message-no" aria-label="No message">&#10007;</span>
+                    {/if}
+                  </td>
+                  <td class="altair-data-table__td altair-data-table__td--end">
+                    <div class="actions row-actions">
+                      {@render button('Apply', () => handleApplyPreset(preset), { icon: applyIcon })}
+                      {@render button('Edit preset', () => handleEditPreset(preset), { icon: editIcon, iconOnly: true })}
+                      {@render button('Delete preset', () => handleDeletePreset(preset.id), { variant: 'critical', icon: deleteIcon, iconOnly: true })}
+                      {@render button('Hotlink', () => handleOpenHotlinkModal(preset))}
+                    </div>
+                  </td>
+                </tr>
+              {/each}
+            {/if}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="credit">
+      <CreditChip source="collaborator_access" variant="plain" />
+    </div>
   </div>
 </div>
+
+<style>
+  /* Same table treatment as the dashboard's Logs page: flush with the card
+     edges and a tinted header row */
+  .altair-data-table {
+    width: auto;
+    margin-inline: calc(-1 * var(--altair-card-padding));
+    border-inline: 0;
+    border-radius: 0;
+  }
+
+  .altair-data-table__scroller {
+    border-radius: 0;
+  }
+
+  thead tr {
+    background: var(--ui-surface-tertiary);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ui-size-200);
+  }
+
+  .row-actions {
+    flex-wrap: nowrap;
+  }
+
+  .credit {
+    display: flex;
+    justify-content: flex-end;
+    color: var(--ui-text-tertiary);
+    font: var(--ui-text-body-sm-font);
+  }
+
+  .message-yes {
+    color: var(--ui-text-success);
+  }
+
+  .message-no {
+    color: var(--ui-text-tertiary);
+  }
+
+  .choice-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-size-050);
+  }
+
+  .url-row {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-size-200);
+  }
+
+  .url-row .field {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Stacks the copy and check icons so they cross-fade in place */
+  .copy-icons {
+    display: inline-grid;
+    place-items: center;
+    vertical-align: middle;
+  }
+
+  .copy-icons > * {
+    grid-area: 1 / 1;
+  }
+
+  .divider {
+    margin: 0;
+    border: 0;
+    border-top: var(--ui-border-width-025) solid var(--ui-border);
+  }
+</style>

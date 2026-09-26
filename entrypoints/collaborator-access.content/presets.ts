@@ -406,12 +406,18 @@ export function importPresets(): Promise<number | null> {
 // Permission search filter (injected into the page's permissions card)
 // ---------------------------------------------------------------------------
 
+/** Visible text of a permission label or section header in the permissions tree. */
+const TEXT_SELECTOR = 'span.truncate';
+/** Subheadings are the non-label rows inside a section panel (e.g. "Abandoned checkouts"). */
+const SUBHEADING_SELECTOR = '[data-permissions-tree-target="panel"] > div > div';
+const HIDDEN_CLASS = 'alfred-perm-filter-hidden';
+
 /**
  * Injects a search input above the permissions card and wires up
  * real-time filtering. Returns a controller to clear or tear down the search.
  */
 export function setupPermissionSearch(): PermissionSearchController | null {
-  const permissionsCard = document.querySelector<HTMLElement>('.permissions-card');
+  const permissionsCard = document.querySelector<HTMLElement>('[data-controller="permissions-tree"]');
   if (!permissionsCard) return null;
 
   const PERM_SELECTOR = 'input[type="checkbox"][name="permissions[]"]';
@@ -421,66 +427,56 @@ export function setupPermissionSearch(): PermissionSearchController | null {
   const allLabels = permissionsCard.querySelectorAll<HTMLLabelElement>(`label:has(${PERM_SELECTOR})`);
   const totalCount = allLabels.length;
 
-  const transitionStyle = document.createElement('style');
-  transitionStyle.textContent = `
-    .alfred-perm-filter { transition: opacity 150ms ease, max-height 150ms ease; overflow: hidden; }
-    .alfred-perm-filter-hidden { opacity: 0; max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; margin: 0 !important; pointer-events: none; }
-    .alfred-section-filter { transition: opacity 150ms ease, max-height 200ms ease, padding 150ms ease, margin 150ms ease, border-width 150ms ease; overflow: hidden; }
-    .alfred-section-filter-hidden { opacity: 0; max-height: 0 !important; padding: 0 !important; margin: 0 !important; border-width: 0 !important; overflow: hidden; pointer-events: none; }
-  `;
-  document.head.appendChild(transitionStyle);
+  // Sections, subheadings, and labels sit in flex columns with `gap`, so
+  // hidden rows are removed from layout rather than collapsed in place.
+  const hiddenStyle = document.createElement('style');
+  hiddenStyle.textContent = `.${HIDDEN_CLASS} { display: none !important; }`;
+  document.head.appendChild(hiddenStyle);
 
-  allLabels.forEach((label) => label.classList.add('alfred-perm-filter'));
-
-  const sectionContainers = permissionsCard.querySelectorAll<HTMLElement>('[data-permissions-tree-target="header"]');
-  sectionContainers.forEach((header) => {
-    const container = header.closest('.bg-background-surface-default') as HTMLElement | null;
-    if (container) container.classList.add('alfred-section-filter');
-  });
-
+  // Built from the dashboard's Altair field markup so it themes with the page
   const wrapper = document.createElement('div');
-  wrapper.className = 'w-full max-w-[768px] mb-3';
-  wrapper.style.cssText = 'position:relative;';
+  wrapper.className = 'field';
+  wrapper.style.cssText = 'margin-bottom:var(--ui-size-300);';
+
+  const control = document.createElement('div');
+  control.className = 'field__control';
 
   const input = document.createElement('input');
   input.type = 'text';
   input.placeholder = 'Search permissions...';
-  input.className = 'w-full h-8 rounded bg-background-surface-default px-3 text-body-sm';
-  input.style.cssText = 'border:1px solid var(--color-border-default,#333);outline:none;';
+  input.className = 'field__input';
+  input.setAttribute('aria-label', 'Search permissions');
 
   const clearBtn = document.createElement('button');
   clearBtn.type = 'button';
   clearBtn.innerHTML = '&#10005;';
-  clearBtn.className = 'text-text-subdued';
+  clearBtn.setAttribute('aria-label', 'Clear search');
   clearBtn.style.cssText =
-    'position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;display:none;padding:2px 4px;';
+    'position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;display:none;padding:2px 4px;color:var(--ui-text-tertiary);';
 
   const countLabel = document.createElement('div');
-  countLabel.className = 'text-caption text-text-subdued';
-  countLabel.style.cssText = 'margin-top:4px;display:none;';
+  countLabel.style.cssText = 'display:none;font:var(--ui-text-body-sm-font);color:var(--ui-text-tertiary);';
 
-  wrapper.appendChild(input);
-  wrapper.appendChild(clearBtn);
+  control.appendChild(input);
+  control.appendChild(clearBtn);
+  wrapper.appendChild(control);
   wrapper.appendChild(countLabel);
-  permissionsCard.insertAdjacentElement('beforebegin', wrapper);
+  permissionsCard.querySelector('.altair-card__content')?.prepend(wrapper);
 
   const selectAllBtn = permissionsCard
     .closest('[data-controller="permissions-tree"]')
     ?.querySelector<HTMLButtonElement>('[data-permissions-tree-target="selectAllButton"]');
   if (selectAllBtn) {
-    const linkBtnStyle = 'border:none;background:none;padding:0;';
-
-    const expandAllBtn = document.createElement('button');
-    expandAllBtn.type = 'button';
-    expandAllBtn.textContent = 'Expand all';
-    expandAllBtn.className = 'text-link text-body-sm cursor-pointer';
-    expandAllBtn.style.cssText = linkBtnStyle;
-
-    const collapseAllBtn = document.createElement('button');
-    collapseAllBtn.type = 'button';
-    collapseAllBtn.textContent = 'Collapse all';
-    collapseAllBtn.className = 'text-link text-body-sm cursor-pointer';
-    collapseAllBtn.style.cssText = linkBtnStyle;
+    // Same plain Altair button as the page's own "Select all"
+    const plainButton = (text: string) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = text;
+      btn.className = 'altair-button altair-button--plain';
+      return btn;
+    };
+    const expandAllBtn = plainButton('Expand all');
+    const collapseAllBtn = plainButton('Collapse all');
 
     function clickSectionsByState(openState: string) {
       permissionsCard!.querySelectorAll<HTMLElement>('[data-permissions-tree-target="panel"]').forEach((panel) => {
@@ -561,7 +557,7 @@ export function setupPermissionSearch(): PermissionSearchController | null {
     const sectionTexts = new Map<string, string>();
     sectionHeaders.forEach((header) => {
       const sectionId = header.getAttribute('data-section-id') ?? '';
-      const headerText = header.querySelector('span.text-heading-xs')?.textContent?.toLowerCase() ?? '';
+      const headerText = header.querySelector(TEXT_SELECTOR)?.textContent?.toLowerCase() ?? '';
       sectionTexts.set(sectionId, headerText);
     });
 
@@ -574,53 +570,41 @@ export function setupPermissionSearch(): PermissionSearchController | null {
       if (!checkbox) return;
 
       const sectionId = checkbox.getAttribute('data-section-id') ?? '';
-      const labelText = label.querySelector('span.text-body-sm')?.textContent?.toLowerCase() ?? '';
+      const labelText = label.querySelector(TEXT_SELECTOR)?.textContent?.toLowerCase() ?? '';
       const sectionText = sectionTexts.get(sectionId) ?? '';
       const combined = sectionText + ' ' + labelText;
       const allWordsMatch = words.every((word) => combined.includes(word));
 
       if (allWordsMatch) {
-        label.classList.remove('alfred-perm-filter-hidden');
+        label.classList.remove(HIDDEN_CLASS);
         visibleCount++;
         sectionVisibleCounts.set(sectionId, (sectionVisibleCounts.get(sectionId) ?? 0) + 1);
       } else {
-        label.classList.add('alfred-perm-filter-hidden');
+        label.classList.add(HIDDEN_CLASS);
       }
     });
 
     // Hide subheadings whose following permission labels are all hidden.
     // Walk forward from each subheading div until the next subheading or end of container.
-    permissionsCard!
-      .querySelectorAll<HTMLElement>('[data-permissions-tree-target="panel"] div.py-2:has(> strong.text-heading-xs)')
-      .forEach((headingDiv) => {
-        let hasVisibleSibling = false;
-        let sibling = headingDiv.nextElementSibling as HTMLElement | null;
-        while (sibling) {
-          if (sibling.matches('div.py-2:has(> strong.text-heading-xs)')) break;
-          if (sibling.tagName === 'LABEL' && !sibling.classList.contains('alfred-perm-filter-hidden')) {
-            hasVisibleSibling = true;
-            break;
-          }
-          sibling = sibling.nextElementSibling as HTMLElement | null;
+    permissionsCard!.querySelectorAll<HTMLElement>(SUBHEADING_SELECTOR).forEach((headingDiv) => {
+      let hasVisibleSibling = false;
+      let sibling = headingDiv.nextElementSibling as HTMLElement | null;
+      while (sibling) {
+        if (sibling.tagName !== 'LABEL') break;
+        if (!sibling.classList.contains(HIDDEN_CLASS)) {
+          hasVisibleSibling = true;
+          break;
         }
-        if (hasVisibleSibling) {
-          headingDiv.classList.remove('alfred-perm-filter-hidden');
-        } else {
-          headingDiv.classList.add('alfred-perm-filter-hidden');
-        }
-      });
+        sibling = sibling.nextElementSibling as HTMLElement | null;
+      }
+      headingDiv.classList.toggle(HIDDEN_CLASS, !hasVisibleSibling);
+    });
 
     sectionHeaders.forEach((header) => {
       const sectionId = header.getAttribute('data-section-id') ?? '';
       const sectionHasVisiblePerms = (sectionVisibleCounts.get(sectionId) ?? 0) > 0;
-      const sectionContainer = header.closest('.bg-background-surface-default') as HTMLElement | null;
-
-      if (sectionHasVisiblePerms) {
-        if (sectionContainer) sectionContainer.classList.remove('alfred-section-filter-hidden');
-        expandSection(sectionId);
-      } else {
-        if (sectionContainer) sectionContainer.classList.add('alfred-section-filter-hidden');
-      }
+      header.parentElement?.classList.toggle(HIDDEN_CLASS, !sectionHasVisiblePerms);
+      if (sectionHasVisiblePerms) expandSection(sectionId);
     });
 
     clearBtn.style.display = 'block';
@@ -635,23 +619,10 @@ export function setupPermissionSearch(): PermissionSearchController | null {
     clearBtn.style.display = 'none';
     countLabel.style.display = 'none';
 
-    allLabels.forEach((label) => {
-      label.classList.remove('alfred-perm-filter-hidden');
-    });
-
-    // Restore subheadings
+    // Restore labels, subheadings, and sections
     permissionsCard!
-      .querySelectorAll<HTMLElement>('[data-permissions-tree-target="panel"] div > strong.text-heading-xs')
-      .forEach((heading) => {
-        const parentDiv = heading.closest('div.py-2');
-        if (parentDiv) (parentDiv as HTMLElement).classList.remove('alfred-perm-filter-hidden');
-      });
-
-    // Restore hidden sections
-    permissionsCard!.querySelectorAll<HTMLElement>('[data-permissions-tree-target="header"]').forEach((header) => {
-      const sectionContainer = header.closest('.bg-background-surface-default') as HTMLElement | null;
-      if (sectionContainer) sectionContainer.classList.remove('alfred-section-filter-hidden');
-    });
+      .querySelectorAll<HTMLElement>(`.${HIDDEN_CLASS}`)
+      .forEach((el) => el.classList.remove(HIDDEN_CLASS));
 
     collapseAutoExpanded();
   }
@@ -678,11 +649,7 @@ export function setupPermissionSearch(): PermissionSearchController | null {
       clearTimeout(debounceTimer);
       clearFilter();
       wrapper.remove();
-      transitionStyle.remove();
-      allLabels.forEach((label) => label.classList.remove('alfred-perm-filter'));
-      permissionsCard!.querySelectorAll<HTMLElement>('.alfred-section-filter').forEach((el) => {
-        el.classList.remove('alfred-section-filter');
-      });
+      hiddenStyle.remove();
     }
   };
 }
@@ -701,7 +668,7 @@ export function createAdapter() {
     getCheckedPermissions(): Permission[] {
       const permissions: Permission[] = [];
       document.querySelectorAll<HTMLInputElement>(`${PERM_SELECTOR}:checked`).forEach((checkbox) => {
-        const label = checkbox.closest('label')?.querySelector('span.text-body-sm')?.textContent ?? '';
+        const label = checkbox.closest('label')?.querySelector(TEXT_SELECTOR)?.textContent ?? '';
         permissions.push({ id: checkbox.value, label: label.trim() });
       });
       return permissions;
