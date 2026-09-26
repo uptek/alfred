@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026.09.26
+@ 2026-09-26
+
+### Light Mode for the New Dev Dashboard
+Shopify's redesigned Dev Dashboard broke Alfred's theme switcher, so it has been rebuilt for the new design. Pick Light, Dark or System from the switcher at the bottom of the sidebar. Light mode now looks like the Shopify admin: a dark sidebar beside a bright, rounded workspace, with dark buttons and checkboxes that match the dashboard's own palette. The switcher also works from the keyboard with the arrow keys.
+
+
+### Collapsible Dev Dashboard Sidebar
+Shrink the Dev Dashboard sidebar to a slim icon rail with the new button beside the logo, or press ⌘B (Ctrl+B on Windows). Pages inside an app get icons in the rail too, the theme switcher stays within reach, and your choice is remembered across tabs and visits.
+
+
+### Collaborator Presets, Refreshed
+The permission presets panel on the collaborator access request page now matches the new dashboard design. Copying a preset link shows the same checkmark animation as the dashboard's own copy buttons, and permission search now sits at the top of the permissions card.
+
+
 ## 2026.09.24
 @ 2026-09-24
 
