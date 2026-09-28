@@ -29,3 +29,42 @@ jobs:
       - run: bun run check
 
       - run: bun run build
+
+  publish:
+    needs: lint-and-build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency: chrome-web-store
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Publish only when the push bumps the version: the store rejects re-uploads of a published version.
+      - id: version
+        run: |
+          new=$(jq -r .version package.json)
+          old=$(git show ${{ github.event.before }}:package.json | jq -r .version)
+          if [ "$new" != "$old" ]; then echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+          echo "$old -> $new"
+
+      - if: steps.version.outputs.changed
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - if: steps.version.outputs.changed
+        run: bun install --frozen-lockfile
+
+      - if: steps.version.outputs.changed
+        run: bun run changelog:gen && bunx wxt zip
+
+      - if: steps.version.outputs.changed
+        run: bunx wxt submit --chrome-zip .output/*-chrome.zip
+        env:
+          CHROME_API_VERSION: v2
+          CHROME_CANCEL_PENDING: true
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}

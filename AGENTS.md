@@ -87,6 +87,10 @@ When bumping the version or updating the changelog, use the `/version-bump`
 skill, including inside `/ship`. It handles CalVer format, file updates, and
 changelog entries.
 
+Pushes to `main` that change the `package.json` version auto-publish to the
+Chrome Web Store (`publish` job in `.github/workflows/ci.yml`, `wxt submit` on
+CWS API v2 with a service account). Merges without a version bump skip it.
+
 ## Pruning Theme Data
 
 When `assets/data/themes.json` is updated with fresh scraped data, use the
