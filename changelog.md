@@ -15,6 +15,8 @@ Shrink the Dev Dashboard sidebar to a slim icon rail with the new button beside 
 The permission presets panel on the collaborator access request page now matches the new dashboard design. Copying a preset link shows the same checkmark animation as the dashboard's own copy buttons, and permission search now sits at the top of the permissions card.
 
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-dev-dashboard-v2026.09.26.mp4"></video>
+
 ## 2026.09.24
 @ 2026-09-24
 

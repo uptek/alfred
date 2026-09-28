@@ -26,6 +26,10 @@
       {
         "type": "paragraph",
         "content": "The permission presets panel on the collaborator access request page now matches the new dashboard design. Copying a preset link shows the same checkmark animation as the dashboard's own copy buttons, and permission search now sits at the top of the permissions card."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-dev-dashboard-v2026.09.26.mp4"
       }
     ]
   },
