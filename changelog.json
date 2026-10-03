@@ -1,5 +1,19 @@
 [
   {
+    "version": "2026.10.03",
+    "date": "2026-10-03",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Theme List Copy Buttons Are Back"
+      },
+      {
+        "type": "paragraph",
+        "content": "Shopify's redesigned themes page hid Alfred's copy buttons. They're back under each draft theme's actions: copy a theme's ID or its preview URL in one click. They now also appear when you open Themes from elsewhere in the admin, not just after a page refresh, and they fit the narrower layout on small screens."
+      }
+    ]
+  },
+  {
     "version": "2026.09.26",
     "date": "2026-09-26",
     "changes": [
