@@ -1,70 +1,36 @@
-## WXT Framework
+## WXT
 
-This project uses WXT - a modern framework for building browser extensions.
+- Auto-imported types can't be used as global types: import them with
+  `import type { ContentScriptContext } from '#imports'`
 
-### Documentation
+## Online Store Iframe
 
-- Official WXT documentation: https://wxt.dev/guide/installation.html
+Admin's Online Store pages (themes list, theme editor) render inside a
+cross-origin `online-store-web.shopifyapps.com` iframe, matched by
+`theme-customizer.content` with `allFrames`. Browser automation can't read its
+DOM, and opening its URL top-level redirects back to admin, so get markup by
+running `copy(document.body.outerHTML)` in DevTools with that frame selected.
+The iframe navigates client-side, so per-page features re-check the path on
+`wxt:locationchange`.
 
-### Key Points
+## Dev & Build
 
-- Content scripts are placed in `/entrypoints/` with `.content.ts` suffix
-- Background scripts use `.background.ts` suffix
-- WXT provides auto-imports for common utilities (defineContentScript, browser,
-  etc.)
-- TypeScript is fully supported with proper types
-- **UI framework: Svelte 5** with Runes API ($state, $props, $effect, $derived)
-- All UI components use `.svelte` files — no JSX/TSX
-- Uses `@wxt-dev/module-svelte` for WXT integration
-- Content scripts use `mount()`/`unmount()` from Svelte with `createIntegratedUi`
-  or `createShadowRootUi` from WXT
-- Options page settings use a module-level Svelte store
-  (`entrypoints/options/stores/settings.svelte.ts`)
-- Popup per-tab view state uses a module-level Svelte store
-  (`entrypoints/popup/stores/tabState.svelte.ts`) backed by
-  `chrome.storage.session`, keyed by tab id and stamped with the page URL. App
-  and tab components hydrate from it on open and push snapshots back; it busts on
-  navigation and is cleared on tab close via `tabs.onRemoved` in the background
-- Options page uses Shopify Polaris web components (custom elements, not Svelte
-  components) with polyfill helpers in `utils/polaris.polyfill.ts`
-
-## Dev Dashboard Theme
-
-`entrypoints/dev-dashboard.content/` adds a light/dark/system toggle to
-dev.shopify.com, which runs Shopify's Altair design system: `--ui-*` tokens
-resolve from the nearest `data-altair-theme` attribute (`body`,
-`.altair-app-frame`). Light mode mirrors the Shopify admin layout:
-`.altair-app-frame` (and the nav) stays pinned to dark and
-`.altair-app-frame__main` becomes a light rounded canvas. Dark fills on light
-surfaces (rail, primary buttons, checked boxes) use the dashboard's dark palette
-(`--altair-ink-surface-1`, `--altair-button-secondary-*`), not the admin's
-neutrals. The catalogs page is legacy Tailwind with hardcoded dark colors,
-remapped to Altair tokens in `style.css`.
-
-`sidebar.ts` adds an admin-style nav collapse toggle (logo row button, ⌘B /
-Ctrl+B). Altair already ships the collapsed rail: setting the nav's
-`data-altair--side-nav-state-value` to `collapsed` makes its Stimulus
-controller set `data-state`, which the dashboard CSS styles. Second-level nav
-links (inside an app) are text only, so `sidebar.ts` gives them rail-only icons. Dashboard
-charts redraw their SVG on every canvas resize, so the toggle pins chart
-canvases until the nav width transition ends.
-
-## Visual Test Pages
-
-`bun run testpages` serves `test-pages/` at http://localhost:4242 — a fixture
-site with one folder per popup tab (headings, links, images, assets, theme,
-robots) and one page per scenario. Each page states the expected popup output
-in a blue panel. The index is auto-generated; adding a scenario is just adding
-an `.html` file. See `test-pages/README.md` for conventions (no heading tags
-in page chrome, referer-based robots.txt fixtures).
+- `bun run dev` launches `CHROME_TESTING_BINARY` (from `.env`) against the
+  persistent profile `.wxt/chrome-data`. Chrome can't run a profile last
+  opened by a newer major version: it crashes on startup with "CDP connection
+  closed before response to Extensions.loadUnpacked". Never open that profile
+  with another Chrome. To upgrade, run
+  `bunx @puppeteer/browsers install chrome@stable --path <dir>` and point
+  `.env` at the new binary
+- `bun run build` starts with `rm -rf .output`, which also deletes the dev
+  build (`.output/chrome-mv3-dev`) that Chrome may have loaded unpacked
 
 ## Testing
 
 - Unit tests use Bun's built-in test runner: `bun test` (no package.json script
   needed)
 - Test files live in a `tests/` subfolder beside the code they cover (e.g.
-  `entrypoints/popup/tests/`, `utils/tests/`) with a `.test.ts` suffix, and are
-  excluded from `tsconfig.json`
+  `entrypoints/popup/tests/`, `utils/tests/`) with a `.test.ts` suffix
 - Bun has no DOM. Tests that need one use `linkedom` (`parseHTML`): assign its
   globals to `globalThis` before importing the module under test and restore
   them in `afterAll`, since all test files share one process (see
@@ -73,25 +39,20 @@ in page chrome, referer-based robots.txt fixtures).
   MutationObserver reports attribute changes on descendants only when
   `childList` is observed too, `:disabled` doesn't match controls inside a
   disabled `<fieldset>`, and a `tabIndex` of 0 reads back as -1
-- `bun run build` starts with `rm -rf .output`, which also deletes the dev
-  build (`.output/chrome-mv3-dev`) that Chrome may have loaded unpacked
-- Analytics events live in `utils/analytics-actions.ts` (`ANALYTICS_ACTIONS`,
-  the source of truth); the Supabase track function imports
-  `valid-actions.gen.ts`, generated from it via `bun run track:gen` (run
-  automatically by `bun run deploy:track`). A parity test fails `bun test`
-  when the generated file is stale
+- `bun run testpages` serves the visual fixture site in `test-pages/` at
+  http://localhost:4242. See `test-pages/README.md` for conventions
+
+## Analytics
+
+Events live in `utils/analytics-actions.ts` (`ANALYTICS_ACTIONS`, the source of
+truth). The Supabase track function imports `valid-actions.gen.ts`, generated
+from it via `bun run track:gen` (run automatically by `bun run deploy:track`).
+A parity test fails `bun test` when the generated file is stale.
 
 ## Version Bumping & Changelog
 
-When bumping the version or updating the changelog, use the `/version-bump`
-skill, including inside `/ship`. It handles CalVer format, file updates, and
-changelog entries.
+Use the `/version-bump` skill, including inside `/ship`.
 
 Pushes to `main` that change the `package.json` version auto-publish to the
 Chrome Web Store (`publish` job in `.github/workflows/ci.yml`, `wxt submit` on
 CWS API v2 with a service account). Merges without a version bump skip it.
-
-## Pruning Theme Data
-
-When `assets/data/themes.json` is updated with fresh scraped data, use the
-`/prune-themes-json` skill to strip unused fields.
