@@ -1,7 +1,38 @@
+import type { ContentScriptContext } from '#imports';
 import { getSettings, isEnabled } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 
 const INJECTED_ATTR = 'data-alfred-theme-list';
+const THEMES_PATH = /\/themes\/?$/;
+
+/**
+ * Layout for the injected copy row. On wide screens the actions row wraps, so the full-width
+ * copy row drops below it; `contain: inline-size` keeps it out of the actions row's natural
+ * width so the existing buttons stay flush right, and a hidden copy of the "more actions"
+ * button lines the copy buttons up under "Edit theme". At 831px and below Shopify moves the
+ * actions under the theme and aligns them left, so the copy row follows and drops the spacer.
+ */
+const ROW_STYLES = `
+  [${INJECTED_ATTR}] {
+    display: flex;
+    flex-basis: 100%;
+    contain: inline-size;
+    justify-content: flex-end;
+    gap: var(--p-space-100);
+  }
+  [${INJECTED_ATTR}] > [inert] {
+    visibility: hidden;
+    margin-inline-start: var(--p-space-100);
+  }
+  @media (max-width: 831px) {
+    [${INJECTED_ATTR}] {
+      justify-content: flex-start;
+    }
+    [${INJECTED_ATTR}] > [inert] {
+      display: none;
+    }
+  }
+`;
 
 interface ThemeData {
   themeId: string;
@@ -12,17 +43,18 @@ interface ThemeData {
 
 /**
  * Extracts theme ID, store name, and preview URL from a theme list item's editor link.
- * @param listItem - A ThemeListItem DOM element.
+ * The link points at `/themes/:id/editor`, or `/themes/:id/canvas` for Canvas themes.
+ * @param listItem - A theme list `<li>` element.
  * @returns The parsed theme data, or `null` if no editor link is found.
  */
 const extractThemeData = (listItem: HTMLElement): ThemeData | null => {
-  const editLink = listItem.querySelector<HTMLAnchorElement>('a[href*="/themes/"][href*="/editor"]');
+  const editLink = listItem.querySelector<HTMLAnchorElement>('a[href*="/themes/"]');
   if (!editLink) {
     return null;
   }
 
   const href = editLink.getAttribute('href') ?? '';
-  const themeId = /\/themes\/(\d+)\//.exec(href)?.[1] ?? '';
+  const themeId = /\/themes\/(\d+)/.exec(href)?.[1] ?? '';
   const storeName = /\/store\/([^/]+)\//.exec(href)?.[1] ?? '';
   const themeName = listItem.querySelector('h3')?.textContent?.trim() ?? 'Unknown';
 
@@ -44,7 +76,7 @@ const html = (template: string): HTMLElement => {
 
 /**
  * Copies the button's `data-copy-value` to clipboard and briefly swaps the icon to a checkmark.
- * @param e - The click event from an `s-button` element.
+ * @param e - The click event from an `s-internal-button` element.
  */
 const handleCopyClick = (e: Event) => {
   e.stopPropagation();
@@ -60,46 +92,46 @@ const handleCopyClick = (e: Event) => {
 };
 
 /**
- * Scans the theme list and injects copy-ID / copy-preview-URL buttons into each unprocessed item.
+ * Scans the theme list and adds copy-ID / copy-preview-URL buttons on their own row below
+ * each theme's action buttons, laid out by `ROW_STYLES`.
+ * The buttons use the page's own `s-internal-button` Polaris element.
+ * Items whose buttons React has re-rendered away get them back on the next scan.
  * @returns `true` if at least one item was injected, `false` if none were found or all were already processed.
  */
-const injectIntoThemeList = () => {
-  const themeListItems = document.querySelectorAll<HTMLElement>('ul[class*="ThemeList"] div[class*="ThemeListItem"]');
-
-  if (!themeListItems.length) {
-    return false;
-  }
+export const injectIntoThemeList = () => {
+  const themeListItems = document.querySelectorAll<HTMLElement>('ul[class*="ThemeList"] > li');
 
   let injected = false;
 
   themeListItems.forEach((listItem) => {
-    if (listItem.hasAttribute(INJECTED_ATTR)) {
+    if (listItem.querySelector(`[${INJECTED_ATTR}]`)) {
       return;
     }
 
     const data = extractThemeData(listItem);
-    if (!data) {
+    const actions = listItem.querySelector('a[class*="ThemeActionButton"]')?.closest('.Polaris-InlineStack');
+    if (!data || !actions) {
       return;
     }
 
-    const contextProvider = listItem.querySelector('s-internal-context-provider');
-    if (contextProvider) {
-      const wrapper = html(`
-        <s-stack gap="small-200">
-          <s-stack direction="inline" gap="small-500">
-            <s-button variant="tertiary" icon="clipboard" data-copy-value="${data.themeId}" data-track-action="theme_list_copy_id">ID</s-button>
-            <s-button variant="tertiary" icon="clipboard" data-copy-value="${data.previewUrl}" data-track-action="theme_list_copy_preview_url">Preview URL</s-button>
-          </s-stack>
-        </s-stack>
-      `);
-      const buttons = wrapper.querySelectorAll<HTMLElement>('s-button');
-      buttons.forEach((btn) => btn.addEventListener('click', handleCopyClick));
-      contextProvider.replaceWith(wrapper);
-      wrapper.prepend(contextProvider);
+    const row = html(`
+      <div ${INJECTED_ATTR}>
+        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${data.themeId}" data-track-action="theme_list_copy_id">ID</s-internal-button>
+        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${data.previewUrl}" data-track-action="theme_list_copy_preview_url">Preview URL</s-internal-button>
+      </div>
+    `);
+    row.querySelectorAll('s-internal-button').forEach((btn) => btn.addEventListener('click', handleCopyClick));
+
+    // The inert copy of the "more actions" button is the spacer `ROW_STYLES` hides.
+    const more = actions.querySelector(':scope > button[command]');
+    if (more) {
+      const spacer = more.cloneNode(true) as HTMLElement;
+      spacer.removeAttribute('commandfor');
+      spacer.setAttribute('inert', '');
+      row.append(spacer);
     }
 
-    listItem.setAttribute(INJECTED_ATTR, 'true');
-    listItem.querySelector<HTMLElement>(':scope > s-stack')?.setAttribute('alignItems', 'end');
+    actions.append(row);
     injected = true;
   });
 
@@ -107,33 +139,50 @@ const injectIntoThemeList = () => {
 };
 
 /**
- * Initializes the theme list enhancements on /themes pages and re-injects on DOM changes.
- * Sets up a MutationObserver to handle dynamically loaded theme list items.
+ * Adds the theme list buttons while the frame is on /themes, on first load and after
+ * client-side navigation. A MutationObserver covers the list rendering after the URL changes.
+ * @param ctx - The content script context, used to watch URL changes and clean up.
  */
-export const setupThemeList = async () => {
-  if (!window.location.pathname.endsWith('/themes')) {
-    return;
-  }
-
+export const setupThemeList = async (ctx: ContentScriptContext) => {
   const settings = await getSettings();
   if (!isEnabled(settings.admin.themeListUtils)) {
     return;
   }
 
-  injectIntoThemeList();
+  const style = document.createElement('style');
+  style.textContent = ROW_STYLES;
+  document.head.append(style);
 
-  let queued = false;
-  const observer = new MutationObserver(() => {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(() => {
-      injectIntoThemeList();
-      queued = false;
+  let observer: MutationObserver | undefined;
+
+  const sync = (pathname: string) => {
+    if (!THEMES_PATH.test(pathname)) {
+      observer?.disconnect();
+      observer = undefined;
+      return;
+    }
+    if (observer) {
+      return;
+    }
+
+    injectIntoThemeList();
+
+    let queued = false;
+    observer = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        injectIntoThemeList();
+        queued = false;
+      });
     });
-  });
+    observer.observe(document.body, { childList: true, subtree: true });
+  };
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
+  sync(window.location.pathname);
+  ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => sync(newUrl.pathname));
+  ctx.onInvalidated(() => {
+    observer?.disconnect();
+    style.remove();
   });
 };
