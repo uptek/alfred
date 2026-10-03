@@ -1,10 +1,10 @@
 {
   "name": "alfred",
-  "version": "2026.09.28",
+  "version": "2026.10.03",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run changelog:gen && (bun run watch:changelog & wxt)",
+    "dev": "bun run changelog:gen && { chokidar changelog.json -c 'bun run changelog:gen' & trap \"kill $!\" EXIT; wxt; }",
     "dev:firefox": "wxt -b firefox",
     "build": "rm -rf .output && bun run changelog:gen && wxt build",
     "build:firefox": "wxt build -b firefox",
@@ -22,7 +22,6 @@
     "track:gen": "bun scripts/generate-valid-actions.ts",
     "deploy:track": "bun run track:gen && supabase functions deploy track",
     "testpages": "bun test-pages/server.ts",
-    "watch:changelog": "chokidar 'changelog.json' -c 'bun run changelog:gen'",
     "submit": "bash scripts/submit.sh",
     "prepare": "cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",
     "postinstall": "wxt prepare"

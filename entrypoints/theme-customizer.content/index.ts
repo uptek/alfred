@@ -5,9 +5,9 @@ import { setupThemeList } from './theme-list.util';
 export default defineContentScript({
   matches: ['https://online-store-web.shopifyapps.com/*'],
   allFrames: true,
-  main() {
+  main(ctx) {
     setupResizers();
     setupInspector();
-    setupThemeList();
+    setupThemeList(ctx);
   }
 });

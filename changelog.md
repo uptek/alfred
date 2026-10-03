@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.10.03
+@ 2026-10-03
+
+### Theme List Copy Buttons Are Back
+Shopify's redesigned themes page hid Alfred's copy buttons. They're back under each draft theme's actions: copy a theme's ID or its preview URL in one click. They now also appear when you open Themes from elsewhere in the admin, not just after a page refresh, and they fit the narrower layout on small screens.
+
+
 ## 2026.09.26
 @ 2026-09-26
 
@@ -15,7 +22,7 @@ Shrink the Dev Dashboard sidebar to a slim icon rail with the new button beside 
 The permission presets panel on the collaborator access request page now matches the new dashboard design. Copying a preset link shows the same checkmark animation as the dashboard's own copy buttons, and permission search now sits at the top of the permissions card.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-dev-dashboard-v2026.09.26.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-dev-dashboard-v2026.09.26.mp4"></video>
 
 ## 2026.09.24
 @ 2026-09-24
