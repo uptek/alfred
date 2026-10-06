@@ -3,8 +3,10 @@ import { getItem, setItem } from './storage';
 import { getSettings, isEnabled } from './settings';
 import { recordSuccess } from './successNudge';
 import { sendRuntimeMessage } from './messages';
+import { UNINSTALL_SURVEY_URL } from './constants';
 
 const TRACK_ENDPOINT = 'https://api.alfredext.com/track';
+const UNINSTALL_ENDPOINT = 'https://api.alfredext.com/uninstall';
 
 // Action catalog — names, per-action time-saved, and cooldown config live in
 // analytics-actions.ts, which the track Worker (worker/index.ts) also imports
@@ -98,6 +100,21 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
     }).catch(() => {});
   } catch {
     // Analytics should never break the user experience
+  }
+}
+
+/**
+ * The page Chrome opens after uninstall. With analytics on, it goes through the
+ * Worker, which records the uninstall and redirects to the survey.
+ */
+export async function getUninstallUrl(): Promise<string> {
+  try {
+    const settings = await getSettings();
+    if (import.meta.env.DEV || !isEnabled(settings.general.analytics)) return UNINSTALL_SURVEY_URL;
+    const params = new URLSearchParams({ user_id: await getUserId(), version: getVersion() ?? '' });
+    return `${UNINSTALL_ENDPOINT}?${params}`;
+  } catch {
+    return UNINSTALL_SURVEY_URL;
   }
 }
 

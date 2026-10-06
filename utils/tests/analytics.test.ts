@@ -3,7 +3,7 @@ import worker from '../../worker/index';
 import * as helpers from '../helpers';
 import * as settingsModule from '../settings';
 import * as successNudge from '../successNudge';
-import { sendTrackEvent, trackAction } from '../analytics';
+import { getUninstallUrl, sendTrackEvent, trackAction } from '../analytics';
 
 // trackAction's storage-backed dependencies are spied, not module-mocked, so
 // their own tests stay intact. fetch and browser are swapped on globalThis and
@@ -83,6 +83,32 @@ describe('trackAction', () => {
     analyticsEnabled = false;
     await trackAction('popup_open');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('getUninstallUrl', () => {
+  it('routes the survey through the Worker with the user id and version', async () => {
+    expect(await getUninstallUrl()).toBe('https://api.alfredext.com/uninstall?user_id=u1&version=2026.10.07');
+  });
+
+  it('opens the survey directly when the user opted out of analytics', async () => {
+    analyticsEnabled = false;
+    expect(await getUninstallUrl()).toBe('https://tally.so/r/zx79O8');
+  });
+
+  it('falls back to the survey when settings cannot be read', async () => {
+    spies[0]!.mockImplementationOnce(() => Promise.reject(new Error('storage unavailable')));
+    expect(await getUninstallUrl()).toBe('https://tally.so/r/zx79O8');
+  });
+
+  it('gives a URL the Worker records and redirects to the survey', async () => {
+    const inserts: unknown[][] = [];
+    const env = {
+      DB: { prepare: () => ({ bind: (...values: unknown[]) => ({ run: async () => void inserts.push(values) }) }) }
+    };
+    const response = await worker.fetch(new Request(await getUninstallUrl()), env);
+    expect(response.headers.get('Location')).toBe('https://tally.so/r/zx79O8');
+    expect(inserts.map((values) => values.slice(1))).toEqual([['u1', 'uninstall', 0, '2026.10.07', '{}']]);
   });
 });
 
