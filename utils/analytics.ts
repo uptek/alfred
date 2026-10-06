@@ -4,14 +4,11 @@ import { getSettings, isEnabled } from './settings';
 import { recordSuccess } from './successNudge';
 import { sendRuntimeMessage } from './messages';
 
-const SUPABASE_URL = 'https://obrjirdnqoiailhbsnmu.supabase.co';
-const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9icmppcmRucW9pYWlsaGJzbm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA0NzAyMzQsImV4cCI6MjA2NjA0NjIzNH0.i0cWjFKNk8HDZQsVkCn83fTKFROiNzvPf_sTP5xQwAM';
-const TRACK_ENDPOINT = `${SUPABASE_URL}/functions/v1/track`;
+const TRACK_ENDPOINT = 'https://api.alfredext.com/track';
 
 // Action catalog — names, per-action time-saved, and cooldown config live in
-// analytics-actions.ts; analytics-actions.test.ts keeps the Supabase track
-// function's allowlist in sync.
+// analytics-actions.ts, which the track Worker (worker/index.ts) also imports
+// as its allowlist.
 import type { AnalyticsAction } from './analytics-actions';
 import { TIME_SAVINGS, COOLDOWN_MS } from './analytics-actions';
 
@@ -39,10 +36,10 @@ export async function markNudgeShown(): Promise<boolean> {
   return true;
 }
 
-// --- Supabase tracking ---
+// --- Tracking ---
 
 /**
- * Track a user action and send it to Supabase (skipped in dev mode).
+ * Track a user action and send it to the track Worker (skipped in dev mode).
  * @param action - The action to track
  * @param metadata - Additional context (e.g. page_url, page_type, shop_domain, app_count)
  */
@@ -91,15 +88,12 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       return;
     }
 
-    // Send to Supabase (fire and forget). keepalive lets the request survive
+    // Send to the track Worker (fire and forget). keepalive lets the request survive
     // the popup closing mid-flight (e.g. actions that open a new tab).
     fetch(TRACK_ENDPOINT, {
       method: 'POST',
       keepalive: true,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(eventData)
     }).catch(() => {});
   } catch {
