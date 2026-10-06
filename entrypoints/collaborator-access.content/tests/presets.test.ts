@@ -58,6 +58,7 @@ afterAll(() => {
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const hidden = (id: string) => $(`#${id}`).classList.contains('alfred-perm-filter-hidden');
+const ROWS = ['p-abandoned', 'h-abandoned', 'p-drafts', 'h-drafts', 's-orders', 's-products', 'p-products'];
 const isOpen = (section: string) =>
   $(`[data-permissions-tree-target="panel"][data-section-id="${section}"]`).dataset.open;
 
@@ -82,10 +83,15 @@ const search = async (query: string) => {
 };
 
 describe('setupPermissionSearch', () => {
-  it('does nothing on pages without the permissions tree', () => {
-    document.body.innerHTML = '<form id="collaboration-request-form"></form>';
+  it.each([
+    ['pages without the permissions tree', () => $('[data-controller="permissions-tree"]').remove()],
+    ['a tree without card content', () => $('.altair-card__content').remove()]
+  ])('does nothing on %s', (_, setup) => {
+    setup();
+    const body = document.body.innerHTML;
     expect(setupPermissionSearch()).toBeNull();
-    expect(document.querySelector('style')).toBeNull();
+    expect(document.body.innerHTML).toBe(body);
+    expect(document.head.innerHTML).toBe('');
   });
 
   it('adds an Altair search field in the card and Expand/Collapse all beside Select all', () => {
@@ -112,14 +118,7 @@ describe('setupPermissionSearch', () => {
     setupPermissionSearch();
 
     await search('DRAFT');
-    expect(['p-abandoned', 'h-abandoned', 'p-drafts', 'h-drafts', 's-orders', 's-products'].map(hidden)).toEqual([
-      true,
-      true,
-      false,
-      false,
-      false,
-      true
-    ]);
+    expect(ROWS.filter(hidden)).toEqual(['p-abandoned', 'h-abandoned', 's-products', 'p-products']);
     // A collapsed section with a match opens so the match is visible.
     expect(isOpen('orders')).toBe('true');
     expect($('.field').lastElementChild!.textContent).toBe('Showing 1 of 3 permissions');
@@ -131,7 +130,7 @@ describe('setupPermissionSearch', () => {
 
     // Every word must match, across the section name and the label.
     await search('orders abandoned');
-    expect(['p-abandoned', 'h-abandoned', 'p-drafts', 'h-drafts'].map(hidden)).toEqual([false, false, true, true]);
+    expect(ROWS.filter(hidden)).toEqual(['p-drafts', 'h-drafts', 's-products', 'p-products']);
 
     const input = $<HTMLInputElement>('.field__input');
     // Enter would submit the access request form the field sits in
@@ -144,14 +143,6 @@ describe('setupPermissionSearch', () => {
     expect(document.querySelectorAll('.alfred-perm-filter-hidden').length).toBe(0);
     // Sections opened by the search close again; ones the user opened stay.
     expect([isOpen('orders'), isOpen('products')]).toEqual(['false', 'true']);
-  });
-
-  it('returns null for a tree without card content, before adding any style or field', () => {
-    $('.altair-card__content').remove();
-    expect(setupPermissionSearch()).toBeNull();
-    expect(document.querySelector('style')).toBeNull();
-    expect(document.querySelector('.field')).toBeNull();
-    expect($('[data-permissions-tree-target="selectAllButton"]').parentElement!.className).toBe('altair-card__header');
   });
 
   it('treats a blank query and the clear button as a reset', async () => {
@@ -180,7 +171,7 @@ describe('setupPermissionSearch', () => {
     expect([...document.querySelectorAll('button')].map((b) => b.textContent)).not.toContain('Expand all');
 
     await search('products');
-    expect(['s-orders', 's-products'].map(hidden)).toEqual([true, false]);
+    expect(ROWS.filter(hidden)).toEqual(['p-abandoned', 'h-abandoned', 'p-drafts', 'h-drafts', 's-orders']);
   });
 
   it('removes the field and its style on destroy', async () => {

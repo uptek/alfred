@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 describe('sidebar toggle farewell', () => {
-  it('shows a persistent announcement once and clears the legacy key', async () => {
+  it('shows a persistent announcement once, then clears the legacy key so later loads stay silent', async () => {
     store.set(LEGACY_KEY, 'collapsed');
     await script.main();
     await script.main();
@@ -54,11 +54,6 @@ describe('sidebar toggle farewell', () => {
     expect(show).toHaveBeenCalledTimes(1);
     expect(show).toHaveBeenCalledWith(expect.stringContaining('Farewell'), 'success', 0, 'announcement');
     expect(store.has(LEGACY_KEY)).toBe(false);
-  });
-
-  it('stays silent for merchants who never used the toggle', async () => {
-    await script.main();
-    expect(show).not.toHaveBeenCalled();
   });
 
   it('arms the code editor close warning even when legacy key cleanup fails', async () => {

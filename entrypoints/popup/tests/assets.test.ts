@@ -14,123 +14,92 @@ import {
 } from '../utils/assets';
 
 describe('hasOwnLoad', () => {
-  test('scripts and inline styles have a load strategy', () => {
-    expect(hasOwnLoad({ kind: 'script', isInline: false })).toBe(true);
-    expect(hasOwnLoad({ kind: 'script', isInline: true })).toBe(true);
-    expect(hasOwnLoad({ kind: 'style', isInline: true })).toBe(true);
-  });
-
-  test('external stylesheets do not (async/defer never apply to them)', () => {
-    expect(hasOwnLoad({ kind: 'style', isInline: false })).toBe(false);
+  // async/defer never apply to external stylesheets
+  test.each([
+    ['script', false, true],
+    ['script', true, true],
+    ['style', true, true],
+    ['style', false, false]
+  ] as const)('%p with isInline=%p: %p', (kind, isInline, expected) => {
+    expect(hasOwnLoad({ kind, isInline })).toBe(expected);
   });
 });
 
 describe('typeLabel', () => {
-  test('stylesheets are always Style', () => {
-    expect(typeLabel({ kind: 'style', subtype: 'stylesheet' })).toBe('Style');
-  });
-
-  test('script subtypes get their own labels', () => {
-    expect(typeLabel({ kind: 'script', subtype: 'classic' })).toBe('Script');
-    expect(typeLabel({ kind: 'script', subtype: 'module' })).toBe('Module');
-    expect(typeLabel({ kind: 'script', subtype: 'importmap' })).toBe('Map');
-    expect(typeLabel({ kind: 'script', subtype: 'speculationrules' })).toBe('Rules');
-    expect(typeLabel({ kind: 'script', subtype: 'json' })).toBe('JSON');
-    expect(typeLabel({ kind: 'script', subtype: 'ld+json' })).toBe('JSON-LD');
-    expect(typeLabel({ kind: 'script', subtype: 'data' })).toBe('Data');
+  test.each([
+    ['style', 'stylesheet', 'Style'],
+    ['script', 'classic', 'Script'],
+    ['script', 'module', 'Module'],
+    ['script', 'importmap', 'Map'],
+    ['script', 'speculationrules', 'Rules'],
+    ['script', 'json', 'JSON'],
+    ['script', 'ld+json', 'JSON-LD'],
+    ['script', 'data', 'Data']
+  ] as const)('%p %p is %p', (kind, subtype, label) => {
+    expect(typeLabel({ kind, subtype })).toBe(label);
   });
 });
 
 describe('matchesAssetFlag', () => {
-  const asset = (over: Partial<{ renderBlocking: boolean; status: number; src: string | null }>) => ({
-    renderBlocking: false,
-    status: 0,
-    src: null,
-    ...over
-  });
+  const counts = { 'https://a.com/x.js': 2, 'https://a.com/y.js': 1 };
 
-  test('render-blocking flag', () => {
-    expect(matchesAssetFlag(asset({ renderBlocking: true }), 'render-blocking', {})).toBe(true);
-    expect(matchesAssetFlag(asset({}), 'render-blocking', {})).toBe(false);
-  });
-
-  test('failed starts exactly at HTTP 400', () => {
-    expect(matchesAssetFlag(asset({ status: 400 }), 'failed', {})).toBe(true);
-    expect(matchesAssetFlag(asset({ status: 399 }), 'failed', {})).toBe(false);
-    expect(matchesAssetFlag(asset({ status: 0 }), 'failed', {})).toBe(false);
-  });
-
-  test('duplicate needs a src that appears more than once', () => {
-    const counts = { 'https://a.com/x.js': 2, 'https://a.com/y.js': 1 };
-    expect(matchesAssetFlag(asset({ src: 'https://a.com/x.js' }), 'duplicate', counts)).toBe(true);
-    expect(matchesAssetFlag(asset({ src: 'https://a.com/y.js' }), 'duplicate', counts)).toBe(false);
-    expect(matchesAssetFlag(asset({ src: null }), 'duplicate', counts)).toBe(false);
+  // failed starts exactly at HTTP 400; duplicate needs a src that appears more than once
+  test.each([
+    [{ renderBlocking: true }, 'render-blocking', true],
+    [{}, 'render-blocking', false],
+    [{ status: 400 }, 'failed', true],
+    [{ status: 399 }, 'failed', false],
+    [{ status: 0 }, 'failed', false],
+    [{ src: 'https://a.com/x.js' }, 'duplicate', true],
+    [{ src: 'https://a.com/y.js' }, 'duplicate', false],
+    [{ src: null }, 'duplicate', false]
+  ] as const)('%p matches %p: %p', (over, flag, expected) => {
+    expect(matchesAssetFlag({ renderBlocking: false, status: 0, src: null, ...over }, flag, counts)).toBe(expected);
   });
 });
 
 describe('scriptSubtype', () => {
-  test('empty type is a classic script', () => {
-    expect(scriptSubtype('')).toBe('classic');
-  });
-
-  test('javascript MIME types are classic', () => {
-    expect(scriptSubtype('text/javascript')).toBe('classic');
-    expect(scriptSubtype('application/javascript')).toBe('classic');
-    expect(scriptSubtype('application/ecmascript')).toBe('classic');
-    expect(scriptSubtype('text/jscript')).toBe('classic');
-  });
-
-  test('MIME parameters and case are ignored', () => {
-    expect(scriptSubtype('text/javascript; charset=utf-8')).toBe('classic');
-    expect(scriptSubtype('Text/JavaScript')).toBe('classic');
-    expect(scriptSubtype('  MODULE  ')).toBe('module');
-  });
-
-  test('module and importmap and speculationrules are their own kinds', () => {
-    expect(scriptSubtype('module')).toBe('module');
-    expect(scriptSubtype('importmap')).toBe('importmap');
-    expect(scriptSubtype('speculationrules')).toBe('speculationrules');
-  });
-
-  test('json variants', () => {
-    expect(scriptSubtype('application/json')).toBe('json');
-    expect(scriptSubtype('text/json')).toBe('json');
-    expect(scriptSubtype('application/ld+json')).toBe('ld+json');
-    expect(scriptSubtype('application/vnd.api+json')).toBe('json');
-  });
-
-  test('unknown types are inert data blocks', () => {
-    expect(scriptSubtype('text/template')).toBe('data');
-    expect(scriptSubtype('text/x-handlebars')).toBe('data');
+  // MIME parameters, case and surrounding whitespace are ignored; unknown types are inert data blocks
+  test.each([
+    ['', 'classic'],
+    ['text/javascript', 'classic'],
+    ['application/javascript', 'classic'],
+    ['application/ecmascript', 'classic'],
+    ['text/jscript', 'classic'],
+    ['text/javascript; charset=utf-8', 'classic'],
+    ['Text/JavaScript', 'classic'],
+    ['  MODULE  ', 'module'],
+    ['module', 'module'],
+    ['importmap', 'importmap'],
+    ['speculationrules', 'speculationrules'],
+    ['application/json', 'json'],
+    ['text/json', 'json'],
+    ['application/ld+json', 'ld+json'],
+    ['application/vnd.api+json', 'json'],
+    ['text/template', 'data'],
+    ['text/x-handlebars', 'data']
+  ])('%p is %p', (type, subtype) => {
+    expect(scriptSubtype(type)).toBe(subtype);
   });
 });
 
 describe('scriptLoad', () => {
-  test('inline scripts load inline regardless of attributes', () => {
-    expect(scriptLoad('classic', true, true, true)).toBe('inline');
-    expect(scriptLoad('module', false, false, true)).toBe('inline');
-  });
-
-  test('module scripts are deferred by default', () => {
-    expect(scriptLoad('module', false, false, false)).toBe('defer');
-  });
-
-  test('module scripts honor async', () => {
-    expect(scriptLoad('module', true, false, false)).toBe('async');
-  });
-
-  test('classic scripts: async wins over defer, no attributes blocks', () => {
-    expect(scriptLoad('classic', true, true, false)).toBe('async');
-    expect(scriptLoad('classic', false, true, false)).toBe('defer');
-    expect(scriptLoad('classic', false, false, false)).toBe('blocking');
-  });
-
-  test('inert data blocks never load, even with a src (browsers ignore it)', () => {
-    expect(scriptLoad('json', false, false, false)).toBe('inline');
-    expect(scriptLoad('ld+json', false, false, false)).toBe('inline');
-    expect(scriptLoad('data', true, true, false)).toBe('inline');
-    expect(scriptLoad('importmap', false, false, false)).toBe('inline');
-    expect(scriptLoad('speculationrules', false, false, false)).toBe('inline');
+  // Inline wins over attributes; modules defer unless async; inert subtypes never fetch even with a src
+  test.each([
+    ['classic', true, true, true, 'inline'],
+    ['module', false, false, true, 'inline'],
+    ['module', false, false, false, 'defer'],
+    ['module', true, false, false, 'async'],
+    ['classic', true, true, false, 'async'],
+    ['classic', false, true, false, 'defer'],
+    ['classic', false, false, false, 'blocking'],
+    ['json', false, false, false, 'inline'],
+    ['ld+json', false, false, false, 'inline'],
+    ['data', true, true, false, 'inline'],
+    ['importmap', false, false, false, 'inline'],
+    ['speculationrules', false, false, false, 'inline']
+  ] as const)('%p async=%p defer=%p inline=%p loads %p', (subtype, async, defer, inline, load) => {
+    expect(scriptLoad(subtype, async, defer, inline)).toBe(load);
   });
 });
 
@@ -147,127 +116,73 @@ describe('isRenderBlockingScript', () => {
     expect(isRenderBlockingScript(base)).toBe(true);
   });
 
-  test('async and defer do not block', () => {
-    expect(isRenderBlockingScript({ ...base, load: 'async' })).toBe(false);
-    expect(isRenderBlockingScript({ ...base, load: 'defer' })).toBe(false);
-  });
-
-  test('body and footer placement do not block first render', () => {
-    expect(isRenderBlockingScript({ ...base, placement: 'body' })).toBe(false);
-    expect(isRenderBlockingScript({ ...base, placement: 'footer' })).toBe(false);
-  });
-
-  test('inline scripts are not flagged', () => {
-    expect(isRenderBlockingScript({ ...base, isInline: true, load: 'inline' })).toBe(false);
-  });
-
-  test('module scripts never block the parser', () => {
-    expect(isRenderBlockingScript({ ...base, subtype: 'module', load: 'defer' })).toBe(false);
-  });
-
-  test('nomodule scripts are not even fetched by modern browsers', () => {
-    expect(isRenderBlockingScript({ ...base, noModule: true })).toBe(false);
-  });
-
-  test('data scripts are inert', () => {
-    expect(isRenderBlockingScript({ ...base, subtype: 'json' })).toBe(false);
-    expect(isRenderBlockingScript({ ...base, subtype: 'ld+json' })).toBe(false);
-    expect(isRenderBlockingScript({ ...base, subtype: 'importmap' })).toBe(false);
+  // Modules never block the parser, nomodule scripts are not fetched by modern browsers, data scripts are inert
+  test.each([
+    { load: 'async' },
+    { load: 'defer' },
+    { placement: 'body' },
+    { placement: 'footer' },
+    { isInline: true, load: 'inline' },
+    { subtype: 'module', load: 'defer' },
+    { noModule: true },
+    { subtype: 'json' },
+    { subtype: 'ld+json' },
+    { subtype: 'importmap' }
+  ] as const)('%p does not block', (over) => {
+    expect(isRenderBlockingScript({ ...base, ...over })).toBe(false);
   });
 });
 
 describe('isRenderBlockingStylesheet', () => {
-  const matchesScreen = (q: string) => !/print|max-width: 1px/.test(q);
+  const matchesScreen = (q: string) => /screen|min-width/.test(q);
   const base = { placement: 'head' as const, media: '', disabled: false, alternate: false };
 
-  test('plain head stylesheet blocks render', () => {
-    expect(isRenderBlockingStylesheet(base, matchesScreen)).toBe(true);
-  });
-
-  test('non-matching media query does not block', () => {
-    expect(isRenderBlockingStylesheet({ ...base, media: 'print' }, matchesScreen)).toBe(false);
-    expect(isRenderBlockingStylesheet({ ...base, media: '(max-width: 1px)' }, matchesScreen)).toBe(false);
-  });
-
-  test('matching media query blocks', () => {
-    expect(isRenderBlockingStylesheet({ ...base, media: 'screen' }, matchesScreen)).toBe(true);
-    expect(isRenderBlockingStylesheet({ ...base, media: '(min-width: 1px)' }, matchesScreen)).toBe(true);
-  });
-
-  test('whitespace-only media counts as no media', () => {
-    expect(isRenderBlockingStylesheet({ ...base, media: '  ' }, () => false)).toBe(true);
-  });
-
-  test('disabled stylesheets are never fetched', () => {
-    expect(isRenderBlockingStylesheet({ ...base, disabled: true }, matchesScreen)).toBe(false);
-  });
-
-  test('alternate stylesheets are not applied', () => {
-    expect(isRenderBlockingStylesheet({ ...base, alternate: true }, matchesScreen)).toBe(false);
-  });
-
-  test('body placement does not block first render', () => {
-    expect(isRenderBlockingStylesheet({ ...base, placement: 'body' }, matchesScreen)).toBe(false);
-    expect(isRenderBlockingStylesheet({ ...base, placement: 'footer' }, matchesScreen)).toBe(false);
+  // Whitespace-only media counts as no media, so the matcher never sees it
+  test.each([
+    [{}, true],
+    [{ media: '  ' }, true],
+    [{ media: 'screen' }, true],
+    [{ media: '(min-width: 1px)' }, true],
+    [{ media: 'print' }, false],
+    [{ media: '(max-width: 1px)' }, false],
+    [{ disabled: true }, false],
+    [{ alternate: true }, false],
+    [{ placement: 'body' }, false],
+    [{ placement: 'footer' }, false]
+  ] as const)('%p blocks: %p', (over, expected) => {
+    expect(isRenderBlockingStylesheet({ ...base, ...over }, matchesScreen)).toBe(expected);
   });
 });
 
 describe('isExternalAssetUrl', () => {
-  test('same host is not external', () => {
-    expect(isExternalAssetUrl('https://example.com/app.js', 'example.com')).toBe(false);
-  });
-
-  test('www variant of the page host is not external', () => {
-    expect(isExternalAssetUrl('https://www.example.com/app.js', 'example.com')).toBe(false);
-    expect(isExternalAssetUrl('https://example.com/app.js', 'www.example.com')).toBe(false);
-  });
-
-  test('different host and subdomains are external', () => {
-    expect(isExternalAssetUrl('https://cdn.shopify.com/a.js', 'shop.example.com')).toBe(true);
-    expect(isExternalAssetUrl('https://cdn.example.com/a.js', 'example.com')).toBe(true);
-  });
-
-  test('host comparison is case-insensitive', () => {
-    expect(isExternalAssetUrl('https://EXAMPLE.com/a.js', 'example.com')).toBe(false);
-  });
-
-  test('data and blob URIs are not external hosts', () => {
-    expect(isExternalAssetUrl('data:text/javascript,1', 'example.com')).toBe(false);
-    expect(isExternalAssetUrl('blob:https://example.com/uuid', 'example.com')).toBe(false);
-  });
-
-  test('unparseable URLs count as external', () => {
-    expect(isExternalAssetUrl('http://', 'example.com')).toBe(true);
+  // www variants and case differences are the same host; data/blob have no host; unparseable counts as external
+  test.each([
+    ['https://example.com/app.js', 'example.com', false],
+    ['https://www.example.com/app.js', 'example.com', false],
+    ['https://example.com/app.js', 'www.example.com', false],
+    ['https://cdn.shopify.com/a.js', 'shop.example.com', true],
+    ['https://cdn.example.com/a.js', 'example.com', true],
+    ['https://EXAMPLE.com/a.js', 'example.com', false],
+    ['data:text/javascript,1', 'example.com', false],
+    ['blob:https://example.com/uuid', 'example.com', false],
+    ['http://', 'example.com', true]
+  ])('%p on %p is external: %p', (url, pageHost, external) => {
+    expect(isExternalAssetUrl(url, pageHost)).toBe(external);
   });
 });
 
 describe('displaySource', () => {
-  test('same-host assets show path only', () => {
-    expect(displaySource('https://example.com/assets/app.js?v=2', 'example.com')).toBe('/assets/app.js?v=2');
-  });
-
-  test('www variant counts as same host', () => {
-    expect(displaySource('https://www.example.com/app.js', 'example.com')).toBe('/app.js');
-  });
-
-  test('same-host root path falls back to the host', () => {
-    expect(displaySource('https://example.com/', 'example.com')).toBe('example.com');
-  });
-
-  test('external assets show host plus path, www stripped', () => {
-    expect(displaySource('https://www.cdn.com/lib/x.js', 'example.com')).toBe('cdn.com/lib/x.js');
-  });
-
-  test('external root path shows just the host', () => {
-    expect(displaySource('https://cdn.com/', 'example.com')).toBe('cdn.com');
-  });
-
-  test('no page host behaves like external display', () => {
-    expect(displaySource('https://example.com/app.js', null)).toBe('example.com/app.js');
-  });
-
-  test('unparseable src is returned as-is', () => {
-    expect(displaySource('not a url', 'example.com')).toBe('not a url');
+  // Same-host shows the path, external shows host plus path without www, root paths fall back to the host
+  test.each([
+    ['https://example.com/assets/app.js?v=2', 'example.com', '/assets/app.js?v=2'],
+    ['https://www.example.com/app.js', 'example.com', '/app.js'],
+    ['https://example.com/', 'example.com', 'example.com'],
+    ['https://www.cdn.com/lib/x.js', 'example.com', 'cdn.com/lib/x.js'],
+    ['https://cdn.com/', 'example.com', 'cdn.com'],
+    ['https://example.com/app.js', null, 'example.com/app.js'],
+    ['not a url', 'example.com', 'not a url']
+  ])('%p on %p shows %p', (src, pageHost, shown) => {
+    expect(displaySource(src, pageHost)).toBe(shown);
   });
 });
 
@@ -275,28 +190,17 @@ describe('summarizeAssets', () => {
   const asset = (over: Partial<RawAsset>): RawAsset =>
     ({ kind: 'script', size: 0, renderBlocking: false, ...over }) as RawAsset;
 
-  const texts = (items: { text: string }[]) => items.map((i) => i.text);
-
-  test('always shows both kind counts, singular for one', () => {
-    expect(texts(summarizeAssets([asset({}), asset({ kind: 'style' })]))).toEqual(['1 script', '1 style']);
+  test('always shows both kind counts and suppresses size and render-blocking at zero', () => {
+    expect(summarizeAssets([])).toEqual([{ text: '0 scripts' }, { text: '0 styles' }]);
+    expect(summarizeAssets([asset({}), asset({ kind: 'style' })])).toEqual([{ text: '1 script' }, { text: '1 style' }]);
   });
 
-  test('shows zeroed kind counts for an empty list', () => {
-    expect(texts(summarizeAssets([]))).toEqual(['0 scripts', '0 styles']);
-  });
-
-  test('suppresses size and render-blocking at zero', () => {
-    expect(summarizeAssets([asset({})])).toHaveLength(2);
-  });
-
-  test('totals known sizes and omits the unknown ones', () => {
-    expect(summarizeAssets([asset({ size: 2048 }), asset({ size: 0 })])[2]?.text).toBe('2.0 KB');
-  });
-
-  test('warns on render-blocking assets', () => {
-    expect(summarizeAssets([asset({ renderBlocking: true })]).at(-1)).toEqual({
-      text: '1 render-blocking',
-      tone: 'warn'
-    });
+  test('adds the known size total and warns on render-blocking assets', () => {
+    expect(summarizeAssets([asset({ size: 2048, renderBlocking: true }), asset({ kind: 'style' })])).toEqual([
+      { text: '1 script' },
+      { text: '1 style' },
+      { text: '2.0 KB', title: expect.any(String) },
+      { text: '1 render-blocking', tone: 'warn' }
+    ]);
   });
 });

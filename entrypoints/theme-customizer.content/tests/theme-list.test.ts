@@ -52,33 +52,24 @@ describe('injectIntoThemeList', () => {
     expect(injectIntoThemeList()).toBe(true);
 
     const wrappers = injected();
-    expect(wrappers).toHaveLength(2);
-    expect(copyValues(wrappers[0])).toEqual([
-      '188431433942',
-      'https://demo-store.myshopify.com/?preview_theme_id=188431433942'
-    ]);
-    expect(copyValues(wrappers[1])).toEqual([
-      '159845974230',
-      'https://demo-store.myshopify.com/?preview_theme_id=159845974230'
+    expect(wrappers.map(copyValues)).toEqual([
+      ['188431433942', 'https://demo-store.myshopify.com/?preview_theme_id=188431433942'],
+      ['159845974230', 'https://demo-store.myshopify.com/?preview_theme_id=159845974230']
     ]);
     expect(wrappers[0].parentElement?.lastElementChild).toBe(wrappers[0]);
     expect(wrappers[0].parentElement?.querySelector('a')?.textContent).toBe('Edit theme');
   });
 
-  it('renders tertiary Polaris buttons with clipboard icons', () => {
+  it('renders tertiary Polaris buttons with clipboard icons, then an inert copy of the more-actions button', () => {
     injectIntoThemeList();
 
-    const buttons = [...injected()[0].querySelectorAll('s-internal-button')];
-    expect(buttons.map((b) => b.textContent)).toEqual(['ID', 'Preview URL']);
-    expect(
-      buttons.every((b) => b.getAttribute('variant') === 'tertiary' && b.getAttribute('icon') === 'clipboard')
-    ).toBe(true);
-  });
-
-  it('ends the row with an inert copy of the more-actions button', () => {
-    injectIntoThemeList();
-
-    const spacer = injected()[0].lastElementChild as HTMLElement;
+    const row = injected()[0];
+    const buttons = [...row.querySelectorAll('s-internal-button')];
+    expect(buttons.map((b) => [b.textContent, b.getAttribute('variant'), b.getAttribute('icon')])).toEqual([
+      ['ID', 'tertiary', 'clipboard'],
+      ['Preview URL', 'tertiary', 'clipboard']
+    ]);
+    const spacer = row.lastElementChild as HTMLElement;
     expect(spacer.tagName).toBe('BUTTON');
     expect(spacer.hasAttribute('inert')).toBe(true);
     expect(spacer.hasAttribute('commandfor')).toBe(false);

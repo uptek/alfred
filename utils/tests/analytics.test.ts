@@ -25,14 +25,22 @@ const spies = [
   spyOn(successNudge, 'recordSuccess').mockImplementation(async () => {})
 ];
 
+const SURVEY_URL = 'https://tally.so/r/zx79O8';
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+/** Runs a request through the Worker, returning its response and the rows it inserted (minus the random id). */
+async function sendToWorker(request: Request) {
+  const rows: unknown[][] = [];
+  const DB = {
+    prepare: () => ({ bind: (...values: unknown[]) => ({ run: async () => void rows.push(values.slice(1)) }) })
+  };
+  return { response: await worker.fetch(request, { DB }), rows };
+}
 
 beforeEach(() => {
   analyticsEnabled = true;
-  fetchMock.mockReset();
-  fetchMock.mockImplementation(() => Promise.resolve(new Response()));
-  sendMessage.mockReset();
-  sendMessage.mockImplementation(() => Promise.resolve());
+  fetchMock.mockClear();
+  sendMessage.mockClear();
   g.fetch = fetchMock;
   g.browser = { runtime: { sendMessage } };
 });
@@ -64,16 +72,12 @@ describe('trackAction', () => {
   it('sends a payload the Worker accepts and stores', async () => {
     await trackAction('popup_open');
     const [url, init] = fetchMock.mock.calls[0]!;
-    const inserts: unknown[][] = [];
-    const env = {
-      DB: { prepare: () => ({ bind: (...values: unknown[]) => ({ run: async () => void inserts.push(values) }) }) }
-    };
-    await worker.fetch(new Request(url, init), env);
-    expect(inserts.map((values) => values.slice(1))).toEqual([['u1', 'popup_open', 0, '2026.10.07', '{}']]);
+    const { rows } = await sendToWorker(new Request(url, init));
+    expect(rows).toEqual([['u1', 'popup_open', 0, '2026.10.07', '{}']]);
   });
 
   it('swallows a network failure', async () => {
-    fetchMock.mockImplementation(() => Promise.reject(new TypeError('Failed to fetch')));
+    fetchMock.mockImplementationOnce(() => Promise.reject(new TypeError('Failed to fetch')));
     expect(await trackAction('popup_open')).toBeUndefined();
     await flush();
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -87,28 +91,20 @@ describe('trackAction', () => {
 });
 
 describe('getUninstallUrl', () => {
-  it('routes the survey through the Worker with the user id and version', async () => {
-    expect(await getUninstallUrl()).toBe('https://api.alfredext.com/uninstall?user_id=u1&version=2026.10.07');
+  it('routes the survey through the Worker, which records the uninstall', async () => {
+    const url = await getUninstallUrl();
+    expect(url).toBe('https://api.alfredext.com/uninstall?user_id=u1&version=2026.10.07');
+    const { response, rows } = await sendToWorker(new Request(url));
+    expect(response.headers.get('Location')).toBe(SURVEY_URL);
+    expect(rows).toEqual([['u1', 'uninstall', 0, '2026.10.07', '{}']]);
   });
 
-  it('opens the survey directly when the user opted out of analytics', async () => {
-    analyticsEnabled = false;
-    expect(await getUninstallUrl()).toBe('https://tally.so/r/zx79O8');
-  });
-
-  it('falls back to the survey when settings cannot be read', async () => {
-    spies[0]!.mockImplementationOnce(() => Promise.reject(new Error('storage unavailable')));
-    expect(await getUninstallUrl()).toBe('https://tally.so/r/zx79O8');
-  });
-
-  it('gives a URL the Worker records and redirects to the survey', async () => {
-    const inserts: unknown[][] = [];
-    const env = {
-      DB: { prepare: () => ({ bind: (...values: unknown[]) => ({ run: async () => void inserts.push(values) }) }) }
-    };
-    const response = await worker.fetch(new Request(await getUninstallUrl()), env);
-    expect(response.headers.get('Location')).toBe('https://tally.so/r/zx79O8');
-    expect(inserts.map((values) => values.slice(1))).toEqual([['u1', 'uninstall', 0, '2026.10.07', '{}']]);
+  it.each([
+    ['the user opted out of analytics', () => (analyticsEnabled = false)],
+    ['settings cannot be read', () => spies[0]!.mockImplementationOnce(() => Promise.reject(new Error('no storage')))]
+  ])('opens the survey directly when %s', async (_, arrange) => {
+    arrange();
+    expect(await getUninstallUrl()).toBe(SURVEY_URL);
   });
 });
 
@@ -121,7 +117,7 @@ describe('sendTrackEvent', () => {
   });
 
   it('posts directly to the Worker when the background is unreachable', async () => {
-    sendMessage.mockImplementation(() => Promise.reject(new Error('Receiving end does not exist')));
+    sendMessage.mockImplementationOnce(() => Promise.reject(new Error('Receiving end does not exist')));
     sendTrackEvent('cartograph_open');
     await flush();
     expect(fetchMock).toHaveBeenCalledTimes(1);

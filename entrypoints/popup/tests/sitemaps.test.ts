@@ -8,8 +8,7 @@ import {
   parseIndexEntries,
   parseUrlsetUrls,
   sitemapFilename,
-  type SitemapNode,
-  type SitemapsData
+  type SitemapNode
 } from '../utils/sitemaps';
 
 const INDEX_XML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -117,72 +116,55 @@ function node(partial: Partial<SitemapNode>): SitemapNode {
   };
 }
 
+const analyze = (nodes: SitemapNode[], robotsSitemaps = ['x']) => analyzeSitemaps({ nodes, robotsSitemaps });
+
 describe('analyzeSitemaps', () => {
   it('returns not-ok with no findings for null data', () => {
-    const a = analyzeSitemaps(null);
-    expect(a.ok).toBe(false);
-    expect(a.findings).toEqual([]);
-    expect(a.errorCount).toBe(0);
+    expect(analyzeSitemaps(null)).toEqual({ ok: false, findings: [], errorCount: 0, totalSitemaps: 0, totalUrls: 0 });
   });
 
   it('flags a missing sitemap as an error', () => {
-    const data: SitemapsData = {
-      nodes: [node({ ok: false, status: 404, kind: 'invalid', urlCount: 0 })],
-      robotsSitemaps: []
-    };
-    const a = analyzeSitemaps(data);
-    expect(a.ok).toBe(false);
-    expect(a.findings.some((f) => f.code === 'no-sitemap' && f.severity === 'error')).toBe(true);
-    expect(a.errorCount).toBe(1);
+    expect(analyze([node({ ok: false, status: 404, kind: 'invalid', urlCount: 0 })], [])).toMatchObject({
+      ok: false,
+      errorCount: 1,
+      findings: [{ code: 'no-sitemap', severity: 'error' }]
+    });
   });
 
   it('counts totals across an index and flags empty/failed children', () => {
-    const data: SitemapsData = {
-      nodes: [
-        node({
-          kind: 'index',
-          urlCount: 3,
-          children: [
-            node({ url: 'https://x.com/sitemap_products_1.xml', urlCount: 5000 }),
-            node({ url: 'https://x.com/sitemap_pages_1.xml', urlCount: 0 }),
-            node({ url: 'https://x.com/sitemap_blogs_1.xml', ok: false, status: 500, kind: 'invalid', urlCount: 0 })
-          ]
-        })
-      ],
-      robotsSitemaps: ['https://x.com/sitemap.xml']
-    };
-    const a = analyzeSitemaps(data);
-    expect(a.ok).toBe(true);
-    expect(a.totalSitemaps).toBe(3);
-    expect(a.totalUrls).toBe(5000);
-    expect(a.findings.some((f) => f.code === 'empty-sitemap' && f.severity === 'warning')).toBe(true);
-    expect(a.findings.some((f) => f.code === 'child-fetch-failed' && f.severity === 'warning')).toBe(true);
+    const children = [
+      node({ url: 'https://x.com/sitemap_products_1.xml', urlCount: 5000 }),
+      node({ url: 'https://x.com/sitemap_pages_1.xml', urlCount: 0 }),
+      node({ url: 'https://x.com/sitemap_blogs_1.xml', ok: false, status: 500, kind: 'invalid', urlCount: 0 })
+    ];
+    expect(analyze([node({ kind: 'index', urlCount: 3, children })])).toMatchObject({
+      ok: true,
+      totalSitemaps: 3,
+      totalUrls: 5000,
+      findings: [
+        { code: 'empty-sitemap', severity: 'warning' },
+        { code: 'child-fetch-failed', severity: 'warning' }
+      ]
+    });
   });
 
-  it('flags HTML and invalid XML bodies', () => {
-    const html = analyzeSitemaps({ nodes: [node({ kind: 'html', urlCount: 0 })], robotsSitemaps: ['x'] });
-    expect(html.findings.some((f) => f.code === 'serves-html' && f.severity === 'warning')).toBe(true);
-    const invalid = analyzeSitemaps({ nodes: [node({ kind: 'invalid', urlCount: 0 })], robotsSitemaps: ['x'] });
-    expect(invalid.findings.some((f) => f.code === 'invalid-xml' && f.severity === 'error')).toBe(true);
-    expect(invalid.errorCount).toBe(1);
+  it.each([
+    ['html', 'serves-html', 'warning', 0],
+    ['invalid', 'invalid-xml', 'error', 1]
+  ])('flags a %s body as %s at %s severity', (kind, code, severity, errorCount) => {
+    expect(analyze([node({ kind, urlCount: 0 })])).toMatchObject({ errorCount, findings: [{ code, severity }] });
   });
 
   it('notes when robots.txt has no Sitemap line', () => {
-    const a = analyzeSitemaps({ nodes: [node({})], robotsSitemaps: [] });
-    expect(a.findings.some((f) => f.code === 'not-in-robots' && f.severity === 'info')).toBe(true);
+    expect(analyze([node({})], []).findings).toMatchObject([{ code: 'not-in-robots', severity: 'info' }]);
   });
 
   it('notes truncated counts as a floor', () => {
-    const a = analyzeSitemaps({
-      nodes: [node({ kind: 'index', urlCount: 1, children: [node({ truncated: true, urlCount: 40000 })] })],
-      robotsSitemaps: ['x']
-    });
-    expect(a.findings.some((f) => f.code === 'truncated' && f.severity === 'info')).toBe(true);
+    const index = node({ kind: 'index', urlCount: 1, children: [node({ truncated: true, urlCount: 40000 })] });
+    expect(analyze([index]).findings).toMatchObject([{ code: 'truncated', severity: 'info' }]);
   });
 
   it('treats a flat urlset root as one sitemap', () => {
-    const a = analyzeSitemaps({ nodes: [node({ urlCount: 42 })], robotsSitemaps: ['x'] });
-    expect(a.totalSitemaps).toBe(1);
-    expect(a.totalUrls).toBe(42);
+    expect(analyze([node({ urlCount: 42 })])).toMatchObject({ totalSitemaps: 1, totalUrls: 42 });
   });
 });

@@ -68,9 +68,10 @@ describe('parseRobots', () => {
     expect(p.otherDirectives).toEqual([{ name: 'noindex', value: '/old', line: 3 }]);
   });
 
-  it('keeps the first Crawl-delay of a group', () => {
-    const p = parse('User-agent: AhrefsBot\nCrawl-delay: 10\nCrawl-delay: 20\n');
-    expect(p.groups[0]!.crawlDelay).toEqual({ value: '10', line: 2 });
+  it('keeps the first Crawl-delay of a group and treats one before any group as an other directive', () => {
+    const p = parse('Crawl-delay: 5\nUser-agent: *\nDisallow: /a\nUser-agent: Bot\nCrawl-delay: 10\nCrawl-delay: 20\n');
+    expect(p.otherDirectives).toEqual([{ name: 'crawl-delay', value: '5', line: 1 }]);
+    expect(p.groups.map((g) => g.crawlDelay)).toEqual([null, { value: '10', line: 5 }]);
   });
 
   it('handles CRLF and bare CR line endings with correct line numbers', () => {
@@ -80,98 +81,49 @@ describe('parseRobots', () => {
       { type: 'allow', path: '/b', line: 3 }
     ]);
   });
-
-  it('treats Crawl-delay before any group as an other directive', () => {
-    const p = parse('Crawl-delay: 5\nUser-agent: *\nDisallow: /a\n');
-    expect(p.otherDirectives).toEqual([{ name: 'crawl-delay', value: '5', line: 1 }]);
-    expect(p.groups[0]!.crawlDelay).toBeNull();
-  });
 });
 
 describe('isAllowed', () => {
-  it('allows when there are no groups at all', () => {
-    expect(isAllowed(parse(''), '/anything', 'Googlebot')).toEqual({
-      allowed: true,
-      rule: null,
-      group: null
-    });
+  // No groups at all, or only a group whose empty user-agent matches no bot.
+  it.each(['', 'User-agent:\nDisallow: /\n'])('allows with no applicable group in %j', (text) => {
+    expect(isAllowed(parse(text), '/anything', 'Googlebot')).toEqual({ allowed: true, rule: null, group: null });
   });
 
-  it('blocks by prefix match', () => {
-    const p = parse('User-agent: *\nDisallow: /admin\n');
-    expect(isAllowed(p, '/admin/settings', 'Googlebot').allowed).toBe(false);
-    expect(isAllowed(p, '/products', 'Googlebot').allowed).toBe(true);
-  });
-
-  it('supports * wildcards and $ end anchors', () => {
-    const p = parse('User-agent: *\nDisallow: /*.pdf$\nDisallow: /private*/data\n');
-    expect(isAllowed(p, '/files/report.pdf', 'Googlebot').allowed).toBe(false);
-    expect(isAllowed(p, '/files/report.pdf?page=2', 'Googlebot').allowed).toBe(true);
-    expect(isAllowed(p, '/private-area/data', 'Googlebot').allowed).toBe(false);
-  });
-
-  it('matches an unencoded rule against the encoded path a browser reports', () => {
-    const p = parse('User-agent: *\nDisallow: /café\n');
-    expect(isAllowed(p, '/caf%C3%A9', 'Googlebot').allowed).toBe(false);
-    expect(isAllowed(p, '/caf%C3%A9/menu', 'Googlebot').allowed).toBe(false);
-    expect(isAllowed(p, '/coffee', 'Googlebot').allowed).toBe(true);
-  });
-
-  it('matches an already-encoded rule without double-encoding it', () => {
-    const p = parse('User-agent: *\nDisallow: /caf%C3%A9\n');
-    expect(isAllowed(p, '/caf%C3%A9', 'Googlebot').allowed).toBe(false);
-  });
-
-  it('matches an encoded rule whose hex case differs from the page path', () => {
+  it.each([
+    ['Disallow: /admin', '/admin/settings', false], // prefix match
+    ['Disallow: /admin', '/products', true],
+    ['Disallow: /*.pdf$\nDisallow: /private*/data', '/files/report.pdf', false], // * wildcards and $ anchors
+    ['Disallow: /*.pdf$\nDisallow: /private*/data', '/files/report.pdf?page=2', true],
+    ['Disallow: /*.pdf$\nDisallow: /private*/data', '/private-area/data', false],
+    // An unencoded rule matches the encoded path a browser reports.
+    ['Disallow: /café', '/caf%C3%A9', false],
+    ['Disallow: /café', '/caf%C3%A9/menu', false],
+    ['Disallow: /café', '/coffee', true],
+    ['Disallow: /caf%C3%A9', '/caf%C3%A9', false], // an already-encoded rule is not double-encoded
     // URL.pathname uppercases what it encodes itself, but preserves whatever
-    // case the URL was written in, so both directions have to hold.
-    const lower = parse('User-agent: *\nDisallow: /caf%c3%a9\n');
-    expect(isAllowed(lower, '/caf%C3%A9', 'Googlebot').allowed).toBe(false);
-    const upper = parse('User-agent: *\nDisallow: /caf%C3%A9\n');
-    expect(isAllowed(upper, '/caf%c3%a9', 'Googlebot').allowed).toBe(false);
-  });
-
-  it('ranks the encoded and unencoded spellings of a path as equally specific', () => {
-    const p = parse('User-agent: *\nDisallow: /caf%C3%A9\nAllow: /café\n');
-    // Same encoded length, so the Allow-beats-Disallow tiebreak decides.
-    expect(isAllowed(p, '/caf%C3%A9', 'Googlebot').allowed).toBe(true);
+    // case the URL was written in, so both hex-case directions have to hold.
+    ['Disallow: /caf%c3%a9', '/caf%C3%A9', false],
+    ['Disallow: /caf%C3%A9', '/caf%c3%a9', false],
+    // Encoded and unencoded spellings are equally specific, so Allow wins the tie.
+    ['Disallow: /caf%C3%A9\nAllow: /café', '/caf%C3%A9', true],
+    ['Disallow: /shop\nAllow: /shop/public', '/shop/public/item', true], // longest pattern wins
+    ['Disallow: /shop\nAllow: /shop/public', '/shop/private', false],
+    ['Disallow: /page\nAllow: /page', '/page', true], // Allow wins an equal-length tie
+    ['Disallow:', '/x', true] // an empty Disallow restricts nothing
+  ])('under * with %j, allows %s: %p', (rules, path, allowed) => {
+    expect(isAllowed(parse(`User-agent: *\n${rules}\n`), path, 'Googlebot').allowed).toBe(allowed);
   });
 
   it('applies a versioned user-agent group to the bare bot token', () => {
     const p = parse('User-agent: Googlebot/2.1\nDisallow: /admin\n\nUser-agent: *\nDisallow: /\n');
-    const verdict = isAllowed(p, '/admin', 'Googlebot');
-    expect(verdict.allowed).toBe(false);
-    expect(verdict.group).toBe('googlebot');
+    expect(isAllowed(p, '/admin', 'Googlebot')).toMatchObject({ allowed: false, group: 'googlebot' });
     // The versioned group wins over `*`, so an unlisted path stays allowed.
     expect(isAllowed(p, '/products', 'Googlebot').allowed).toBe(true);
   });
 
   it('does not let an empty user-agent group swallow every bot', () => {
     const p = parse('User-agent:\nDisallow: /\n\nUser-agent: *\nAllow: /\n');
-    const verdict = isAllowed(p, '/anything', 'Googlebot');
-    expect(verdict.allowed).toBe(true);
-    expect(verdict.group).toBe('*');
-  });
-
-  it('falls through to no group when the only group has an empty user-agent', () => {
-    const p = parse('User-agent:\nDisallow: /\n');
-    expect(isAllowed(p, '/anything', 'Googlebot')).toEqual({ allowed: true, rule: null, group: null });
-  });
-
-  it('longest pattern wins regardless of rule order', () => {
-    const p = parse('User-agent: *\nDisallow: /shop\nAllow: /shop/public\n');
-    expect(isAllowed(p, '/shop/public/item', 'Googlebot').allowed).toBe(true);
-    expect(isAllowed(p, '/shop/private', 'Googlebot').allowed).toBe(false);
-  });
-
-  it('allow wins on equal-length tie', () => {
-    const p = parse('User-agent: *\nDisallow: /page\nAllow: /page\n');
-    expect(isAllowed(p, '/page', 'Googlebot').allowed).toBe(true);
-  });
-
-  it('empty Disallow restricts nothing', () => {
-    const p = parse('User-agent: *\nDisallow:\n');
-    expect(isAllowed(p, '/x', 'Googlebot').allowed).toBe(true);
+    expect(isAllowed(p, '/anything', 'Googlebot')).toMatchObject({ allowed: true, group: '*' });
   });
 
   it('selects the most specific user-agent group and ignores * for named bots', () => {
@@ -197,55 +149,41 @@ describe('isAllowed', () => {
 
   it('picks the longest matching token among multiple named groups', () => {
     const p = parse('User-agent: Googlebot\nDisallow: /broad\nUser-agent: Googlebot-Image\nDisallow: /narrow\n');
-    const v = isAllowed(p, '/broad', 'Googlebot-Image');
-    expect(v.allowed).toBe(true); // only the most specific group applies
+    expect(isAllowed(p, '/broad', 'Googlebot-Image').allowed).toBe(true); // only the most specific group applies
     expect(isAllowed(p, '/narrow', 'Googlebot-Image').group).toBe('googlebot-image');
   });
 
   it('reports the matched rule and group', () => {
-    const p = parse('User-agent: *\nDisallow: /admin\n');
-    const v = isAllowed(p, '/admin', 'Googlebot');
-    expect(v.rule).toEqual({ type: 'disallow', path: '/admin', line: 2 });
-    expect(v.group).toBe('*');
+    const v = isAllowed(parse('User-agent: *\nDisallow: /admin\n'), '/admin', 'Googlebot');
+    expect(v).toEqual({ allowed: false, rule: { type: 'disallow', path: '/admin', line: 2 }, group: '*' });
   });
 });
 
 describe('encodePath', () => {
-  it('encodes unencoded non-ASCII the way URL.pathname would', () => {
-    expect(encodePath('/café')).toBe('/caf%C3%A9');
-    expect(encodePath('/日本')).toBe('/%E6%97%A5%E6%9C%AC');
-  });
-
-  it('leaves an already-encoded octet alone instead of double-encoding it', () => {
-    expect(encodePath('/caf%C3%A9')).toBe('/caf%C3%A9');
-    expect(encodePath('/a%20b')).toBe('/a%20b');
-  });
-
-  // RFC 3986 §6.2.2.1: the two hex cases are the same octet, but the matcher
-  // compares strings, so both sides have to land on one spelling.
-  it('uppercases the hex of an already-encoded octet', () => {
-    expect(encodePath('/caf%c3%a9')).toBe('/caf%C3%A9');
-    expect(encodePath('/a%2fb')).toBe('/a%2Fb');
-    expect(encodePath('/caf%c3%A9')).toBe('/caf%C3%A9');
-  });
-
-  it('encodes a bare percent that is not a valid octet', () => {
-    expect(encodePath('/100%')).toBe('/100%25');
-    expect(encodePath('/%zz')).toBe('/%25zz');
-  });
-
-  it('handles encoded and unencoded segments in the same path', () => {
-    expect(encodePath('/caf%C3%A9/thé')).toBe('/caf%C3%A9/th%C3%A9');
-  });
-
-  it('passes the wildcard syntax through untouched', () => {
-    expect(encodePath('/*.pdf$')).toBe('/*.pdf$');
-    expect(encodePath('/a/*/b$')).toBe('/a/*/b$');
-  });
-
-  it('leaves plain ASCII paths and query strings unchanged', () => {
-    expect(encodePath('/products?page=2&sort=a')).toBe('/products?page=2&sort=a');
-    expect(encodePath('')).toBe('');
+  it.each([
+    // Unencoded non-ASCII is encoded the way URL.pathname would.
+    ['/café', '/caf%C3%A9'],
+    ['/日本', '/%E6%97%A5%E6%9C%AC'],
+    // An already-encoded octet is not double-encoded.
+    ['/caf%C3%A9', '/caf%C3%A9'],
+    ['/a%20b', '/a%20b'],
+    // RFC 3986 §6.2.2.1: the two hex cases are the same octet, but the matcher
+    // compares strings, so an encoded octet's hex is uppercased.
+    ['/caf%c3%a9', '/caf%C3%A9'],
+    ['/a%2fb', '/a%2Fb'],
+    ['/caf%c3%A9', '/caf%C3%A9'],
+    // A bare percent that is not a valid octet is encoded.
+    ['/100%', '/100%25'],
+    ['/%zz', '/%25zz'],
+    ['/caf%C3%A9/thé', '/caf%C3%A9/th%C3%A9'], // encoded and unencoded segments in one path
+    // Wildcard syntax, plain ASCII paths, and query strings pass through.
+    ['/*.pdf$', '/*.pdf$'],
+    ['/a/*/b$', '/a/*/b$'],
+    ['/products?page=2&sort=a', '/products?page=2&sort=a'],
+    ['', ''],
+    ['/products?filter[]=red', '/products?filter%5B%5D=red'] // brackets encode on both sides, so they still match
+  ])('encodes %p as %p', (path, expected) => {
+    expect(encodePath(path)).toBe(expected);
   });
 
   // Load-bearing: the page side arrives already encoded from URL.pathname, so a
@@ -255,106 +193,76 @@ describe('encodePath', () => {
       expect(encodePath(encodePath(p))).toBe(encodePath(p));
     }
   });
-
-  it('encodes brackets on both sides, so they still match each other', () => {
-    expect(encodePath('/products?filter[]=red')).toBe('/products?filter%5B%5D=red');
-  });
 });
 
 describe('userAgentToken', () => {
-  it('lowercases and strips a version suffix', () => {
-    expect(userAgentToken('Googlebot/2.1')).toBe('googlebot');
-    expect(userAgentToken('Googlebot')).toBe('googlebot');
-  });
-
-  it('keeps hyphens and underscores, which are token characters', () => {
-    expect(userAgentToken('OAI-SearchBot')).toBe('oai-searchbot');
-    expect(userAgentToken('some_bot')).toBe('some_bot');
-  });
-
-  it('truncates at the first non-token character', () => {
-    expect(userAgentToken('Bingbot 2.0')).toBe('bingbot');
-    expect(userAgentToken('bot(compatible)')).toBe('bot');
-  });
-
-  it('returns empty for values with no leading token character', () => {
-    expect(userAgentToken('')).toBe('');
-    expect(userAgentToken('   ')).toBe('');
-    expect(userAgentToken('*')).toBe('');
-    expect(userAgentToken('2.1')).toBe('');
+  // Lowercases and truncates at the first non-token character, so a version
+  // suffix drops off; hyphens and underscores are token characters.
+  it.each([
+    ['Googlebot/2.1', 'googlebot'],
+    ['Googlebot', 'googlebot'],
+    ['OAI-SearchBot', 'oai-searchbot'],
+    ['some_bot', 'some_bot'],
+    ['Bingbot 2.0', 'bingbot'],
+    ['bot(compatible)', 'bot'],
+    // Empty for values with no leading token character.
+    ['', ''],
+    ['   ', ''],
+    ['*', ''],
+    ['2.1', '']
+  ])('reduces %p to %p', (ua, token) => {
+    expect(userAgentToken(ua)).toBe(token);
   });
 });
 
 const lint = (text: string, size = 100) => lintRobots(parse(text), { size });
-const codes = (text: string, size = 100) => lint(text, size).map((f) => f.code);
+const codes = (text: string) => lint(text).map((f) => f.code);
+const find = (text: string, code: string, size?: number) => lint(text, size).find((f) => f.code === code);
 
 describe('lintRobots', () => {
-  it('flags rules before any group', () => {
-    expect(codes('Disallow: /a\nUser-agent: *\nDisallow: /b\n')).toContain('rule-before-group');
+  it.each([
+    ['rule-before-group', 'error', 'Disallow: /a\nUser-agent: *\nDisallow: /b\n'],
+    ['unparseable', 'error', 'User-agent: *\nDisallow /a\n'],
+    ['path-no-slash', 'error', 'User-agent: *\nDisallow: admin\n'],
+    ['full-url-path', 'warning', 'User-agent: *\nDisallow: https://x.com/a\n'],
+    ['content-signal', 'info', 'User-agent: *\nDisallow: /a\nContent-Signal: ai-train=no\n'],
+    ['unknown-directive', 'info', 'User-agent: *\nDisallow: /a\nFoo-bar: baz\n'],
+    ['crawl-delay', 'info', 'User-agent: *\nCrawl-delay: 10\n'],
+    ['crawl-delay', 'warning', 'User-agent: *\nCrawl-delay: fast\n'],
+    ['blocks-assets', 'warning', 'User-agent: *\nDisallow: /assets\n'],
+    ['sitemap-relative', 'warning', 'User-agent: *\nDisallow:\nSitemap: /sitemap.xml\n'],
+    ['no-sitemap', 'info', 'User-agent: *\nDisallow:\n']
+  ])('flags %s as %s in %j', (code, severity, text) => {
+    expect(find(text, code)?.severity).toBe(severity);
   });
 
-  it('flags a user-agent with no product token', () => {
-    const findings = lint('User-agent:\nDisallow: /admin\n');
-    const f = findings.find((x) => x.code === 'empty-user-agent')!;
-    expect(f.severity).toBe('info');
-    expect(f.line).toBe(1);
-    expect(f.message).toContain('matches no crawler');
+  it('flags a user-agent with no product token, quoting the value when there is one', () => {
+    expect(find('User-agent:\nDisallow: /admin\n', 'empty-user-agent')).toMatchObject({
+      severity: 'info',
+      line: 1,
+      message: expect.stringContaining('matches no crawler')
+    });
+    expect(find('User-agent: 2.1\nDisallow: /a\n', 'empty-user-agent')?.message).toContain('`2.1`');
   });
 
-  it('flags a user-agent whose value has no token character', () => {
-    const f = lint('User-agent: 2.1\nDisallow: /a\n').find((x) => x.code === 'empty-user-agent')!;
-    expect(f.message).toContain('`2.1`');
-  });
-
-  it('does not flag * or a versioned token as tokenless', () => {
-    expect(codes('User-agent: *\nDisallow: /a\n')).not.toContain('empty-user-agent');
-    expect(codes('User-agent: Googlebot/2.1\nDisallow: /a\n')).not.toContain('empty-user-agent');
-  });
-
-  it('counts a versioned and bare spelling of one bot as a duplicate group', () => {
-    expect(codes('User-agent: Googlebot\nDisallow: /a\n\nUser-agent: Googlebot/2.1\nDisallow: /b\n')).toContain(
-      'duplicate-group'
-    );
-  });
-
-  it('flags unparseable lines', () => {
-    expect(codes('User-agent: *\nDisallow /a\n')).toContain('unparseable');
-  });
-
-  it('flags paths missing a leading slash and full-URL paths', () => {
-    const found = codes('User-agent: *\nDisallow: admin\nDisallow: https://x.com/a\n');
-    expect(found).toContain('path-no-slash');
-    expect(found).toContain('full-url-path');
+  it('counts a versioned and bare spelling of one bot as a duplicate group, not a tokenless one', () => {
+    const found = codes('User-agent: Googlebot\nDisallow: /a\n\nUser-agent: Googlebot/2.1\nDisallow: /b\n');
+    expect(found).toContain('duplicate-group');
+    expect(found).not.toContain('empty-user-agent');
   });
 
   it('flags a site-wide block as an error', () => {
-    const findings = lint('User-agent: *\nDisallow: /\n');
-    const f = findings.find((x) => x.code === 'site-blocked')!;
-    expect(f.severity).toBe('error');
-    expect(f.line).toBe(2);
+    expect(find('User-agent: *\nDisallow: /\n', 'site-blocked')).toMatchObject({ severity: 'error', line: 2 });
   });
 
-  it('flags oversized files', () => {
-    expect(codes('User-agent: *\nDisallow:\n', 501 * 1024)).toContain('too-large');
-  });
-
-  it('warns when approaching the 500 KiB limit but errors only past it', () => {
-    const near = lint('User-agent: *\nDisallow:\n', 460 * 1024).find((f) => f.code === 'too-large')!;
-    expect(near.severity).toBe('warning');
-    expect(codes('User-agent: *\nDisallow:\n', 450 * 1024)).not.toContain('too-large');
-    // Exactly at the limit is still a warning; one byte past is an error.
-    expect(lint('User-agent: *\nDisallow:\n', 500 * 1024).find((f) => f.code === 'too-large')!.severity).toBe(
-      'warning'
-    );
-    expect(lint('User-agent: *\nDisallow:\n', 500 * 1024 + 1).find((f) => f.code === 'too-large')!.severity).toBe(
-      'error'
-    );
-  });
-
-  it('reports content-signal and unknown directives as info', () => {
-    const findings = lint('User-agent: *\nDisallow: /a\nContent-Signal: ai-train=no\nFoo-bar: baz\n');
-    expect(findings.find((f) => f.code === 'content-signal')!.severity).toBe('info');
-    expect(findings.find((f) => f.code === 'unknown-directive')!.severity).toBe('info');
+  // Warns when approaching the 500 KiB limit; exactly at it is still a warning, one byte past is an error.
+  it.each([
+    [450 * 1024, undefined],
+    [460 * 1024, 'warning'],
+    [500 * 1024, 'warning'],
+    [500 * 1024 + 1, 'error']
+  ])('rates a %i byte file as too-large: %p', (size, severity) => {
+    expect(find('User-agent: *\nDisallow:\n', 'too-large', size)?.severity).toBe(severity);
   });
 
   it('flags misspelled and retired directives', () => {
@@ -363,41 +271,18 @@ describe('lintRobots', () => {
     expect(found.filter((c) => c === 'unsupported').length).toBe(2);
   });
 
-  it('reports crawl-delay as info, or warning when non-numeric', () => {
-    const ok = lint('User-agent: *\nCrawl-delay: 10\nSitemap: https://x.com/s.xml\n');
-    expect(ok.find((f) => f.code === 'crawl-delay')!.severity).toBe('info');
-    const bad = lint('User-agent: *\nCrawl-delay: fast\n');
-    expect(bad.find((f) => f.code === 'crawl-delay')!.severity).toBe('warning');
-  });
-
-  it('flags rules that block CSS/JS assets', () => {
-    expect(codes('User-agent: *\nDisallow: /assets\n')).toContain('blocks-assets');
-    expect(codes('User-agent: *\nDisallow: /admin\n')).not.toContain('blocks-assets');
-  });
-
-  it('flags relative sitemap URLs and missing sitemaps', () => {
-    expect(codes('User-agent: *\nDisallow:\nSitemap: /sitemap.xml\n')).toContain('sitemap-relative');
-    expect(codes('User-agent: *\nDisallow:\n')).toContain('no-sitemap');
-  });
-
   it('flags empty groups, duplicate groups, and BOM', () => {
     const found = codes('﻿User-agent: *\nDisallow: /x\nUser-agent: *\nDisallow: /y\nUser-agent: GPTBot\n');
-    expect(found).toContain('empty-group');
-    expect(found).toContain('duplicate-group');
-    expect(found).toContain('bom');
+    expect(found).toEqual(expect.arrayContaining(['empty-group', 'duplicate-group', 'bom']));
   });
 
   it('returns no findings for a clean file', () => {
-    const clean = 'User-agent: *\nDisallow: /admin\n\nSitemap: https://x.com/sitemap.xml\n';
-    expect(lint(clean)).toEqual([]);
+    expect(lint('User-agent: *\nDisallow: /admin\n\nSitemap: https://x.com/sitemap.xml\n')).toEqual([]);
   });
 
-  it('sorts findings by severity', () => {
-    const findings = lint('Disallow: /a\nUser-agent: *\nCrawl-delay: 10\nNoindex: /x\nSitemap: https://x.com/s.xml\n');
-    const severities = findings.map((f) => f.severity);
-    expect(severities).toEqual(
-      [...severities].sort((a, b) => ({ error: 0, warning: 1, info: 2 })[a] - { error: 0, warning: 1, info: 2 }[b])
-    );
+  it('sorts findings by severity, then line', () => {
+    const text = '﻿Disallow: /a\nUser-agent: *\nCrawl-delay: 10\nNoindex: /x\nSitemap: https://x.com/s.xml\n';
+    expect(codes(text)).toEqual(['rule-before-group', 'bom', 'unsupported', 'crawl-delay']);
   });
 });
 
@@ -421,24 +306,19 @@ const STOCK_HOST = 'test-store.myshopify.com';
 describe('detectShopifyDefault', () => {
   it('recognizes the stock Shopify robots.txt', () => {
     const diff = detectShopifyDefault(parse(`# we use Shopify\n${stockFile()}\n`), STOCK_HOST);
-    expect(diff.isDefault).toBe(true);
-    expect(diff.addedLines).toEqual([]);
-    expect(diff.removedRules).toEqual([]);
+    expect(diff).toEqual({ isDefault: true, addedLines: [], removedRules: [] });
   });
 
   it('reports added lines with their line numbers', () => {
-    const text = `${stockFile()}\nUser-agent: GPTBot\nDisallow: /\n`;
-    const diff = detectShopifyDefault(parse(text), STOCK_HOST);
+    const diff = detectShopifyDefault(parse(`${stockFile()}\nUser-agent: GPTBot\nDisallow: /\n`), STOCK_HOST);
     expect(diff.isDefault).toBe(false);
     const lineCount = stockFile().split('\n').length;
     expect(diff.addedLines).toEqual([lineCount + 1, lineCount + 2]);
   });
 
   it('reports removed default rules', () => {
-    const lines = stockFile()
-      .split('\n')
-      .filter((l) => l !== 'Disallow: /admin');
-    const diff = detectShopifyDefault(parse(lines.join('\n')), STOCK_HOST);
+    const text = stockFile().replace(/^Disallow: \/admin$/gm, '');
+    const diff = detectShopifyDefault(parse(text), STOCK_HOST);
     expect(diff.isDefault).toBe(false);
     expect(diff.removedRules).toEqual(['disallow: /admin']);
   });
