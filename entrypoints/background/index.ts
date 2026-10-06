@@ -10,6 +10,8 @@ import { captureOrganizationId } from '@/entrypoints/collaborator-access.content
 import { getSettings, isEnabled, watchSettings } from '@/utils/settings';
 
 const UNINSTALL_SURVEY_URL = 'https://tally.so/r/zx79O8';
+// Updating to this version skips the changelog tab
+const SILENT_VERSION = '2026.10.07';
 
 export default defineBackground(() => {
   // Set uninstall survey URL
@@ -129,7 +131,11 @@ export default defineBackground(() => {
     refreshThemesCacheIfNeeded();
 
     // Open changelog page when extension is updated, unless disabled in settings
-    if (!import.meta.env.DEV && details.reason === 'update') {
+    if (
+      !import.meta.env.DEV &&
+      details.reason === 'update' &&
+      browser.runtime.getManifest().version !== SILENT_VERSION
+    ) {
       const settings = await getSettings();
       if (isEnabled(settings.general.openChangelogOnUpdate)) {
         browser.tabs.create({
