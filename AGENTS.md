@@ -65,3 +65,5 @@ Use the `/version-bump` skill, including inside `/ship`.
 Pushes to `main` that change the `package.json` version auto-publish to the
 Chrome Web Store (`publish` job in `.github/workflows/ci.yml`, `wxt submit` on
 CWS API v2 with a service account). Merges without a version bump skip it.
+`publish` waits for the `deploy-worker` job, so a failed Worker deploy holds
+the release too.
