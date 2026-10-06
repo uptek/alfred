@@ -94,4 +94,16 @@ describe('sendRuntimeMessage', () => {
     expect(await sendRuntimeMessage({ type: 'check_link_status', url: 'https://a.test' })).toBe('runtime-ack');
     expect(runtimeMessages[0]).toEqual({ type: 'check_link_status', url: 'https://a.test' });
   });
+
+  it('turns a synchronous throw from an invalidated extension context into a rejection', async () => {
+    (globalThis as { browser?: unknown }).browser = {
+      runtime: {
+        sendMessage: () => {
+          throw new Error('Extension context invalidated.');
+        }
+      }
+    };
+    const sent = sendRuntimeMessage({ type: 'track_action', action: 'popup_open' });
+    await expect(sent).rejects.toThrow('Extension context invalidated.');
+  });
 });

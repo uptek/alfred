@@ -75,9 +75,10 @@ export type RuntimeMessage =
   | { type: 'check_link_status'; url: string };
 
 /**
- * Sends a typed message to the background service worker.
+ * Sends a typed message to the background service worker. Async so an
+ * orphaned content script's synchronous throw becomes a catchable rejection.
  * @param message - The runtime message.
  */
-export function sendRuntimeMessage(message: RuntimeMessage): Promise<unknown> {
+export async function sendRuntimeMessage(message: RuntimeMessage): Promise<unknown> {
   return browser.runtime.sendMessage(message);
 }
