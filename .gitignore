@@ -42,4 +42,3 @@ node_modules
 .gstack
 brain
 .videos
-deno.lock
