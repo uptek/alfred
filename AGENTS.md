@@ -45,9 +45,18 @@ The iframe navigates client-side, so per-page features re-check the path on
 ## Analytics
 
 Events live in `utils/analytics-actions.ts` (`ANALYTICS_ACTIONS`, the source of
-truth). The Supabase track function imports `valid-actions.gen.ts`, generated
-from it via `bun run track:gen` (run automatically by `bun run deploy:track`).
-A parity test fails `bun test` when the generated file is stale.
+truth). The extension posts them to `https://api.alfredext.com/track`. That
+host is the `alfred-api` Cloudflare Worker (`worker/`, Uptek account), which
+routes by path, so new server endpoints go there too. `/track` imports the same
+list as its allowlist and writes to the D1 database `alfred-events`. CI runs
+`bun run deploy:worker` (D1 migrations, then `wrangler deploy`) on every push
+to `main`. Migrations apply while the previous Worker is still live, so keep
+them additive: new columns need defaults, and drops or renames wait for a later
+release. Query with `bunx wrangler d1 execute alfred-events --remote -c
+worker/wrangler.jsonc --command "..."`, bounding `created_at` (ISO text) with
+`strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')`, not `datetime()`. Wrangler needs
+`CLOUDFLARE_ACCOUNT_ID` in `.env` (see `.env.example`); Cloudflare account and
+resource IDs never go in the repo.
 
 ## Version Bumping & Changelog
 
