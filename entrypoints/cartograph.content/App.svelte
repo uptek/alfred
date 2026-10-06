@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import * as api from './cartApi';
   import CreditChip from '@/components/CreditChip.svelte';
-  import { trackAction } from '@/utils/analytics';
+  import { sendTrackEvent } from '@/utils/analytics';
   import type { AddItemPayload, CartData, TabId } from './types';
   import ItemsTab from './components/ItemsTab.svelte';
   import AddItemTab from './components/AddItemTab.svelte';
@@ -128,7 +128,7 @@
     if (activeTab === 'json' && !jsonInspected) {
       jsonDwellTimer = setTimeout(() => {
         jsonInspected = true;
-        trackAction('cartograph_inspect_json');
+        sendTrackEvent('cartograph_inspect_json');
       }, 3000);
     } else if (jsonDwellTimer) {
       clearTimeout(jsonDwellTimer);
@@ -236,8 +236,8 @@
         {#if activeTab === 'items'}
           <ItemsTab
             {cart}
-            onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); trackAction('cartograph_update_quantity'); }}
-            onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); trackAction('cartograph_remove_item'); }}
+            onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); sendTrackEvent('cartograph_update_quantity'); }}
+            onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); sendTrackEvent('cartograph_remove_item'); }}
             onUpdateProperties={async (key, qty, props) => {
               if (Object.keys(props).length === 0) {
                 const item = cart!.items.find(i => i.key === key)!;
@@ -249,9 +249,9 @@
               } else {
                 await mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }));
               }
-              trackAction('cartograph_update_properties');
+              sendTrackEvent('cartograph_update_properties');
             }}
-            onClearCart={async () => { await mutate(() => api.clearCart()); trackAction('cartograph_clear'); }}
+            onClearCart={async () => { await mutate(() => api.clearCart()); sendTrackEvent('cartograph_clear'); }}
             onSwitchTab={(tab) => activeTab = tab as TabId}
             onSwitchVariant={async (key, oldItem, newVariantId) => {
               await replaceItem(key, {
@@ -259,7 +259,7 @@
                 quantity: oldItem.quantity,
                 ...(oldItem.properties && Object.keys(oldItem.properties).length > 0 ? { properties: oldItem.properties } : {}),
               });
-              trackAction('cartograph_switch_variant');
+              sendTrackEvent('cartograph_switch_variant');
             }}
             onFetchProduct={(url) => api.getProductByUrl(url)}
           />
@@ -269,24 +269,24 @@
             onAddItem={async (payload: AddItemPayload) => {
               await mutate(() => api.addItem(payload));
               activeTab = 'items';
-              trackAction('cartograph_add_item');
+              sendTrackEvent('cartograph_add_item');
             }}
             onFetchProduct={(url: string) => api.getProductByUrl(url)}
           />
         {:else if activeTab === 'metadata'}
           <MetadataTab
             {cart}
-            onUpdateNote={async (note) => { await mutate(() => api.updateCart({ note })); trackAction('cartograph_update_note'); }}
-            onUpdateAttributes={async (attrs) => { await mutate(() => api.updateCart({ attributes: attrs })); trackAction('cartograph_update_attributes'); }}
-            onApplyDiscount={async (code) => { await mutate(() => api.updateCart({ discount: code })); trackAction('cartograph_apply_discount'); }}
-            onRemoveDiscount={async () => { await mutate(() => api.updateCart({ discount: '' })); trackAction('cartograph_remove_discount'); }}
+            onUpdateNote={async (note) => { await mutate(() => api.updateCart({ note })); sendTrackEvent('cartograph_update_note'); }}
+            onUpdateAttributes={async (attrs) => { await mutate(() => api.updateCart({ attributes: attrs })); sendTrackEvent('cartograph_update_attributes'); }}
+            onApplyDiscount={async (code) => { await mutate(() => api.updateCart({ discount: code })); sendTrackEvent('cartograph_apply_discount'); }}
+            onRemoveDiscount={async () => { await mutate(() => api.updateCart({ discount: '' })); sendTrackEvent('cartograph_remove_discount'); }}
           />
         {:else if activeTab === 'shipping'}
           <ShippingTab
             {cart}
             onCalculateRates={async (addr) => {
               const rates = await api.getShippingRates(addr);
-              trackAction('cartograph_calculate_shipping');
+              sendTrackEvent('cartograph_calculate_shipping');
               return rates;
             }}
           />
