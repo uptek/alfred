@@ -48,7 +48,10 @@ Events live in `utils/analytics-actions.ts` (`ANALYTICS_ACTIONS`, the source of
 truth). The extension posts them to `https://api.alfredext.com/track`. That
 host is the `alfred-api` Cloudflare Worker (`worker/`, Uptek account), which
 routes by path, so new server endpoints go there too. `/track` imports the same
-list as its allowlist and writes to the D1 database `alfred-events`. CI runs
+list as its allowlist and writes to the D1 database `alfred-events`.
+`/uninstall` is the extension's uninstall URL when analytics is on: it records
+an `uninstall` event, then redirects to the survey. Going back from the survey
+records another, so count distinct `user_id`s. CI runs
 `bun run deploy:worker` (D1 migrations, then `wrangler deploy`) on every push
 to `main`. Migrations apply while the previous Worker is still live, so keep
 them additive: new columns need defaults, and drops or renames wait for a later

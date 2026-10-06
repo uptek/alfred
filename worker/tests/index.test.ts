@@ -160,3 +160,30 @@ describe('track worker', () => {
     expect((await send(JSON.stringify(event), { method: 'POST' }, '/other')).status).toBe(404);
   });
 });
+
+describe('uninstall route', () => {
+  it('stores an uninstall event and redirects to the survey', async () => {
+    const { inserts, send } = setup();
+    const response = await send('', { method: 'GET' }, '/uninstall?user_id=u1&version=2026.10.07');
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toBe('https://tally.so/r/zx79O8');
+    expect(inserts.map((values) => values.slice(1))).toEqual([['u1', 'uninstall', 0, '2026.10.07', '{}']]);
+  });
+
+  it('still redirects to the survey without a user id, storing nothing', async () => {
+    const { inserts, send } = setup();
+    for (const query of ['', '?version=2026.10.07', '?user_id=&version=2026.10.07']) {
+      const response = await send('', { method: 'GET' }, `/uninstall${query}`);
+      expect(response.status).toBe(302);
+      expect(response.headers.get('Location')).toBe('https://tally.so/r/zx79O8');
+    }
+    expect(inserts).toEqual([]);
+  });
+
+  it('is the only way to record an uninstall', async () => {
+    // Pages can make the extension post any allowlisted action, so /track must not accept this one
+    const { inserts, send } = setup();
+    await send(JSON.stringify({ ...event, action: 'uninstall', metadata: {} }));
+    expect(inserts).toEqual([]);
+  });
+});
