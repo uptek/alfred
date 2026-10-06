@@ -21,6 +21,7 @@
     "changelog:gen": "bun scripts/generate-changelog.ts",
     "track:gen": "bun scripts/generate-valid-actions.ts",
     "deploy:track": "bun run track:gen && supabase functions deploy track",
+    "deploy:worker": "wrangler d1 migrations apply alfred-events --remote -c worker/wrangler.jsonc && wrangler deploy -c worker/wrangler.jsonc",
     "testpages": "bun test-pages/server.ts",
     "submit": "bash scripts/submit.sh",
     "prepare": "cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",

@@ -1,0 +1,13 @@
+// Account and resource IDs stay out of this public repo: wrangler reads the
+// account from CLOUDFLARE_ACCOUNT_ID (.env locally, a secret in CI). D1 commands
+// find the database by name, and deploys keep the binding already on the Worker.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "alfred-api",
+  "main": "index.ts",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "routes": [{ "pattern": "api.alfredext.com", "custom_domain": true }],
+  "d1_databases": [{ "binding": "DB", "database_name": "alfred-events", "migrations_dir": "migrations" }],
+  "observability": { "enabled": true }
+}
