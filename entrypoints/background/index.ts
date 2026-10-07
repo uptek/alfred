@@ -1,6 +1,7 @@
 import { storage } from '#imports';
 import { registerShortcuts } from './shortcuts';
 import { checkLinkStatus } from './linkStatus';
+import { startHeartbeat } from './heartbeat';
 import { keyFor } from '@/entrypoints/popup/stores/tabState';
 import { getUninstallUrl, trackAction } from '@/utils/analytics';
 import type { RuntimeMessage } from '@/utils/messages';
@@ -20,6 +21,7 @@ export default defineBackground(() => {
       .catch(() => {});
   void updateUninstallUrl();
   watchSettings(() => void updateUninstallUrl());
+  void startHeartbeat();
 
   // Track navigation start URLs to handle redirect chains correctly
   // This is needed because preview_theme_id URLs may redirect multiple times before /password

@@ -26,7 +26,7 @@ export default defineConfig({
     action: {
       default_title: 'Alfred'
     },
-    permissions: ['contextMenus', 'scripting', 'tabs', 'activeTab', 'storage', 'webNavigation'],
+    permissions: ['alarms', 'contextMenus', 'scripting', 'tabs', 'activeTab', 'storage', 'webNavigation'],
     host_permissions: ['<all_urls>'],
     web_accessible_resources: [
       {
