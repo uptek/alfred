@@ -10,8 +10,8 @@ import { refreshThemesCacheIfNeeded } from '@/utils/themesCache';
 import { captureOrganizationId } from '@/entrypoints/collaborator-access.content/presets';
 import { getSettings, isEnabled, watchSettings } from '@/utils/settings';
 
-// Updating to this version skips the changelog tab
-const SILENT_VERSION = '2026.10.07';
+// Updates to a silent release skip the changelog tab
+const SILENT_RELEASE = true;
 
 export default defineBackground(() => {
   // The uninstall URL carries the analytics opt-in, so refresh it whenever settings change
@@ -136,12 +136,8 @@ export default defineBackground(() => {
     // Prefetch themes cache on install and update
     refreshThemesCacheIfNeeded();
 
-    // Open changelog page when extension is updated, unless disabled in settings
-    if (
-      !import.meta.env.DEV &&
-      details.reason === 'update' &&
-      browser.runtime.getManifest().version !== SILENT_VERSION
-    ) {
+    // Open changelog page on update, unless this is a silent release or the user turned it off
+    if (!import.meta.env.DEV && details.reason === 'update' && !SILENT_RELEASE) {
       const settings = await getSettings();
       if (isEnabled(settings.general.openChangelogOnUpdate)) {
         browser.tabs.create({
