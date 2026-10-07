@@ -19,12 +19,18 @@ description: Bump version using CalVer (YYYY.MM.DD) and add a changelog entry
    - Recent commits since last version tag (`git log`)
    - Recent entries in `changelog.json` to avoid duplicating already-recorded changes
    - Write a user-facing changelog summary from the changes (not technical commit messages)
-5. Update all three files:
+5. Decide whether the release is silent. `SILENT_RELEASE` in `entrypoints/background/index.ts`
+   stays as set until changed, so set it on every bump:
+   - User-facing changes → `false`, so updating users see the changelog tab
+   - Nothing users would notice (analytics, internal fixes) → `true`, and skip the `changelog.json` entry
+   - Not sure → ask the user before bumping
+6. Update the files:
    - `package.json` → `"version": "NEW_VERSION"`
    - `wxt.config.ts` → `version: 'NEW_VERSION'`
-   - `changelog.json` → prepend new entry to the array
-6. Run `bun run changelog:gen` to regenerate changelog files
-7. Report the version bump
+   - `changelog.json` → prepend new entry to the array (unless silent)
+   - `entrypoints/background/index.ts` → `const SILENT_RELEASE = true | false;`
+7. Run `bun run changelog:gen` to regenerate changelog files
+8. Report the version bump and whether it is silent
 
 ## Files to update
 
@@ -38,6 +44,12 @@ description: Bump version using CalVer (YYYY.MM.DD) and add a changelog entry
 
 ```ts
 version: 'YYYY.MM.DD',
+```
+
+### entrypoints/background/index.ts
+
+```ts
+const SILENT_RELEASE = false;
 ```
 
 ### changelog.json

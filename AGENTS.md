@@ -51,7 +51,13 @@ routes by path, so new server endpoints go there too. `/track` imports the same
 list as its allowlist and writes to the D1 database `alfred-events`.
 `/uninstall` is the extension's uninstall URL when analytics is on: it records
 an `uninstall` event, then redirects to the survey. Going back from the survey
-records another, so count distinct `user_id`s. CI runs
+records another, so count distinct `user_id`s. Chrome has no event for an
+extension being disabled, so the background tracks a `heartbeat` about once a
+day (`entrypoints/background/heartbeat.ts`). A user whose heartbeats stop with
+no `uninstall` row has disabled Alfred, turned analytics off, or stopped using
+Chrome; compare that rate across versions rather than reading it alone. Pages
+can fire any listed action and a recreated alarm can fire twice in a day, so
+count distinct users per day, not rows. CI runs
 `bun run deploy:worker` (D1 migrations, then `wrangler deploy`) on every push
 to `main`. Migrations apply while the previous Worker is still live, so keep
 them additive: new columns need defaults, and drops or renames wait for a later
