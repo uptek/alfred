@@ -38,7 +38,7 @@ entrypoints/          # Extension entry points
   options/            # Options/settings page
 utils/                # Shared utilities
 assets/               # Static assets (icons, data)
-supabase/             # Edge functions and database views
+worker/               # Analytics Worker (Cloudflare) and D1 schema
 ```
 
 Key conventions:
@@ -89,10 +89,9 @@ to work around: its MutationObserver reports attribute changes on descendants
 only when `childList` is observed too, `:disabled` doesn't match controls inside
 a disabled `<fieldset>`, and a `tabIndex` of 0 reads back as -1.
 
-If you add, rename, or remove an analytics event in
-`utils/analytics-actions.ts`, run `bun run track:gen` to regenerate
-`supabase/functions/track/valid-actions.gen.ts`. A parity test fails `bun test`
-when the generated file is stale.
+Analytics events are listed in `utils/analytics-actions.ts`. The track Worker
+in `worker/` imports that list as its allowlist and redeploys from CI on every
+push to `main`, so a new event is accepted once its PR merges.
 
 ## Submitting Changes
 

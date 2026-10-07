@@ -1,5 +1,5 @@
 import { getSettings, isEnabled } from '~/utils/settings';
-import { trackAction } from '@/utils/analytics';
+import { sendTrackEvent } from '@/utils/analytics';
 import type { TabMessage } from '@/utils/messages';
 
 export default defineContentScript({
@@ -15,7 +15,7 @@ export default defineContentScript({
     const open = async () => {
       if (mounted) return;
       mounted = true;
-      trackAction('cartograph_open');
+      sendTrackEvent('cartograph_open');
       try {
         const { mountCartograph } = await import('./mount');
         mountCartograph(ctx, () => {

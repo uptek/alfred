@@ -1,8 +1,0 @@
-# Supabase
-.temp/
-.branches
-.env
-
-# Local Supabase files
-config.toml
-migrations/

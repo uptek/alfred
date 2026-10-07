@@ -17,21 +17,30 @@ import {
   socialProfiles,
   analyzeOverview
 } from '../utils/overview';
-import type { RawOverview, OverviewNetwork, RobotsResponse, ShopifyContext, RawLink } from '../utils/types';
+import type {
+  CanonicalInfo,
+  OverviewFinding,
+  RawOverview,
+  OverviewNetwork,
+  RobotsDirective,
+  RobotsResponse,
+  ShopifyContext,
+  RawLink
+} from '../utils/types';
+
+const SHOP = 'https://shop.example.com';
+const PAGE = `${SHOP}/products/widget`;
+
+/** Canonical tag whose href resolves against the product page. */
+const canon = (raw: string, inHead = true) => ({ raw, resolved: new URL(raw, PAGE).href, inHead });
 
 export const baseRaw = (over: Partial<RawOverview> = {}): RawOverview => ({
-  url: 'https://shop.example.com/products/widget',
+  url: PAGE,
   titles: ['Widget — Example Shop, purveyor of fine widgets'],
   descriptions: ['A'.repeat(120)],
   robotsMeta: [],
   googlebotMeta: [],
-  canonicals: [
-    {
-      raw: 'https://shop.example.com/products/widget',
-      resolved: 'https://shop.example.com/products/widget',
-      inHead: true
-    }
-  ],
+  canonicals: [canon(PAGE)],
   viewport: 'width=device-width, initial-scale=1',
   charset: 'UTF-8',
   lang: 'en',
@@ -50,52 +59,52 @@ export const baseNetwork = (over: Partial<OverviewNetwork> = {}): OverviewNetwor
   xRobotsTag: null,
   rawTitle: 'Widget — Example Shop, purveyor of fine widgets',
   rawDescription: 'A'.repeat(120),
-  rawCanonical: 'https://shop.example.com/products/widget',
+  rawCanonical: PAGE,
   rawRobotsMeta: null,
   ...over
 });
 
-const codes = (findings: { code: string }[]) => findings.map((f) => f.code);
+// Only the fields the analyzer reads.
+const baseShopify = (over: Partial<ShopifyContext> = {}) =>
+  ({
+    isShopify: true,
+    pageType: 'product',
+    locale: 'en',
+    themeRole: 'main',
+    designMode: false,
+    ...over
+  }) as ShopifyContext;
+
+const robots = (content: string, over: Partial<RobotsResponse> = {}) =>
+  ({ ok: true, status: 200, content, ...over }) as RobotsResponse;
+
+const d = (name: string, source = 'meta', value: string | null = null) => ({ name, value, source }) as RobotsDirective;
+const h = (name: string) => d(name, 'header');
+const DISALLOW_PRIVATE = robots('User-agent: *\nDisallow: /private/');
+
+const codes = (findings: OverviewFinding[]) => findings.map((f) => f.code);
+const sev = (findings: OverviewFinding[], code: string) => findings.find((f) => f.code === code)?.severity;
 
 describe('parseDirectives', () => {
-  test('splits comma-separated meta robots into named directives', () => {
-    const ds = pd(baseRaw({ robotsMeta: ['noindex, nofollow'] }), null);
-    expect(ds).toEqual([
-      { name: 'noindex', value: null, source: 'meta' },
-      { name: 'nofollow', value: null, source: 'meta' }
-    ]);
-  });
-
-  test('captures values, including colons inside unavailable_after dates', () => {
-    const ds = pd(baseRaw({ robotsMeta: ['max-snippet:20, unavailable_after: 2026-12-01T00:00:00Z'] }), null);
-    expect(ds).toEqual([
-      { name: 'max-snippet', value: '20', source: 'meta' },
-      { name: 'unavailable_after', value: '2026-12-01T00:00:00Z', source: 'meta' }
-    ]);
-  });
-
-  test('reads googlebot meta and X-Robots-Tag header sources', () => {
-    const ds = pd(baseRaw({ googlebotMeta: ['noindex'] }), baseNetwork({ xRobotsTag: 'noarchive' }));
-    expect(ds).toContainEqual({ name: 'noindex', value: null, source: 'googlebot' });
-    expect(ds).toContainEqual({ name: 'noarchive', value: null, source: 'header' });
-  });
-
-  test('unwraps bot-scoped X-Robots-Tag form "googlebot: noindex"', () => {
-    const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'googlebot: noindex, nofollow' }));
-    expect(ds).toContainEqual({ name: 'noindex', value: null, source: 'header' });
-    expect(ds).toContainEqual({ name: 'nofollow', value: null, source: 'header' });
-  });
-
-  test('drops the whole comma-separated list scoped to another bot', () => {
-    const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'otherbot: index, noindex' }));
-    expect(ds).toEqual([]);
-  });
-
-  test('a new bot scope resets a prior scope mid-header', () => {
-    const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'otherbot: noindex, googlebot: nofollow, noarchive' }));
-    expect(ds).toContainEqual({ name: 'nofollow', value: null, source: 'header' });
-    expect(ds).toContainEqual({ name: 'noarchive', value: null, source: 'header' });
-    expect(ds).not.toContainEqual({ name: 'noindex', value: null, source: 'header' });
+  test.each([
+    ['splits comma-separated meta robots', { robotsMeta: ['noindex, nofollow'] }, null, [d('noindex'), d('nofollow')]],
+    [
+      'captures values, including colons inside unavailable_after dates',
+      { robotsMeta: ['max-snippet:20, unavailable_after: 2026-12-01T00:00:00Z'] },
+      null,
+      [d('max-snippet', 'meta', '20'), d('unavailable_after', 'meta', '2026-12-01T00:00:00Z')]
+    ],
+    ['reads googlebot meta', { googlebotMeta: ['noindex'] }, 'noarchive', [d('noindex', 'googlebot'), h('noarchive')]],
+    ['unwraps a googlebot-scoped header', {}, 'googlebot: noindex, nofollow', [h('noindex'), h('nofollow')]],
+    ['drops the whole list scoped to another bot', {}, 'otherbot: index, noindex', []],
+    [
+      'a new bot scope resets the prior one',
+      {},
+      'otherbot: noindex, googlebot: nofollow, noarchive',
+      [h('nofollow'), h('noarchive')]
+    ]
+  ])('%s', (_, over, xRobotsTag, expected) => {
+    expect(pd(baseRaw(over), baseNetwork({ xRobotsTag }))).toEqual(expected);
   });
 
   test('returns empty for null inputs', () => {
@@ -104,220 +113,108 @@ describe('parseDirectives', () => {
 });
 
 describe('directive helpers', () => {
-  test('hasNoindex matches noindex and none', () => {
-    expect(hasNoindex([{ name: 'none', value: null, source: 'meta' }])).toBe(true);
-    expect(hasNoindex([{ name: 'noindex', value: null, source: 'header' }])).toBe(true);
-    expect(hasNoindex([{ name: 'nofollow', value: null, source: 'meta' }])).toBe(false);
-  });
-
-  test('hasNosnippet matches nosnippet and max-snippet:0', () => {
-    expect(hasNosnippet([{ name: 'max-snippet', value: '0', source: 'meta' }])).toBe(true);
-    expect(hasNosnippet([{ name: 'max-snippet', value: '20', source: 'meta' }])).toBe(false);
-    expect(hasNosnippet([{ name: 'nosnippet', value: null, source: 'meta' }])).toBe(true);
+  const helpers = { hasNoindex, hasNofollow, hasNosnippet };
+  test.each([
+    ['hasNoindex', 'none', null, true],
+    ['hasNoindex', 'noindex', null, true],
+    ['hasNoindex', 'nofollow', null, false],
+    ['hasNofollow', 'none', null, true],
+    ['hasNofollow', 'nofollow', null, true],
+    ['hasNofollow', 'noindex', null, false],
+    ['hasNosnippet', 'nosnippet', null, true],
+    ['hasNosnippet', 'max-snippet', '0', true],
+    ['hasNosnippet', 'max-snippet', '20', false]
+  ] as const)('%s(%s:%p) is %p', (fn, name, value, expected) => {
+    expect(helpers[fn]([d(name, 'meta', value)])).toBe(expected);
   });
 });
 
 describe('normalizeUrl', () => {
-  test('drops hash, collapses trailing slash, keeps query', () => {
+  test('normalizes parseable URLs and returns anything else as-is', () => {
     expect(normalizeUrl('https://a.com/path/#frag')).toBe('https://a.com/path');
-    expect(normalizeUrl('https://a.com/')).toBe('https://a.com/');
-    expect(normalizeUrl('https://a.com/p?page=2')).toBe('https://a.com/p?page=2');
+    expect(normalizeUrl('not a url')).toBe('not a url');
   });
 });
 
 describe('canonicalInfo', () => {
-  test('self when canonical matches the page URL', () => {
-    expect(canonicalInfo(baseRaw())).toEqual({
-      kind: 'self',
-      href: 'https://shop.example.com/products/widget'
-    });
+  test('self when the canonical matches the page URL', () => {
+    expect(canonicalInfo(baseRaw())).toEqual({ kind: 'self', href: PAGE });
   });
 
-  test('elsewhere when same host, different path or query', () => {
-    const raw = baseRaw({ url: 'https://shop.example.com/products/widget?variant=123' });
-    expect(canonicalInfo(raw).kind).toBe('elsewhere');
-  });
-
-  test('cross-domain when host differs', () => {
-    const raw = baseRaw({
-      canonicals: [{ raw: 'https://other.com/x', resolved: 'https://other.com/x', inHead: true }]
-    });
-    expect(canonicalInfo(raw).kind).toBe('cross-domain');
-  });
-
-  test('missing when no canonical, multiple when conflicting targets', () => {
-    expect(canonicalInfo(baseRaw({ canonicals: [] })).kind).toBe('missing');
-    const raw = baseRaw({
-      canonicals: [
-        { raw: '/a', resolved: 'https://shop.example.com/a', inHead: true },
-        { raw: '/b', resolved: 'https://shop.example.com/b', inHead: true }
-      ]
-    });
-    expect(canonicalInfo(raw).kind).toBe('multiple');
-  });
-
-  test('duplicate canonicals pointing at the same URL are not "multiple"', () => {
-    const raw = baseRaw({
-      canonicals: [
-        { raw: '/products/widget', resolved: 'https://shop.example.com/products/widget', inHead: true },
-        { raw: '/products/widget', resolved: 'https://shop.example.com/products/widget', inHead: true }
-      ]
-    });
-    expect(canonicalInfo(raw).kind).toBe('self');
-  });
-
-  test('body canonicals never drive the canonical state', () => {
-    const bodyOnly = baseRaw({
-      canonicals: [{ raw: '/other', resolved: 'https://shop.example.com/other', inHead: false }]
-    });
-    expect(canonicalInfo(bodyOnly).kind).toBe('missing');
-
-    const headWinsOverConflictingBody = baseRaw({
-      canonicals: [
-        { raw: '/products/widget', resolved: 'https://shop.example.com/products/widget', inHead: true },
-        { raw: '/other', resolved: 'https://shop.example.com/other', inHead: false }
-      ]
-    });
-    expect(canonicalInfo(headWinsOverConflictingBody).kind).toBe('self');
+  test.each([
+    ['elsewhere for the same host and a different URL', { url: `${PAGE}?variant=123` }, 'elsewhere'],
+    ['cross-domain when the host differs', { canonicals: [canon('https://other.com/x')] }, 'cross-domain'],
+    ['missing with no canonical', { canonicals: [] }, 'missing'],
+    ['missing when the only canonical is in the body', { canonicals: [canon('/other', false)] }, 'missing'],
+    ['multiple for conflicting targets', { canonicals: [canon('/a'), canon('/b')] }, 'multiple'],
+    [
+      'multiple for an unparseable URL',
+      { canonicals: [{ raw: 'x', resolved: 'not a url', inHead: true }] },
+      'multiple'
+    ],
+    ['self for duplicates pointing at one URL', { canonicals: [canon('/products/widget'), canon(PAGE)] }, 'self'],
+    ['self when a head canonical conflicts with a body one', { canonicals: [canon(PAGE), canon('/x', false)] }, 'self']
+  ])('%s', (_, over, kind) => {
+    expect(canonicalInfo(baseRaw(over)).kind).toBe(kind);
   });
 });
 
 describe('coreFindings', () => {
-  test('clean page produces no core findings', () => {
-    const raw = baseRaw();
-    expect(coreFindings(raw, canonicalInfo(raw))).toEqual([]);
+  const core = (over: Partial<RawOverview>) => {
+    const raw = baseRaw(over);
+    return coreFindings(raw, canonicalInfo(raw));
+  };
+
+  test('clean page, even with an empty extra title tag, produces no core findings', () => {
+    expect(core({})).toEqual([]);
+    expect(core({ titles: ['One title that is long enough here', ''] })).toEqual([]);
   });
 
-  test('flags missing title as error and short/long titles as warnings', () => {
-    let raw = baseRaw({ titles: [] });
-    expect(codes(coreFindings(raw, canonicalInfo(raw)))).toContain('title-missing');
-    raw = baseRaw({ titles: ['Short'] });
-    expect(codes(coreFindings(raw, canonicalInfo(raw)))).toContain('title-short');
-    raw = baseRaw({ titles: ['X'.repeat(75)] });
-    expect(codes(coreFindings(raw, canonicalInfo(raw)))).toContain('title-long');
+  test.each([
+    ['no title', { titles: [] }, 'title-missing', 'error'],
+    ['a whitespace-only title', { titles: ['   '] }, 'title-missing', 'error'],
+    ['a short title', { titles: ['Short'] }, 'title-short', 'warning'],
+    ['a long title', { titles: ['X'.repeat(75)] }, 'title-long', 'warning'],
+    ['two title tags', { titles: ['One title that is long enough here', 'Second'] }, 'title-multiple', 'error'],
+    ['no description', { descriptions: [] }, 'description-missing', 'error'],
+    ['a short description', { descriptions: ['too short'] }, 'description-short', 'warning'],
+    ['a long description', { descriptions: ['D'.repeat(200)] }, 'description-long', 'warning'],
+    ['no canonical', { canonicals: [] }, 'canonical-missing', 'info'],
+    ['a canonical to another URL', { url: `${PAGE}?variant=1` }, 'canonical-elsewhere', 'info'],
+    ['conflicting canonicals', { canonicals: [canon('/a'), canon('/b')] }, 'canonical-multiple', 'error'],
+    ['a relative canonical', { canonicals: [canon('/products/widget')] }, 'canonical-relative', 'warning'],
+    ['a canonical in the body', { canonicals: [canon(PAGE, false)] }, 'canonical-in-body', 'warning'],
+    ['an http canonical', { canonicals: [canon('http://shop.example.com/x')] }, 'canonical-http-downgrade', 'warning']
+  ])('flags %s as %s (%s)', (_, over, code, severity) => {
+    expect(sev(core(over), code)).toBe(severity);
   });
-
-  test('flags multiple title tags as error', () => {
-    const raw = baseRaw({ titles: ['One title that is long enough here', 'Second'] });
-    expect(codes(coreFindings(raw, canonicalInfo(raw)))).toContain('title-multiple');
-  });
-
-  test('ignores an empty title tag alongside a real one', () => {
-    const raw = baseRaw({ titles: ['One title that is long enough here', ''] });
-    const found = codes(coreFindings(raw, canonicalInfo(raw)));
-    expect(found).not.toContain('title-multiple');
-    expect(found).not.toContain('title-missing');
-  });
-
-  test('flags missing/short/long description', () => {
-    expect(codes(coreFindings(baseRaw({ descriptions: [] }), canonicalInfo(baseRaw())))).toContain(
-      'description-missing'
-    );
-    expect(codes(coreFindings(baseRaw({ descriptions: ['too short'] }), canonicalInfo(baseRaw())))).toContain(
-      'description-short'
-    );
-    expect(codes(coreFindings(baseRaw({ descriptions: ['D'.repeat(200)] }), canonicalInfo(baseRaw())))).toContain(
-      'description-long'
-    );
-  });
-
-  test('flags canonical problems: relative, in body, http downgrade, multiple', () => {
-    const relative = baseRaw({
-      canonicals: [{ raw: '/products/widget', resolved: 'https://shop.example.com/products/widget', inHead: true }]
-    });
-    expect(codes(coreFindings(relative, canonicalInfo(relative)))).toContain('canonical-relative');
-
-    const inBody = baseRaw({
-      canonicals: [
-        {
-          raw: 'https://shop.example.com/products/widget',
-          resolved: 'https://shop.example.com/products/widget',
-          inHead: false
-        }
-      ]
-    });
-    expect(codes(coreFindings(inBody, canonicalInfo(inBody)))).toContain('canonical-in-body');
-
-    const downgrade = baseRaw({
-      canonicals: [
-        {
-          raw: 'http://shop.example.com/products/widget',
-          resolved: 'http://shop.example.com/products/widget',
-          inHead: true
-        }
-      ]
-    });
-    expect(codes(coreFindings(downgrade, canonicalInfo(downgrade)))).toContain('canonical-http-downgrade');
-
-    const multi = baseRaw({
-      canonicals: [
-        { raw: '/a', resolved: 'https://shop.example.com/a', inHead: true },
-        { raw: '/b', resolved: 'https://shop.example.com/b', inHead: true }
-      ]
-    });
-    expect(codes(coreFindings(multi, canonicalInfo(multi)))).toContain('canonical-multiple');
-  });
-
-  test('canonical missing is info, elsewhere is info', () => {
-    const missing = coreFindings(baseRaw({ canonicals: [] }), canonicalInfo(baseRaw({ canonicals: [] })));
-    expect(missing.find((f) => f.code === 'canonical-missing')?.severity).toBe('info');
-    const elsewhereRaw = baseRaw({ url: 'https://shop.example.com/products/widget?variant=1' });
-    const elsewhere = coreFindings(elsewhereRaw, canonicalInfo(elsewhereRaw));
-    expect(elsewhere.find((f) => f.code === 'canonical-elsewhere')?.severity).toBe('info');
-  });
-});
-
-const baseShopify = (over: Partial<ShopifyContext> = {}): ShopifyContext => ({
-  isShopify: true,
-  pageType: 'product',
-  resourceId: '123',
-  shop: 'example.myshopify.com',
-  locale: 'en',
-  currency: 'USD',
-  country: 'US',
-  marketRoot: '/',
-  themeRole: 'main',
-  designMode: false,
-  ...over
-});
-
-const robotsResponse = (content: string): RobotsResponse => ({
-  ok: true,
-  status: 200,
-  content,
-  finalUrl: 'https://shop.example.com/robots.txt',
-  size: content.length,
-  truncated: false
 });
 
 describe('directiveFindings', () => {
+  const df = (robotsMeta: string[], xRobotsTag: string | null = null) =>
+    directiveFindings(pd(baseRaw({ robotsMeta }), baseNetwork({ xRobotsTag })));
+
   test('noindex is error; nofollow and nosnippet are warnings', () => {
-    const f = directiveFindings(pd(baseRaw({ robotsMeta: ['noindex, nofollow, nosnippet'] }), null));
-    expect(f.find((x) => x.code === 'noindex')?.severity).toBe('error');
-    expect(f.find((x) => x.code === 'nofollow')?.severity).toBe('warning');
-    expect(f.find((x) => x.code === 'nosnippet')?.severity).toBe('warning');
+    const f = df(['noindex, nofollow, nosnippet']);
+    expect(sev(f, 'noindex')).toBe('error');
+    expect(sev(f, 'nofollow')).toBe('warning');
+    expect(sev(f, 'nosnippet')).toBe('warning');
     expect(f.find((x) => x.code === 'nosnippet')?.message).toContain('AI Overviews');
   });
 
   test('unavailable_after warns with the date; noai is info', () => {
-    const f = directiveFindings(pd(baseRaw({ robotsMeta: ['unavailable_after: 2026-12-01, noai'] }), null));
+    const f = df(['unavailable_after: 2026-12-01, noai']);
     expect(f.find((x) => x.code === 'unavailable-after')?.message).toContain('2026-12-01');
-    expect(f.find((x) => x.code === 'noai')?.severity).toBe('info');
+    expect(sev(f, 'noai')).toBe('info');
   });
 
-  test('meta and header disagreement on noindex is flagged', () => {
-    const f = directiveFindings(pd(baseRaw({ robotsMeta: ['index, follow'] }), baseNetwork({ xRobotsTag: 'noindex' })));
-    expect(f.map((x) => x.code)).toContain('robots-conflict');
-  });
-
-  test('header-only noindex is not a conflict', () => {
-    const f = directiveFindings(pd(baseRaw(), baseNetwork({ xRobotsTag: 'noindex' })));
-    expect(f.map((x) => x.code)).not.toContain('robots-conflict');
-    expect(f.map((x) => x.code)).toContain('noindex');
+  test('flags meta and header disagreeing on noindex, but not a header-only noindex', () => {
+    expect(codes(df(['index, follow'], 'noindex'))).toContain('robots-conflict');
+    expect(codes(df([], 'noindex'))).toEqual(['noindex']);
   });
 
   test('clean directives produce nothing', () => {
-    expect(directiveFindings(pd(baseRaw(), baseNetwork()))).toEqual([]);
+    expect(df([])).toEqual([]);
   });
 });
 
@@ -326,47 +223,27 @@ describe('technicalFindings', () => {
     expect(technicalFindings(baseRaw(), false, baseShopify())).toEqual([]);
   });
 
-  test('missing viewport is error; user-scalable=no is warning', () => {
-    expect(codes(technicalFindings(baseRaw({ viewport: null }), null, null))).toContain('viewport-missing');
-    expect(
-      codes(technicalFindings(baseRaw({ viewport: 'width=device-width, user-scalable=no' }), null, null))
-    ).toContain('viewport-no-zoom');
+  test('llms.txt presence is info', () => {
+    expect(sev(technicalFindings(baseRaw(), true, null), 'llms-txt')).toBe('info');
   });
 
-  test('missing lang and locale mismatch warn', () => {
-    expect(codes(technicalFindings(baseRaw({ lang: '' }), null, null))).toContain('lang-missing');
-    expect(codes(technicalFindings(baseRaw({ lang: 'de' }), null, baseShopify({ locale: 'en' })))).toContain(
-      'lang-locale-mismatch'
-    );
-    expect(codes(technicalFindings(baseRaw({ lang: 'en-GB' }), null, baseShopify({ locale: 'en' })))).not.toContain(
-      'lang-locale-mismatch'
-    );
-  });
-
-  test('non-UTF8 charset and missing favicon warn', () => {
-    expect(codes(technicalFindings(baseRaw({ charset: 'ISO-8859-1' }), null, null))).toContain('charset');
-    expect(codes(technicalFindings(baseRaw({ faviconHref: null }), null, null))).toContain('favicon-missing');
-  });
-
-  test('word count bands: <100 warning, <300 info, 300+ nothing', () => {
-    const thin = technicalFindings(baseRaw({ wordCount: 42 }), null, null);
-    expect(thin.find((f) => f.code === 'thin-content')?.severity).toBe('warning');
-    const light = technicalFindings(baseRaw({ wordCount: 200 }), null, null);
-    expect(light.find((f) => f.code === 'thin-content')?.severity).toBe('info');
-    expect(codes(technicalFindings(baseRaw({ wordCount: 500 }), null, null))).not.toContain('thin-content');
-  });
-
-  test('llms.txt presence is info; inverted dates are info', () => {
-    expect(codes(technicalFindings(baseRaw(), true, null))).toContain('llms-txt');
-    expect(
-      codes(
-        technicalFindings(
-          baseRaw({ publishedTime: '2026-05-01T00:00:00Z', modifiedTime: '2026-01-01T00:00:00Z' }),
-          null,
-          null
-        )
-      )
-    ).toContain('dates-inverted');
+  // The store locale is 'en' in every row.
+  test.each([
+    ['viewport-missing', 'error', { viewport: null }],
+    ['viewport-no-zoom', 'warning', { viewport: 'width=device-width, user-scalable=no' }],
+    ['viewport-no-zoom', 'warning', { viewport: 'width=device-width, maximum-scale=1' }],
+    ['lang-missing', 'warning', { lang: '' }],
+    ['lang-locale-mismatch', 'warning', { lang: 'de' }],
+    ['lang-locale-mismatch', undefined, { lang: 'en-GB' }],
+    ['charset', 'warning', { charset: 'ISO-8859-1' }],
+    ['charset', undefined, { charset: '' }],
+    ['favicon-missing', 'warning', { faviconHref: null }],
+    ['thin-content', 'warning', { wordCount: 42 }],
+    ['thin-content', 'info', { wordCount: 200 }],
+    ['thin-content', undefined, { wordCount: 500 }],
+    ['dates-inverted', 'info', { publishedTime: '2026-05-01T00:00:00Z', modifiedTime: '2026-01-01T00:00:00Z' }]
+  ])('%s is %p for %p', (code, severity, over) => {
+    expect(sev(technicalFindings(baseRaw(over), null, baseShopify()), code)).toBe(severity);
   });
 });
 
@@ -378,21 +255,16 @@ describe('rawVsRenderedFindings', () => {
   test('JS-modified title/description are info; canonical/robots are warnings', () => {
     const f = rawVsRenderedFindings(
       baseRaw({ robotsMeta: ['noindex'] }),
-      baseNetwork({
-        rawTitle: 'Original server title for the widget page',
-        rawDescription: 'B'.repeat(120),
-        rawCanonical: 'https://shop.example.com/products/other',
-        rawRobotsMeta: null
-      })
+      baseNetwork({ rawTitle: 'Server title', rawDescription: 'B'.repeat(120), rawCanonical: `${SHOP}/products/other` })
     );
-    expect(f.find((x) => x.code === 'title-js-modified')?.severity).toBe('info');
-    expect(f.find((x) => x.code === 'description-js-modified')?.severity).toBe('info');
-    expect(f.find((x) => x.code === 'canonical-js-modified')?.severity).toBe('warning');
-    expect(f.find((x) => x.code === 'robots-js-modified')?.severity).toBe('warning');
+    expect(sev(f, 'title-js-modified')).toBe('info');
+    expect(sev(f, 'description-js-modified')).toBe('info');
+    expect(sev(f, 'canonical-js-modified')).toBe('warning');
+    expect(sev(f, 'robots-js-modified')).toBe('warning');
   });
 
   test('skips comparison when the refetch failed or was non-200', () => {
-    expect(rawVsRenderedFindings(baseRaw(), baseNetwork({ ok: false, status: 0 }))).toEqual([]);
+    expect(rawVsRenderedFindings(baseRaw(), baseNetwork({ ok: false, status: 0, rawTitle: 'Failed' }))).toEqual([]);
     expect(rawVsRenderedFindings(baseRaw(), baseNetwork({ status: 403, rawTitle: 'Blocked' }))).toEqual([]);
   });
 });
@@ -400,118 +272,54 @@ describe('rawVsRenderedFindings', () => {
 describe('robotsTxtAllows', () => {
   test('null when robots.txt missing, non-2xx, or HTML', () => {
     expect(robotsTxtAllows(null, 'https://a.com/x')).toBe(null);
-    expect(robotsTxtAllows({ ...robotsResponse(''), status: 404 }, 'https://a.com/x')).toBe(null);
-    expect(robotsTxtAllows(robotsResponse('<!doctype html><html></html>'), 'https://a.com/x')).toBe(null);
+    expect(robotsTxtAllows({ ...DISALLOW_PRIVATE, status: 404 }, 'https://a.com/private/x')).toBe(null);
+    expect(robotsTxtAllows(robots('<!doctype html><html></html>'), 'https://a.com/x')).toBe(null);
   });
 
   test('applies Googlebot matching to the page path', () => {
-    const robots = robotsResponse('User-agent: *\nDisallow: /private/');
-    expect(robotsTxtAllows(robots, 'https://a.com/private/page')).toBe(false);
-    expect(robotsTxtAllows(robots, 'https://a.com/public')).toBe(true);
+    expect(robotsTxtAllows(DISALLOW_PRIVATE, 'https://a.com/private/page')).toBe(false);
+    expect(robotsTxtAllows(DISALLOW_PRIVATE, 'https://a.com/public')).toBe(true);
   });
 });
 
 describe('computeIndexability', () => {
-  const cleanDs = pd(baseRaw(), null);
+  const missing: CanonicalInfo = { kind: 'missing', href: null };
+  const elsewhere: CanonicalInfo = { kind: 'elsewhere', href: 'x' };
+  const multiple: CanonicalInfo = { kind: 'multiple', href: 'https://a.com/x' };
+  const verdict = ({
+    raw = baseRaw() as RawOverview | null,
+    network = baseNetwork() as OverviewNetwork | null,
+    ds = pd(baseRaw(), null),
+    canonical = canonicalInfo(baseRaw()),
+    allowed = true as boolean | null,
+    error = undefined as 'server' | undefined
+  }) => computeIndexability(raw, network, ds, canonical, allowed, error);
 
-  test('indexable for a clean 200 page', () => {
-    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), true);
-    expect(v.status).toBe('indexable');
+  // The optional last column is a phrase the reason must not contain.
+  test.each([
+    ['a clean 200 page', {}, 'indexable', 'canonical OK'],
+    ['a missing canonical', { canonical: missing }, 'indexable', 'no canonical', 'canonical OK'],
+    ['conflicting canonicals', { canonical: multiple }, 'indexable', 'conflicting canonicals', 'canonical OK'],
+    [
+      'an unavailable HTTP status',
+      { raw: baseRaw({ navStatus: 0 }), network: baseNetwork({ ok: false, status: 0 }) },
+      'indexable',
+      'status unavailable',
+      'HTTP 200'
+    ],
+    ['a robots.txt server error', { allowed: null, error: 'server' }, 'unknown', 'server error'],
+    ['a non-HTTP page', { raw: baseRaw({ url: 'file:///Users/x/page.html' }) }, 'unknown', 'Not an HTTP(S)'],
+    ['missing raw data', { raw: null }, 'unknown', 'Page data unavailable'],
+    ['a non-2xx status', { raw: baseRaw({ navStatus: 404 }), network: null }, 'not-indexable', '404'],
+    ['noindex over a canonical elsewhere', { ds: [d('noindex')], canonical: elsewhere }, 'not-indexable', 'noindex'],
+    ['a robots.txt block', { allowed: false }, 'not-indexable', 'robots.txt'],
+    ['a canonical elsewhere', { canonical: elsewhere }, 'canonicalized', 'Canonical points to x']
+  ] as const)('%s yields %p', (_, args, status, reason, unclaimed: string | null = null) => {
+    const v = verdict(args);
+    expect(v.status).toBe(status);
+    expect(v.reasons[0]).toContain(reason);
+    if (unclaimed) expect(v.reasons[0]).not.toContain(unclaimed);
   });
-
-  test('robots.txt server error yields unknown, not crawlable', () => {
-    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), null, 'server');
-    expect(v.status).toBe('unknown');
-    expect(v.reasons[0]).toContain('server error');
-  });
-
-  test('missing canonical is not called OK in the reason', () => {
-    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, { kind: 'missing', href: null }, true);
-    expect(v.status).toBe('indexable');
-    expect(v.reasons[0]).not.toContain('canonical OK');
-    expect(v.reasons[0]).toContain('no canonical');
-  });
-
-  test('non-HTTP pages are unknown, not indexable', () => {
-    const v = computeIndexability(
-      baseRaw({ url: 'file:///Users/x/page.html', navStatus: 0 }),
-      null,
-      cleanDs,
-      { kind: 'missing', href: null },
-      null
-    );
-    expect(v.status).toBe('unknown');
-    expect(v.reasons[0]).toContain('Not an HTTP(S) page');
-  });
-
-  test('conflicting canonicals stay indexable but are not called OK', () => {
-    const v = computeIndexability(
-      baseRaw(),
-      baseNetwork(),
-      cleanDs,
-      { kind: 'multiple', href: 'https://a.com/x' },
-      true
-    );
-    expect(v.status).toBe('indexable');
-    expect(v.reasons[0]).not.toContain('canonical OK');
-    expect(v.reasons[0]).toContain('conflicting canonicals');
-  });
-
-  test('unknown status stays indexable but does not claim HTTP 200', () => {
-    const v = computeIndexability(
-      baseRaw({ navStatus: 0 }),
-      baseNetwork({ ok: false, status: 0 }),
-      cleanDs,
-      canonicalInfo(baseRaw()),
-      true
-    );
-    expect(v.status).toBe('indexable');
-    expect(v.reasons[0]).not.toContain('HTTP 200');
-    expect(v.reasons[0]).toContain('status unavailable');
-  });
-
-  test('non-2xx status wins', () => {
-    const v = computeIndexability(baseRaw({ navStatus: 404 }), null, cleanDs, canonicalInfo(baseRaw()), true);
-    expect(v.status).toBe('not-indexable');
-    expect(v.reasons[0]).toContain('404');
-  });
-
-  test('noindex wins over canonical', () => {
-    const ds = pd(baseRaw({ robotsMeta: ['noindex'] }), null);
-    const v = computeIndexability(baseRaw(), baseNetwork(), ds, { kind: 'elsewhere', href: 'x' }, true);
-    expect(v.status).toBe('not-indexable');
-    expect(v.reasons[0]).toContain('noindex');
-  });
-
-  test('robots.txt block reports not-indexable with URL-only caveat', () => {
-    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, canonicalInfo(baseRaw()), false);
-    expect(v.status).toBe('not-indexable');
-    expect(v.reasons[0]).toContain('robots.txt');
-  });
-
-  test('canonical elsewhere yields canonicalized', () => {
-    const v = computeIndexability(baseRaw(), baseNetwork(), cleanDs, { kind: 'elsewhere', href: 'x' }, true);
-    expect(v.status).toBe('canonicalized');
-  });
-
-  test('unknown when raw data missing', () => {
-    expect(computeIndexability(null, null, [], { kind: 'missing', href: null }, null).status).toBe('unknown');
-  });
-});
-
-const mkLink = (href: string): RawLink => ({
-  index: 0,
-  href,
-  text: '',
-  rel: '',
-  kind: 'external',
-  isNofollow: false,
-  isSponsored: false,
-  isUgc: false,
-  isImage: false,
-  isHidden: false,
-  isInsecure: false,
-  isBrokenAnchor: false
 });
 
 describe('detectPageType', () => {
@@ -519,279 +327,116 @@ describe('detectPageType', () => {
     expect(detectPageType('https://a.com/whatever', 'collection')).toBe('collection');
   });
 
-  test('falls back to URL patterns, including Markets locale prefixes', () => {
-    expect(detectPageType('https://a.com/', null)).toBe('home');
-    expect(detectPageType('https://a.com/products/x', null)).toBe('product');
-    expect(detectPageType('https://a.com/collections/all/products/x', null)).toBe('product');
-    expect(detectPageType('https://a.com/collections/sale', null)).toBe('collection');
-    expect(detectPageType('https://a.com/blogs/news/hello-world', null)).toBe('article');
-    expect(detectPageType('https://a.com/pages/about', null)).toBe('page');
-    expect(detectPageType('https://a.com/cart', null)).toBe('cart');
-    expect(detectPageType('https://a.com/password', null)).toBe('password');
-    expect(detectPageType('https://a.com/fr/products/x', null)).toBe('product');
-    expect(detectPageType('https://a.com/en-ca/', null)).toBe('home');
+  test.each([
+    ['https://a.com/', 'home'],
+    ['https://a.com/en-ca/', 'home'],
+    ['https://a.com/products/x', 'product'],
+    ['https://a.com/fr/products/x', 'product'],
+    ['https://a.com/collections/all/products/x', 'product'],
+    ['https://a.com/collections/sale', 'collection'],
+    ['https://a.com/blogs/news/hello-world', 'article'],
+    ['https://a.com/pages/about', 'page'],
+    ['https://a.com/cart', 'cart'],
+    ['https://a.com/search', 'searchresults'],
+    ['https://a.com/password', 'password'],
+    ['not a url', null]
+  ])('falls back to the URL: %p is %p', (url, type) => {
+    expect(detectPageType(url, null)).toBe(type);
   });
 });
 
 describe('shopifyFindings', () => {
+  const FILTERED = '/collections/sale?filter.v.price.gte=10';
+  const NESTED = '/collections/sale/products/widget';
+  const COLLECTION = { pageType: 'collection' };
+
   test('empty for non-Shopify pages', () => {
     expect(shopifyFindings(baseRaw(), null, canonicalInfo(baseRaw()))).toEqual([]);
     expect(shopifyFindings(baseRaw(), baseShopify({ isShopify: false }), canonicalInfo(baseRaw()))).toEqual([]);
   });
 
-  test('password page is an error', () => {
-    const raw = baseRaw({ url: 'https://shop.example.com/password' });
-    const f = shopifyFindings(raw, baseShopify({ pageType: 'password' }), canonicalInfo(raw));
-    expect(f.find((x) => x.code === 'password-page')?.severity).toBe('error');
-  });
-
-  test('preview mode warns for preview_theme_id, non-main role, and design mode', () => {
-    const previewUrl = baseRaw({ url: 'https://shop.example.com/?preview_theme_id=99' });
-    expect(codes(shopifyFindings(previewUrl, baseShopify(), canonicalInfo(previewUrl)))).toContain('preview-mode');
-    expect(
-      codes(shopifyFindings(baseRaw(), baseShopify({ themeRole: 'unpublished' }), canonicalInfo(baseRaw())))
-    ).toContain('preview-mode');
-    expect(codes(shopifyFindings(baseRaw(), baseShopify({ designMode: true }), canonicalInfo(baseRaw())))).toContain(
-      'preview-mode'
-    );
-  });
-
-  test('warns when browsing on the myshopify.com domain', () => {
-    const raw = baseRaw({
-      url: 'https://example.myshopify.com/products/widget',
-      canonicals: [{ raw: '/products/widget', resolved: 'https://example.myshopify.com/products/widget', inHead: true }]
-    });
-    expect(codes(shopifyFindings(raw, baseShopify(), canonicalInfo(raw)))).toContain('myshopify-domain');
-  });
-
-  test('collection-scoped product URL: info when canonical is bare, warning otherwise', () => {
-    const good = baseRaw({
-      url: 'https://shop.example.com/collections/sale/products/widget',
-      canonicals: [{ raw: '/products/widget', resolved: 'https://shop.example.com/products/widget', inHead: true }]
-    });
-    expect(
-      shopifyFindings(good, baseShopify(), canonicalInfo(good)).find((f) => f.code === 'nested-product-path')?.severity
-    ).toBe('info');
-    const bad = baseRaw({
-      url: 'https://shop.example.com/collections/sale/products/widget',
-      canonicals: [
-        {
-          raw: '/collections/sale/products/widget',
-          resolved: 'https://shop.example.com/collections/sale/products/widget',
-          inHead: true
-        }
-      ]
-    });
-    expect(codes(shopifyFindings(bad, baseShopify(), canonicalInfo(bad)))).toContain('nested-product-canonical');
-  });
-
-  test('warns when canonical keeps the variant parameter', () => {
-    const raw = baseRaw({
-      url: 'https://shop.example.com/products/widget?variant=42',
-      canonicals: [
-        {
-          raw: '/products/widget?variant=42',
-          resolved: 'https://shop.example.com/products/widget?variant=42',
-          inHead: true
-        }
-      ]
-    });
-    expect(codes(shopifyFindings(raw, baseShopify(), canonicalInfo(raw)))).toContain('variant-canonical');
-  });
-
-  test('warns when page 2+ canonicalizes back to page 1', () => {
-    const raw = baseRaw({
-      url: 'https://shop.example.com/collections/sale?page=3',
-      canonicals: [{ raw: '/collections/sale', resolved: 'https://shop.example.com/collections/sale', inHead: true }]
-    });
-    expect(codes(shopifyFindings(raw, baseShopify({ pageType: 'collection' }), canonicalInfo(raw)))).toContain(
-      'pagination-canonical'
-    );
-    const selfCanonical = baseRaw({
-      url: 'https://shop.example.com/collections/sale?page=3',
-      canonicals: [
-        { raw: '/collections/sale?page=3', resolved: 'https://shop.example.com/collections/sale?page=3', inHead: true }
-      ]
-    });
-    expect(
-      codes(shopifyFindings(selfCanonical, baseShopify({ pageType: 'collection' }), canonicalInfo(selfCanonical)))
-    ).not.toContain('pagination-canonical');
-  });
-
-  test('filtered collection views are info', () => {
-    const raw = baseRaw({ url: 'https://shop.example.com/collections/sale?filter.v.price.gte=10' });
-    expect(codes(shopifyFindings(raw, baseShopify({ pageType: 'collection' }), canonicalInfo(raw)))).toContain(
-      'filtered-collection'
-    );
-  });
-
-  test('filtered collection canonical preserving filter state is a warning', () => {
-    const raw = baseRaw({
-      url: 'https://shop.example.com/collections/sale?filter.v.price.gte=10',
-      canonicals: [
-        {
-          raw: '/collections/sale?filter.v.price.gte=10',
-          resolved: 'https://shop.example.com/collections/sale?filter.v.price.gte=10',
-          inHead: true
-        }
-      ]
-    });
-    const found = codes(shopifyFindings(raw, baseShopify({ pageType: 'collection' }), canonicalInfo(raw)));
-    expect(found).toContain('filtered-collection-canonical');
-    expect(found).not.toContain('filtered-collection');
-  });
-
-  test('tag path canonicalizing to itself is a warning, to the base collection is info', () => {
-    const tagSelf = baseRaw({
-      url: 'https://shop.example.com/collections/sale/red',
-      canonicals: [
-        { raw: '/collections/sale/red', resolved: 'https://shop.example.com/collections/sale/red', inHead: true }
-      ]
-    });
-    expect(codes(shopifyFindings(tagSelf, baseShopify({ pageType: 'collection' }), canonicalInfo(tagSelf)))).toContain(
-      'filtered-collection-canonical'
-    );
-    const tagBase = baseRaw({
-      url: 'https://shop.example.com/collections/sale/red',
-      canonicals: [{ raw: '/collections/sale', resolved: 'https://shop.example.com/collections/sale', inHead: true }]
-    });
-    expect(codes(shopifyFindings(tagBase, baseShopify({ pageType: 'collection' }), canonicalInfo(tagBase)))).toContain(
-      'filtered-collection'
-    );
+  // A null canonical keeps the default one, which points at the bare product URL.
+  test.each([
+    ['/password', null, { pageType: 'password' }, 'password-page', 'error'],
+    ['/?preview_theme_id=99', null, {}, 'preview-mode', 'warning'],
+    ['/products/widget', null, { themeRole: 'unpublished' }, 'preview-mode', 'warning'],
+    ['/products/widget', null, { designMode: true }, 'preview-mode', 'warning'],
+    ['https://example.myshopify.com/products/widget', null, {}, 'myshopify-domain', 'warning'],
+    [NESTED, null, {}, 'nested-product-path', 'info'],
+    [NESTED, NESTED, {}, 'nested-product-canonical', 'warning'],
+    ['/products/widget?variant=42', '/products/widget?variant=42', {}, 'variant-canonical', 'warning'],
+    ['/collections/sale?page=3', '/collections/sale', COLLECTION, 'pagination-canonical', 'warning'],
+    ['/collections/sale?page=3', '/collections/sale?page=3', COLLECTION, 'pagination-canonical', undefined],
+    [FILTERED, null, COLLECTION, 'filtered-collection', 'info'],
+    [FILTERED, FILTERED, COLLECTION, 'filtered-collection-canonical', 'warning'],
+    [FILTERED, FILTERED, COLLECTION, 'filtered-collection', undefined],
+    ['/collections/sale/red', '/collections/sale/red', COLLECTION, 'filtered-collection-canonical', 'warning'],
+    ['/collections/sale/red', '/collections/sale', COLLECTION, 'filtered-collection', 'info']
+  ])('%s with canonical %p and context %p: %s is %p', (path, canonical, ctx, code, severity) => {
+    const raw = baseRaw({ url: new URL(path, SHOP).href, ...(canonical ? { canonicals: [canon(canonical)] } : {}) });
+    expect(sev(shopifyFindings(raw, baseShopify(ctx), canonicalInfo(raw)), code)).toBe(severity);
   });
 });
 
 describe('socialProfiles', () => {
+  const links = (...hrefs: string[]) => hrefs.map((href) => ({ href }) as RawLink);
+
   test('detects profile links and dedupes per network', () => {
-    const profiles = socialProfiles([
-      mkLink('https://www.facebook.com/example'),
-      mkLink('https://facebook.com/example-two'),
-      mkLink('https://www.instagram.com/example/'),
-      mkLink('https://x.com/example'),
-      mkLink('https://www.youtube.com/@example'),
-      mkLink('https://www.tiktok.com/@example')
-    ]);
-    expect(profiles.map((p) => p.network)).toEqual(['Facebook', 'Instagram', 'X (Twitter)', 'YouTube', 'TikTok']);
+    const networks = socialProfiles(
+      links(
+        'https://www.facebook.com/example',
+        'https://facebook.com/example-two',
+        'https://www.instagram.com/example/',
+        'https://x.com/example',
+        'https://www.youtube.com/@example',
+        'https://www.tiktok.com/@example',
+        'https://www.pinterest.co.uk/example/'
+      )
+    ).map((p) => p.network);
+    expect(networks).toEqual(['Facebook', 'Instagram', 'X (Twitter)', 'YouTube', 'TikTok', 'Pinterest']);
   });
 
-  test('ignores bare domains and share/intent links', () => {
-    expect(
-      socialProfiles([
-        mkLink('https://www.facebook.com/'),
-        mkLink('https://www.facebook.com/sharer/sharer.php?u=x'),
-        mkLink('https://x.com/intent/tweet?text=hi')
-      ])
-    ).toEqual([]);
-  });
-
-  test('rejects lookalike domains that merely start with a social host name', () => {
-    expect(
-      socialProfiles([
-        mkLink('https://pinterest.evil.example/account'),
-        mkLink('https://facebook.com.evil.example/somepage')
-      ])
-    ).toEqual([]);
-    expect(socialProfiles([mkLink('https://www.pinterest.co.uk/example/')]).map((p) => p.network)).toEqual([
-      'Pinterest'
-    ]);
-  });
-
-  test('ignores content and media routes on social hosts', () => {
-    expect(
-      socialProfiles([
-        mkLink('https://www.youtube.com/watch?v=abc123'),
-        mkLink('https://www.youtube.com/shorts/abc123'),
-        mkLink('https://www.facebook.com/somepage/posts/12345'),
-        mkLink('https://www.linkedin.com/pulse/some-article'),
-        mkLink('https://x.com/someuser/status/12345'),
-        mkLink('https://www.instagram.com/p/abc123/'),
-        mkLink('https://www.tiktok.com/@someuser/video/12345'),
-        mkLink('https://www.pinterest.com/pin/12345/')
-      ])
-    ).toEqual([]);
-  });
-});
-
-describe('coverage: edge cases', () => {
-  test('X-Robots-Tag scoped to other bots does not affect the verdict', () => {
-    const ds = pd(baseRaw(), baseNetwork({ xRobotsTag: 'otherbot: noindex' }));
-    expect(ds).toEqual([]);
-    const scoped = pd(baseRaw(), baseNetwork({ xRobotsTag: 'googlebot: noindex' }));
-    expect(scoped).toContainEqual({ name: 'noindex', value: null, source: 'header' });
-  });
-
-  test('whitespace-only title is treated as missing, matching description handling', () => {
-    const raw = baseRaw({ titles: ['   '] });
-    expect(codes(coreFindings(raw, canonicalInfo(raw)))).toContain('title-missing');
-  });
-
-  test('hasNofollow matches nofollow and none', () => {
-    expect(hasNofollow([{ name: 'none', value: null, source: 'meta' }])).toBe(true);
-    expect(hasNofollow([{ name: 'nofollow', value: null, source: 'header' }])).toBe(true);
-    expect(hasNofollow([{ name: 'noindex', value: null, source: 'meta' }])).toBe(false);
-  });
-
-  test('normalizeUrl falls back to the raw input when it cannot be parsed', () => {
-    expect(normalizeUrl('not a url')).toBe('not a url');
-  });
-
-  test('canonicalInfo treats an unparseable canonical target as multiple', () => {
-    const raw = baseRaw({
-      canonicals: [{ raw: 'not a url', resolved: 'not a url', inHead: true }]
-    });
-    expect(canonicalInfo(raw).kind).toBe('multiple');
-  });
-
-  test('technicalFindings: empty-string charset is not flagged, maximum-scale=1 blocks zoom', () => {
-    expect(codes(technicalFindings(baseRaw({ charset: '' }), null, null))).not.toContain('charset');
-    expect(
-      codes(technicalFindings(baseRaw({ viewport: 'width=device-width, maximum-scale=1' }), null, null))
-    ).toContain('viewport-no-zoom');
-  });
-
-  test('detectPageType: /search maps to searchresults, an unparseable URL yields null', () => {
-    expect(detectPageType('https://a.com/search', null)).toBe('searchresults');
-    expect(detectPageType('not a url', null)).toBe(null);
+  test.each([
+    // Bare domains and share/intent links
+    'https://www.facebook.com/',
+    'https://www.facebook.com/sharer/sharer.php?u=x',
+    'https://x.com/intent/tweet?text=hi',
+    // Lookalike hosts that merely start with a social host name
+    'https://pinterest.evil.example/account',
+    'https://facebook.com.evil.example/somepage',
+    // Content and media routes on social hosts
+    'https://www.youtube.com/watch?v=abc123',
+    'https://www.youtube.com/shorts/abc123',
+    'https://www.facebook.com/somepage/posts/12345',
+    'https://www.linkedin.com/pulse/some-article',
+    'https://x.com/someuser/status/12345',
+    'https://www.instagram.com/p/abc123/',
+    'https://www.tiktok.com/@someuser/video/12345',
+    'https://www.pinterest.com/pin/12345/'
+  ])('ignores %p', (href) => {
+    expect(socialProfiles(links(href))).toEqual([]);
   });
 });
 
 describe('analyzeOverview', () => {
   test('assembles a clean analysis with zero errors', () => {
-    const analysis = analyzeOverview(
-      baseRaw(),
-      baseNetwork(),
-      baseShopify(),
-      robotsResponse('User-agent: *\nAllow: /')
-    );
+    const analysis = analyzeOverview(baseRaw(), baseNetwork(), baseShopify(), robots('User-agent: *\nAllow: /'));
     expect(analysis.indexability.status).toBe('indexable');
     expect(analysis.errorCount).toBe(0);
     expect(analysis.pageType).toBe('product');
     expect(analysis.title.length).toBeGreaterThan(0);
   });
 
-  test('robots.txt 5xx makes the verdict unknown; 404 stays indexable', () => {
-    const err = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 503 });
-    expect(err.indexability.status).toBe('unknown');
-    const notFound = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 404 });
-    expect(notFound.indexability.status).toBe('indexable');
-  });
-
-  test('robots.txt 429 is treated as a server error', () => {
-    const analysis = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), status: 429 });
-    expect(analysis.indexability.status).toBe('unknown');
-    expect(analysis.indexability.reasons[0]).toContain('server error');
-  });
-
-  test('robots.txt error outranks a canonicalized verdict', () => {
-    const raw = baseRaw({ url: 'https://shop.example.com/products/widget?variant=123' });
-    const analysis = analyzeOverview(raw, baseNetwork(), null, { ...robotsResponse(''), status: 503 });
-    expect(analysis.indexability.status).toBe('unknown');
-  });
-
-  test('robots.txt network failure reads as unfetchable, not a server error', () => {
-    const analysis = analyzeOverview(baseRaw(), baseNetwork(), null, { ...robotsResponse(''), ok: false, status: 0 });
-    expect(analysis.indexability.status).toBe('unknown');
-    expect(analysis.indexability.reasons[0]).toContain('could not be fetched');
+  test.each([
+    ['a 503', {}, { status: 503 }, 'unknown', 'server error'],
+    ['a 503 on a canonicalized page', { url: `${PAGE}?variant=123` }, { status: 503 }, 'unknown', 'server error'],
+    ['a 429', {}, { status: 429 }, 'unknown', 'server error'],
+    ['a network failure', {}, { ok: false, status: 0 }, 'unknown', 'could not be fetched'],
+    ['a 404', {}, { status: 404 }, 'indexable', 'crawlable']
+  ])('robots.txt %s yields %p', (_, over, response, status, reason) => {
+    const { indexability } = analyzeOverview(baseRaw(over), baseNetwork(), null, robots('', response));
+    expect(indexability.status).toBe(status);
+    expect(indexability.reasons[0]).toContain(reason);
   });
 
   test('counts error findings and sorts findings by severity', () => {
@@ -803,34 +448,21 @@ describe('analyzeOverview', () => {
   });
 
   test('errors with no visible UI representation are excluded from errorCount', () => {
-    const raw = baseRaw({ titles: ['One', 'Two'], viewport: null });
-    const analysis = analyzeOverview(raw, null, null, null);
-    const errorCodes = analysis.findings.filter((f) => f.severity === 'error').map((f) => f.code);
-    expect(errorCodes).toContain('title-multiple');
-    expect(errorCodes).toContain('viewport-missing');
+    const analysis = analyzeOverview(baseRaw({ titles: ['One', 'Two'], viewport: null }), null, null, null);
+    expect(sev(analysis.findings, 'title-multiple')).toBe('error');
+    expect(sev(analysis.findings, 'viewport-missing')).toBe('error');
     expect(analysis.errorCount).toBe(0);
   });
 
   test('flags the noindex + robots-block and noindex + canonical conflicts', () => {
-    const blockedNoindex = analyzeOverview(
-      baseRaw({ url: 'https://shop.example.com/private/x', robotsMeta: ['noindex'], canonicals: [] }),
-      null,
-      null,
-      robotsResponse('User-agent: *\nDisallow: /private/')
-    );
-    expect(codes(blockedNoindex.findings)).toContain('robots-noindex-conflict');
-
-    const noindexCanonical = analyzeOverview(
-      baseRaw({ url: 'https://shop.example.com/products/widget?variant=1', robotsMeta: ['noindex'] }),
-      null,
-      null,
-      null
-    );
-    expect(codes(noindexCanonical.findings)).toContain('noindex-canonical-conflict');
+    const blocked = baseRaw({ url: `${SHOP}/private/x`, robotsMeta: ['noindex'], canonicals: [] });
+    expect(codes(analyzeOverview(blocked, null, null, DISALLOW_PRIVATE).findings)).toContain('robots-noindex-conflict');
+    const canonicalized = baseRaw({ url: `${PAGE}?variant=1`, robotsMeta: ['noindex'] });
+    expect(codes(analyzeOverview(canonicalized, null, null, null).findings)).toContain('noindex-canonical-conflict');
   });
 
   test('password-protected store overrides an otherwise indexable verdict', () => {
-    const raw = baseRaw({ url: 'https://shop.example.com/password', canonicals: [] });
+    const raw = baseRaw({ url: `${SHOP}/password`, canonicals: [] });
     const analysis = analyzeOverview(raw, baseNetwork(), baseShopify({ pageType: 'password' }), null);
     expect(analysis.indexability.status).toBe('not-indexable');
     expect(codes(analysis.findings)).toContain('password-page');

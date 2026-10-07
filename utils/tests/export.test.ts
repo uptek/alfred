@@ -1,134 +1,74 @@
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, it, spyOn } from 'bun:test';
 import { csvField, downloadFile, siteSlug } from '../export';
 
 describe('siteSlug', () => {
-  it('falls back to "site" when there is no domain', () => {
-    expect(siteSlug()).toBe('site');
-    expect(siteSlug(undefined)).toBe('site');
-  });
-
-  it('strips a leading www', () => {
-    expect(siteSlug('www.example.com')).toBe('example-com');
-  });
-
-  it('only strips www at the start', () => {
-    expect(siteSlug('shop.www.example.com')).toBe('shop-www-example-com');
-  });
-
-  it('collapses runs of non-alphanumerics into a single dash', () => {
-    expect(siteSlug('my--shop..example.com')).toBe('my-shop-example-com');
-  });
-
-  it('trims trailing dashes', () => {
-    expect(siteSlug('example.com.')).toBe('example-com');
-  });
-
-  it('keeps digits and mixed case', () => {
-    expect(siteSlug('Shop123.MyShopify.com')).toBe('Shop123-MyShopify-com');
-  });
-
-  it('yields an empty slug rather than throwing on a domain with no usable characters', () => {
-    expect(siteSlug('...')).toBe('');
+  it.each([
+    ['falls back to "site" when there is no domain', undefined, 'site'],
+    ['strips a leading www', 'www.example.com', 'example-com'],
+    ['only strips www at the start', 'shop.www.example.com', 'shop-www-example-com'],
+    ['collapses runs of non-alphanumerics into a single dash', 'my--shop..example.com', 'my-shop-example-com'],
+    ['trims trailing dashes', 'example.com.', 'example-com'],
+    ['keeps digits and mixed case', 'Shop123.MyShopify.com', 'Shop123-MyShopify-com'],
+    ['yields an empty slug on a domain with no usable characters', '...', '']
+  ])('%s', (_, domain, slug) => {
+    expect(siteSlug(domain)).toBe(slug);
   });
 });
 
 describe('csvField', () => {
-  it('quotes plain values', () => {
-    expect(csvField('hello')).toBe('"hello"');
-  });
-
-  it('stringifies non-strings', () => {
-    expect(csvField(42)).toBe('"42"');
-    expect(csvField(null)).toBe('"null"');
-    expect(csvField(undefined)).toBe('"undefined"');
-  });
-
-  it('doubles embedded quotes', () => {
-    expect(csvField('say "hi"')).toBe('"say ""hi"""');
-  });
-
-  it('neutralizes formula-leading characters', () => {
-    expect(csvField('=SUM(A1:A9)')).toBe('"\'=SUM(A1:A9)"');
-    expect(csvField('@import')).toBe('"\'@import"');
-  });
-
-  it('leaves an equals sign mid-string alone', () => {
-    expect(csvField('a=b')).toBe('"a=b"');
+  it.each([
+    ['quotes plain values', 'hello', '"hello"'],
+    ['stringifies numbers', 42, '"42"'],
+    ['stringifies null', null, '"null"'],
+    ['stringifies undefined', undefined, '"undefined"'],
+    ['doubles embedded quotes', 'say "hi"', '"say ""hi"""'],
+    ['neutralizes a leading =', '=SUM(A1:A9)', '"\'=SUM(A1:A9)"'],
+    ['neutralizes a leading @', '@import', '"\'@import"'],
+    ['neutralizes a leading +', '+1234', '"\'+1234"'],
+    ['neutralizes a leading -', '-cmd', '"\'-cmd"'],
+    ['neutralizes a formula after a leading tab', '\t=SUM(A1)', '"\'\t=SUM(A1)"'],
+    ['neutralizes a formula after a leading CR', '\r-cmd', '"\'\r-cmd"'],
+    ['stringifies booleans', true, '"true"'],
+    ['leaves an equals sign mid-string alone', 'a=b', '"a=b"']
+  ])('%s', (_, value, field) => {
+    expect(csvField(value)).toBe(field);
   });
 });
 
 describe('downloadFile', () => {
-  interface FakeAnchor {
-    href: string;
-    download: string;
-    clicks: number;
-    click(): void;
-  }
+  const g = globalThis as { document?: unknown };
+  const realDocument = g.document;
+  const anchor = {
+    href: '',
+    download: '',
+    clicks: 0,
+    click() {
+      this.clicks++;
+    }
+  };
+  let minted = 0;
+  const create = spyOn(URL, 'createObjectURL').mockImplementation(() => `blob:fake/${++minted}`);
+  const revoke = spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
-  let anchor: FakeAnchor;
-  let created: Blob[];
-  let revoked: string[];
-  const realDocument = (globalThis as { document?: unknown }).document;
-  const realCreate = URL.createObjectURL;
-  const realRevoke = URL.revokeObjectURL;
-
-  beforeEach(() => {
-    created = [];
-    revoked = [];
-    anchor = {
-      href: '',
-      download: '',
-      clicks: 0,
-      click() {
-        anchor.clicks++;
-      }
-    };
-    (globalThis as { document?: unknown }).document = {
-      createElement: (tag: string) => {
-        if (tag !== 'a') throw new Error(`unexpected element: ${tag}`);
-        return anchor;
-      }
-    };
-    URL.createObjectURL = ((blob: Blob) => {
-      created.push(blob);
-      return `blob:fake/${created.length}`;
-    }) as typeof URL.createObjectURL;
-    URL.revokeObjectURL = ((url: string) => void revoked.push(url)) as typeof URL.revokeObjectURL;
+  beforeAll(() => {
+    g.document = { createElement: (tag: string) => (tag === 'a' ? anchor : null) };
   });
 
-  afterEach(() => {
-    (globalThis as { document?: unknown }).document = realDocument;
-    URL.createObjectURL = realCreate;
-    URL.revokeObjectURL = realRevoke;
+  afterAll(() => {
+    g.document = realDocument;
+    create.mockRestore();
+    revoke.mockRestore();
   });
 
-  it('clicks an anchor pointing at the blob url', () => {
-    downloadFile('a,b', 'alfred-links-example-com.csv', 'text/csv');
-    expect(anchor.clicks).toBe(1);
-    expect(anchor.href).toBe('blob:fake/1');
-  });
+  it('clicks an anchor at a fresh blob url per download, then revokes it', async () => {
+    downloadFile('id,url\n1,/a', 'alfred-links-example-com.csv', 'text/csv');
+    expect(anchor).toMatchObject({ href: 'blob:fake/1', download: 'alfred-links-example-com.csv', clicks: 1 });
+    const blob = create.mock.calls[0]![0] as Blob;
+    expect(blob.type).toBe('text/csv');
+    expect(await blob.text()).toBe('id,url\n1,/a');
 
-  it('sets the suggested filename', () => {
     downloadFile('{}', 'alfred-assets.json', 'application/json');
-    expect(anchor.download).toBe('alfred-assets.json');
-  });
-
-  it('builds the blob with the requested mime type and content', async () => {
-    downloadFile('id,url\n1,/a', 'x.csv', 'text/csv');
-    expect(created).toHaveLength(1);
-    expect(created[0]?.type).toBe('text/csv');
-    expect(await created[0]?.text()).toBe('id,url\n1,/a');
-  });
-
-  it('revokes the object url so the blob is not leaked', () => {
-    downloadFile('x', 'x.txt', 'text/plain');
-    expect(revoked).toEqual(['blob:fake/1']);
-  });
-
-  it('mints a fresh url per download', () => {
-    downloadFile('a', 'a.txt', 'text/plain');
-    downloadFile('b', 'b.txt', 'text/plain');
-    expect(revoked).toEqual(['blob:fake/1', 'blob:fake/2']);
-    expect(anchor.clicks).toBe(2);
+    expect(anchor).toMatchObject({ href: 'blob:fake/2', download: 'alfred-assets.json', clicks: 2 });
+    expect(revoke.mock.calls).toEqual([['blob:fake/1'], ['blob:fake/2']]);
   });
 });

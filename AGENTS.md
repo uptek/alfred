@@ -45,9 +45,21 @@ The iframe navigates client-side, so per-page features re-check the path on
 ## Analytics
 
 Events live in `utils/analytics-actions.ts` (`ANALYTICS_ACTIONS`, the source of
-truth). The Supabase track function imports `valid-actions.gen.ts`, generated
-from it via `bun run track:gen` (run automatically by `bun run deploy:track`).
-A parity test fails `bun test` when the generated file is stale.
+truth). The extension posts them to `https://api.alfredext.com/track`. That
+host is the `alfred-api` Cloudflare Worker (`worker/`, Uptek account), which
+routes by path, so new server endpoints go there too. `/track` imports the same
+list as its allowlist and writes to the D1 database `alfred-events`.
+`/uninstall` is the extension's uninstall URL when analytics is on: it records
+an `uninstall` event, then redirects to the survey. Going back from the survey
+records another, so count distinct `user_id`s. CI runs
+`bun run deploy:worker` (D1 migrations, then `wrangler deploy`) on every push
+to `main`. Migrations apply while the previous Worker is still live, so keep
+them additive: new columns need defaults, and drops or renames wait for a later
+release. Query with `bunx wrangler d1 execute alfred-events --remote -c
+worker/wrangler.jsonc --command "..."`, bounding `created_at` (ISO text) with
+`strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')`, not `datetime()`. Wrangler needs
+`CLOUDFLARE_ACCOUNT_ID` in `.env` (see `.env.example`); Cloudflare account and
+resource IDs never go in the repo.
 
 ## Version Bumping & Changelog
 
@@ -56,3 +68,5 @@ Use the `/version-bump` skill, including inside `/ship`.
 Pushes to `main` that change the `package.json` version auto-publish to the
 Chrome Web Store (`publish` job in `.github/workflows/ci.yml`, `wxt submit` on
 CWS API v2 with a service account). Merges without a version bump skip it.
+`publish` waits for the `deploy-worker` job, so a failed Worker deploy holds
+the release too.

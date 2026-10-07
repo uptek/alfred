@@ -1,9 +1,7 @@
-// Single source of truth for analytics action names. The Supabase track edge
-// function imports a copy generated from this list by `bun run track:gen`
-// (Deno can't import extension code), and utils/tests/analytics-actions.test.ts
-// fails `bun test` when the generated file is stale, so drift can't silently
-// drop events server-side (which is exactly what happened to the images_*
-// events in v2026.06.05).
+// Single source of truth for analytics action names. The track Worker
+// (worker/index.ts) imports this list as its allowlist, so it rejects any action
+// not listed here. Keep this file free of extension-only imports so the Worker
+// can bundle it.
 export const ANALYTICS_ACTIONS = [
   'open_in_admin',
   'open_in_customizer',

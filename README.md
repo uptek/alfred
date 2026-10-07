@@ -88,7 +88,7 @@ entrypoints/          # Extension entry points
   options/            # Options/settings page
 utils/                # Shared utilities
 assets/               # Static assets (icons, data)
-supabase/             # Edge functions and database views
+worker/               # Analytics Worker (Cloudflare) and D1 schema
 ```
 
 ## Contributing

@@ -31,5 +31,5 @@
     // _-prefix marks internal Alfred members (_lastRightClickedElement, _init*)
     "no-underscore-dangle": "off"
   },
-  "ignorePatterns": [".output", ".wxt", "public", "node_modules", "*.config.*", "supabase"]
+  "ignorePatterns": [".output", ".wxt", "public", "node_modules", "*.config.*"]
 }

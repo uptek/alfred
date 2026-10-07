@@ -17,5 +17,5 @@ Please do not open a public GitHub issue for security vulnerabilities.
 ## Scope
 
 This policy covers the Alfred browser extension source code and any associated
-infrastructure (edge functions, build scripts). It does not cover the Chrome Web
+infrastructure (the analytics Worker, build scripts). It does not cover the Chrome Web
 Store listing or third-party dependencies.

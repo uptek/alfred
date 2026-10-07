@@ -11,11 +11,14 @@ interface FakeWindow {
   postMessage(data: unknown, targetOrigin: string): void;
 }
 
-function makeWindow(origin = 'https://shop.example'): FakeWindow {
-  const win: FakeWindow = {
+let win: FakeWindow;
+const realWindow = (globalThis as { window?: unknown }).window;
+
+beforeEach(() => {
+  win = {
     listeners: [],
     posted: [],
-    location: { origin },
+    location: { origin: 'https://shop.example' },
     addEventListener(type, listener) {
       if (type === 'message') win.listeners.push(listener);
     },
@@ -28,14 +31,6 @@ function makeWindow(origin = 'https://shop.example'): FakeWindow {
       });
     }
   };
-  return win;
-}
-
-let win: FakeWindow;
-const realWindow = (globalThis as { window?: unknown }).window;
-
-beforeEach(() => {
-  win = makeWindow();
   (globalThis as { window?: unknown }).window = win;
 });
 
@@ -51,7 +46,8 @@ interface Methods extends Record<string, (payload: never) => unknown> {
   rejects: () => Promise<never>;
 }
 
-function serve(overrides: Partial<Methods> = {}) {
+/** Starts the 'test' server and returns a client for it. */
+function serve(overrides: Partial<Methods> = {}, timeoutMs?: number) {
   createBridgeServer<Methods>('test', {
     ping: () => 'pong',
     double: ({ n }) => n * 2,
@@ -62,32 +58,24 @@ function serve(overrides: Partial<Methods> = {}) {
     rejects: () => Promise.reject(new Error('async failure')),
     ...overrides
   } as Methods);
+  return createBridgeClient<Methods>('test', timeoutMs);
 }
 
 describe('bridge round trip', () => {
-  it('resolves with the handler result', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test');
-    expect(await client.call('ping')).toBe('pong');
-  });
-
-  it('passes the payload through to the handler', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test');
-    expect(await client.call('double', { n: 21 })).toBe(42);
+  it('resolves concurrent calls with their own results', async () => {
+    const client = serve();
+    const results = await Promise.all([1, 2, 3].map((n) => client.call('double', { n })));
+    expect(results).toEqual([2, 4, 6]);
   });
 
   it('posts to the window origin, never a wildcard', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test');
-    await client.call('ping');
+    await serve().call('ping');
     expect(win.posted.length).toBeGreaterThan(0);
     expect(win.posted.every((p) => p.targetOrigin === 'https://shop.example')).toBe(true);
   });
 
   it('gives two same-namespace clients disjoint request ids', async () => {
-    serve();
-    const a = createBridgeClient<Methods>('test');
+    const a = serve();
     const b = createBridgeClient<Methods>('test');
     await Promise.all([a.call('double', { n: 1 }), b.call('double', { n: 2 })]);
     const ids = win.posted
@@ -97,92 +85,58 @@ describe('bridge round trip', () => {
     expect(ids).toHaveLength(2);
     expect(new Set(ids).size).toBe(2);
   });
-
-  it('keeps concurrent calls distinct by request id', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test');
-    const [a, b, c] = await Promise.all([
-      client.call('double', { n: 1 }),
-      client.call('double', { n: 2 }),
-      client.call('double', { n: 3 })
-    ]);
-    expect([a, b, c]).toEqual([2, 4, 6]);
-  });
 });
 
 describe('bridge error paths', () => {
-  it('rejects when the handler throws synchronously', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test');
-    expect(client.call('boom')).rejects.toThrow('handler exploded');
+  it.each([
+    ['the handler throws synchronously', 'boom', 'handler exploded'],
+    ['the handler returns a rejected promise', 'rejects', 'async failure'],
+    ['the method is unknown', 'nope', 'Unknown method: nope']
+  ])('rejects when %s', async (_, method, message) => {
+    await expect(serve().call(method as keyof Methods & string)).rejects.toThrow(message);
   });
 
-  it('rejects when the handler returns a rejected promise', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test');
-    expect(client.call('rejects')).rejects.toThrow('async failure');
+  it.each([
+    ['the client default', 10, undefined],
+    ['a per-call override', 60_000, 10]
+  ])('rejects with the method name once %s timeout elapses', async (_, clientTimeout, callTimeout) => {
+    await expect(serve({}, clientTimeout).call('slow', undefined, callTimeout)).rejects.toThrow(
+      'test bridge timeout: slow did not respond within 10ms'
+    );
   });
 
-  it('rejects unknown methods instead of hanging', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test');
-    expect(client.call('nope' as keyof Methods & string)).rejects.toThrow('Unknown method: nope');
-  });
-
-  it('rejects with the method name once the timeout elapses', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test', 10);
-    expect(client.call('slow')).rejects.toThrow(/test bridge timeout: slow did not respond within 10ms/);
-  });
-
-  it('honors a per-call timeout override', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test', 60_000);
-    expect(client.call('slow', undefined, 10)).rejects.toThrow(/within 10ms/);
-  });
-
-  it('does not resolve a call whose timeout already fired', async () => {
+  it('drops a late response whose call already timed out', async () => {
     let release: ((value: string) => void) | undefined;
-    serve({ slow: () => new Promise<never>((resolve) => (release = resolve as (v: string) => void)) });
-    const client = createBridgeClient<Methods>('test', 10);
-    const call = client.call('slow');
-    expect(call).rejects.toThrow(/timeout/);
-    await new Promise((r) => setTimeout(r, 30));
-    release?.('late');
+    const client = serve(
+      { slow: () => new Promise<never>((resolve) => (release = resolve as (v: string) => void)) },
+      10
+    );
+    await expect(client.call('slow')).rejects.toThrow(/timeout/);
     // A late response for a dropped request id must not throw or double-settle.
-    await new Promise((r) => setTimeout(r, 10));
+    release?.('late');
+    await Bun.sleep(10);
   });
 });
 
 describe('bridge isolation', () => {
-  it('ignores messages from another window', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test', 10);
-    const call = client.call('ping');
-    // A foreign frame forges a response before the real one is delivered.
-    const forgedId = (win.posted[0]?.data as { requestId?: string } | undefined)?.requestId;
-    expect(forgedId).toBeString();
-    for (const listener of win.listeners.slice()) {
-      listener({ source: {}, data: { type: 'alfred:test_response', requestId: forgedId, data: 'forged' } });
-    }
+  it.each([
+    [
+      'from another window',
+      (id?: string) => ({ source: {}, data: { type: 'alfred:test_response', requestId: id, data: 'forged' } })
+    ],
+    ['without a request id', () => ({ source: win, data: { type: 'alfred:test_response', data: 'no id' } })],
+    ['with no data', () => ({ source: win, data: undefined })]
+  ])('ignores responses %s', async (_, forge) => {
+    const call = serve({}, 10).call('ping');
+    // The forgery lands before the real response is delivered.
+    const id = (win.posted[0]?.data as { requestId?: string } | undefined)?.requestId;
+    expect(id).toBeString();
+    for (const listener of win.listeners.slice()) listener(forge(id));
     expect(await call).toBe('pong');
   });
 
   it('ignores traffic from a different namespace', async () => {
     createBridgeServer<Methods>('other', { ping: () => 'other-pong' } as Methods);
-    serve();
-    const client = createBridgeClient<Methods>('test');
-    expect(await client.call('ping')).toBe('pong');
-  });
-
-  it('ignores malformed messages without a request id', async () => {
-    serve();
-    const client = createBridgeClient<Methods>('test', 10);
-    const call = client.call('ping');
-    for (const listener of win.listeners.slice()) {
-      listener({ source: win, data: { type: 'alfred:test_response', data: 'no id' } });
-      listener({ source: win, data: undefined });
-    }
-    expect(await call).toBe('pong');
+    expect(await serve().call('ping')).toBe('pong');
   });
 });

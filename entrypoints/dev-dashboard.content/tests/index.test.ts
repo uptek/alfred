@@ -27,9 +27,9 @@ const WIDE = media('(min-width: 48rem)');
 const PREFERS_DARK = media('(prefers-color-scheme: dark)');
 const REDUCED_MOTION = media('(prefers-reduced-motion: reduce)');
 WIDE.matches = true;
-const setWide = (wide: boolean) => {
-  WIDE.matches = wide;
-  WIDE.listeners.forEach((fn) => fn());
+const setMatch = (mq: FakeMediaQuery, matches: boolean) => {
+  mq.matches = matches;
+  mq.listeners.forEach((fn) => fn());
 };
 
 const FIXTURE = `
@@ -150,7 +150,7 @@ const resetDom = () => {
   document.body.innerHTML = FIXTURE;
   syncSidebar();
 };
-const key = (init: Partial<KeyboardEvent> & { target?: unknown }) => {
+const key = (init: Partial<KeyboardEvent> & { target?: unknown }, handler = keyHandlers[0]!) => {
   const event = {
     key: 'b',
     metaKey: false,
@@ -161,19 +161,15 @@ const key = (init: Partial<KeyboardEvent> & { target?: unknown }) => {
     preventDefault: mock(),
     ...init
   };
-  keyHandlers[0]!(event);
+  handler(event);
   return event;
 };
 
 describe('theme toggle', () => {
   it('applies the saved light theme while keeping the frame and nav dark', () => {
     const html = document.documentElement;
-    expect(html.classList.contains('light')).toBe(true);
-    expect(html.classList.contains('dark')).toBe(false);
-    expect(html.style.colorScheme).toBe('light');
-    expect(themeOf('body')).toBe('light');
-    expect(themeOf('.altair-app-frame__main')).toBe('light');
-    expect(themeOf('.altair-app-frame')).toBe('dark');
+    expect([html.className, html.style.colorScheme]).toEqual(['light', 'light']);
+    expect(['body', '.altair-app-frame__main', '.altair-app-frame'].map(themeOf)).toEqual(['light', 'light', 'dark']);
   });
 
   it('injects a radiogroup above the nav footer and applies a clicked mode once', async () => {
@@ -193,9 +189,7 @@ describe('theme toggle', () => {
     watcher.disconnect();
 
     expect(setItem).toHaveBeenCalledWith('devDashboardTheme', 'dark');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(themeOf('body')).toBe('dark');
-    expect(checkedMode()).toBe('dark');
+    expect([document.documentElement.className, themeOf('body'), checkedMode()]).toEqual(['dark', 'dark', 'dark']);
     expect(records.filter((r) => r.target === document.body).length).toBeLessThanOrEqual(2);
   });
 
@@ -205,32 +199,26 @@ describe('theme toggle', () => {
     setItem.mockImplementationOnce(async () => {});
     themeButton('light').click();
     await Bun.sleep(0);
-    expect(themeOf('body')).toBe('light');
-    expect(checkedMode()).toBe('light');
+    expect([themeOf('body'), checkedMode()]).toEqual(['light', 'light']);
     store.set('devDashboardTheme', 'light');
   });
 
   it('follows another tab and the OS scheme only while in system mode', () => {
     PREFERS_DARK.matches = false;
     otherTab('devDashboardTheme', null);
-    expect(checkedMode()).toBe('system');
-    expect(themeOf('body')).toBe('light');
+    expect([checkedMode(), themeOf('body')]).toEqual(['system', 'light']);
 
-    PREFERS_DARK.matches = true;
-    PREFERS_DARK.listeners.forEach((fn) => fn());
+    setMatch(PREFERS_DARK, true);
     expect(themeOf('body')).toBe('dark');
     expect(document.documentElement.style.colorScheme).toBe('dark');
 
     otherTab('devDashboardTheme', 'light');
-    PREFERS_DARK.matches = false;
-    PREFERS_DARK.listeners.forEach((fn) => fn());
-    expect(checkedMode()).toBe('light');
-    expect(themeOf('body')).toBe('light');
+    setMatch(PREFERS_DARK, false);
+    expect([checkedMode(), themeOf('body')]).toEqual(['light', 'light']);
   });
 
   it('slides the pill from its old slot, unless motion is reduced', () => {
-    const animate = pillAnimate;
-    animate.mockClear();
+    const animate = pillAnimate.mockClear();
 
     themeButton('system').click();
     expect(animate).toHaveBeenCalledTimes(1);
@@ -285,12 +273,12 @@ describe('nav collapse toggle', () => {
 
   it('shows the expanded nav below 48rem and follows other tabs', () => {
     resetDom();
-    setWide(false);
+    setMatch(WIDE, false);
     expect(navState()).toBe('expanded');
     expect(navButton().getAttribute('aria-label')).toBe('Collapse navigation');
     expect($('#alfred-nav-toggle').dataset.placement).toBe('bottom');
 
-    setWide(true);
+    setMatch(WIDE, true);
     expect(navState()).toBe('collapsed');
 
     otherTab('devDashboardNavCollapsed', null);
@@ -337,20 +325,27 @@ describe('nav collapse toggle', () => {
     expect(navState()).toBe('collapsed');
   });
 
-  it('gives second-level links rail icons once: cloned, inline, or a monogram', () => {
+  it('gives each second-level link one rail icon: cloned, inline, or a monogram, matching whole words', () => {
     resetDom();
-    const iconOf = (id: string) => $(`#${id}`).querySelectorAll('.alfred-rail-icon');
-
-    expect(iconOf('l-overview')[0]!.querySelector('.altair-icon')!.textContent).toBe('home');
-    expect(iconOf('l-logs')[0]!.querySelector('svg')).not.toBeNull();
-    expect(iconOf('l-versions')[0]!.querySelector('svg')).not.toBeNull();
-    expect(iconOf('l-monitoring')[0]!.querySelector('.alfred-rail-monogram')!.textContent).toBe('M');
-    expect(iconOf('l-logs')[0]!.getAttribute('aria-hidden')).toBe('true');
-    // The first-level link keeps its own icon.
-    expect(document.querySelectorAll('.alfred-rail-icon').length).toBe(4);
-
+    $('.side-nav__list--secondary').insertAdjacentHTML(
+      'beforeend',
+      ['Conversions', 'Changelog', 'App versions']
+        .map((label) => `<li><a class="side-nav-link"><span class="side-nav__label">${label}</span></a></li>`)
+        .join('')
+    );
     syncSidebar();
-    for (const id of ['l-overview', 'l-logs', 'l-versions', 'l-monitoring']) expect(iconOf(id).length).toBe(1);
+    // Every rail icon on the page, as its monogram, its inline path's start, or the text of the page icon it
+    // cloned: none on the first-level link, and none added by a second sync.
+    const icons = [...document.querySelectorAll('.alfred-rail-icon')];
+    expect(
+      icons.map(
+        (icon) =>
+          icon.querySelector('.alfred-rail-monogram')?.textContent ??
+          icon.querySelector('svg path')?.getAttribute('d')!.slice(0, 6) ??
+          icon.querySelector('.altair-icon')!.textContent
+      )
+    ).toEqual(['home', 'M4 6a1', 'M10.75', 'M', 'C', 'C', 'M10.75']);
+    expect(icons[1]!.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('waits for a label and for the page icon it clones before adding a rail icon', () => {
@@ -373,7 +368,7 @@ describe('nav collapse toggle', () => {
     expect($('#l-settings .alfred-rail-icon .altair-icon').textContent).toBe('cog');
   });
 
-  it('toggles on Ctrl+B off Mac, leaving other combos, rich text and the drawer alone', () => {
+  it('toggles on Ctrl+B off Mac, leaving other combos, keyless events, rich text and the drawer alone', () => {
     resetDom();
     expect(navState()).toBe('collapsed');
 
@@ -384,13 +379,15 @@ describe('nav collapse toggle', () => {
       { ctrlKey: true, key: 'i' },
       { ctrlKey: true, repeat: true },
       { ctrlKey: true, defaultPrevented: true },
-      { ctrlKey: true, target: { isContentEditable: true } }
+      { ctrlKey: true, target: { isContentEditable: true } },
+      // Chrome autofill sends keydown events without a key
+      { ctrlKey: true, key: undefined }
     ]) {
       expect(key(init).preventDefault).not.toHaveBeenCalled();
     }
-    setWide(false);
+    setMatch(WIDE, false);
     expect(key({ ctrlKey: true }).preventDefault).not.toHaveBeenCalled();
-    setWide(true);
+    setMatch(WIDE, true);
     expect(navState()).toBe('collapsed');
 
     expect(key({ ctrlKey: true, key: 'B' }).preventDefault).toHaveBeenCalled();
@@ -403,9 +400,8 @@ describe('nav collapse toggle', () => {
     setGlobal('navigator', { platform: 'MacIntel' });
     const mac = await import('../sidebar.ts?mac');
     setGlobal('navigator', { platform: 'Win32' });
-    const handlerCount = keyHandlers.length;
     await mac.initSidebar();
-    const macKey = keyHandlers[handlerCount]!;
+    const macKey = keyHandlers.at(-1)!;
 
     resetDom();
     $('#alfred-nav-toggle').remove();
@@ -413,20 +409,8 @@ describe('nav collapse toggle', () => {
     expect(navButton().getAttribute('aria-keyshortcuts')).toBe('Meta+B');
     expect([...$('#alfred-nav-toggle').querySelectorAll('kbd')].map((k) => k.textContent)).toEqual(['⌘', 'B']);
 
-    const press = (init: Partial<KeyboardEvent>) => {
-      const event = {
-        key: 'b',
-        shiftKey: false,
-        altKey: false,
-        target: document.body,
-        preventDefault: mock(),
-        ...init
-      };
-      macKey(event);
-      return event.preventDefault;
-    };
-    expect(press({ ctrlKey: true, metaKey: false })).not.toHaveBeenCalled();
-    expect(press({ metaKey: true, ctrlKey: false })).toHaveBeenCalled();
+    expect(key({ ctrlKey: true }, macKey).preventDefault).not.toHaveBeenCalled();
+    expect(key({ metaKey: true }, macKey).preventDefault).toHaveBeenCalled();
   });
 
   it('pins chart canvases through the nav transition and releases one per frame', async () => {
@@ -436,7 +420,8 @@ describe('nav collapse toggle', () => {
       '<div class="chart"><div data-altair--chart-target="canvas"></div></div>';
     const canvases = [...document.querySelectorAll<HTMLElement>('[data-altair--chart-target~="canvas"]')];
     canvases.forEach((c, i) => Object.assign(c, { getBoundingClientRect: () => ({ width: 300 + i }) }));
-    const pinned = () => canvases.map((c) => [c.style.width, c.parentElement!.style.overflow]);
+    const boxes = canvases.map((c) => c.parentElement!);
+    const pinned = () => canvases.map((c, i) => [c.style.width, boxes[i]!.style.overflow]);
 
     navButton().click();
     expect(pinned()).toEqual([
@@ -482,32 +467,21 @@ describe('nav collapse toggle', () => {
     ]);
 
     // Nothing to pin in the drawer layout.
-    setWide(false);
+    setMatch(WIDE, false);
     navButton().click();
-    setWide(true);
+    setMatch(WIDE, true);
     expect(pinned()[0]).toEqual(['', '']);
-    $('main').innerHTML = '';
-  });
 
-  it('releases every chart even when the page detaches one before release', () => {
-    resetDom();
-    $('main').innerHTML =
-      '<div class="chart"><div data-altair--chart-target="canvas"></div></div>' +
-      '<div class="chart"><div data-altair--chart-target="canvas"></div></div>';
-    const [first, second] = [...document.querySelectorAll<HTMLElement>('[data-altair--chart-target~="canvas"]')];
-    for (const c of [first!, second!]) Object.assign(c, { getBoundingClientRect: () => ({ width: 300 }) });
-    const firstBox = first!.parentElement!;
-
+    // A canvas the page detaches before release still has its box released.
     navButton().click();
-    first!.remove();
-    nav().dispatchEvent(Object.assign(new dom.Event('transitionend'), { propertyName: 'width' }));
+    canvases[0]!.remove();
+    transitionEnd(nav(), 'width');
     flushFrame();
     flushFrame();
-    expect(firstBox.style.overflow).toBe('');
-    expect([second!.style.width, second!.parentElement!.style.overflow]).toEqual(['', '']);
-
-    navButton().click();
-    document.dispatchEvent(new dom.Event('turbo:before-cache'));
+    expect(pinned()).toEqual([
+      ['', ''],
+      ['', '']
+    ]);
   });
 });
 
@@ -527,9 +501,9 @@ describe('theme toggle keyboard', () => {
     }
     return toggle;
   };
-  const arrow = (key: string, init: object = {}) => {
-    const event = Object.assign(new dom.Event('keydown'), { key, preventDefault: mock(), ...init });
-    $('#alfred-theme-toggle').dispatchEvent(event);
+  const arrow = (key: string, init: object = {}, target: HTMLElement = $('#alfred-theme-toggle')) => {
+    const event = Object.assign(new dom.Event('keydown', { bubbles: true }), { key, preventDefault: mock(), ...init });
+    target.dispatchEvent(event);
     return event;
   };
   const tabStops = () => [...$('#alfred-theme-toggle').querySelectorAll('button')].map((b) => b.tabIndex);
@@ -582,11 +556,7 @@ describe('theme toggle keyboard', () => {
     await freshToggle();
     themeButton('light').click();
     otherTab('devDashboardTheme', 'system');
-    const event = Object.assign(new dom.Event('keydown', { bubbles: true }), {
-      key: 'ArrowRight',
-      preventDefault: mock()
-    });
-    themeButton('light').dispatchEvent(event);
+    arrow('ArrowRight', {}, themeButton('light'));
     expect(checkedMode()).toBe('dark');
   });
 });
@@ -602,36 +572,33 @@ describe('theme observer', () => {
     html().classList.remove('light');
   };
 
-  it('skips the theme pass for mutations that bring no themed element', async () => {
-    await settleLight();
-    $('main').insertAdjacentHTML('beforeend', '<svg><path d="M0 0"/></svg><div class="chart"><span>tip</span></div>');
-    await Bun.sleep(0);
-    expect(html().classList.contains('light')).toBe(false);
-  });
+  const insert = (markup: string) => () => $('main').insertAdjacentHTML('beforeend', markup);
 
-  it('re-applies the theme when a themed element arrives, on its own or nested', async () => {
+  it.each([
+    [
+      'skips the theme pass for mutations that bring no themed element',
+      insert('<svg><path d="M0 0"/></svg><div class="chart"><span>tip</span></div>'),
+      false
+    ],
+    ['re-applies the theme when a themed element arrives', insert('<div data-altair-theme="dark"></div>'), true],
+    [
+      're-applies the theme to a nested canvas',
+      insert('<section><div class="altair-app-frame__main"></div></section>'),
+      true
+    ],
+    [
+      're-applies the theme when a data-altair-theme attribute changes',
+      () => ($('.altair-app-frame__main').dataset.altairTheme = 'dark'),
+      true
+    ]
+  ])('%s', async (_, mutate, reapplied) => {
     await settleLight();
-    $('main').insertAdjacentHTML('beforeend', '<div id="popover" data-altair-theme="dark"></div>');
+    mutate();
     await Bun.sleep(0);
-    expect(html().classList.contains('light')).toBe(true);
-    expect(themeOf('#popover')).toBe('light');
-
-    html().classList.remove('light');
-    $('main').insertAdjacentHTML(
-      'beforeend',
-      '<section><div class="altair-app-frame__main" id="canvas"></div></section>'
-    );
-    await Bun.sleep(0);
-    expect(html().classList.contains('light')).toBe(true);
-    expect(themeOf('#canvas')).toBe('light');
-  });
-
-  it('re-applies the theme when a data-altair-theme attribute changes', async () => {
-    await settleLight();
-    $('.altair-app-frame__main').dataset.altairTheme = 'dark';
-    await Bun.sleep(0);
-    expect(html().classList.contains('light')).toBe(true);
-    expect(themeOf('.altair-app-frame__main')).toBe('light');
+    expect(html().classList.contains('light')).toBe(reapplied);
+    // Every themed element but the frame is light, including any that arrived
+    const themes = [...document.querySelectorAll<HTMLElement>('[data-altair-theme], .altair-app-frame__main')];
+    expect(themes.map((el) => el.dataset.altairTheme).filter((t) => t !== 'light')).toEqual(['dark']);
   });
 
   it('waits for the nav footer before injecting the theme toggle', async () => {
@@ -665,34 +632,6 @@ describe('nav collapse edge cases', () => {
     themeButton('dark').click();
     expect(checkedMode()).toBe('dark');
     themeButton('light').click();
-  });
-
-  it('ignores keydown events without a key, which Chrome autofill sends', () => {
-    resetDom();
-    const before = navState();
-    let event: ReturnType<typeof key> | undefined;
-    expect(() => (event = key({ key: undefined, ctrlKey: true }))).not.toThrow();
-    expect(event!.preventDefault).not.toHaveBeenCalled();
-    expect(navState()).toBe(before);
-  });
-
-  it('matches rail icons on whole words, so Conversions and Changelog get monograms', () => {
-    resetDom();
-    $('.side-nav__list--secondary').insertAdjacentHTML(
-      'beforeend',
-      '<li><a class="side-nav-link" id="l-conversions"><span class="side-nav__label">Conversions</span></a></li>' +
-        '<li><a class="side-nav-link" id="l-changelog"><span class="side-nav__label">Changelog</span></a></li>' +
-        '<li><a class="side-nav-link" id="l-app-versions"><span class="side-nav__label">App versions</span></a></li>'
-    );
-    syncSidebar();
-    const monogram = (id: string) => $(`#${id} .alfred-rail-icon`).querySelector('.alfred-rail-monogram')?.textContent;
-    const iconPath = (id: string) => $(`#${id} .alfred-rail-icon svg path`).getAttribute('d')!;
-
-    expect(monogram('l-conversions')).toBe('C');
-    expect(monogram('l-changelog')).toBe('C');
-    // Logs and versions keep their own inline icons.
-    expect(iconPath('l-logs')).toStartWith('M4 6a1');
-    expect(iconPath('l-app-versions')).toStartWith('M10.75 6a');
   });
 
   it('defers injection to DOMContentLoaded when the script runs while the page is loading', async () => {

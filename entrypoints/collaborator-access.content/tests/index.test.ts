@@ -142,25 +142,23 @@ describe('collaborator access content script', () => {
 
     uis[0]!.onRemove();
     uis[0]!.onRemove();
-    expect(unmount).toHaveBeenCalledTimes(1);
-    expect(unmount).toHaveBeenCalledWith(app);
+    expect(unmount.mock.calls).toEqual([[app]]);
   });
 
   it('builds Altair buttons: Save preset asks the app to save, Request access submits the form', async () => {
     await visitForm();
     const [save, submit] = bottomButtons();
-    for (const [button, variant, label] of [
-      [save!, 'secondary', 'Save preset'],
-      [submit!, 'primary', 'Request access']
+    for (const [button, variant, label, type] of [
+      [save!, 'secondary', 'Save preset', 'button'],
+      [submit!, 'primary', 'Request access', 'submit']
     ] as const) {
       expect(button.className).toBe(`altair-button altair-button--${variant}`);
       expect(button.getAttribute('data-altair-component')).toBe('Button');
       expect(button.getAttribute('data-altair-variant')).toBe(variant);
       expect(button.getAttribute('data-altair-size')).toBe('default');
       expect(button.querySelector('.altair-button__content > .altair-button__label')!.textContent).toBe(label);
+      expect(button.type).toBe(type);
     }
-    expect(save!.type).toBe('button');
-    expect(submit!.type).toBe('submit');
     expect(submit!.getAttribute('form')).toBe('collaboration-request-form');
 
     const onSave = mock();

@@ -30,8 +30,12 @@ jobs:
 
       - run: bun run build
 
+      # Bundles the Worker without credentials, so a change that breaks it fails here, not after merge
+      - run: bunx wrangler deploy --dry-run -c worker/wrangler.jsonc
+
+  # New builds post to the Worker, so a release waits for the Worker that accepts its events
   publish:
-    needs: lint-and-build
+    needs: [lint-and-build, deploy-worker]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     concurrency: chrome-web-store
@@ -68,3 +72,32 @@ jobs:
           CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
           CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
           CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+
+  # The Worker imports utils/analytics-actions.ts as its allowlist, so any merge can change what it accepts.
+  deploy-worker:
+    needs: lint-and-build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency: worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run deploy:worker
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      # /track answers 200 even when inserts fail, so check the route itself: a zone redirect
+      # rule or a lost custom domain turns this preflight into a 3xx or an error
+      - run: |
+          code=$(curl --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 --max-time 15 \
+            --output /dev/null --write-out '%{http_code}' -X OPTIONS https://api.alfredext.com/track) || true
+          echo "OPTIONS /track -> $code"
+          test "$code" = 200
