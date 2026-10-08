@@ -173,12 +173,12 @@
     opacity var(--ui-motion-fast);
 }
 
-#alfred-nav-toggle button:hover {
+:is(#alfred-nav-toggle button, .alfred-contact__action):hover {
   background: var(--ui-control-bg-hover);
   color: var(--ui-text);
 }
 
-#alfred-nav-toggle button:focus-visible {
+:is(#alfred-nav-toggle button, .alfred-contact__action):focus-visible {
   outline: var(--ui-border-width-050) solid var(--ui-border-focus);
   outline-offset: -2px;
 }
@@ -309,7 +309,47 @@
   font: 600 0.6875rem/1 var(--ui-font-family-sans);
 }
 
+/* Contact email and phone in install popovers (contacts.ts): the value as a
+   link, then its icon buttons */
+.alfred-contact {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.alfred-contact > :first-child {
+  min-width: 0;
+  margin-inline-end: 2px;
+  color: var(--ui-link-text);
+  text-decoration: none;
+}
+
+.alfred-contact > :first-child:hover {
+  color: var(--ui-link-text-hover);
+  text-decoration: underline;
+}
+
+.alfred-contact__action {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  /* Keeps the row at its text height */
+  margin-block: -2px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-border-radius-150);
+  background: none;
+  color: var(--ui-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--ui-motion-fast),
+    color var(--ui-motion-fast);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .alfred-contact__action,
   .alfred-rail-icon,
   .alfred-rail-icon > *,
   .side-nav__list--secondary .side-nav-link,
