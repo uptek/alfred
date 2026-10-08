@@ -1,5 +1,6 @@
 import { storage } from '#imports';
 import { getItem, setItem } from '@/utils/storage';
+import { initContacts, syncContacts } from './contacts';
 import { initSidebar, syncSidebar } from './sidebar';
 import './style.css';
 
@@ -21,6 +22,7 @@ export default defineContentScript({
     let mode: ThemeMode = saved ?? 'system';
 
     applyTheme(mode);
+    initContacts();
 
     // Set by injectToggle so a theme picked in another dashboard tab moves the
     // live toggle too, not just the document.
@@ -42,6 +44,7 @@ export default defineContentScript({
 
     const tryInject = () => {
       syncSidebar();
+      syncContacts();
       if (document.getElementById('alfred-theme-toggle')) return;
       syncToggle = injectToggle(mode, pick);
     };

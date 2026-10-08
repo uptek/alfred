@@ -1,5 +1,23 @@
 [
   {
+    "version": "2026.10.08",
+    "date": "2026-10-08",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Contact Store Owners from the Installs Page"
+      },
+      {
+        "type": "paragraph",
+        "content": "In the Dev Dashboard, an app's Installs page shows each store's contact details in a popover. The email and phone there are now links: click the email to write to the store owner, or the phone to call. The email, phone and shop URL each have a copy button, and phone numbers get a WhatsApp button that opens the chat in one click. Numbers saved without a country code get one from the store's location, so the WhatsApp link still reaches the right person."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-installs-contacts-v2026.10.08.mp4"
+      }
+    ]
+  },
+  {
     "version": "2026.10.03",
     "date": "2026-10-03",
     "changes": [

@@ -11,7 +11,7 @@ import { captureOrganizationId } from '@/entrypoints/collaborator-access.content
 import { getSettings, isEnabled, watchSettings } from '@/utils/settings';
 
 // Updates to a silent release skip the changelog tab
-const SILENT_RELEASE = true;
+const SILENT_RELEASE = false;
 
 export default defineBackground(() => {
   // The uninstall URL carries the analytics opt-in, so refresh it whenever settings change
