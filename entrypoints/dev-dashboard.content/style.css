@@ -310,7 +310,7 @@
 }
 
 /* Contact email and phone in install popovers (contacts.ts): the value as a
-   link, then its icon buttons */
+   link (the dashboard links the shop URL itself), then its icon buttons */
 .alfred-contact {
   display: flex;
   align-items: center;
@@ -320,11 +320,14 @@
 .alfred-contact > :first-child {
   min-width: 0;
   margin-inline-end: 2px;
+}
+
+.alfred-contact__link {
   color: var(--ui-link-text);
   text-decoration: none;
 }
 
-.alfred-contact > :first-child:hover {
+.alfred-contact__link:hover {
   color: var(--ui-link-text-hover);
   text-decoration: underline;
 }

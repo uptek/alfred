@@ -4,7 +4,7 @@
 @ 2026-10-08
 
 ### Contact Store Owners from the Installs Page
-In the Dev Dashboard, an app's Installs page shows each store's contact details in a popover. The email and phone there are now links: click the email to write to the store owner, or the phone to call. Each has a copy button, and phone numbers get a WhatsApp button that opens the chat in one click. Numbers saved without a country code get one from the store's location, so the WhatsApp link still reaches the right person.
+In the Dev Dashboard, an app's Installs page shows each store's contact details in a popover. The email and phone there are now links: click the email to write to the store owner, or the phone to call. The email, phone and shop URL each have a copy button, and phone numbers get a WhatsApp button that opens the chat in one click. Numbers saved without a country code get one from the store's location, so the WhatsApp link still reaches the right person.
 
 
 <video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-installs-contacts-v2026.10.08.mp4"></video>

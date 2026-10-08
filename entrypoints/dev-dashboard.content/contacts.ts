@@ -1,6 +1,6 @@
 // An app's installs list each store contact in a popover, with the email and
 // phone as plain text. This links them (mail, call and WhatsApp) and gives
-// each a copy button.
+// each, and the shop URL, a copy button.
 
 import { sendTrackEvent } from '@/utils/analytics';
 import type { AnalyticsAction } from '@/utils/analytics-actions';
@@ -38,7 +38,7 @@ export function initContacts() {
   });
 }
 
-/** Links the contact email and phone in install popovers. Runs on every DOM mutation, so done fields are skipped. */
+/** Links the contact email and phone in install popovers and adds copy buttons. Runs on every DOM mutation, so done fields are skipped. */
 export function syncContacts() {
   // The phone comes before the location it's read with, so a half-parsed popover waits
   if (document.readyState === 'loading') return;
@@ -46,8 +46,14 @@ export function syncContacts() {
   for (const dd of document.querySelectorAll<HTMLElement>('.altair-popover__surface dt + dd:not(.alfred-contact)')) {
     const label = dd.previousElementSibling!.textContent!.trim();
     const value = dd.textContent!.trim();
-    if (!value || (label !== 'Email' && label !== 'Phone')) continue;
+    if (!value || !['Email', 'Phone', 'Shop URL'].includes(label)) continue;
     dd.classList.add('alfred-contact');
+
+    if (label === 'Shop URL') {
+      // Already a link
+      dd.append(copyButton(value, 'Copy shop URL', 'dev.contacts.shop_url_copy'));
+      continue;
+    }
 
     if (label === 'Email') {
       dd.replaceChildren(
@@ -74,6 +80,7 @@ export function syncContacts() {
 function link(href: string, text: string, track: AnalyticsAction) {
   const a = document.createElement('a');
   a.href = href;
+  a.className = 'alfred-contact__link';
   a.textContent = text;
   a.dataset.alfredTrack = track;
   return a;
