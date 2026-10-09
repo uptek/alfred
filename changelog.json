@@ -1,5 +1,19 @@
 [
   {
+    "version": "2026.10.09",
+    "date": "2026-10-09",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Copy Buttons on the Live Theme"
+      },
+      {
+        "type": "paragraph",
+        "content": "The live theme now has the same ID and Preview URL copy buttons as your draft themes. The buttons stay readable on the dark live theme card and line up under Edit theme on any screen size."
+      }
+    ]
+  },
+  {
     "version": "2026.10.08",
     "date": "2026-10-08",
     "changes": [

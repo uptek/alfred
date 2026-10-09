@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.10.09
+@ 2026-10-09
+
+### Copy Buttons on the Live Theme
+The live theme now has the same ID and Preview URL copy buttons as your draft themes. The buttons stay readable on the dark live theme card and line up under Edit theme on any screen size.
+
+
 ## 2026.10.08
 @ 2026-10-08
 
@@ -7,7 +14,7 @@
 In the Dev Dashboard, an app's Installs page shows each store's contact details in a popover. The email and phone there are now links: click the email to write to the store owner, or the phone to call. The email, phone and shop URL each have a copy button, and phone numbers get a WhatsApp button that opens the chat in one click. Numbers saved without a country code get one from the store's location, so the WhatsApp link still reaches the right person.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-installs-contacts-v2026.10.08.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-installs-contacts-v2026.10.08.mp4"></video>
 
 ## 2026.10.03
 @ 2026-10-03
