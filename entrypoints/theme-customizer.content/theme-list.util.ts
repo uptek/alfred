@@ -9,8 +9,10 @@ const THEMES_PATH = /\/themes\/?$/;
  * Layout for the injected copy row. On wide screens the actions row wraps, so the full-width
  * copy row drops below it; `contain: inline-size` keeps it out of the actions row's natural
  * width so the existing buttons stay flush right, and a hidden copy of the "more actions"
- * button lines the copy buttons up under "Edit theme". At 831px and below Shopify moves the
- * actions under the theme and aligns them left, so the copy row follows and drops the spacer.
+ * button lines the copy buttons up under "Edit theme". Shopify moves the actions under the
+ * theme and aligns them left at 831px and below for library themes, and at 30.6225em and below
+ * for the live theme, so the copy row follows and drops the spacer. The live theme card is
+ * dark, so its copy buttons take the card's light text and hover colors.
  */
 const ROW_STYLES = `
   [${INJECTED_ATTR}] {
@@ -24,11 +26,24 @@ const ROW_STYLES = `
     visibility: hidden;
     margin-inline-start: var(--p-space-100);
   }
+  [class*="PublishedTheme"] [${INJECTED_ATTR}] {
+    --p-color-text: var(--p-color-text-brand-on-accent);
+    --p-color-icon: var(--p-color-text-brand-on-accent);
+    --p-color-bg-fill-transparent-hover: rgba(255, 255, 255, 0.15);
+  }
   @media (max-width: 831px) {
-    [${INJECTED_ATTR}] {
+    ul[class*="ThemeList"] [${INJECTED_ATTR}] {
       justify-content: flex-start;
     }
-    [${INJECTED_ATTR}] > [inert] {
+    ul[class*="ThemeList"] [${INJECTED_ATTR}] > [inert] {
+      display: none;
+    }
+  }
+  @media (max-width: 30.6225em) {
+    [class*="PublishedTheme"] [${INJECTED_ATTR}] {
+      justify-content: flex-start;
+    }
+    [class*="PublishedTheme"] [${INJECTED_ATTR}] > [inert] {
       display: none;
     }
   }
@@ -36,31 +51,26 @@ const ROW_STYLES = `
 
 interface ThemeData {
   themeId: string;
-  storeName: string;
-  themeName: string;
   previewUrl: string;
 }
 
 /**
- * Extracts theme ID, store name, and preview URL from a theme list item's editor link.
+ * Extracts theme ID and preview URL from a theme's "Edit theme" link.
  * The link points at `/themes/:id/editor`, or `/themes/:id/canvas` for Canvas themes.
- * @param listItem - A theme list `<li>` element.
- * @returns The parsed theme data, or `null` if no editor link is found.
+ * @param editLink - The theme's "Edit theme" `<a>` element.
+ * @returns The parsed theme data, or `null` if the link has no theme ID.
  */
-const extractThemeData = (listItem: HTMLElement): ThemeData | null => {
-  const editLink = listItem.querySelector<HTMLAnchorElement>('a[href*="/themes/"]');
-  if (!editLink) {
+const extractThemeData = (editLink: HTMLAnchorElement): ThemeData | null => {
+  const href = editLink.getAttribute('href') ?? '';
+  const themeId = /\/themes\/(\d+)/.exec(href)?.[1];
+  if (!themeId) {
     return null;
   }
 
-  const href = editLink.getAttribute('href') ?? '';
-  const themeId = /\/themes\/(\d+)/.exec(href)?.[1] ?? '';
   const storeName = /\/store\/([^/]+)\//.exec(href)?.[1] ?? '';
-  const themeName = listItem.querySelector('h3')?.textContent?.trim() ?? 'Unknown';
-
   const previewUrl = storeName ? `https://${storeName}.myshopify.com/?preview_theme_id=${themeId}` : '';
 
-  return { themeId, storeName, themeName, previewUrl };
+  return { themeId, previewUrl };
 };
 
 /**
@@ -92,25 +102,26 @@ const handleCopyClick = (e: Event) => {
 };
 
 /**
- * Scans the theme list and adds copy-ID / copy-preview-URL buttons on their own row below
- * each theme's action buttons, laid out by `ROW_STYLES`.
+ * Adds copy-ID / copy-preview-URL buttons on their own row below the action buttons of
+ * the live theme and each theme in the library, laid out by `ROW_STYLES`.
+ * Both cards share the "Edit theme" link and its `.Polaris-InlineStack` actions row.
  * The buttons use the page's own `s-internal-button` Polaris element.
- * Items whose buttons React has re-rendered away get them back on the next scan.
- * @returns `true` if at least one item was injected, `false` if none were found or all were already processed.
+ * Themes whose buttons React has re-rendered away get them back on the next scan.
+ * @returns `true` if at least one theme was injected, `false` if none were found or all were already processed.
  */
 export const injectIntoThemeList = () => {
-  const themeListItems = document.querySelectorAll<HTMLElement>('ul[class*="ThemeList"] > li');
+  const editLinks = document.querySelectorAll<HTMLAnchorElement>('a[class*="ThemeActionButton"][href*="/themes/"]');
 
   let injected = false;
 
-  themeListItems.forEach((listItem) => {
-    if (listItem.querySelector(`[${INJECTED_ATTR}]`)) {
+  editLinks.forEach((editLink) => {
+    const actions = editLink.closest('.Polaris-InlineStack');
+    if (!actions || actions.querySelector(`[${INJECTED_ATTR}]`)) {
       return;
     }
 
-    const data = extractThemeData(listItem);
-    const actions = listItem.querySelector('a[class*="ThemeActionButton"]')?.closest('.Polaris-InlineStack');
-    if (!data || !actions) {
+    const data = extractThemeData(editLink);
+    if (!data) {
       return;
     }
 

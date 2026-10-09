@@ -24,7 +24,34 @@ const themeItem = (id: string, name: string, editPath: string) => `
     </div></div>
   </div></div></div></li>`;
 
+// Trimmed from the live theme card at the top of the same page.
+const publishedTheme = (id: string, name: string) => `
+  <div class="_PublishedTheme_1nfrl_1">
+    <a href="https://admin.shopify.com/store/demo-store/themes/${id}/editor" class="Polaris-Link" aria-label="Edit theme">
+      <span class="_ThemePreview_1nfrl_8"><img alt="Theme preview screenshot"></span>
+    </a>
+    <div class="Polaris-Box"><div class="_ThemeInformationContainer_1nfrl_109"><div class="_ThemeInformation_1nfrl_109">
+      <div class="_ThemeContent_1nfrl_134"><div class="Polaris-BlockStack">
+        <div class="_PublishedThemeDomain_7wbza_31"><div class="Polaris-InlineStack">
+          <s-internal-heading-display level="2" size="small"><button type="button">demo-store.myshopify.com</button></s-internal-heading-display>
+          <a href="https://admin.shopify.com/store/demo-store/settings/domains" aria-label="Domain settings"></a>
+        </div></div>
+        <s-internal-text size="base">${name} · Last saved: Wednesday at 1:43 pm</s-internal-text>
+      </div></div>
+      <div class="_ThemeActions_1nfrl_144"><div class="Polaris-InlineStack">
+        <span data-component-name="theme-index-customize-button">
+          <a href="https://admin.shopify.com/store/demo-store/themes/${id}/editor" class="_ThemeActionButton_xaf5q_1 _primary_xaf5q_36" aria-label="Edit ${name}">Edit theme</a>
+        </span>
+        <button class="_ThemeActionButton_xaf5q_1 _tertiary_xaf5q_66 _small_xaf5q_75 _PublishedThemeAction_1x4mc_5" type="button" commandfor=":r3:" command="--toggle"><s-internal-icon type="menu-horizontal"></s-internal-icon></button>
+        <s-popover id=":r3:"><ul class="Polaris-Box"><li class="Polaris-Box">
+          <a class="Polaris-ActionList__Item" href="https://admin.shopify.com/store/demo-store/themes/${id}">Edit code</a>
+        </li></ul></s-popover>
+      </div></div>
+    </div></div></div>
+  </div>`;
+
 const { document } = parseHTML(`<html><body>
+  ${publishedTheme('158745460950', 'Prod')}
   <ul class="_ThemeList_11pt9_1 _NewThemeList_11pt9_19">
     ${themeItem('188431433942', 'Copy of Horizon', 'canvas?editorEntry=themeIndex')}
     ${themeItem('159845974230', 'Horizon', 'editor')}
@@ -48,16 +75,19 @@ const copyValues = (row: Element) =>
 describe('injectIntoThemeList', () => {
   beforeEach(() => injected().forEach((el) => el.remove()));
 
-  it('adds ID and preview URL buttons below each theme actions row, including Canvas themes', () => {
+  it('adds ID and preview URL buttons below the live theme and each library theme, including Canvas themes', () => {
     expect(injectIntoThemeList()).toBe(true);
 
     const wrappers = injected();
     expect(wrappers.map(copyValues)).toEqual([
+      ['158745460950', 'https://demo-store.myshopify.com/?preview_theme_id=158745460950'],
       ['188431433942', 'https://demo-store.myshopify.com/?preview_theme_id=188431433942'],
       ['159845974230', 'https://demo-store.myshopify.com/?preview_theme_id=159845974230']
     ]);
-    expect(wrappers[0].parentElement?.lastElementChild).toBe(wrappers[0]);
-    expect(wrappers[0].parentElement?.querySelector('a')?.textContent).toBe('Edit theme');
+    for (const wrapper of wrappers) {
+      expect(wrapper.parentElement?.lastElementChild).toBe(wrapper);
+      expect(wrapper.parentElement?.querySelector('a[class*="ThemeActionButton"]')?.textContent).toBe('Edit theme');
+    }
   });
 
   it('renders tertiary Polaris buttons with clipboard icons, then an inert copy of the more-actions button', () => {
@@ -81,6 +111,6 @@ describe('injectIntoThemeList', () => {
 
     injected()[0].remove();
     expect(injectIntoThemeList()).toBe(true);
-    expect(injected()).toHaveLength(2);
+    expect(injected()).toHaveLength(3);
   });
 });
