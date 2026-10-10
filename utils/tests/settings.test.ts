@@ -92,7 +92,7 @@ describe('getSettings', () => {
     const settings = await getSettings();
     expect(settings.general.analytics).toBe(false);
     expect(settings.general.restoreRightClick).toBe(true);
-    expect(settings.admin.timeline).toBe(true);
+    expect(settings.admin.themeListUtils).toBe(true);
     expect(settings.shortcuts.openInAdmin).toBe(true);
     expect(settings.appStore.compareApps).toBe(true);
   });
@@ -112,23 +112,23 @@ describe('updateSettings', () => {
       updateSettings({ shortcuts: { clearCart: false } }),
       updateSettings({ shortcuts: { cartograph: false } }),
       updateSettings({ shortcuts: { openInAdmin: false } }),
-      updateSettings({ admin: { timeline: false } })
+      updateSettings({ admin: { themeListUtils: false } })
     ]);
     expect(await getSettings()).toMatchObject({
       general: { analytics: false },
       shortcuts: { clearCart: false, cartograph: false, openInAdmin: false },
-      admin: { timeline: false }
+      admin: { themeListUtils: false }
     });
   });
 
   it('rejects a failed write to its caller and keeps serving later writes', async () => {
     failNextWrite = true;
     const failing = updateSettings({ general: { analytics: false } });
-    const following = updateSettings({ admin: { timeline: false } });
+    const following = updateSettings({ admin: { themeListUtils: false } });
     await expect(failing).rejects.toThrow('storage full');
     await following;
     const settings = await getSettings();
-    expect(settings.admin.timeline).toBe(false);
+    expect(settings.admin.themeListUtils).toBe(false);
     // The failed write left no trace; the queue did not stall on it.
     expect(settings.general.analytics).toBe(true);
   });

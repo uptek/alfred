@@ -110,7 +110,6 @@ export const ANALYTICS_ACTIONS = [
   'sitemaps_copy_urls',
   'sitemaps_export',
   'sitemaps_search',
-  'timeline_view',
   'credit_click'
 ] as const;
 
@@ -235,7 +234,6 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   sitemaps_copy_urls: 120,
   sitemaps_export: 120,
   sitemaps_search: 120,
-  timeline_view: 30,
   credit_click: 0
 };
 
@@ -251,7 +249,6 @@ export const ACTION_CATEGORIES: Record<AnalyticsAction, string> = {
   open_in_customizer: 'Admin Nav',
   open_image_in_admin: 'Admin Nav',
   open_section_in_code_editor: 'Admin Nav',
-  timeline_view: 'Admin',
   credit_click: 'Insights',
   copy_product_json: 'Copy Data',
   copy_cart_json: 'Copy Data',
