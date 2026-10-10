@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.10.10
+@ 2026-10-10
+
+### Activity Timeline Retired
+Alfred no longer adds an activity timeline to product, collection, page, blog, and blog post screens in the Shopify admin. Its switch is gone from Alfred's settings too. Thanks to everyone who used it.
+
+
 ## 2026.10.09
 @ 2026-10-09
 
@@ -64,18 +71,9 @@ Shopify recently rebuilt the admin's left navigation, which quietly broke Alfred
 ## 2026.08.08.3
 @ 2026-08-08
 
-### Activity Timeline in the Shopify Admin
-Alfred now shows a timeline of changes right on the resource's admin page: who changed what, and when. Works on products, pages, collections, blogs, and blog posts. Thanks to oContis Studio for kicking off this feature.
-
-- Every change carries a badge showing whether it came from a staff member or an app.
-- Events are grouped by day, and bulk actions like publishing to a dozen sales channels collapse into one row.
-- Can be turned off anytime from Alfred's settings.
-
 ### Small Touches
 - Alfred may occasionally ask how he's doing, but only after he's actually done something useful for you. He promises not to nag.
 - Formatted copies and CSV exports now note they were prepared by Alfred, so reports carry their source with them.
-
-<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-activity-timeline.mp4"></video>
 
 ## 2026.08.08.2
 @ 2026-08-08
