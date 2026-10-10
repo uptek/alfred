@@ -67,8 +67,9 @@ read per day, reset at 00:00 UTC. Past either limit every query fails,
 including `/track`'s inserts, until the reset. A write also writes one row per
 index whose column it sets, so an event insert costs 3 rows. Bulk writes
 (backfills, imports) take a row budget and run once per UTC day, like
-`scripts/backfill-event-names.ts`. Query with `bunx wrangler d1 execute alfred-events --remote -c
-worker/wrangler.jsonc --command "..."`, bounding `created_at` (ISO text) with
+`scripts/backfill-event-names.ts`. Query with
+`bunx wrangler d1 execute alfred-events --remote -c worker/wrangler.jsonc --command "..."`,
+bounding `created_at` (ISO text) with
 `strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')`, not `datetime()`. Wrangler needs
 `CLOUDFLARE_ACCOUNT_ID` in `.env` (see `.env.example`); Cloudflare account and
 resource IDs never go in the repo.
@@ -103,7 +104,32 @@ separates the three levels, so `action.split('.')` is always
   `LEGACY_ACTIONS` (`utils/analytics-legacy.ts`). Installed builds keep sending
   old names, so the Worker upgrades them on arrival and keeps the original in
   `events.legacy_action`. The same rules drive `scripts/backfill-event-names.ts`
-  and the Supabase import.
+  and the Supabase import. To count across a rename, match `action` or
+  `legacy_action`.
+
+### Adding an event
+
+1. Name it by the rules above, then add it to `ANALYTICS_ACTIONS` and its
+   seconds saved to `TIME_SAVINGS` (a function of metadata when variants save
+   different time). TypeScript requires both.
+2. Fire it from where the UI runs:
+   - Popup, Options and background: `trackAction(action, metadata)`.
+   - Popup tab views: `trackViewOnce(action, ready, metadata)`
+     (`entrypoints/popup/utils/track.svelte.ts`), once per popup open.
+   - Content scripts: `sendTrackEvent(action, metadata)`, which relays to the
+     background and falls back to `trackAction`.
+   - The main-world script (`entrypoints/alfred-main-world.ts`): its
+     `track(action, metadata)`, relayed through an `alfred:track` event.
+     `main.content.ts` drops names that are not in the list.
+3. Keep metadata flat: values are strings, numbers, booleans or null. The
+   Worker drops events with nested objects, arrays or a body over 16 KB.
+4. Optional: `COOLDOWN_MS` to rate-limit a noisy event, and `STRONG_ACTIONS`
+   (`utils/successNudge.ts`) if it should count toward the review nudge.
+
+`trackAction` skips users who turned analytics off. In dev it only logs
+`[Dev Mode] Event not sent:` to the console, which is how to check a new event.
+The Worker accepts a new name once its PR merges, and the store publish waits
+for that deploy.
 
 ## Version Bumping & Changelog
 
