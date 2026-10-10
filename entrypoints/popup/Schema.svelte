@@ -82,7 +82,7 @@
   }
 
   trackViewOnce(
-    'schema_view',
+    'popup.schema.view',
     () => analysis.entities.length > 0 || analysis.invalidBlocks.length > 0,
     () => ({ blocks: schema.length, entities: analysis.entities.length, invalid: analysis.invalidBlocks.length })
   );
@@ -92,18 +92,18 @@
   const copyFeedback = createCopyFeedback();
   async function copyAll() {
     const text = schema.map((b) => b.raw).join('\n\n');
-    if (await copyFeedback.copy(text)) trackAction('schema_copy', { scope: 'all', blocks: schema.length });
+    if (await copyFeedback.copy(text)) trackAction('popup.schema.copy', { scope: 'all', blocks: schema.length });
   }
   function exportJson() {
     const data = analysis.entities.map((e) => e.data);
     downloadFile(JSON.stringify(data, null, 2), `alfred-schema-${siteSlug}.json`, 'application/json');
-    trackAction('schema_export', { format: 'json', entities: analysis.entities.length });
+    trackAction('popup.schema.export', { format: 'json', entities: analysis.entities.length });
   }
 
   const entityCopy = createKeyedCopyFeedback<number>();
   async function copyEntity(i: number, entity: SchemaEntity) {
     if (await entityCopy.copy(JSON.stringify(entity.data, null, 2), i)) {
-      trackAction('schema_copy', { scope: 'entity', type: entity.type });
+      trackAction('popup.schema.copy', { scope: 'entity', type: entity.type });
     }
   }
 </script>

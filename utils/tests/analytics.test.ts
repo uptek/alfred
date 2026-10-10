@@ -53,7 +53,7 @@ afterAll(() => {
 
 describe('trackAction', () => {
   it('posts the event to the track Worker with no Authorization header', async () => {
-    await trackAction('links_export', { format: 'csv' });
+    await trackAction('popup.links.export', { format: 'csv' });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe('https://api.alfredext.com/track');
@@ -62,7 +62,7 @@ describe('trackAction', () => {
     expect(init.headers).toEqual({ 'Content-Type': 'application/json' });
     expect(JSON.parse(init.body as string)).toEqual({
       user_id: 'u1',
-      action: 'links_export',
+      action: 'popup.links.export',
       time_saved: 60,
       version: '2026.10.07',
       metadata: { format: 'csv' }
@@ -70,22 +70,22 @@ describe('trackAction', () => {
   });
 
   it('sends a payload the Worker accepts and stores', async () => {
-    await trackAction('popup_open');
+    await trackAction('popup.app.open');
     const [url, init] = fetchMock.mock.calls[0]!;
     const { rows } = await sendToWorker(new Request(url, init));
-    expect(rows).toEqual([['u1', 'popup_open', 0, '2026.10.07', '{}']]);
+    expect(rows).toEqual([['u1', 'popup.app.open', 0, '2026.10.07', '{}', null]]);
   });
 
   it('swallows a network failure', async () => {
     fetchMock.mockImplementationOnce(() => Promise.reject(new TypeError('Failed to fetch')));
-    expect(await trackAction('popup_open')).toBeUndefined();
+    expect(await trackAction('popup.app.open')).toBeUndefined();
     await flush();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('sends nothing when the user opted out of analytics', async () => {
     analyticsEnabled = false;
-    await trackAction('popup_open');
+    await trackAction('popup.app.open');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
@@ -96,7 +96,7 @@ describe('getUninstallUrl', () => {
     expect(url).toBe('https://api.alfredext.com/uninstall?user_id=u1&version=2026.10.07');
     const { response, rows } = await sendToWorker(new Request(url));
     expect(response.headers.get('Location')).toBe(SURVEY_URL);
-    expect(rows).toEqual([['u1', 'uninstall', 0, '2026.10.07', '{}']]);
+    expect(rows).toEqual([['u1', 'system.extension.uninstall', 0, '2026.10.07', '{}', null]]);
   });
 
   it.each([
@@ -110,15 +110,19 @@ describe('getUninstallUrl', () => {
 
 describe('sendTrackEvent', () => {
   it('routes through the background when it is reachable', async () => {
-    sendTrackEvent('cartograph_open', { a: 1 });
+    sendTrackEvent('storefront.cartograph.open', { a: 1 });
     await flush();
-    expect(sendMessage).toHaveBeenCalledWith({ type: 'track_action', action: 'cartograph_open', metadata: { a: 1 } });
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: 'track_action',
+      action: 'storefront.cartograph.open',
+      metadata: { a: 1 }
+    });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('posts directly to the Worker when the background is unreachable', async () => {
     sendMessage.mockImplementationOnce(() => Promise.reject(new Error('Receiving end does not exist')));
-    sendTrackEvent('cartograph_open');
+    sendTrackEvent('storefront.cartograph.open');
     await flush();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]![0]).toBe('https://api.alfredext.com/track');

@@ -91,7 +91,7 @@ const onMouseDown = (e: MouseEvent, resizer: Resizer) => {
     }
   };
 
-  sendTrackEvent('resize_theme_customizer', { type: resizer.type || 'unknown', page_type: 'theme_customizer' });
+  sendTrackEvent('admin.theme_editor.panel_resize', { type: resizer.type || 'unknown', page_type: 'theme_customizer' });
 
   document.body.style.cursor = window.getComputedStyle(e.target as Element).cursor;
   document.body.style.userSelect = 'none';

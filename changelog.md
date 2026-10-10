@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.10.10
+@ 2026-10-10
+
+### Activity Timeline Retired
+Alfred no longer adds an activity timeline to product, collection, page, blog, and blog post screens in the Shopify admin. Its switch is gone from Alfred's settings too. Thanks to everyone who used it.
+
+
 ## 2026.10.09
 @ 2026-10-09
 

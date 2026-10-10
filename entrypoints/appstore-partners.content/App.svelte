@@ -81,7 +81,7 @@
         apps = initialApps;
         isLoading = false;
 
-        sendTrackEvent('appstore_partner_table_view', { app_count: initialApps.length, page_url: window.location.href, page_type: 'appstore_partners' });
+        sendTrackEvent('apps.partner_table.view', { app_count: initialApps.length, page_url: window.location.href, page_type: 'appstore_partners' });
 
         for (const app of initialApps) {
           try {
@@ -104,7 +104,7 @@
   function handleSort(column: keyof App, direction: 'asc' | 'desc') {
     sortState = { column, direction };
 
-    sendTrackEvent('appstore_partner_table_sort', { app_count: apps.length, sort_by: column, sort_direction: direction, page_url: window.location.href, page_type: 'appstore_partners' });
+    sendTrackEvent('apps.partner_table.sort', { app_count: apps.length, sort_by: column, sort_direction: direction, page_url: window.location.href, page_type: 'appstore_partners' });
 
     apps = [...apps].sort((a, b) => {
       let aValue: string | number;
@@ -167,7 +167,7 @@
         <img src={exportIcon} alt="Export to CSV" />
         Export to CSV
       </button>
-      <CreditChip source="partner_table" />
+      <CreditChip action="apps.partner_table.credit_click" />
     </div>
     <div class="table-container">
       <table class="table">

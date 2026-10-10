@@ -55,8 +55,8 @@ describe('sendTabMessage', () => {
 
 describe('sendRuntimeMessage', () => {
   it.each<RuntimeMessage>([
-    { type: 'track_action', action: 'popup_open' },
-    { type: 'track_action', action: 'popup_open', metadata: { tab: 'links' } },
+    { type: 'track_action', action: 'popup.app.open' },
+    { type: 'track_action', action: 'popup.app.open', metadata: { tab: 'links' } },
     { type: 'check_link_status', url: 'https://a.test' }
   ])('forwards %j unchanged and returns the response', async (message) => {
     const expected = structuredClone(message);
@@ -72,7 +72,7 @@ describe('sendRuntimeMessage', () => {
         }
       }
     };
-    await expect(sendRuntimeMessage({ type: 'track_action', action: 'popup_open' })).rejects.toThrow(
+    await expect(sendRuntimeMessage({ type: 'track_action', action: 'popup.app.open' })).rejects.toThrow(
       'Extension context invalidated.'
     );
   });

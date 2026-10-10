@@ -1,9 +1,10 @@
 <script lang="ts">
   import { sendTrackEvent } from '@/utils/analytics';
+  import type { AnalyticsAction } from '@/utils/analytics-actions';
   import { CWS_REVIEW_URL } from '@/utils/constants';
   import alfredIcon from '@/assets/icon.png';
 
-  let { source, variant = 'chip' }: { source: string; variant?: 'chip' | 'plain' } = $props();
+  let { action, variant = 'chip' }: { action: AnalyticsAction; variant?: 'chip' | 'plain' } = $props();
 </script>
 
 <a
@@ -12,7 +13,7 @@
   href={CWS_REVIEW_URL}
   target="_blank"
   rel="noopener"
-  onclick={() => sendTrackEvent('credit_click', { source })}>
+  onclick={() => sendTrackEvent(action)}>
   <img src={alfredIcon} alt="" class="credit-chip-icon" />
   <span class="credit-chip-muted">Powered by</span>
   <span class="credit-chip-name">Alfred</span>

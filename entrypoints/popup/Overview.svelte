@@ -33,7 +33,7 @@
     links: RawLink[];
   } = $props();
 
-  trackViewOnce('overview_view', () => !!raw, () => ({
+  trackViewOnce('popup.overview.view', () => !!raw, () => ({
     indexability: analysis.indexability.status,
     error_count: analysis.errorCount,
     finding_count: analysis.findings.length,
@@ -114,11 +114,11 @@
 
   const copyFeedback = createKeyedCopyFeedback<string>();
   async function copy(key: string, value: string) {
-    if (await copyFeedback.copy(value, key)) trackAction('overview_copy', { field: key });
+    if (await copyFeedback.copy(value, key)) trackAction('popup.overview.copy', { field: key });
   }
 
   function quickLink(name: string, url: string) {
-    trackAction('overview_quick_link', { link: name });
+    trackAction('popup.overview.quick_link_click', { link: name });
     window.open(url, '_blank');
   }
 
@@ -326,7 +326,7 @@
             href={profile.url}
             target="_blank"
             rel="noopener"
-            onclick={() => trackAction('overview_social_profile', { network: profile.network })}
+            onclick={() => trackAction('popup.overview.social_profile_click', { network: profile.network })}
           >
             {#if SOCIAL_ICONS[profile.network]}
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={SOCIAL_ICONS[profile.network]} /></svg>

@@ -3,21 +3,18 @@
   import { nudgeRated } from '@/utils/successNudge';
   import { CWS_REVIEW_URL, FEEDBACK_URL } from '@/utils/constants';
 
-  let { variant = 'default', source = 'review_nudge' }: {
-    variant?: 'default' | 'compact';
-    source?: string;
-  } = $props();
+  let { variant = 'default' }: { variant?: 'default' | 'compact' } = $props();
 
   let hovered = $state(0);
 
   $effect(() => {
     markNudgeShown().then((firstTime) => {
-      if (firstTime) trackAction('review_nudge_show');
+      if (firstTime) trackAction('popup.review_prompt.show');
     });
   });
 
   function handleRate(rating: number) {
-    trackAction('credit_click', { source, rating });
+    trackAction('popup.review_prompt.credit_click', { rating });
     nudgeRated();
     browser.tabs.create({ url: rating === 5 ? CWS_REVIEW_URL : FEEDBACK_URL });
   }

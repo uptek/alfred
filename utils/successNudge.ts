@@ -1,4 +1,5 @@
 import { getItem, setItem } from './storage';
+import type { AnalyticsAction } from './analytics-actions';
 
 /**
  * Review nudge scheduling. Value events accumulate a weighted score;
@@ -34,34 +35,32 @@ const DEFAULT_STATE: NudgeState = {
   done: false
 };
 
-const STRONG_ACTIONS = new Set([
-  'links_check_status',
-  'links_export',
-  'links_copy',
-  'assets_export',
-  'assets_copy',
-  'images_export',
-  'images_copy',
-  'headings_copy',
-  'overview_copy',
-  'schema_copy',
-  'schema_export',
-  'hreflangs_copy',
-  'hreflangs_export',
-  'sitemaps_copy',
-  'sitemaps_copy_urls',
-  'sitemaps_export',
-  'social_copy_tags',
-  'robots_copy',
-  'compare_export_markdown',
-  'compare_export_csv',
-  'compare_export_json',
-  'appstore_partner_table_export',
-  'cartograph_apply_discount',
-  'cartograph_add_item',
-  'cartograph_update_quantity',
-  'copy_product_json',
-  'copy_cart_json'
+const STRONG_ACTIONS = new Set<AnalyticsAction>([
+  'popup.links.status_check',
+  'popup.links.export',
+  'popup.links.copy',
+  'popup.assets.export',
+  'popup.assets.copy',
+  'popup.images.export',
+  'popup.images.copy',
+  'popup.headings.copy',
+  'popup.overview.copy',
+  'popup.schema.copy',
+  'popup.schema.export',
+  'popup.hreflangs.copy',
+  'popup.hreflangs.export',
+  'popup.sitemaps.copy',
+  'popup.sitemaps.urls_copy',
+  'popup.sitemaps.export',
+  'popup.social.tags_copy',
+  'popup.robots.copy',
+  'apps.compare.export',
+  'apps.partner_table.export',
+  'storefront.cartograph.discount_apply',
+  'storefront.cartograph.item_add',
+  'storefront.cartograph.quantity_update',
+  'storefront.shortcuts.product_json_copy',
+  'storefront.shortcuts.cart_json_copy'
 ]);
 
 let onTrigger: (() => void) | null = null;
@@ -95,7 +94,7 @@ async function addPoints(points: number): Promise<void> {
 }
 
 /** Count a deliberate value action (exports, copies, checks, cart mutations). */
-export async function recordSuccess(action: string): Promise<void> {
+export async function recordSuccess(action: AnalyticsAction): Promise<void> {
   if (!STRONG_ACTIONS.has(action)) return;
   await addPoints(STRONG_POINTS);
 }

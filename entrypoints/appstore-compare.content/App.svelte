@@ -108,7 +108,7 @@
     try {
       await navigator.clipboard.writeText(withCredit(buildComparisonMarkdown(loadedListings)));
       Toast.success('Comparison copied as markdown');
-      sendTrackEvent('compare_export_markdown', { app_count: loadedListings.length });
+      sendTrackEvent('apps.compare.export', { format: 'markdown', app_count: loadedListings.length });
     } catch {
       Toast.error('Could not copy to clipboard');
     }
@@ -122,14 +122,14 @@
     closeExportMenu();
     downloadFile(withCsvCredit(buildComparisonCsv(loadedListings)), exportFilename('csv'), 'text/csv;charset=utf-8;');
     Toast.success('Comparison downloaded as CSV');
-    sendTrackEvent('compare_export_csv', { app_count: loadedListings.length });
+    sendTrackEvent('apps.compare.export', { format: 'csv', app_count: loadedListings.length });
   }
 
   function downloadJson() {
     closeExportMenu();
     downloadFile(buildComparisonJson(loadedListings), exportFilename('json'), 'application/json');
     Toast.success('Comparison downloaded as JSON');
-    sendTrackEvent('compare_export_json', { app_count: loadedListings.length });
+    sendTrackEvent('apps.compare.export', { format: 'json', app_count: loadedListings.length });
   }
 
   // The comparison URL works for anyone with Alfred installed. Desktop
@@ -138,14 +138,14 @@
     try {
       await navigator.clipboard.writeText(window.location.href);
       Toast.success('Comparison link copied');
-      sendTrackEvent('compare_share', { app_count: loadedListings.length });
+      sendTrackEvent('apps.compare.share', { app_count: loadedListings.length });
     } catch {
       Toast.error('Could not copy the link');
     }
   }
 
   // svelte-ignore state_referenced_locally
-  sendTrackEvent('compare_view', { app_count: handles.length, page_url: window.location.href });
+  sendTrackEvent('apps.compare.view', { app_count: handles.length, page_url: window.location.href });
 
   // Fetch all listings in parallel but reveal them in a single paint:
   // per-column reveals make the columns reflow each other as they load.
@@ -562,7 +562,7 @@
   {/if}
 
   <div class="compare-credit-float" use:cornerStack>
-    <CreditChip source="compare" />
+    <CreditChip action="apps.compare.credit_click" />
   </div>
 </div>
 

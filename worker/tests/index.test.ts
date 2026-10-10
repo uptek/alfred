@@ -25,7 +25,7 @@ function setup(DB?: Env['DB']) {
   return { inserts, send };
 }
 
-const event = { user_id: 'u1', action: 'popup_open', time_saved: 0, version: '2026.10.03', metadata: { a: 1 } };
+const event = { user_id: 'u1', action: 'popup.app.open', time_saved: 0, version: '2026.10.03', metadata: { a: 1 } };
 
 describe('track worker', () => {
   it('stores a valid event, with null for a version that is not a string', async () => {
@@ -35,8 +35,8 @@ describe('track worker', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
     await send(JSON.stringify({ ...event, version: { v: 1 } }));
     expect(inserts.map((values) => values.slice(1))).toEqual([
-      ['u1', 'popup_open', 0, '2026.10.03', '{"a":1}'],
-      ['u1', 'popup_open', 0, null, '{"a":1}']
+      ['u1', 'popup.app.open', 0, '2026.10.03', '{"a":1}', null],
+      ['u1', 'popup.app.open', 0, null, '{"a":1}', null]
     ]);
   });
 
@@ -46,6 +46,11 @@ describe('track worker', () => {
       JSON.stringify({ ...event, action: 'not_an_action' }),
       // Pages can make the extension post any allowlisted action, so only /uninstall records uninstalls
       JSON.stringify({ ...event, action: 'uninstall', metadata: {} }),
+      JSON.stringify({ ...event, action: 'system.extension.uninstall', metadata: {} }),
+      // Legacy names whose feature is gone, or that no rule recognizes
+      JSON.stringify({ ...event, action: 'timeline_view' }),
+      JSON.stringify({ ...event, action: 'credit_click', metadata: { source: 'timeline' } }),
+      JSON.stringify({ ...event, action: 'credit_click', metadata: {} }),
       JSON.stringify({ ...event, time_saved: '5' }),
       JSON.stringify({ ...event, time_saved: 1.5 }),
       JSON.stringify({ ...event, time_saved: -1 }),
@@ -65,6 +70,29 @@ describe('track worker', () => {
     ]) {
       expect((await send(body)).status).toBe(200);
     }
+    expect(inserts).toHaveLength(0);
+  });
+
+  it('stores a legacy action from a build still installed under its new name, keeping the original', async () => {
+    const { inserts, send } = setup();
+    await send(
+      JSON.stringify({ ...event, action: 'copy_theme_preview_url', time_saved: 40, metadata: { source: 'popup' } })
+    );
+    expect(inserts.map((values) => values.slice(1))).toEqual([
+      ['u1', 'storefront.shortcuts.preview_url_copy', 40, '2026.10.03', '{"trigger":"popup"}', 'copy_theme_preview_url']
+    ]);
+  });
+
+  it('ignores a legacy_action sent by the client', async () => {
+    const { inserts, send } = setup();
+    await send(JSON.stringify({ ...event, legacy_action: 'forged' }));
+    expect(inserts.map((values) => values.at(-1))).toEqual([null]);
+  });
+
+  it('applies the size and shape checks to upgraded events too', async () => {
+    const { inserts, send } = setup();
+    await send(JSON.stringify({ ...event, action: 'compare_export_csv', metadata: 'x' }));
+    await send(JSON.stringify({ ...event, action: 'compare_export_csv', time_saved: -1 }));
     expect(inserts).toHaveLength(0);
   });
 
@@ -125,11 +153,20 @@ describe('track worker', () => {
       })
     });
     await send(JSON.stringify(event));
-    await send(JSON.stringify({ user_id: 'u2', action: 'popup_open', time_saved: 5 }));
+    await send(JSON.stringify({ user_id: 'u2', action: 'popup.app.open', time_saved: 5 }));
+    await send(JSON.stringify({ user_id: 'u3', action: 'heartbeat', time_saved: 0 }));
     const rows = db.query('SELECT * FROM events ORDER BY user_id').all() as Record<string, unknown>[];
     expect(rows).toMatchObject([
-      { user_id: 'u1', action: 'popup_open', time_saved: 0, version: '2026.10.03', metadata: '{"a":1}' },
-      { user_id: 'u2', action: 'popup_open', time_saved: 5, version: null, metadata: '{}' }
+      {
+        user_id: 'u1',
+        action: 'popup.app.open',
+        time_saved: 0,
+        version: '2026.10.03',
+        metadata: '{"a":1}',
+        legacy_action: null
+      },
+      { user_id: 'u2', action: 'popup.app.open', time_saved: 5, version: null, metadata: '{}' },
+      { user_id: 'u3', action: 'system.extension.ping', metadata: '{}', legacy_action: 'heartbeat' }
     ]);
     for (const row of rows) {
       expect(row.id).toMatch(/^[0-9a-f-]{36}$/);
@@ -152,7 +189,7 @@ describe('track worker', () => {
 describe('uninstall route', () => {
   // Without a user id nothing is stored, but the survey redirect still happens
   it.each([
-    ['?user_id=u1&version=2026.10.07', [['u1', 'uninstall', 0, '2026.10.07', '{}']]],
+    ['?user_id=u1&version=2026.10.07', [['u1', 'system.extension.uninstall', 0, '2026.10.07', '{}', null]]],
     ['', []],
     ['?version=2026.10.07', []],
     ['?user_id=&version=2026.10.07', []]

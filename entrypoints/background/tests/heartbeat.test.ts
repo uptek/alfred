@@ -52,6 +52,6 @@ describe('startHeartbeat', () => {
     expect(track).not.toHaveBeenCalled();
 
     onAlarm!({ name: 'heartbeat' });
-    expect(track).toHaveBeenCalledWith('heartbeat');
+    expect(track).toHaveBeenCalledWith('system.extension.ping');
   });
 });

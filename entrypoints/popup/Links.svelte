@@ -21,7 +21,7 @@
 
   const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  trackViewOnce('links_view', () => links.length > 0, () => ({
+  trackViewOnce('popup.links.view', () => links.length > 0, () => ({
     link_count: links.length,
     external_count: links.filter(l => l.kind === 'external').length,
     nofollow_count: links.filter(l => l.isNofollow).length
@@ -140,7 +140,7 @@
     checking = true;
     checkTotal = urls.length;
     checkDone = 0;
-    trackAction('links_check_status', { count: urls.length });
+    trackAction('popup.links.status_check', { count: urls.length });
 
     // Batch results into the SvelteMap on a timer rather than per-result: the
     // stats/summary/sorted deriveds each scan all links, so writing once per
@@ -294,7 +294,7 @@
       sortKey = key;
       sortDir = 'asc';
     }
-    trackAction('links_sort', { key, dir: sortDir });
+    trackAction('popup.links.sort', { key, dir: sortDir });
   }
 
   function displayUrl(link: RawLink): string {
@@ -326,13 +326,13 @@
 
   function toggleHidden() {
     showHidden = !showHidden;
-    trackAction('links_toggle_hidden', { show_hidden: showHidden });
+    trackAction('popup.links.hidden_toggle', { show_hidden: showHidden });
   }
 
   function toggleHighlight() {
     highlightOn = !highlightOn;
     highlightLinks(highlightOn);
-    trackAction('links_highlight', { enabled: highlightOn });
+    trackAction('popup.links.highlight', { enabled: highlightOn });
   }
 
   onDestroy(() => {
@@ -343,7 +343,7 @@
   function handleRowClick(e: MouseEvent, index: number) {
     if ((e.target as HTMLElement).closest('a')) return;
     scrollToLink(index);
-    trackAction('links_scroll_to', {});
+    trackAction('popup.links.locate', {});
   }
 
   function exportCsv() {
@@ -355,7 +355,7 @@
         .join(',');
     });
     downloadFile(withCsvCredit([header, ...rows].join('\n')), `alfred-links-${siteSlug}.csv`, 'text/csv');
-    trackAction('links_export', { format: 'csv', link_count: links.length });
+    trackAction('popup.links.export', { format: 'csv', link_count: links.length });
   }
 
   function exportJson() {
@@ -376,18 +376,18 @@
       };
     });
     downloadFile(JSON.stringify(data, null, 2), `alfred-links-${siteSlug}.json`, 'application/json');
-    trackAction('links_export', { format: 'json', link_count: links.length });
+    trackAction('popup.links.export', { format: 'json', link_count: links.length });
   }
 
   function exportText() {
     const text = links.map(l => l.href).join('\n');
     downloadFile(text, `alfred-links-${siteSlug}.txt`, 'text/plain');
-    trackAction('links_export', { format: 'text', link_count: links.length });
+    trackAction('popup.links.export', { format: 'text', link_count: links.length });
   }
 
   async function copyUrls() {
     const text = links.map(l => l.href).join('\n');
-    if (await copyFeedback.copy(text)) trackAction('links_copy', { format: 'urls', link_count: links.length });
+    if (await copyFeedback.copy(text)) trackAction('popup.links.copy', { format: 'urls', link_count: links.length });
   }
 
   const typeOptions = $derived([
@@ -421,10 +421,10 @@
 
   const anyFilterActive = $derived(typeFilter !== 'all' || followFilter !== 'all' || anchorFilter !== 'all' || statusFilter !== 'all' || !showHidden || search.length > 0);
 
-  function setType(v: string) { typeFilter = v; trackAction('links_filter', { facet: 'type', value: v }); }
-  function setFollow(v: string) { followFilter = v; trackAction('links_filter', { facet: 'follow', value: v }); }
-  function setAnchor(v: string) { anchorFilter = v; trackAction('links_filter', { facet: 'anchor', value: v }); }
-  function setStatus(v: string) { statusFilter = v; trackAction('links_filter', { facet: 'status', value: v }); }
+  function setType(v: string) { typeFilter = v; trackAction('popup.links.filter', { facet: 'type', value: v }); }
+  function setFollow(v: string) { followFilter = v; trackAction('popup.links.filter', { facet: 'follow', value: v }); }
+  function setAnchor(v: string) { anchorFilter = v; trackAction('popup.links.filter', { facet: 'anchor', value: v }); }
+  function setStatus(v: string) { statusFilter = v; trackAction('popup.links.filter', { facet: 'status', value: v }); }
 
   const facets = $derived<Facet[]>([
     { key: 'type', name: 'Type', options: typeOptions, selected: typeFilter, onSelect: setType },
@@ -448,7 +448,7 @@
     showHidden = true;
     search = '';
     searchOpen = false;
-    trackAction('links_filter', { reset: true });
+    trackAction('popup.links.filter', { reset: true });
   }
 </script>
 

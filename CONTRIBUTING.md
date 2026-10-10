@@ -91,7 +91,8 @@ a disabled `<fieldset>`, and a `tabIndex` of 0 reads back as -1.
 
 Analytics events are listed in `utils/analytics-actions.ts`. The track Worker
 in `worker/` imports that list as its allowlist and redeploys from CI on every
-push to `main`, so a new event is accepted once its PR merges.
+push to `main`, so a new event is accepted once its PR merges. Name it by the
+"Event naming" rules in `AGENTS.md`.
 
 ## Submitting Changes
 

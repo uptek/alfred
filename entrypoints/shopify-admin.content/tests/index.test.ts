@@ -24,10 +24,7 @@ const getItem = spyOn(storage, 'getItem').mockImplementation(async (key: string)
 const removeItem = spyOn(storage, 'removeItem').mockImplementation(async (key: string) => {
   store.delete(key);
 });
-const getSettings = spyOn(settings, 'getSettings').mockResolvedValue({
-  ...settings.defaultSettings,
-  admin: { ...settings.defaultSettings.admin, timeline: false }
-});
+const getSettings = spyOn(settings, 'getSettings').mockResolvedValue(settings.defaultSettings);
 const show = spyOn(Toast, 'show').mockImplementation(() => {});
 const { default: script } = await import('../index');
 

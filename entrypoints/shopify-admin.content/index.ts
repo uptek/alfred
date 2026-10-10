@@ -1,4 +1,3 @@
-import { setupTimeline } from './timeline.util';
 import { getSettings, isEnabled } from '~/utils/settings';
 import { getItem, removeItem } from '~/utils/storage';
 import { Toast } from '~/utils/toast';
@@ -12,8 +11,6 @@ export default defineContentScript({
   runAt: 'document_end',
   async main() {
     const settings = await getSettings();
-
-    setupTimeline(settings);
 
     /**
      * Warn before closing the theme code editor page.

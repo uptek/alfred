@@ -31,7 +31,7 @@
   );
   const statusOf = (img: RawImage): ImageStatus => statusByIndex.get(img.index) ?? 'ok';
 
-  trackViewOnce('images_view', () => images.length > 0, () => ({
+  trackViewOnce('popup.images.view', () => images.length > 0, () => ({
     image_count: images.length,
     missing_alt_count: images.filter(i => i.lacksAlt).length,
     broken_count: images.filter(i => i.broken).length
@@ -163,7 +163,7 @@
       sortKey = key;
       sortDir = 'asc';
     }
-    trackAction('images_sort', { key, dir: sortDir });
+    trackAction('popup.images.sort', { key, dir: sortDir });
   }
 
   function dimsLabel(img: RawImage): string {
@@ -187,7 +187,7 @@
   function toggleHighlight() {
     highlightOn = !highlightOn;
     highlightImages(highlightOn);
-    trackAction('images_highlight', { enabled: highlightOn });
+    trackAction('popup.images.highlight', { enabled: highlightOn });
   }
 
   onDestroy(() => {
@@ -197,7 +197,7 @@
   function handleRowClick(e: MouseEvent, index: number) {
     if ((e.target as HTMLElement).closest('a')) return;
     scrollToImage(index);
-    trackAction('images_scroll_to', {});
+    trackAction('popup.images.locate', {});
   }
 
   function exportCsv() {
@@ -208,7 +208,7 @@
         .join(',');
     });
     downloadFile(withCsvCredit([header, ...rows].join('\n')), `alfred-images-${siteSlug}.csv`, 'text/csv');
-    trackAction('images_export', { format: 'csv', image_count: images.length });
+    trackAction('popup.images.export', { format: 'csv', image_count: images.length });
   }
 
   function exportJson() {
@@ -227,12 +227,12 @@
       oversized: img.oversized
     }));
     downloadFile(JSON.stringify(data, null, 2), `alfred-images-${siteSlug}.json`, 'application/json');
-    trackAction('images_export', { format: 'json', image_count: images.length });
+    trackAction('popup.images.export', { format: 'json', image_count: images.length });
   }
 
   async function copyUrls() {
     const text = images.map(img => img.src).filter(Boolean).join('\n');
-    if (await copyFeedback.copy(text)) trackAction('images_copy', { format: 'urls', image_count: images.length });
+    if (await copyFeedback.copy(text)) trackAction('popup.images.copy', { format: 'urls', image_count: images.length });
   }
 
   const altOptions = $derived([
@@ -267,11 +267,11 @@
 
   const anyFilterActive = $derived(altFilter !== 'all' || formatFilter !== 'all' || loadingFilter !== 'all' || statusFilter !== 'all' || flagFilter !== 'all' || search.length > 0);
 
-  function setAlt(v: string) { altFilter = v; trackAction('images_filter', { facet: 'alt', value: v }); }
-  function setFormat(v: string) { formatFilter = v; trackAction('images_filter', { facet: 'format', value: v }); }
-  function setLoading(v: string) { loadingFilter = v; trackAction('images_filter', { facet: 'loading', value: v }); }
-  function setStatus(v: string) { statusFilter = v; trackAction('images_filter', { facet: 'status', value: v }); }
-  function setFlag(v: string) { flagFilter = v; trackAction('images_filter', { facet: 'flag', value: v }); }
+  function setAlt(v: string) { altFilter = v; trackAction('popup.images.filter', { facet: 'alt', value: v }); }
+  function setFormat(v: string) { formatFilter = v; trackAction('popup.images.filter', { facet: 'format', value: v }); }
+  function setLoading(v: string) { loadingFilter = v; trackAction('popup.images.filter', { facet: 'loading', value: v }); }
+  function setStatus(v: string) { statusFilter = v; trackAction('popup.images.filter', { facet: 'status', value: v }); }
+  function setFlag(v: string) { flagFilter = v; trackAction('popup.images.filter', { facet: 'flag', value: v }); }
 
   const facets = $derived<Facet[]>([
     { key: 'alt', name: 'Alt', options: altOptions, selected: altFilter, onSelect: setAlt },
@@ -295,7 +295,7 @@
     flagFilter = 'all';
     search = '';
     searchOpen = false;
-    trackAction('images_filter', { reset: true });
+    trackAction('popup.images.filter', { reset: true });
   }
 </script>
 
@@ -348,7 +348,7 @@
                     <!-- No src, or a data URI capped to its MIME essence (no renderable payload) -->
                     <div class="thumb thumb--empty"></div>
                   {:else if isNavigable(img.src)}
-                    <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab" onclick={() => trackAction('images_open', { source: img.source })}>
+                    <a href={img.src} target="_blank" rel="noopener noreferrer" class="thumb-link" title="Open image in new tab" onclick={() => trackAction('popup.images.open', { element: img.source })}>
                       <img class="thumb" src={img.src} alt="" loading="lazy" />
                     </a>
                   {:else}
