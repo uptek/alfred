@@ -188,7 +188,7 @@ export const registerShortcuts = async (providedSettings?: AlfredSettings | null
             const adminUrl = `https://admin.shopify.com/store/${shopName}/content/files?query=${filename}`;
             await browser.tabs.create({ url: adminUrl });
 
-            trackAction('open_image_in_admin');
+            trackAction('storefront.shortcuts.admin_files_open');
           } catch (error) {
             console.error('Error searching image in files:', error);
           }

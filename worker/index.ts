@@ -1,4 +1,5 @@
 import { ANALYTICS_ACTIONS } from '../utils/analytics-actions';
+import { upgradeLegacyEvent } from '../utils/analytics-legacy';
 import { UNINSTALL_SURVEY_URL } from '../utils/constants';
 
 // The slice of the Workers runtime this file touches, typed locally so it
@@ -20,7 +21,8 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type'
 };
 
-const INSERT = 'INSERT INTO events (id, user_id, action, time_saved, version, metadata) VALUES (?, ?, ?, ?, ?, ?)';
+const INSERT =
+  'INSERT INTO events (id, user_id, action, time_saved, version, metadata, legacy_action) VALUES (?, ?, ?, ?, ?, ?, ?)';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -29,8 +31,13 @@ export default {
 
     if (request.method === 'POST' && pathname === '/track') {
       const event = await readEvent(request);
-      // Listed actions only. uninstall stays off the list, since pages can make the extension post any listed action
-      if (VALID_ACTIONS.has(event.action)) await store(env, event);
+      // Builds released before a rename still send the old name; store it under the new one
+      const upgraded = VALID_ACTIONS.has(event.action)
+        ? null
+        : upgradeLegacyEvent(String(event.action), event.metadata);
+      const row = { ...event, ...upgraded, legacy_action: upgraded ? event.action : null };
+      // Listed actions only. The uninstall action stays off the list, since pages can make the extension post any listed action
+      if (VALID_ACTIONS.has(row.action)) await store(env, row);
       // Always succeed: the extension fires and forgets, so an error has nowhere to go
       return Response.json({ success: true }, { headers: CORS });
     }
@@ -39,7 +46,7 @@ export default {
     if (request.method === 'GET' && pathname === '/uninstall') {
       await store(env, {
         user_id: searchParams.get('user_id'),
-        action: 'uninstall',
+        action: 'system.extension.uninstall',
         time_saved: 0,
         version: searchParams.get('version')
       });
@@ -51,7 +58,10 @@ export default {
 };
 
 // Inserts a well-formed event and drops anything else, logging insert failures
-async function store(env: Env, { user_id, action, time_saved, version, metadata = {} }: Record<string, any>) {
+async function store(
+  env: Env,
+  { user_id, action, time_saved, version, metadata = {}, legacy_action = null }: Record<string, any>
+) {
   if (
     typeof user_id === 'string' &&
     user_id &&
@@ -70,7 +80,8 @@ async function store(env: Env, { user_id, action, time_saved, version, metadata 
           action,
           time_saved,
           (typeof version === 'string' && version) || null,
-          JSON.stringify(metadata)
+          JSON.stringify(metadata),
+          legacy_action
         )
         .run();
     } catch (error) {

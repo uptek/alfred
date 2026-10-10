@@ -25,7 +25,7 @@ export async function setupInspector(): Promise<void> {
     if (isPressed) {
       (inspectorButton as HTMLButtonElement).click();
 
-      sendTrackEvent('disable_theme_inspector');
+      sendTrackEvent('admin.theme_editor.inspector_disable');
     }
   } else if (inspectorSetting === 'restore') {
     const lastState = await getItem<boolean>(INSPECTOR_STATE_KEY);
@@ -34,7 +34,7 @@ export async function setupInspector(): Promise<void> {
       (inspectorButton as HTMLButtonElement).click();
 
       if (!lastState) {
-        sendTrackEvent('disable_theme_inspector');
+        sendTrackEvent('admin.theme_editor.inspector_disable');
       }
     }
   }

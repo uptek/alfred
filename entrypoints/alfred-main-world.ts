@@ -2,6 +2,7 @@ import { initRestoreRightClick } from '../utils/restore-right-click';
 import { Toast } from '@/utils/toast';
 import { isShopifyStorefront } from '@/utils/shopifyDetection';
 import { createBridgeServer } from '@/utils/mainWorldBridge';
+import type { AnalyticsAction } from '@/utils/analytics-actions';
 
 export default defineUnlistedScript(() => {
   // Settings will be received via postMessage
@@ -10,7 +11,7 @@ export default defineUnlistedScript(() => {
   const alfredWin = () => window as unknown as WindowWithAlfred;
 
   /** Dispatches an analytics event for the content script to relay. */
-  const track = (action: string, metadata?: Record<string, unknown>) => {
+  const track = (action: AnalyticsAction, metadata?: Record<string, unknown>) => {
     window.dispatchEvent(new CustomEvent('alfred:track', { detail: metadata ? { action, metadata } : { action } }));
   };
 
@@ -219,7 +220,7 @@ export default defineUnlistedScript(() => {
         Toast.success('Opening admin...');
         window.open(url, '_blank');
 
-        track('open_in_admin', pageMetadata(p || 'other'));
+        track('storefront.shortcuts.admin_open', pageMetadata(p || 'other'));
 
         return true;
       } catch (error) {
@@ -249,7 +250,7 @@ export default defineUnlistedScript(() => {
         Toast.success('Opening customizer...');
         window.open(customizerUrl, '_blank');
 
-        track('open_in_customizer', pageMetadata());
+        track('storefront.shortcuts.customizer_open', pageMetadata());
 
         return true;
       } catch (error) {
@@ -289,7 +290,7 @@ export default defineUnlistedScript(() => {
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
           Toast.success('Product JSON copied');
-          track('copy_product_json', pageMetadata('product'));
+          track('storefront.shortcuts.product_json_copy', pageMetadata('product'));
         } else {
           Toast.error('Failed to copy product JSON');
         }
@@ -323,7 +324,7 @@ export default defineUnlistedScript(() => {
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
           Toast.success('Cart JSON copied');
-          track('copy_cart_json', pageMetadata());
+          track('storefront.shortcuts.cart_json_copy', pageMetadata());
         } else {
           Toast.error('Failed to copy cart JSON');
         }
@@ -360,10 +361,10 @@ export default defineUnlistedScript(() => {
         // If successful, show toast and dispatch event for tracking
         if (copiedToClipboard) {
           Toast.success('Preview URL copied!');
-          track('copy_theme_preview_url', {
+          track('storefront.shortcuts.preview_url_copy', {
             ...pageMetadata(),
             disable_preview_bar: disablePreviewBar,
-            source: 'context_menu'
+            trigger: 'context_menu'
           });
         } else {
           Toast.error('Failed to copy theme preview URL');
@@ -394,7 +395,7 @@ export default defineUnlistedScript(() => {
         Toast.success('Exiting theme preview...');
 
         // Track the action before navigation
-        track('exit_theme_preview');
+        track('storefront.shortcuts.preview_exit');
 
         // Navigate to the current URL with an empty preview_theme_id to clear the preview
         const url = new URL(window.location.href);
@@ -428,7 +429,7 @@ export default defineUnlistedScript(() => {
         Toast.success('Cart cleared');
 
         // Track the action before reload
-        track('clear_cart', pageMetadata());
+        track('storefront.shortcuts.cart_clear', pageMetadata());
 
         // Reload the page to reflect the empty cart
         window.location.reload();
@@ -520,7 +521,7 @@ export default defineUnlistedScript(() => {
         window.open(editorUrl, '_blank');
         Toast.success(`Opening ${sectionName}.liquid`);
 
-        track('open_section_in_code_editor', pageMetadata());
+        track('storefront.shortcuts.code_editor_open', pageMetadata());
 
         return true;
       } catch (error) {

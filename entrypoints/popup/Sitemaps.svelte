@@ -97,18 +97,18 @@
   function openSitemap() {
     if (!openUrl) return;
     window.open(openUrl, '_blank');
-    trackAction('sitemaps_open');
+    trackAction('popup.sitemaps.open');
   }
 
   function openRow(node: SitemapNode) {
     window.open(node.finalUrl || node.url, '_blank');
-    trackAction('sitemaps_open');
+    trackAction('popup.sitemaps.open');
   }
 
   const copyFeedback = createCopyFeedback();
   async function copyUrls() {
     const text = rows.map(({ node }) => node.finalUrl || node.url).join('\n');
-    if (await copyFeedback.copy(text)) trackAction('sitemaps_copy');
+    if (await copyFeedback.copy(text)) trackAction('popup.sitemaps.copy');
   }
 
   // Per-row action feedback, keyed by sitemap URL so sorting can't misplace it.
@@ -117,7 +117,7 @@
   let pendingLinksKey = $state<string | null>(null);
 
   async function copySitemapUrl(node: SitemapNode) {
-    if (await urlCopy.copy(node.finalUrl || node.url, node.url)) trackAction('sitemaps_copy');
+    if (await urlCopy.copy(node.finalUrl || node.url, node.url)) trackAction('popup.sitemaps.copy');
   }
 
   async function copySitemapLinks(node: SitemapNode) {
@@ -127,7 +127,7 @@
       const result = await getSitemapUrls(node.finalUrl || node.url);
       if (!result || result.urls.length === 0) return;
       if (await linksCopy.copy(result.urls.join('\n'), node.url)) {
-        trackAction('sitemaps_copy_urls', { url_count: result.urls.length, truncated: result.truncated });
+        trackAction('popup.sitemaps.urls_copy', { url_count: result.urls.length, truncated: result.truncated });
       }
     } catch {
       // ignore fetch errors
@@ -162,7 +162,7 @@
       if (seq !== searchSeq) return;
       searching = false;
       searchResult = result;
-      if (result) trackAction('sitemaps_search', { query_length: q.length, match_count: result.total });
+      if (result) trackAction('popup.sitemaps.search', { query_length: q.length, match_count: result.total });
     }, 350);
     return () => clearTimeout(timer);
   });
@@ -202,19 +202,19 @@
         .join(',');
     });
     downloadFile(withCsvCredit([header, ...csvRows].join('\n')), 'sitemaps.csv', 'text/csv');
-    trackAction('sitemaps_export', { format: 'csv' });
+    trackAction('popup.sitemaps.export', { format: 'csv' });
   }
 
   function exportJson() {
     const data = rows.map(({ node }) => exportRow(node));
     downloadFile(JSON.stringify(data, null, 2), 'sitemaps.json', 'application/json');
-    trackAction('sitemaps_export', { format: 'json' });
+    trackAction('popup.sitemaps.export', { format: 'json' });
   }
 
   function exportText() {
     const text = rows.map(({ node }) => node.finalUrl || node.url).join('\n');
     downloadFile(text, 'sitemaps.txt', 'text/plain');
-    trackAction('sitemaps_export', { format: 'txt' });
+    trackAction('popup.sitemaps.export', { format: 'txt' });
   }
 
   const exportItems = $derived<ExportItem[]>([
@@ -228,7 +228,7 @@
     return severity === 'error' ? 'Error' : severity === 'warning' ? 'Warning' : 'Info';
   }
 
-  trackViewOnce('sitemaps_view', () => data !== null, () => ({
+  trackViewOnce('popup.sitemaps.view', () => data !== null, () => ({
     ok: analysis.ok,
     sitemap_count: analysis.totalSitemaps,
     url_count: analysis.totalUrls,

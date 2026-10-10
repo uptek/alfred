@@ -59,7 +59,7 @@
     tabState.saveSection('social', { platform });
   });
 
-  trackViewOnce('social_view', () => raw !== null, () => ({
+  trackViewOnce('popup.social.view', () => raw !== null, () => ({
     error_count: findings.filter((f) => f.severity === 'error').length,
     warning_count: findings.filter((f) => f.severity === 'warning').length,
     platform
@@ -74,7 +74,7 @@
   function selectPlatform(p: SocialPlatform) {
     if (p === platform) return;
     platform = p;
-    trackAction('social_platform_click', { platform: p });
+    trackAction('popup.social.platform_switch', { platform: p });
   }
 
   const preview = $derived(resolved ? previewModel(resolved, platform) : null);
@@ -138,7 +138,7 @@
 
   async function copyTags(format: 'html' | 'text') {
     const text = format === 'html' ? tagsAsHtml() : withCredit(tagsAsText());
-    if (await copyFeedback.copy(text, format)) trackAction('social_copy_tags', { platform, format });
+    if (await copyFeedback.copy(text, format)) trackAction('popup.social.tags_copy', { platform, format });
   }
 
   const duplicateNotes = $derived(

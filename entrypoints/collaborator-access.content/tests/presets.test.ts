@@ -111,7 +111,7 @@ describe('setupPermissionSearch', () => {
     expect([isOpen('orders'), isOpen('products')]).toEqual(['true', 'true']);
     buttons[2]!.click();
     expect([isOpen('orders'), isOpen('products')]).toEqual(['false', 'false']);
-    expect(sendTrackEvent).toHaveBeenCalledWith('collapse_all_permissions');
+    expect(sendTrackEvent).toHaveBeenCalledWith('dev.collaborator_access.permissions_collapse');
   });
 
   it('hides labels, subheadings and sections without matches, then restores them on clear', async () => {
@@ -122,7 +122,7 @@ describe('setupPermissionSearch', () => {
     // A collapsed section with a match opens so the match is visible.
     expect(isOpen('orders')).toBe('true');
     expect($('.field').lastElementChild!.textContent).toBe('Showing 1 of 3 permissions');
-    expect(sendTrackEvent).toHaveBeenCalledWith('permission_search', {
+    expect(sendTrackEvent).toHaveBeenCalledWith('dev.collaborator_access.permission_search', {
       query: 'draft',
       results_count: 1,
       total_count: 3

@@ -6,7 +6,7 @@ import { sendTabMessage } from '@/utils/messages';
 /**
  * Fast DOM-only Shopify check from the isolated world — no main-world relay,
  * so it answers in one message round trip. Used for the popup's initial tab
- * pick and the popup_open event; getTheme() refines the answer when it lands.
+ * pick and the popup.app.open event; getTheme() refines the answer when it lands.
  */
 export const sniffShopify = (): Promise<boolean> =>
   queryActiveTab('sniff_shopify', false, (response) => typeof response === 'boolean');

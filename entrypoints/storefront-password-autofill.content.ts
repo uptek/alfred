@@ -48,7 +48,7 @@ export default defineContentScript({
     // Mark password as used
     await markPasswordUsed(domain);
 
-    sendTrackEvent('autofill_storefront_password', { domain, password_length: password.length });
+    sendTrackEvent('storefront.password.autofill', { domain, password_length: password.length });
 
     // Auto-submit the form
     try {

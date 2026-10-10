@@ -1,4 +1,5 @@
-// Copies the Supabase `events` table into the D1 `events` table. Safe to re-run:
+// Copies the Supabase `events` table into the D1 `events` table, renaming legacy
+// actions as the track Worker does (utils/analytics-legacy.ts). Safe to re-run:
 // rows keep their Supabase uuid and go in with INSERT OR IGNORE, so a run only
 // adds what D1 is missing. Pass an ISO date to skip older rows on catch-up runs.
 //
@@ -9,6 +10,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { upgradeLegacyEvent } from '../utils/analytics-legacy';
 
 const SUPABASE_PROJECT = 'obrjirdnqoiailhbsnmu';
 const PAGE_SIZE = 5000;
@@ -55,16 +57,25 @@ const file = join(tmp, 'import.sql');
 let total = 0;
 for (let page = fetchPage(undefined); page.length; page = fetchPage(page.at(-1))) {
   for (let i = 0; i < page.length; i += ROWS_PER_INSERT) {
-    const values = page
-      .slice(i, i + ROWS_PER_INSERT)
-      .map((row) =>
-        [row.id, row.ts, row.user_id, row.action, row.time_saved, row.version, JSON.stringify(row.metadata ?? {})]
-          .map(literal)
-          .join(', ')
-      );
+    const values = page.slice(i, i + ROWS_PER_INSERT).map((row) => {
+      const metadata = row.metadata ?? {};
+      const upgraded = upgradeLegacyEvent(row.action, metadata);
+      return [
+        row.id,
+        row.ts,
+        row.user_id,
+        upgraded?.action ?? row.action,
+        row.time_saved,
+        row.version,
+        JSON.stringify(upgraded?.metadata ?? metadata),
+        upgraded ? row.action : null
+      ]
+        .map(literal)
+        .join(', ');
+    });
     appendFileSync(
       file,
-      `INSERT OR IGNORE INTO events (id, created_at, user_id, action, time_saved, version, metadata) VALUES\n(${values.join('),\n(')});\n`
+      `INSERT OR IGNORE INTO events (id, created_at, user_id, action, time_saved, version, metadata, legacy_action) VALUES\n(${values.join('),\n(')});\n`
     );
   }
   total += page.length;

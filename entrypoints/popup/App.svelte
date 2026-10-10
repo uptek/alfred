@@ -182,7 +182,7 @@
       // merely referencing a Shopify-hosted asset, and unlike the UI an event
       // cannot be corrected once written. This runs after first paint, so
       // waiting for the relay costs the user nothing.
-      trackAction('popup_open', { is_shopify: storeData?.isShopify ?? false });
+      trackAction('popup.app.open', { is_shopify: storeData?.isShopify ?? false });
       // The sniff can miss either way; settle the default tab from the real
       // answer unless the user already navigated or a restored section won.
       if (!userNavigated && !tabState.restoredActiveSection) {

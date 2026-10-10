@@ -22,7 +22,7 @@
     tabState.saveSection('theme', { disablePreviewBar });
   });
 
-  trackViewOnce('detect_theme', () => true, () => ({
+  trackViewOnce('popup.theme.detect', () => true, () => ({
     is_shopify: storeInfo.isShopify,
     page_url: storeInfo.page_url ?? '',
     shop_domain: storeInfo.shopDomain ?? '',
@@ -214,7 +214,7 @@
           onclick={async () => {
             copying = true;
             const success = await copyThemePreviewUrl(storeInfo, disablePreviewBar);
-            if (success) trackAction('copy_theme_preview_url', { shop_domain: storeInfo.shopDomain ?? '', source: 'popup' });
+            if (success) trackAction('storefront.shortcuts.preview_url_copy', { shop_domain: storeInfo.shopDomain ?? '', trigger: 'popup' });
             setTimeout(() => (copying = false), success ? 1200 : 0);
           }}
           disabled={copying || !storeInfo.theme?.id}

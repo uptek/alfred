@@ -142,25 +142,25 @@
   $effect(() => {
     getNudgeStats().then((s) => {
       stats = s;
-      trackAction('review_nudge_show', { ...s, variant });
+      trackAction('popup.review_nudge.show', { ...s, variant });
     });
   });
 
   function handleRate(rating: number) {
-    trackAction('credit_click', { source: 'review_nudge', rating, variant, ...stats });
+    trackAction('popup.review_nudge.credit_click', { rating, variant, ...stats });
     nudgeRated();
     browser.tabs.create({ url: rating === 5 ? CWS_REVIEW_URL : FEEDBACK_URL });
     onDismiss();
   }
 
   function handleLater() {
-    trackAction('review_nudge_dismiss', { kind: 'later', variant, ...stats });
+    trackAction('popup.review_nudge.dismiss', { kind: 'later', variant, ...stats });
     nudgeDeferred();
     onDismiss();
   }
 
   function handleBackdrop() {
-    trackAction('review_nudge_dismiss', { kind: 'backdrop', variant, ...stats });
+    trackAction('popup.review_nudge.dismiss', { kind: 'backdrop', variant, ...stats });
     onDismiss();
   }
 </script>

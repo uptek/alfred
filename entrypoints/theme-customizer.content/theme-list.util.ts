@@ -1,6 +1,7 @@
 import type { ContentScriptContext } from '#imports';
 import { getSettings, isEnabled } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
+import type { AnalyticsAction } from '~/utils/analytics-actions';
 
 const INJECTED_ATTR = 'data-alfred-theme-list';
 const THEMES_PATH = /\/themes\/?$/;
@@ -97,7 +98,7 @@ const handleCopyClick = (e: Event) => {
   btn.setAttribute('icon', 'check');
   setTimeout(() => btn.setAttribute('icon', 'clipboard'), 1200);
   if (action) {
-    sendTrackEvent(action as import('~/utils/analytics-actions').AnalyticsAction);
+    sendTrackEvent(action as AnalyticsAction);
   }
 };
 
@@ -127,8 +128,8 @@ export const injectIntoThemeList = () => {
 
     const row = html(`
       <div ${INJECTED_ATTR}>
-        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${data.themeId}" data-track-action="theme_list_copy_id">ID</s-internal-button>
-        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${data.previewUrl}" data-track-action="theme_list_copy_preview_url">Preview URL</s-internal-button>
+        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${data.themeId}" data-track-action="${'admin.theme_list.id_copy' satisfies AnalyticsAction}">ID</s-internal-button>
+        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${data.previewUrl}" data-track-action="${'admin.theme_list.preview_url_copy' satisfies AnalyticsAction}">Preview URL</s-internal-button>
       </div>
     `);
     row.querySelectorAll('s-internal-button').forEach((btn) => btn.addEventListener('click', handleCopyClick));

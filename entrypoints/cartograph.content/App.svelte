@@ -128,7 +128,7 @@
     if (activeTab === 'json' && !jsonInspected) {
       jsonDwellTimer = setTimeout(() => {
         jsonInspected = true;
-        sendTrackEvent('cartograph_inspect_json');
+        sendTrackEvent('storefront.cartograph.json_inspect');
       }, 3000);
     } else if (jsonDwellTimer) {
       clearTimeout(jsonDwellTimer);
@@ -236,8 +236,8 @@
         {#if activeTab === 'items'}
           <ItemsTab
             {cart}
-            onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); sendTrackEvent('cartograph_update_quantity'); }}
-            onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); sendTrackEvent('cartograph_remove_item'); }}
+            onUpdateQuantity={async (key, qty) => { await mutate(() => api.changeItem({ id: key, quantity: qty })); sendTrackEvent('storefront.cartograph.quantity_update'); }}
+            onRemoveItem={async (key) => { await mutate(() => api.changeItem({ id: key, quantity: 0 })); sendTrackEvent('storefront.cartograph.item_remove'); }}
             onUpdateProperties={async (key, qty, props) => {
               if (Object.keys(props).length === 0) {
                 const item = cart!.items.find(i => i.key === key)!;
@@ -249,9 +249,9 @@
               } else {
                 await mutate(() => api.changeItem({ id: key, quantity: qty, properties: props }));
               }
-              sendTrackEvent('cartograph_update_properties');
+              sendTrackEvent('storefront.cartograph.properties_update');
             }}
-            onClearCart={async () => { await mutate(() => api.clearCart()); sendTrackEvent('cartograph_clear'); }}
+            onClearCart={async () => { await mutate(() => api.clearCart()); sendTrackEvent('storefront.cartograph.clear'); }}
             onSwitchTab={(tab) => activeTab = tab as TabId}
             onSwitchVariant={async (key, oldItem, newVariantId) => {
               await replaceItem(key, {
@@ -259,7 +259,7 @@
                 quantity: oldItem.quantity,
                 ...(oldItem.properties && Object.keys(oldItem.properties).length > 0 ? { properties: oldItem.properties } : {}),
               });
-              sendTrackEvent('cartograph_switch_variant');
+              sendTrackEvent('storefront.cartograph.variant_switch');
             }}
             onFetchProduct={(url) => api.getProductByUrl(url)}
           />
@@ -269,24 +269,24 @@
             onAddItem={async (payload: AddItemPayload) => {
               await mutate(() => api.addItem(payload));
               activeTab = 'items';
-              sendTrackEvent('cartograph_add_item');
+              sendTrackEvent('storefront.cartograph.item_add');
             }}
             onFetchProduct={(url: string) => api.getProductByUrl(url)}
           />
         {:else if activeTab === 'metadata'}
           <MetadataTab
             {cart}
-            onUpdateNote={async (note) => { await mutate(() => api.updateCart({ note })); sendTrackEvent('cartograph_update_note'); }}
-            onUpdateAttributes={async (attrs) => { await mutate(() => api.updateCart({ attributes: attrs })); sendTrackEvent('cartograph_update_attributes'); }}
-            onApplyDiscount={async (code) => { await mutate(() => api.updateCart({ discount: code })); sendTrackEvent('cartograph_apply_discount'); }}
-            onRemoveDiscount={async () => { await mutate(() => api.updateCart({ discount: '' })); sendTrackEvent('cartograph_remove_discount'); }}
+            onUpdateNote={async (note) => { await mutate(() => api.updateCart({ note })); sendTrackEvent('storefront.cartograph.note_update'); }}
+            onUpdateAttributes={async (attrs) => { await mutate(() => api.updateCart({ attributes: attrs })); sendTrackEvent('storefront.cartograph.attributes_update'); }}
+            onApplyDiscount={async (code) => { await mutate(() => api.updateCart({ discount: code })); sendTrackEvent('storefront.cartograph.discount_apply'); }}
+            onRemoveDiscount={async () => { await mutate(() => api.updateCart({ discount: '' })); sendTrackEvent('storefront.cartograph.discount_remove'); }}
           />
         {:else if activeTab === 'shipping'}
           <ShippingTab
             {cart}
             onCalculateRates={async (addr) => {
               const rates = await api.getShippingRates(addr);
-              sendTrackEvent('cartograph_calculate_shipping');
+              sendTrackEvent('storefront.cartograph.shipping_calculate');
               return rates;
             }}
           />
@@ -296,7 +296,7 @@
       </main>
 
       <footer class="credit">
-        <CreditChip source="cartograph" variant="plain" />
+        <CreditChip action="storefront.cartograph.credit_click" variant="plain" />
       </footer>
     {/if}
   </div>

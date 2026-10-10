@@ -191,8 +191,8 @@ export async function openCollaborationRequest(tab: Browser.tabs.Tab, preset?: P
 
     await browser.tabs.create({ url });
 
-    trackAction('request_access_context_menu', {
-      source: preset ? 'preset' : 'general',
+    trackAction('storefront.shortcuts.access_request', {
+      scope: preset ? 'preset' : 'general',
       action: preset ? action : 'open',
       auto_submit: autoSubmit
     });
@@ -494,11 +494,11 @@ export function setupPermissionSearch(): PermissionSearchController | null {
 
     expandAllBtn.addEventListener('click', () => {
       clickSectionsByState('false');
-      sendTrackEvent('expand_all_permissions');
+      sendTrackEvent('dev.collaborator_access.permissions_expand');
     });
     collapseAllBtn.addEventListener('click', () => {
       clickSectionsByState('true');
-      sendTrackEvent('collapse_all_permissions');
+      sendTrackEvent('dev.collaborator_access.permissions_collapse');
     });
 
     const btnGroup = document.createElement('span');
@@ -612,7 +612,11 @@ export function setupPermissionSearch(): PermissionSearchController | null {
     countLabel.style.display = 'block';
     countLabel.textContent = `Showing ${visibleCount} of ${totalCount} permissions`;
 
-    sendTrackEvent('permission_search', { query: q, results_count: visibleCount, total_count: totalCount });
+    sendTrackEvent('dev.collaborator_access.permission_search', {
+      query: q,
+      results_count: visibleCount,
+      total_count: totalCount
+    });
   }
 
   function clearFilter() {

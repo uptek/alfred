@@ -20,7 +20,7 @@
 
   const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  trackViewOnce('assets_view', () => assets.length > 0, () => ({
+  trackViewOnce('popup.assets.view', () => assets.length > 0, () => ({
     total: assets.length,
     script_count: assets.filter(a => a.kind === 'script').length,
     style_count: assets.filter(a => a.kind === 'style').length,
@@ -160,7 +160,7 @@
       // numbers default to largest/slowest first; text defaults A→Z
       sortDir = key === 'size' || key === 'time' ? 'desc' : 'asc';
     }
-    trackAction('assets_sort', { key, dir: sortDir });
+    trackAction('popup.assets.sort', { key, dir: sortDir });
   }
 
   function displaySource(a: RawAsset): string {
@@ -191,11 +191,11 @@
     if (a.isInline && a.content) {
       const next = new Set(expanded);
       if (next.has(a.index)) next.delete(a.index);
-      else { next.add(a.index); trackAction('assets_expand_inline', { kind: a.kind }); }
+      else { next.add(a.index); trackAction('popup.assets.inline_expand', { kind: a.kind }); }
       expanded = next;
     } else if (a.src && isNavigable(a.src)) {
       window.open(a.src, '_blank', 'noopener,noreferrer');
-      trackAction('assets_view_source', { kind: a.kind, external: true });
+      trackAction('popup.assets.source_view', { kind: a.kind, external: true });
     }
   }
 
@@ -208,7 +208,7 @@
         .join(',');
     });
     downloadFile(withCsvCredit([header, ...rows].join('\n')), `alfred-assets-${siteSlug}.csv`, 'text/csv');
-    trackAction('assets_export', { format: 'csv', count: assets.length });
+    trackAction('popup.assets.export', { format: 'csv', count: assets.length });
   }
 
   function exportJson() {
@@ -229,19 +229,19 @@
       browserExtension: a.isBrowserExtension
     }));
     downloadFile(JSON.stringify(data, null, 2), `alfred-assets-${siteSlug}.json`, 'application/json');
-    trackAction('assets_export', { format: 'json', count: assets.length });
+    trackAction('popup.assets.export', { format: 'json', count: assets.length });
   }
 
   function exportText() {
     const text = assets.filter(a => a.src).map(a => a.src).join('\n');
     downloadFile(text, `alfred-assets-${siteSlug}.txt`, 'text/plain');
-    trackAction('assets_export', { format: 'text', count: assets.length });
+    trackAction('popup.assets.export', { format: 'text', count: assets.length });
   }
 
   async function copyUrls() {
     const text = assets.filter(a => a.src).map(a => a.src).join('\n');
     if (await copyFeedback.copy(text)) {
-      trackAction('assets_copy', { format: 'urls', count: assets.filter(a => a.src).length });
+      trackAction('popup.assets.copy', { format: 'urls', count: assets.filter(a => a.src).length });
     }
   }
 
@@ -275,10 +275,10 @@
     typeFilter !== 'all' || sourceFilter !== 'all' || loadFilter !== 'all' || flagFilter !== 'all' || search.length > 0
   );
 
-  function setType(v: string) { typeFilter = v; trackAction('assets_filter', { facet: 'type', value: v }); }
-  function setSource(v: string) { sourceFilter = v; trackAction('assets_filter', { facet: 'source', value: v }); }
-  function setLoad(v: string) { loadFilter = v; trackAction('assets_filter', { facet: 'load', value: v }); }
-  function setFlag(v: string) { flagFilter = v; trackAction('assets_filter', { facet: 'flag', value: v }); }
+  function setType(v: string) { typeFilter = v; trackAction('popup.assets.filter', { facet: 'type', value: v }); }
+  function setSource(v: string) { sourceFilter = v; trackAction('popup.assets.filter', { facet: 'source', value: v }); }
+  function setLoad(v: string) { loadFilter = v; trackAction('popup.assets.filter', { facet: 'load', value: v }); }
+  function setFlag(v: string) { flagFilter = v; trackAction('popup.assets.filter', { facet: 'flag', value: v }); }
 
   const facets = $derived<Facet[]>([
     { key: 'type', name: 'Type', options: typeOptions, selected: typeFilter, onSelect: setType },
@@ -301,7 +301,7 @@
     flagFilter = 'all';
     search = '';
     searchOpen = false;
-    trackAction('assets_filter', { reset: true });
+    trackAction('popup.assets.filter', { reset: true });
   }
 
   const summaryItems = $derived(summarizeAssets(filtered));

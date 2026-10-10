@@ -199,7 +199,7 @@ export const downloadCSV = (apps: App[]) => {
   const date = new Date().toISOString().split('T')[0];
   downloadFile(csv, `shopify-alfred-${pageTitle}-${date}.csv`, 'text/csv;charset=utf-8;');
 
-  sendTrackEvent('appstore_partner_table_export', {
+  sendTrackEvent('apps.partner_table.export', {
     app_count: apps.length,
     page_url: window.location.href,
     page_type: 'appstore_partners'

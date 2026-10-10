@@ -112,12 +112,12 @@
    * Applies a preset by unchecking all permissions, then checking the preset's permissions
    * one by one with staggered delays. Expands collapsed sections and scrolls to bottom when done.
    * @param presetToApply - The preset to apply. Falls back to selectedPreset if omitted.
-   * @param source - Whether triggered manually or via URL param. Defaults to 'manual'.
+   * @param trigger - Whether the apply button or a URL param started it. Defaults to 'button'.
    * @param autoSubmit - When true, submits the request automatically once the form is filled.
    */
   async function handleApplyPreset(
     presetToApply?: PermissionPreset,
-    source: 'manual' | 'url_param' = 'manual',
+    trigger: 'button' | 'url_param' = 'button',
     autoSubmit = false
   ) {
     const preset = presetToApply ?? selectedPreset;
@@ -132,7 +132,7 @@
     // Hotlink arrivals prefill the store URL from the query param via server render,
     // which never fires an input event — so the page never validates the domain and
     // the Request access button stays disabled. Kick off validation explicitly.
-    if (source === 'url_param') {
+    if (trigger === 'url_param') {
       adapter.triggerStoreUrlValidation();
     }
 
@@ -169,7 +169,7 @@
         .then(() => adapter.waitForSubmitEnabled())
         .then((ready) => {
           if (ready && adapter.submit()) {
-            sendTrackEvent('preset_auto_submit', { permissions_count: permissions.length, source });
+            sendTrackEvent('dev.collaborator_access.request_submit', { permissions_count: permissions.length, trigger });
           }
         });
     }
@@ -178,7 +178,7 @@
     presets = presets.map((p) => (p.id === updatedPreset.id ? updatedPreset : p));
     if (presetToApply) selectedPreset = updatedPreset;
 
-    sendTrackEvent('apply_preset', { permissions_count: (preset.permissions ?? []).length, has_custom_message: !!preset.customMessage, source, auto_submit: autoSubmit });
+    sendTrackEvent('dev.collaborator_access.preset_apply', { permissions_count: (preset.permissions ?? []).length, has_custom_message: !!preset.customMessage, trigger, auto_submit: autoSubmit });
 
     Toast.success(`Applied preset "${updatedPreset.name}"`);
   }
@@ -296,7 +296,7 @@
     try {
       const savedPreset = await savePreset(newPreset);
       presets = [...presets, savedPreset];
-      sendTrackEvent('save_preset', { permissions_count: permissions.length, has_custom_message: !!customMessage });
+      sendTrackEvent('dev.collaborator_access.preset_save', { permissions_count: permissions.length, has_custom_message: !!customMessage });
       Toast.success(`Saved preset "${savedPreset.name}"`);
     } catch (error) {
       console.error('Failed to save preset:', error);
@@ -546,7 +546,7 @@
     </div>
 
     <div class="credit">
-      <CreditChip source="collaborator_access" variant="plain" />
+      <CreditChip action="dev.collaborator_access.credit_click" variant="plain" />
     </div>
   </div>
 </div>

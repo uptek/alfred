@@ -15,7 +15,7 @@ export default defineContentScript({
     const open = async () => {
       if (mounted) return;
       mounted = true;
-      sendTrackEvent('cartograph_open');
+      sendTrackEvent('storefront.cartograph.open');
       try {
         const { mountCartograph } = await import('./mount');
         mountCartograph(ctx, () => {

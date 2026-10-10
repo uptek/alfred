@@ -50,11 +50,12 @@ host is the `alfred-api` Cloudflare Worker (`worker/`, Uptek account), which
 routes by path, so new server endpoints go there too. `/track` imports the same
 list as its allowlist and writes to the D1 database `alfred-events`.
 `/uninstall` is the extension's uninstall URL when analytics is on: it records
-an `uninstall` event, then redirects to the survey. Going back from the survey
-records another, so count distinct `user_id`s. Chrome has no event for an
-extension being disabled, so the background tracks a `heartbeat` about once a
-day (`entrypoints/background/heartbeat.ts`). A user whose heartbeats stop with
-no `uninstall` row has disabled Alfred, turned analytics off, or stopped using
+a `system.extension.uninstall` event, then redirects to the survey. Going back
+from the survey records another, so count distinct `user_id`s. Chrome has no
+event for an extension being disabled, so the background tracks a
+`system.extension.ping` heartbeat about once a day
+(`entrypoints/background/heartbeat.ts`). A user whose pings stop with no
+uninstall row has disabled Alfred, turned analytics off, or stopped using
 Chrome; compare that rate across versions rather than reading it alone. Pages
 can fire any listed action and a recreated alarm can fire twice in a day, so
 count distinct users per day, not rows. CI runs
@@ -66,6 +67,38 @@ worker/wrangler.jsonc --command "..."`, bounding `created_at` (ISO text) with
 `strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')`, not `datetime()`. Wrangler needs
 `CLOUDFLARE_ACCOUNT_ID` in `.env` (see `.env.example`); Cloudflare account and
 resource IDs never go in the repo.
+
+### Event naming
+
+Every event is `<surface>.<feature>.<object>_<verb>`, e.g. `popup.links.export`
+or `admin.theme_list.id_copy`. Words are lowercase snake_case and `.` only
+separates the three levels, so `action.split('.')` is always
+`[surface, feature, action]` and `LIKE 'popup.links.%'` is an exact prefix.
+`utils/tests/analytics-actions.test.ts` enforces the pattern.
+
+- Surface is where the feature's UI lives: `popup`, `storefront` (any
+  storefront, including the right-click menu), `admin` (including the Online
+  Store iframe), `dev` (Dev Dashboard), `apps` (App Store), `options`, or
+  `system` (not user triggered).
+- Feature is the tool as users see it: a popup tab, an Options section or a
+  panel (`links`, `theme_list`, `shortcuts`, `cartograph`).
+- Verb last, present tense, from `VERBS` in the test. Drop the object when it
+  is the feature itself (`popup.links.view`). A new verb goes in `VERBS` first.
+- A different object is a new event (`email_click`, `phone_click`). A variant
+  of the same object is a metadata property (`apps.compare.export` with
+  `format`).
+- An action with several entry points is one event plus a `trigger` property:
+  `popup`, `context_menu`, `button` or `url_param`. Add a value only when that
+  entry point ships.
+- Shared components take the host's surface and feature, so `CreditChip` gets
+  `action="apps.compare.credit_click"` and `LIKE '%.credit_click'` finds them
+  all.
+- No user data in names.
+- Never rename a shipped event without adding its old name to
+  `LEGACY_ACTIONS` (`utils/analytics-legacy.ts`). Installed builds keep sending
+  old names, so the Worker upgrades them on arrival and keeps the original in
+  `events.legacy_action`. The same rules drive `scripts/backfill-event-names.ts`
+  and the Supabase import.
 
 ## Version Bumping & Changelog
 

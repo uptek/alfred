@@ -20,7 +20,7 @@
 
   const siteSlug = $derived(siteSlugOf(domain ?? undefined));
 
-  trackViewOnce('hreflangs_view', () => analysis.entries.length > 0, () => ({
+  trackViewOnce('popup.hreflangs.view', () => analysis.entries.length > 0, () => ({
     tags: analysis.entries.length,
     issues: analysis.issues.length
   }));
@@ -30,7 +30,7 @@
   const copyFeedback = createCopyFeedback();
   async function copyAll() {
     const text = tags.map((t) => `${t.hreflang}\t${t.href || t.rawHref}`).join('\n');
-    if (await copyFeedback.copy(text)) trackAction('hreflangs_copy', { tags: tags.length });
+    if (await copyFeedback.copy(text)) trackAction('popup.hreflangs.copy', { tags: tags.length });
   }
   function exportCsv() {
     const rows = analysis.entries.map((e) =>
@@ -38,7 +38,7 @@
     );
     const content = withCsvCredit(['Hreflang,URL,Self,Invalid Code,Relative URL,In Head', ...rows].join('\n'));
     downloadFile(content, `alfred-hreflangs-${siteSlug}.csv`, 'text/csv');
-    trackAction('hreflangs_export', { tags: tags.length });
+    trackAction('popup.hreflangs.export', { tags: tags.length });
   }
 </script>
 

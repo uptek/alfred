@@ -179,7 +179,7 @@ function createButton(item: CompareTrayItem, getSourceImage?: () => HTMLImageEle
       Toast.error(`You can compare up to ${COMPARE_TRAY_LIMIT} apps`);
     } else if (result === 'added') {
       flyToTray(getSourceImage?.() ?? null, item.iconUrl, button.getBoundingClientRect());
-      sendTrackEvent('compare_add_app', {
+      sendTrackEvent('apps.compare.app_add', {
         handle: item.handle,
         page_url: window.location.href
       });

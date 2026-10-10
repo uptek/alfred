@@ -89,7 +89,7 @@
     return size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`;
   });
 
-  trackViewOnce('robots_view', () => robots !== null, () => ({
+  trackViewOnce('popup.robots.view', () => robots !== null, () => ({
     status: robots!.status,
     is_shopify_default: shopifyDiff?.isDefault ?? false,
     error_count: analysis.errorCount
@@ -112,7 +112,7 @@
     flashedLine = line;
     clearTimeout(flashTimer);
     flashTimer = setTimeout(() => (flashedLine = null), 1600);
-    trackAction('robots_goto_line', { line });
+    trackAction('popup.robots.line_locate', { line });
   }
 
   let wrapLines = $state(false);
@@ -120,7 +120,7 @@
   const copyFeedback = createCopyFeedback();
   async function handleCopy() {
     if (!robots) return;
-    if (await copyFeedback.copy(robots.content)) trackAction('robots_copy', { size: robots.size });
+    if (await copyFeedback.copy(robots.content)) trackAction('popup.robots.copy', { size: robots.size });
   }
 
   type Segment = { text: string; kind: 'code' | 'directive' | 'comment' | 'link' };
@@ -204,7 +204,7 @@
       </div>
       <div class="header__actions">
         {#if robotsUrl}
-          <ActionButton href={robotsUrl} onclick={() => trackAction('robots_open', {})}>
+          <ActionButton href={robotsUrl} onclick={() => trackAction('popup.robots.open', {})}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
             Open
           </ActionButton>
@@ -275,7 +275,7 @@
         aria-expanded={aiExpanded}
         onclick={() => {
           aiExpanded = !aiExpanded;
-          trackAction('robots_ai_toggle', { expanded: aiExpanded });
+          trackAction('popup.robots.ai_toggle', { expanded: aiExpanded });
         }}
       >
         <span class="ai-strip__label">AI Crawlers</span>
@@ -331,7 +331,7 @@
           title="Wrap long lines"
           onclick={() => {
             wrapLines = !wrapLines;
-            trackAction('robots_wrap_toggle', { wrap: wrapLines });
+            trackAction('popup.robots.wrap_toggle', { wrap: wrapLines });
           }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="wrap-btn__icon"><path d="M3 6h18M3 12h13a3 3 0 010 6h-4"/><path d="M14 16l-2 2 2 2"/><path d="M3 18h6"/></svg>

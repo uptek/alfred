@@ -3,7 +3,7 @@
   import { CWS_REVIEW_URL } from '@/utils/constants';
 
   function openReview() {
-    trackAction('credit_click', { source: 'options' });
+    trackAction('options.review_request.credit_click');
     window.open(CWS_REVIEW_URL, '_blank');
   }
 </script>
