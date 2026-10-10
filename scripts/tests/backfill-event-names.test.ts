@@ -87,6 +87,25 @@ describe('backfillSql', () => {
     expect(row('current')).toEqual({ action: 'popup.app.open', metadata: '{}', legacy_action: null });
   });
 
+  it('renames only rows created through the cutoff, so a run stays within a write budget', () => {
+    for (const [id, createdAt] of [
+      ['old', '2026-10-01T00:00:00.000Z'],
+      ['edge', '2026-10-02T00:00:00.000Z'],
+      ['new', '2026-10-03T00:00:00.000Z']
+    ]) {
+      db.run(`INSERT INTO events (id, created_at, user_id, action, time_saved) VALUES (?, ?, 'u1', 'popup_open', 0)`, [
+        id,
+        createdAt
+      ]);
+    }
+    for (const statement of backfillSql('2026-10-02T00:00:00.000Z')) db.run(statement);
+    expect(['old', 'edge', 'new'].map((id) => row(id).action)).toEqual([
+      'popup.app.open',
+      'popup.app.open',
+      'popup_open'
+    ]);
+  });
+
   it('changes nothing when run a second time', () => {
     insert('a', 'review_nudge_show', {});
     insert('b', 'review_nudge_show', { variant: 0 });

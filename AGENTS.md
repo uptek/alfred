@@ -62,7 +62,12 @@ count distinct users per day, not rows. CI runs
 `bun run deploy:worker` (D1 migrations, then `wrangler deploy`) on every push
 to `main`. Migrations apply while the previous Worker is still live, so keep
 them additive: new columns need defaults, and drops or renames wait for a later
-release. Query with `bunx wrangler d1 execute alfred-events --remote -c
+release. D1 runs on the Workers Free plan: 100,000 rows written and 5 million
+read per day, reset at 00:00 UTC. Past either limit every query fails,
+including `/track`'s inserts, until the reset. A write also writes one row per
+index whose column it sets, so an event insert costs 3 rows. Bulk writes
+(backfills, imports) take a row budget and run once per UTC day, like
+`scripts/backfill-event-names.ts`. Query with `bunx wrangler d1 execute alfred-events --remote -c
 worker/wrangler.jsonc --command "..."`, bounding `created_at` (ISO text) with
 `strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')`, not `datetime()`. Wrangler needs
 `CLOUDFLARE_ACCOUNT_ID` in `.env` (see `.env.example`); Cloudflare account and
