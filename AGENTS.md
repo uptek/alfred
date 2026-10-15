@@ -65,8 +65,9 @@ them additive: new columns need defaults, and drops or renames wait for a later
 release. D1 runs on the Workers Free plan: 100,000 rows written and 5 million
 read per day, reset at 00:00 UTC. Past either limit every query fails,
 including `/track`'s inserts, until the reset. A write also writes one row per
-index whose column it sets, so an event insert costs 3 rows. Bulk writes
-(backfills, imports) take a row budget and run once per UTC day, like
+index whose column it sets, and the `id` primary key has its own index, so an
+event insert costs 4 rows. Bulk writes (backfills, imports) take a row budget
+and run once per UTC day, like
 `scripts/backfill-event-names.ts`. Query with
 `bunx wrangler d1 execute alfred-events --remote -c worker/wrangler.jsonc --command "..."`,
 bounding `created_at` (ISO text) with
