@@ -46,7 +46,8 @@ export const defaultSettings: ResolvedSettings = {
   },
   admin: {
     warnBeforeClosingCodeEditor: true,
-    themeListUtils: true
+    themeListUtils: true,
+    sidekick: 'default'
   }
 };
 

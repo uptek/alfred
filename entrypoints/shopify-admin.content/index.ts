@@ -1,6 +1,7 @@
 import { getSettings, isEnabled } from '~/utils/settings';
 import { getItem, removeItem } from '~/utils/storage';
 import { Toast } from '~/utils/toast';
+import { setupSidekick } from './sidekick';
 
 // Collapsed/expanded state stored by Alfred's former admin sidebar toggle.
 // Its presence marks merchants who used the toggle.
@@ -9,8 +10,10 @@ const SIDEBAR_STATE_KEY = 'admin-sidebar-state';
 export default defineContentScript({
   matches: ['https://admin.shopify.com/*', 'https://*.myshopify.com/admin/*'],
   runAt: 'document_end',
-  async main() {
+  async main(ctx) {
     const settings = await getSettings();
+
+    setupSidekick(ctx, settings.admin.sidekick ?? 'default');
 
     /**
      * Warn before closing the theme code editor page.

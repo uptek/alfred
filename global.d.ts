@@ -33,6 +33,8 @@ declare namespace ContextMenu {
   type ClickHandler = (info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => void;
 }
 
+declare type SidekickMode = 'default' | 'sidebar' | 'hidden';
+
 declare interface AlfredSettings {
   general?: {
     analytics?: boolean;
@@ -75,6 +77,7 @@ declare interface AlfredSettings {
   admin?: {
     warnBeforeClosingCodeEditor?: boolean;
     themeListUtils?: boolean;
+    sidekick?: SidekickMode;
   };
 }
 

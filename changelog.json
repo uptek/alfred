@@ -1,5 +1,27 @@
 [
   {
+    "version": "2026.10.16",
+    "date": "2026-10-16",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Hide or Move Sidekick"
+      },
+      {
+        "type": "paragraph",
+        "content": "Shopify's floating Sidekick bar can now get out of your way. Hover the bar to reveal two buttons at its ends: the arrow moves Sidekick into the admin sidebar, just above Settings, and the × hides it completely."
+      },
+      {
+        "type": "paragraph",
+        "content": "In the sidebar, click Sidekick to open it as a panel on the right, or use the button beside it to put the floating bar back."
+      },
+      {
+        "type": "paragraph",
+        "content": "Your choice applies to every admin tab, and you can change it any time under Shopify Admin in Alfred's settings."
+      }
+    ]
+  },
+  {
     "version": "2026.10.10",
     "date": "2026-10-10",
     "changes": [

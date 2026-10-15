@@ -4,6 +4,7 @@ import {
   defaultSettings,
   mergeSettings,
   updateSettings as persistSettings,
+  watchSettings,
   type ResolvedSettings
 } from '~/utils/settings';
 import { Toast } from '@/utils/toast';
@@ -72,6 +73,8 @@ async function resetSettings(): Promise<boolean> {
 
 // Initialize on import
 loadSettings().catch(() => {});
+// Content scripts and other tabs write settings too, so follow storage.
+watchSettings((next) => (settings = next));
 
 export function getSettingsStore() {
   return {

@@ -18,6 +18,7 @@ Object.assign(g, {
 const storage = await import('~/utils/storage');
 const settings = await import('~/utils/settings');
 const { Toast } = await import('~/utils/toast');
+const sidekick = await import('../sidekick');
 
 const store = new Map<string, unknown>();
 const getItem = spyOn(storage, 'getItem').mockImplementation(async (key: string) => (store.get(key) ?? null) as never);
@@ -26,12 +27,15 @@ const removeItem = spyOn(storage, 'removeItem').mockImplementation(async (key: s
 });
 const getSettings = spyOn(settings, 'getSettings').mockResolvedValue(settings.defaultSettings);
 const show = spyOn(Toast, 'show').mockImplementation(() => {});
+// Covered by sidekick.test.ts; it needs a real DOM.
+const setupSidekick = spyOn(sidekick, 'setupSidekick').mockImplementation(() => {});
 const { default: script } = await import('../index');
 
 const LEGACY_KEY = 'admin-sidebar-state';
+const ctx = {} as never;
 
 afterAll(() => {
-  for (const spy of [getItem, removeItem, getSettings, show]) spy.mockRestore();
+  for (const spy of [getItem, removeItem, getSettings, show, setupSidekick]) spy.mockRestore();
   for (const [k, v] of saved) g[k] = v;
 });
 
@@ -45,8 +49,8 @@ beforeEach(() => {
 describe('sidebar toggle farewell', () => {
   it('shows a persistent announcement once, then clears the legacy key so later loads stay silent', async () => {
     store.set(LEGACY_KEY, 'collapsed');
-    await script.main();
-    await script.main();
+    await script.main(ctx);
+    await script.main(ctx);
 
     expect(show).toHaveBeenCalledTimes(1);
     expect(show).toHaveBeenCalledWith(expect.stringContaining('Farewell'), 'success', 0, 'announcement');
@@ -60,7 +64,7 @@ describe('sidebar toggle farewell', () => {
       throw new Error('storage unavailable');
     });
 
-    await expect(script.main()).rejects.toThrow('storage unavailable');
+    await expect(script.main(ctx)).rejects.toThrow('storage unavailable');
     expect(listeners).toContain('beforeunload');
     // The key is cleared before the toast shows, so a failed clear shows nothing.
     expect(show).not.toHaveBeenCalled();

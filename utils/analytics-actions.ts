@@ -100,6 +100,9 @@ export const ANALYTICS_ACTIONS = [
   'admin.theme_list.id_copy',
   'admin.theme_editor.panel_resize',
   'admin.theme_editor.inspector_disable',
+  'admin.sidekick.placement_switch',
+  'admin.sidekick.placement_apply',
+  'admin.sidekick.open',
 
   // Dev Dashboard
   'dev.collaborator_access.preset_apply',
@@ -233,6 +236,12 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   'admin.theme_list.id_copy': 10,
   'admin.theme_editor.panel_resize': 3,
   'admin.theme_editor.inspector_disable': 3,
+  // Most of the time saved is in admin visits without the floating bar in the
+  // way, so it sits on placement_apply, which fires on each admin page load.
+  // Opening from the sidebar spares a trip to Settings to unhide it.
+  'admin.sidekick.placement_switch': 0,
+  'admin.sidekick.placement_apply': 5,
+  'admin.sidekick.open': 3,
   'dev.collaborator_access.preset_apply': (metadata) => {
     return 45 + (metadata?.has_custom_message ? 20 : 0);
   },
