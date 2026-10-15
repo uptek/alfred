@@ -2,14 +2,16 @@ import { afterAll, describe, expect, it, spyOn } from 'bun:test';
 import { parseHTML } from 'linkedom';
 
 const g = globalThis as Record<string, unknown>;
-const saved = ['document', 'MutationObserver', 'HTMLElement'].map((k) => [k, g[k]] as const);
+const saved = ['document', 'MutationObserver', 'HTMLElement', 'requestAnimationFrame'].map((k) => [k, g[k]] as const);
 // A trimmed copy of the admin markup: the nav's sticky bottom section and the
 // floating bar in the footer ribbon, docking button included.
 const dom = parseHTML(`<!doctype html><html><head></head><body>
   <nav><div data-sticky-bottom-nav="true"><ul>
-    <li><div data-navitem="item-wrapper"><a data-navitem="item" href="/settings" class="_Item _Item-selected" aria-current="page">
-      <s-internal-icon type="settings"></s-internal-icon><span>Settings</span>
-    </a></div></li>
+    <li><div data-navitem="item-wrapper"><div data-navitem="item-inner-wrapper" class="_Inner _Inner-selected">
+      <a data-navitem="item" href="/settings" class="_Item _Item-selected" aria-current="page">
+        <s-internal-icon type="settings"></s-internal-icon><span>Settings</span>
+      </a>
+    </div></div></li>
     <li><div>Firecart Staging</div></li>
   </ul></div></nav>
   <div data-polaris-frame-global-ribbon="true"><div data-frame-footer-outlet="center">
@@ -19,7 +21,8 @@ const dom = parseHTML(`<!doctype html><html><head></head><body>
 Object.assign(g, {
   document: dom.document,
   MutationObserver: dom.MutationObserver,
-  HTMLElement: dom.HTMLElement
+  HTMLElement: dom.HTMLElement,
+  requestAnimationFrame: (callback: FrameRequestCallback) => callback(0)
 });
 
 const settings = await import('~/utils/settings');
@@ -46,7 +49,7 @@ const click = (selector: string) => $(selector)!.click();
 const mode = () => dom.document.documentElement.getAttribute('data-alfred-sidekick');
 
 describe('Sidekick', () => {
-  it('moves between the floating bar, the nav and hidden, and keeps the setting in step', () => {
+  it('moves between the floating bar, the nav and hidden, and keeps the setting in step', async () => {
     let invalidate = () => {};
     setupSidekick({ onInvalidated: (cb: () => void) => (invalidate = cb) } as never, 'default');
     expect(mode()).toBeNull();
@@ -71,6 +74,7 @@ describe('Sidekick', () => {
     expect(item.querySelector('s-internal-icon')!.getAttribute('type')).toBe('sidekick');
     expect(item.hasAttribute('aria-current')).toBe(false);
     expect(item.className).toBe('_Item');
+    expect(item.parentElement!.className).toBe('_Inner');
     expect($('#alfred-sidekick-nav')!.nextElementSibling!.textContent).toContain('Settings');
 
     // The nav item docks Sidekick through the bar's own button.
@@ -97,6 +101,13 @@ describe('Sidekick', () => {
     watcher({ ...settings.defaultSettings, admin: { sidekick: 'sidebar' } });
     expect(mode()).toBe('sidebar');
     expect($('#alfred-sidekick-nav')).not.toBeNull();
+
+    // Condensing the nav restyles Settings, and the copy follows.
+    $('#alfred-sidekick-nav + li [data-navitem="item"]')!.classList.add('_Item-condensed');
+    $('nav')!.setAttribute('data-navigation-condensed', 'true');
+    await Promise.resolve();
+    expect($('#alfred-sidekick-nav [data-navitem="item"]')!.className).toBe('_Item _Item-condensed');
+    expect(dom.document.querySelectorAll('#alfred-sidekick-nav')).toHaveLength(1);
 
     // An old build's script must not leave dead controls behind after an update.
     invalidate();

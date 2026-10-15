@@ -5,6 +5,9 @@ import { Toast } from '~/utils/toast';
 
 const MODE_ATTR = 'data-alfred-sidekick';
 const NAV_ID = 'alfred-sidekick-nav';
+const NAV_ITEM = '[data-navitem="item"]';
+// The Settings item at the bottom of the admin nav, which the Sidekick item copies.
+const SETTINGS_ITEM = `[data-sticky-bottom-nav] li:not(#${NAV_ID}) ${NAV_ITEM}`;
 
 // Shopify renders the floating bar in the center outlet of the frame's footer
 // ribbon (a zero-height fixed overlay) and a floating button at mobile widths.
@@ -37,8 +40,7 @@ html[${MODE_ATTR}] [data-component-name="mobile-frame-actions-sidekick"] {
 .alfred-sidekick-control:hover {
   color: rgb(26 26 26);
 }
-/* The bar controls sit just outside the bar's ends while it is hovered. Their
-   fade-out keeps them hoverable long enough to cross the gap. */
+/* The bar controls sit just outside the bar's ends while it is hovered. */
 @supports (anchor-name: --a) {
   ${BAR} {
     anchor-name: --alfred-sidekick;
@@ -50,6 +52,13 @@ html[${MODE_ATTR}] [data-component-name="mobile-frame-actions-sidekick"] {
     position-anchor: --alfred-sidekick;
     bottom: calc(anchor(bottom) + 11px);
     transition: opacity 0.15s, visibility 0.15s;
+  }
+  /* An invisible margin as tall as the bar fills the gap, so the pointer never
+     leaves both the bar and the control on its way across. */
+  .alfred-sidekick-control::before {
+    content: '';
+    position: absolute;
+    inset: -12px -10px;
   }
   #alfred-sidekick-to-nav {
     right: calc(anchor(left) + 8px);
@@ -64,40 +73,48 @@ html[${MODE_ATTR}] [data-component-name="mobile-frame-actions-sidekick"] {
     transition-delay: 0.15s;
   }
 }
-#${NAV_ID} {
-  position: relative;
-}
+/* Matches the secondary actions on Shopify's own nav items, such as Online Store's. */
 .alfred-sidekick-restore {
   position: absolute;
   top: 50%;
   right: 8px;
   translate: 0 -50%;
   display: flex;
-  padding: 4px;
+  padding: 2px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
-  color: inherit;
-  opacity: 0;
+  color: var(--p-color-nav-icon);
+  visibility: hidden;
   cursor: pointer;
 }
-#${NAV_ID}:hover .alfred-sidekick-restore,
-.alfred-sidekick-restore:focus-visible {
-  opacity: 1;
+#${NAV_ID}:is(:hover, :focus-within) .alfred-sidekick-restore {
+  visibility: visible;
 }
 .alfred-sidekick-restore:hover {
-  background: rgb(255 255 255 / 0.1);
+  background: var(--p-color-bg-fill-transparent-hover);
+  color: var(--p-color-nav-icon-hover);
+}
+/* The condensed nav is icons only, with no room for a second button. */
+[data-navigation-condensed="true"] .alfred-sidekick-restore {
+  display: none;
 }
 `;
 
 /** A button showing one of the admin's own icons, which follow the button's text color. */
-function button(className: string, label: string, icon: string, onClick: () => void): HTMLButtonElement {
+function button(
+  className: string,
+  label: string,
+  icon: string,
+  onClick: () => void,
+  size: 'small' | 'base' = 'small'
+): HTMLButtonElement {
   const el = document.createElement('button');
   el.type = 'button';
   el.className = className;
   el.title = label;
   el.setAttribute('aria-label', label);
-  el.innerHTML = `<s-internal-icon type="${icon}" tone="legacy-inherit" size="small"></s-internal-icon>`;
+  el.innerHTML = `<s-internal-icon type="${icon}" tone="legacy-inherit" size="${size}"></s-internal-icon>`;
   el.addEventListener('click', onClick);
   return el;
 }
@@ -110,21 +127,22 @@ function openSidekick(): void {
   sendTrackEvent('admin.sidekick.open');
 }
 
-/**
- * Clones the Settings item at the bottom of the admin nav and places the copy
- * above it, so the Sidekick item picks up Shopify's current (hashed) classes.
- * Does nothing until the nav renders.
- */
-function createNavItem(onRestore: () => void): void {
-  const settings = document.querySelector('[data-sticky-bottom-nav] [data-navitem="item"]')?.closest('li');
-  if (!settings) return;
+/** An element's class names without Shopify's selected-state ones, which the copy drops. */
+function unselectedClasses(el: Element): string {
+  return [...el.classList].filter((name) => !/selected|active/i.test(name)).join(' ');
+}
 
+/**
+ * Clones the Settings item and places the copy above it, so the Sidekick item
+ * picks up Shopify's current (hashed) classes.
+ */
+function createNavItem(settings: HTMLLIElement, onRestore: () => void): void {
   const li = settings.cloneNode(true) as HTMLLIElement;
   li.id = NAV_ID;
+  for (const el of li.querySelectorAll('[class]')) el.setAttribute('class', unselectedClasses(el));
 
-  const item = li.querySelector<HTMLElement>('[data-navitem="item"]')!;
+  const item = li.querySelector<HTMLElement>(NAV_ITEM)!;
   for (const name of ['href', 'aria-current', 'data-discover']) item.removeAttribute(name);
-  item.classList.remove(...[...item.classList].filter((name) => /selected/i.test(name)));
   item.setAttribute('role', 'button');
   item.tabIndex = 0;
   item.querySelector('s-internal-icon')?.setAttribute('type', 'sidekick');
@@ -140,7 +158,9 @@ function createNavItem(onRestore: () => void): void {
     if (e.key === 'Enter' || e.key === ' ') open(e);
   });
 
-  li.append(button('alfred-sidekick-restore', 'Move Sidekick back to the floating bar', 'layout-footer', onRestore));
+  item.after(
+    button('alfred-sidekick-restore', 'Move Sidekick back to the floating bar', 'layout-footer', onRestore, 'base')
+  );
   settings.before(li);
 }
 
@@ -160,12 +180,18 @@ export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): vo
     sendTrackEvent('admin.sidekick.placement_switch', { placement: next });
   };
 
-  // Shopify re-renders the nav on some navigations and drops foreign nodes.
-  // The check runs at most once a frame, since the admin mutates constantly.
+  // Shopify re-renders the nav on some navigations, dropping foreign nodes, and
+  // restyles its items when the nav is condensed, so the copy is redone whenever
+  // its classes fall out of step with Settings. The check runs at most once a
+  // frame, since the admin mutates constantly.
   const ensureNavItem = () => {
-    if (root.getAttribute(MODE_ATTR) === 'sidebar' && !document.getElementById(NAV_ID)) {
-      createNavItem(() => setMode('default'));
+    if (root.getAttribute(MODE_ATTR) !== 'sidebar') return;
+    const settings = document.querySelector(SETTINGS_ITEM);
+    if (!settings || document.querySelector(`#${NAV_ID} ${NAV_ITEM}`)?.className === unselectedClasses(settings)) {
+      return;
     }
+    document.getElementById(NAV_ID)?.remove();
+    createNavItem(settings.closest('li')!, () => setMode('default'));
   };
   let queued = false;
   const observer = new MutationObserver(() => {
@@ -183,7 +209,11 @@ export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): vo
 
     if (next === 'sidebar') {
       ensureNavItem();
-      observer.observe(document.body, { childList: true, subtree: true });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributeFilter: ['data-navigation-condensed']
+      });
     } else {
       observer.disconnect();
       document.getElementById(NAV_ID)?.remove();
