@@ -22,6 +22,10 @@
       {
         "type": "paragraph",
         "content": "Your choice applies to every admin tab, and you can change it any time under Shopify Admin in Alfred's settings."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-sidekick.mp4"
       }
     ]
   },

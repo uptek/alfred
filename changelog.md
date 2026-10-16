@@ -13,6 +13,8 @@ In the sidebar, click Sidekick to open it as a panel on the right, or use the bu
 Your choice applies to every admin tab, and you can change it any time under Shopify Admin in Alfred's settings.
 
 
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-sidekick.mp4"></video>
+
 ## 2026.10.10
 @ 2026-10-10
 
