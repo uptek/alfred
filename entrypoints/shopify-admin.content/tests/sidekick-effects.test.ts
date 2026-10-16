@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it, spyOn } from 'bun:test';
 import { parseHTML } from 'linkedom';
-import { drawEffect, type EffectBag, type HideEffect } from '../sidekick-effects/pick';
+import { pickEffect, type HideEffect } from '../sidekick-effects/pick';
 
 const g = globalThis as Record<string, unknown>;
 const saved = ['document', 'matchMedia', 'innerWidth', 'innerHeight'].map((k) => [k, g[k]] as const);
@@ -59,28 +59,24 @@ describe('playHideEffect', () => {
   });
 });
 
-/** Draws `n` effects in a row, carrying the bag from one draw to the next. */
-function draws(n: number, available: readonly HideEffect[]): HideEffect[] {
-  let bag: EffectBag = { left: [], last: null };
-  return Array.from({ length: n }, () => {
-    const next = drawEffect(bag, available);
-    bag = next.bag;
-    return next.effect;
-  });
+/** Picks `n` effects in a row, each knowing the one before it. */
+function picks(n: number, available: readonly HideEffect[]): HideEffect[] {
+  const seen: HideEffect[] = [];
+  for (let i = 0; i < n; i++) seen.push(pickEffect(seen.at(-1) ?? null, available));
+  return seen;
 }
 
-describe('drawEffect', () => {
-  it('plays every effect once per round and never repeats one back to back', () => {
-    const seen = draws(300, ['glass', 'dust', 'paper']);
-    for (let i = 0; i < seen.length; i += 3) {
-      expect(new Set(seen.slice(i, i + 3))).toEqual(new Set(['glass', 'dust', 'paper']));
-    }
+describe('pickEffect', () => {
+  it('picks at random but never repeats the effect that played last', () => {
+    const seen = picks(300, ['glass', 'dust', 'paper']);
+    expect(new Set(seen)).toEqual(new Set(['glass', 'dust', 'paper']));
     for (let i = 1; i < seen.length; i++) expect(seen[i]).not.toBe(seen[i - 1]);
+    // Not a fixed rotation: some effect comes back after just one other.
+    expect(seen.some((e, i) => e === seen[i - 2])).toBe(true);
   });
 
-  it('skips an effect the browser cannot play, even one already in the bag', () => {
-    const first = drawEffect({ left: ['glass', 'dust'], last: 'paper' }, ['dust', 'paper']);
-    expect(first.effect).toBe('dust');
-    expect(draws(20, ['dust', 'paper']).join(' ')).toMatch(/^(dust paper|paper dust)( \1)*$/);
+  it('never picks an effect the browser cannot play', () => {
+    expect(new Set(picks(50, ['dust', 'paper']))).toEqual(new Set(['dust', 'paper']));
+    expect(pickEffect('glass', ['dust', 'paper'])).not.toBe('glass');
   });
 });

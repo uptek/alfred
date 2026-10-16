@@ -2,12 +2,12 @@ import { sendRuntimeMessage } from '~/utils/messages';
 import { getItem, setItem } from '~/utils/storage';
 import { dust } from './dust';
 import { paper } from './paper';
-import { drawEffect, type EffectBag, type HideEffect } from './pick';
+import { pickEffect, type HideEffect } from './pick';
 import type { Effect, EffectContext, GlassHost, GlassModule } from './shared';
 
 export type PlayedEffect = HideEffect | 'fade';
 
-const BAG_KEY = 'alfred:sidekick-effect-bag';
+const LAST_KEY = 'alfred:sidekick-last-effect';
 const EFFECTS: Record<Exclude<HideEffect, 'glass'>, Effect> = { dust, paper };
 
 const reducedMotion = () => !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -37,14 +37,11 @@ const loadGlass = () =>
       return module;
     }));
 
-// The next effect is drawn on hover, so glass can load before the click, and saved only once it plays.
-let upcoming: Promise<{ effect: HideEffect; bag: EffectBag }> | null = null;
+// The next effect is picked on hover, so glass can load before the click, and saved only once it plays.
+let upcoming: Promise<HideEffect> | null = null;
 const nextEffect = () =>
-  (upcoming ??= getItem<EffectBag>(BAG_KEY).then((bag) =>
-    drawEffect(
-      bag ?? { left: [], last: null },
-      hasWebGL() && !glassFailed ? ['glass', 'dust', 'paper'] : ['dust', 'paper']
-    )
+  (upcoming ??= getItem<HideEffect>(LAST_KEY).then((last) =>
+    pickEffect(last, hasWebGL() && !glassFailed ? ['glass', 'dust', 'paper'] : ['dust', 'paper'])
   ));
 
 /**
@@ -93,7 +90,7 @@ let disposed = false;
 export function prepareHideEffect(bar: HTMLElement): void {
   if (reducedMotion()) return;
   if (!pending || performance.now() - pending.at > 1000) pending = { at: performance.now(), capture: captureBar(bar) };
-  void nextEffect().then(async ({ effect }) => {
+  void nextEffect().then(async (effect) => {
     if (effect === 'glass') (await loadGlass())?.warm();
   });
 }
@@ -130,14 +127,14 @@ async function play(bar: HTMLElement, cover: (effect: PlayedEffect) => void): Pr
     return !disposed;
   }
 
-  const { effect, bag } = await nextEffect();
+  const effect = await nextEffect();
   upcoming = null;
   const glassPlay = effect === 'glass' ? (await loadGlass())?.play : undefined;
   if (disposed) return false;
-  // Glass falls back to dust if its script fails to load. The bag records what actually played.
+  // Glass falls back to dust if its script fails to load. What actually played is saved, so it can't repeat.
   const [name, run]: [HideEffect, Effect] =
     effect !== 'glass' ? [effect, EFFECTS[effect]] : glassPlay ? ['glass', glassPlay] : ['dust', dust];
-  void setItem(BAG_KEY, { left: bag.left.filter((e) => e !== name), last: name });
+  void setItem(LAST_KEY, name);
 
   const host = (layer = document.createElement('div'));
   host.style.cssText = 'position:fixed;inset:0;z-index:2147483000;pointer-events:none;overflow:hidden';
