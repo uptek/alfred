@@ -99,11 +99,12 @@ export default defineBackground(() => {
     void registerShortcuts();
   });
 
-  // Single message dispatcher: tracking events from content scripts, and link
-  // HTTP status checks for the popup. Fetching statuses here (not in the popup)
-  // keeps checks alive after the popup closes and uses host permissions to read
-  // cross-origin status codes. Returning true keeps the channel open for the
-  // async sendResponse.
+  // Single message dispatcher: tracking events from content scripts, link HTTP
+  // status checks for the popup, and the admin content script's tab captures
+  // and glass injection for the Sidekick hide effects. Fetching statuses here
+  // (not in the popup) keeps checks alive after the popup closes and uses host
+  // permissions to read cross-origin status codes. Returning true keeps the
+  // channel open for the async sendResponse.
   browser.runtime.onMessage.addListener((rawMessage: unknown, sender, sendResponse) => {
     // Only honor messages from the extension's own contexts (popup/content scripts).
     if (sender.id !== browser.runtime.id) return false;
@@ -120,6 +121,28 @@ export default defineBackground(() => {
 
     if (message.type === 'check_link_status' && typeof message.url === 'string') {
       checkLinkStatus(message.url).then(sendResponse);
+      return true;
+    }
+
+    // The Sidekick hide effects start from the bar's pixels. Only a visible tab can be captured, which the
+    // sender is, since its bar is under the pointer.
+    if (message.type === 'capture_tab' && sender.tab) {
+      browser.tabs
+        .captureVisibleTab(sender.tab.windowId, { format: 'png' })
+        .then(sendResponse, (error: unknown) => sendResponse({ error: String(error) }));
+      return true;
+    }
+
+    if (message.type === 'load_sidekick_glass' && sender.tab?.id !== undefined) {
+      browser.scripting
+        .executeScript({
+          target: { tabId: sender.tab.id, frameIds: [sender.frameId ?? 0] },
+          files: ['/sidekick-glass.js']
+        })
+        .then(
+          () => sendResponse(true),
+          () => sendResponse(false)
+        );
       return true;
     }
     return false;

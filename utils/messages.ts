@@ -72,7 +72,11 @@ export type RuntimeMessage =
       action: AnalyticsAction;
       metadata?: Record<string, unknown> | undefined;
     }
-  | { type: 'check_link_status'; url: string };
+  | { type: 'check_link_status'; url: string }
+  /** Screenshot of the sender's tab, as a PNG data URL, or `{ error }` when Chrome refuses. */
+  | { type: 'capture_tab' }
+  /** Injects the Sidekick glass effect into the sender's frame. */
+  | { type: 'load_sidekick_glass' };
 
 /**
  * Sends a typed message to the background service worker. Async so an

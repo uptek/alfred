@@ -28,6 +28,7 @@ Object.assign(g, {
 const settings = await import('~/utils/settings');
 const analytics = await import('~/utils/analytics');
 const { Toast } = await import('~/utils/toast');
+const effects = await import('../sidekick-effects');
 const { setupSidekick } = await import('../sidekick');
 
 let watcher: (value: typeof settings.defaultSettings) => void = () => {};
@@ -38,9 +39,20 @@ const watchSettings = spyOn(settings, 'watchSettings').mockImplementation((callb
 });
 const track = spyOn(analytics, 'sendTrackEvent').mockImplementation(() => {});
 const toast = spyOn(Toast, 'success').mockImplementation(() => {});
+// The effect covers the bar right away, then lands (or reports it didn't play) when `land` is called.
+let land = (_landed: boolean) => {};
+let modeWhenPlayed: string | null = 'unset';
+const playEffect = spyOn(effects, 'playHideEffect').mockImplementation((_bar, cover) => {
+  modeWhenPlayed = dom.document.documentElement.getAttribute('data-alfred-sidekick');
+  cover('dust');
+  return new Promise<boolean>((resolve) => (land = resolve));
+});
+const prepareEffect = spyOn(effects, 'prepareHideEffect').mockImplementation(() => {});
+const disposeEffects = spyOn(effects, 'disposeHideEffects').mockImplementation(() => {});
 
 afterAll(() => {
-  for (const spy of [updateSettings, watchSettings, track, toast]) spy.mockRestore();
+  for (const spy of [updateSettings, watchSettings, track, toast, playEffect, prepareEffect, disposeEffects])
+    spy.mockRestore();
   for (const [k, v] of saved) g[k] = v;
 });
 
@@ -55,13 +67,22 @@ describe('Sidekick', () => {
     expect(mode()).toBeNull();
     expect($('#alfred-sidekick-nav')).toBeNull();
 
-    // Pointing at the bar reveals its controls; leaving the page hides them.
+    // Pointing at the bar reveals its controls and gets the hide effect ready, once per visit; leaving the
+    // page hides them.
     const pointerOut = (relatedTarget: Element | null) =>
       dom.document.dispatchEvent(Object.assign(new dom.Event('pointerout'), { relatedTarget }));
     pointerOut($('[data-sidekick-field] button'));
+    pointerOut($('[data-sidekick-field]'));
     expect($('#alfred-sidekick-hide')!.hasAttribute('data-bar-hover')).toBe(true);
+    expect(prepareEffect).toHaveBeenCalledTimes(1);
+    expect(prepareEffect).toHaveBeenCalledWith($('[data-sidekick-field]'));
     pointerOut(null);
     expect($('#alfred-sidekick-hide')!.hasAttribute('data-bar-hover')).toBe(false);
+    pointerOut($('[data-sidekick-field]'));
+    expect(prepareEffect).toHaveBeenCalledTimes(2);
+    // Reaching the hide button gets it ready again, since the bar may have changed meanwhile.
+    $('#alfred-sidekick-hide')!.dispatchEvent(new dom.Event('pointerenter'));
+    expect(prepareEffect).toHaveBeenCalledTimes(3);
 
     // The bar's caret moves Sidekick into the nav, just above Settings.
     click('#alfred-sidekick-to-nav');
@@ -89,11 +110,25 @@ describe('Sidekick', () => {
     expect(mode()).toBeNull();
     expect($('#alfred-sidekick-nav')).toBeNull();
 
-    // Hidden leaves no Alfred UI on the page, so a toast says where to undo it.
+    // Hiding plays an effect over the bar and hides the real one once the effect covers it. Hidden leaves
+    // no Alfred UI on the page, so a toast says where to undo it once the effect lands.
     click('#alfred-sidekick-hide');
+    expect(playEffect).toHaveBeenCalledWith($('[data-sidekick-field]'), expect.any(Function));
+    expect(modeWhenPlayed).toBeNull();
     expect(mode()).toBe('hidden');
     expect(updateSettings).toHaveBeenLastCalledWith({ admin: { sidekick: 'hidden' } });
+    expect(track).toHaveBeenLastCalledWith('admin.sidekick.placement_switch', { placement: 'hidden', effect: 'dust' });
+    expect(toast).not.toHaveBeenCalled();
+    land(true);
+    await Promise.resolve();
+    expect(toast).toHaveBeenCalledTimes(1);
     expect(toast).toHaveBeenCalledWith(expect.stringContaining('Alfred settings'), expect.any(Number));
+
+    // A click that plays nothing, such as one while an effect is already playing, adds no second toast.
+    click('#alfred-sidekick-hide');
+    land(false);
+    await Promise.resolve();
+    expect(toast).toHaveBeenCalledTimes(1);
 
     // Switched in Options or another tab.
     watcher({ ...settings.defaultSettings, admin: { sidekick: 'default' } });
@@ -114,6 +149,7 @@ describe('Sidekick', () => {
     expect(mode()).toBeNull();
     expect($('#alfred-sidekick-nav')).toBeNull();
     expect($('.alfred-sidekick-control')).toBeNull();
+    expect(disposeEffects).toHaveBeenCalled();
   });
 
   it('reports the saved mode on each load only when Sidekick is moved or hidden', () => {

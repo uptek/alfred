@@ -27,11 +27,13 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "three": "0.160.0"
   },
   "devDependencies": {
     "@shopify/app-bridge-ui-types": "^0.3.3",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/three": "0.160.0",
     "@wxt-dev/auto-icons": "^1.1.2",
     "@wxt-dev/module-svelte": "^2.0.5",
     "chokidar-cli": "^3.0.0",

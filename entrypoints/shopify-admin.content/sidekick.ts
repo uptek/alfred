@@ -2,6 +2,7 @@ import type { ContentScriptContext } from '#imports';
 import { sendTrackEvent } from '~/utils/analytics';
 import { updateSettings, watchSettings } from '~/utils/settings';
 import { Toast } from '~/utils/toast';
+import { disposeHideEffects, playHideEffect, prepareHideEffect, type PlayedEffect } from './sidekick-effects';
 
 const MODE_ATTR = 'data-alfred-sidekick';
 const NAV_ID = 'alfred-sidekick-nav';
@@ -72,6 +73,10 @@ html[${MODE_ATTR}] [data-component-name="mobile-frame-actions-sidekick"] {
     opacity: 1;
     transition-delay: 0.15s;
   }
+}
+/* With no bar to anchor to, the controls go too, even the one still under the pointer. */
+html[${MODE_ATTR}] .alfred-sidekick-control {
+  display: none;
 }
 /* Matches the secondary actions on Shopify's own nav items, such as Online Store's. */
 .alfred-sidekick-restore {
@@ -174,10 +179,10 @@ function createNavItem(settings: HTMLLIElement, onRestore: () => void): void {
 export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): void {
   const root = document.documentElement;
 
-  const setMode = (next: SidekickMode) => {
+  const setMode = (next: SidekickMode, effect?: PlayedEffect) => {
     apply(next);
     void updateSettings({ admin: { sidekick: next } });
-    sendTrackEvent('admin.sidekick.placement_switch', { placement: next });
+    sendTrackEvent('admin.sidekick.placement_switch', effect ? { placement: next, effect } : { placement: next });
   };
 
   // Shopify re-renders the nav on some navigations, dropping foreign nodes, and
@@ -228,18 +233,31 @@ export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): vo
   );
   toNav.id = 'alfred-sidekick-to-nav';
 
+  // The bar leaves in a random effect, played over it before it is hidden.
   const hide = button('alfred-sidekick-control', 'Hide Sidekick', 'x', () => {
-    setMode('hidden');
-    Toast.success('Sidekick hidden. You can toggle it back from Alfred settings.', 6000);
+    const toast = () => Toast.success('Sidekick hidden. You can toggle it back from Alfred settings.', 6000);
+    const bar = document.querySelector<HTMLElement>(BAR);
+    if (!bar) {
+      setMode('hidden');
+      return toast();
+    }
+    void playHideEffect(bar, (effect) => setMode('hidden', effect)).then((landed) => landed && toast());
   });
   hide.id = 'alfred-sidekick-hide';
+  // The bar may have changed since the pointer arrived on it, so reaching the button takes a fresh screenshot.
+  hide.addEventListener('pointerenter', () => {
+    const bar = document.querySelector<HTMLElement>(BAR);
+    if (bar) prepareHideEffect(bar);
+  });
 
   // Bar hover is tracked here: a `:has(:hover)` rule on the root would re-match
   // the whole admin page on every pointer move. relatedTarget is the element
-  // the pointer moved into, or null when it left the page.
+  // the pointer moved into, or null when it left the page. Arriving on the bar
+  // gets the hide effect ready.
   const onPointerOut = (e: Event) => {
-    const over = !!((e as PointerEvent).relatedTarget as Element | null)?.closest(BAR);
-    for (const el of [toNav, hide]) el.toggleAttribute('data-bar-hover', over);
+    const bar = ((e as PointerEvent).relatedTarget as Element | null)?.closest<HTMLElement>(BAR);
+    if (bar && !hide.hasAttribute('data-bar-hover')) prepareHideEffect(bar);
+    for (const el of [toNav, hide]) el.toggleAttribute('data-bar-hover', !!bar);
   };
 
   document.head.append(style);
@@ -251,6 +269,7 @@ export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): vo
 
   ctx.onInvalidated(() => {
     unwatch();
+    disposeHideEffects();
     apply('default');
     document.removeEventListener('pointerout', onPointerOut, true);
     for (const el of [style, toNav, hide]) el.remove();
