@@ -1,11 +1,13 @@
 import { sendRuntimeMessage } from '~/utils/messages';
 import { getItem, setItem } from '~/utils/storage';
 import { dust } from './dust';
+import { MOVE_EFFECTS, type MoveEffect } from './move';
 import { paper } from './paper';
 import { pickEffect, type HideEffect } from './pick';
-import type { Effect, EffectContext, GlassHost, GlassModule } from './shared';
+import { barShape, type Effect, type EffectContext, type GlassHost, type GlassModule } from './shared';
 
 export type PlayedEffect = HideEffect | 'fade';
+export type { MoveEffect };
 
 const LAST_KEY = 'alfred:sidekick-last-effect';
 const EFFECTS: Record<Exclude<HideEffect, 'glass'>, Effect> = { dust, paper };
@@ -71,7 +73,7 @@ async function captureBar(bar: HTMLElement): Promise<Pick<EffectContext, 'pixels
     shot.close();
     return { pixels, rect, scale };
   } catch (error) {
-    console.warn('Alfred: could not capture the Sidekick bar, so it fades out instead.', error);
+    console.warn('Alfred: could not capture the Sidekick bar for its effect.', error);
     return null;
   }
 }
@@ -83,17 +85,39 @@ let playing = false;
 // Set once the content script is torn down, so an effect still starting never reaches the page.
 let disposed = false;
 
+/** Takes a fresh screenshot of the bar for the next effect, unless one under a second old is waiting. */
+export function prepareMoveEffect(bar: HTMLElement): void {
+  if (reducedMotion()) return;
+  if (!pending || performance.now() - pending.at > 1000) pending = { at: performance.now(), capture: captureBar(bar) };
+}
+
 /**
  * Gets the next hide ready while the pointer is on the bar or its hide button: a fresh screenshot, and glass
  * when glass is next.
  */
 export function prepareHideEffect(bar: HTMLElement): void {
   if (reducedMotion()) return;
-  if (!pending || performance.now() - pending.at > 1000) pending = { at: performance.now(), capture: captureBar(bar) };
+  prepareMoveEffect(bar);
   void nextEffect().then(async (effect) => {
     if (effect === 'glass') (await loadGlass())?.warm();
   });
 }
+
+/** A fixed, full-viewport layer for an effect to draw into. */
+function overlay(): HTMLElement {
+  const host = (layer = document.createElement('div'));
+  host.style.cssText = 'position:fixed;inset:0;z-index:2147483000;pointer-events:none;overflow:hidden';
+  document.body.append(host);
+  return host;
+}
+
+function removeOverlay(host: HTMLElement): void {
+  host.remove();
+  if (layer === host) layer = null;
+}
+
+const barRadius = (bar: HTMLElement, rect: DOMRect) =>
+  Math.min(rect.height / 2, parseFloat(getComputedStyle(bar).borderTopLeftRadius) || rect.height / 2);
 
 /**
  * Plays the next hide effect over the bar, or fades it out when motion is reduced or the tab can't be
@@ -136,11 +160,9 @@ async function play(bar: HTMLElement, cover: (effect: PlayedEffect) => void): Pr
     effect !== 'glass' ? [effect, EFFECTS[effect]] : glassPlay ? ['glass', glassPlay] : ['dust', dust];
   void setItem(LAST_KEY, name);
 
-  const host = (layer = document.createElement('div'));
-  host.style.cssText = 'position:fixed;inset:0;z-index:2147483000;pointer-events:none;overflow:hidden';
-  document.body.append(host);
+  const host = overlay();
   const { rect } = captured;
-  const radius = Math.min(rect.height / 2, parseFloat(getComputedStyle(bar).borderTopLeftRadius) || rect.height / 2);
+  const radius = barRadius(bar, rect);
   return new Promise((resolve) => {
     let covered = false;
     const fx: EffectContext = {
@@ -159,10 +181,59 @@ async function play(bar: HTMLElement, cover: (effect: PlayedEffect) => void): Pr
       .finally(() => {
         fx.cover();
         fx.land();
-        host.remove();
-        if (layer === host) layer = null;
+        removeOverlay(host);
       });
   });
+}
+
+/**
+ * Flies the bar into the nav as Comet or Spring, picked at random each time. `arrive` moves Sidekick into the
+ * nav and returns the row the bar lands as, which must stay invisible until `land`. Called with no effect, as
+ * when motion is reduced or the tab can't be captured, `arrive` should just move it, and no `land` follows.
+ * Does nothing while another effect is playing or once the content script is torn down.
+ */
+export async function playMoveEffect(
+  bar: HTMLElement,
+  arrive: (effect?: MoveEffect) => HTMLElement | null,
+  land: () => void
+): Promise<void> {
+  if (playing) return;
+  playing = true;
+  try {
+    const captured = reducedMotion() ? null : await (pending?.capture ?? captureBar(bar));
+    pending = null;
+    if (disposed) return;
+    if (!captured) return void arrive();
+    const effect: MoveEffect = Math.random() < 0.5 ? 'comet' : 'spring';
+    const row = arrive(effect);
+    // A nav that's off screen, as at mobile widths, has nowhere to land.
+    const to = row?.getBoundingClientRect();
+    if (!row || !to?.width || to.right <= 0) return land();
+
+    const host = overlay();
+    const { rect } = captured;
+    const radius = barRadius(bar, rect);
+    let landed = false;
+    const once = () => {
+      if (!landed && !disposed) land();
+      landed = true;
+    };
+    await MOVE_EFFECTS[effect]({
+      layer: host,
+      bar: barShape({ ...captured, radius }),
+      from: rect,
+      radius,
+      row,
+      land: once
+    })
+      .catch((error: unknown) => console.error('Sidekick move effect failed:', error))
+      .finally(() => {
+        once();
+        removeOverlay(host);
+      });
+  } finally {
+    playing = false;
+  }
 }
 
 /** Stops a running effect, keeps any still starting off the page, and frees the glass WebGL context. */

@@ -9,7 +9,7 @@ Object.assign(g, { document: dom.document, innerWidth: 1440, innerHeight: 900 })
 
 const messages = await import('~/utils/messages');
 const storage = await import('~/utils/storage');
-const { disposeHideEffects, playHideEffect } = await import('../sidekick-effects');
+const { disposeHideEffects, playHideEffect, playMoveEffect } = await import('../sidekick-effects');
 
 const capture = spyOn(messages, 'sendRuntimeMessage');
 const spies = [
@@ -43,6 +43,26 @@ describe('playHideEffect', () => {
     const played: string[] = [];
     expect(await playHideEffect(bar, (effect) => played.push(effect))).toBe(true);
     expect(played).toEqual(['fade']);
+  });
+
+  it('moves Sidekick without an effect when motion is reduced or the tab cannot be captured', async () => {
+    const arrivals: unknown[] = [];
+    let landings = 0;
+    const move = () =>
+      playMoveEffect(
+        bar,
+        (effect) => (arrivals.push(effect), null),
+        () => landings++
+      );
+    reducedMotion(true);
+    capture.mockClear();
+    await move();
+    expect(capture).not.toHaveBeenCalled();
+    reducedMotion(false);
+    capture.mockRejectedValue(new Error('Cannot access contents of the page'));
+    await move();
+    expect(arrivals).toEqual([undefined, undefined]);
+    expect(landings).toBe(0);
   });
 
   // Last: teardown is final for the module.

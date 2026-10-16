@@ -42,7 +42,10 @@ export function insideBar(x: number, y: number, W: number, H: number, R: number,
 }
 
 /** A canvas the size of `fx.pixels` holding the bar's rounded shape: its pixels, or one color when given. */
-export function barShape(fx: EffectContext, color?: string): HTMLCanvasElement {
+export function barShape(
+  fx: Pick<EffectContext, 'pixels' | 'scale' | 'rect' | 'radius'>,
+  color?: string
+): HTMLCanvasElement {
   const { pixels, scale, rect, radius } = fx;
   const c = document.createElement('canvas');
   c.width = pixels.width;

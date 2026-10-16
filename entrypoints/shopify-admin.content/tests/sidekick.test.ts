@@ -48,10 +48,30 @@ const playEffect = spyOn(effects, 'playHideEffect').mockImplementation((_bar, co
   return new Promise<boolean>((resolve) => (land = resolve));
 });
 const prepareEffect = spyOn(effects, 'prepareHideEffect').mockImplementation(() => {});
+// The move lands right away. It records whether the item it lands on was hidden while the bar flew.
+let hiddenOnArrival: boolean | null = null;
+const playMove = spyOn(effects, 'playMoveEffect').mockImplementation(async (_bar, arrive, land) => {
+  const row = arrive('spring');
+  hiddenOnArrival =
+    dom.document.documentElement.hasAttribute('data-alfred-sidekick-arriving') &&
+    row === $('#alfred-sidekick-nav [data-navitem="item-inner-wrapper"]');
+  land();
+});
+const prepareMove = spyOn(effects, 'prepareMoveEffect').mockImplementation(() => {});
 const disposeEffects = spyOn(effects, 'disposeHideEffects').mockImplementation(() => {});
 
 afterAll(() => {
-  for (const spy of [updateSettings, watchSettings, track, toast, playEffect, prepareEffect, disposeEffects])
+  for (const spy of [
+    updateSettings,
+    watchSettings,
+    track,
+    toast,
+    playEffect,
+    prepareEffect,
+    playMove,
+    prepareMove,
+    disposeEffects
+  ])
     spy.mockRestore();
   for (const [k, v] of saved) g[k] = v;
 });
@@ -83,12 +103,22 @@ describe('Sidekick', () => {
     // Reaching the hide button gets it ready again, since the bar may have changed meanwhile.
     $('#alfred-sidekick-hide')!.dispatchEvent(new dom.Event('pointerenter'));
     expect(prepareEffect).toHaveBeenCalledTimes(3);
+    // So does reaching the caret, for the move.
+    $('#alfred-sidekick-to-nav')!.dispatchEvent(new dom.Event('pointerenter'));
+    expect(prepareMove).toHaveBeenCalledWith($('[data-sidekick-field]'));
 
-    // The bar's caret moves Sidekick into the nav, just above Settings.
+    // The bar's caret flies Sidekick into the nav, just above Settings. The new item stays hidden until the
+    // bar lands on it.
     click('#alfred-sidekick-to-nav');
+    expect(playMove).toHaveBeenCalledWith($('[data-sidekick-field]'), expect.any(Function), expect.any(Function));
+    expect(hiddenOnArrival).toBe(true);
+    expect(dom.document.documentElement.hasAttribute('data-alfred-sidekick-arriving')).toBe(false);
     expect(mode()).toBe('sidebar');
     expect(updateSettings).toHaveBeenLastCalledWith({ admin: { sidekick: 'sidebar' } });
-    expect(track).toHaveBeenLastCalledWith('admin.sidekick.placement_switch', { placement: 'sidebar' });
+    expect(track).toHaveBeenLastCalledWith('admin.sidekick.placement_switch', {
+      placement: 'sidebar',
+      effect: 'spring'
+    });
     const item = $('#alfred-sidekick-nav [data-navitem="item"]')!;
     expect(item.textContent!.trim()).toBe('Sidekick');
     expect(item.hasAttribute('href')).toBe(false);

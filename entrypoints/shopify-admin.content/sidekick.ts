@@ -2,13 +2,25 @@ import type { ContentScriptContext } from '#imports';
 import { sendTrackEvent } from '~/utils/analytics';
 import { updateSettings, watchSettings } from '~/utils/settings';
 import { Toast } from '~/utils/toast';
-import { disposeHideEffects, playHideEffect, prepareHideEffect, type PlayedEffect } from './sidekick-effects';
+import {
+  disposeHideEffects,
+  playHideEffect,
+  playMoveEffect,
+  prepareHideEffect,
+  prepareMoveEffect,
+  type MoveEffect,
+  type PlayedEffect
+} from './sidekick-effects';
 
 const MODE_ATTR = 'data-alfred-sidekick';
+// Set while the bar flies into the nav, which keeps the new item hidden until the bar lands on it.
+const ARRIVING_ATTR = 'data-alfred-sidekick-arriving';
 const NAV_ID = 'alfred-sidekick-nav';
 const NAV_ITEM = '[data-navitem="item"]';
 // The Settings item at the bottom of the admin nav, which the Sidekick item copies.
 const SETTINGS_ITEM = `[data-sticky-bottom-nav] li:not(#${NAV_ID}) ${NAV_ITEM}`;
+// The Sidekick item's row: the wrapper that draws a nav item's background, or the item where there's none.
+const NAV_ROW = `#${NAV_ID} [data-navitem="item-inner-wrapper"], #${NAV_ID} ${NAV_ITEM}`;
 
 // Shopify renders the floating bar in the center outlet of the frame's footer
 // ribbon (a zero-height fixed overlay) and a floating button at mobile widths.
@@ -100,6 +112,9 @@ html[${MODE_ATTR}] .alfred-sidekick-control {
   background: var(--p-color-bg-fill-transparent-hover);
   color: var(--p-color-nav-icon-hover);
 }
+html[${ARRIVING_ATTR}] #${NAV_ID} {
+  visibility: hidden;
+}
 /* The condensed nav is icons only, with no room for a second button. */
 [data-navigation-condensed="true"] .alfred-sidekick-restore {
   display: none;
@@ -179,7 +194,7 @@ function createNavItem(settings: HTMLLIElement, onRestore: () => void): void {
 export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): void {
   const root = document.documentElement;
 
-  const setMode = (next: SidekickMode, effect?: PlayedEffect) => {
+  const setMode = (next: SidekickMode, effect?: PlayedEffect | MoveEffect) => {
     apply(next);
     void updateSettings({ admin: { sidekick: next } });
     sendTrackEvent('admin.sidekick.placement_switch', effect ? { placement: next, effect } : { placement: next });
@@ -228,10 +243,26 @@ export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): vo
   const style = document.createElement('style');
   style.textContent = CSS;
 
-  const toNav = button('alfred-sidekick-control', 'Move Sidekick to the sidebar', 'chevron-left', () =>
-    setMode('sidebar')
-  );
+  // The bar flies into the nav and lands on its new item.
+  const toNav = button('alfred-sidekick-control', 'Move Sidekick to the sidebar', 'chevron-left', () => {
+    const bar = document.querySelector<HTMLElement>(BAR);
+    if (!bar) return setMode('sidebar');
+    void playMoveEffect(
+      bar,
+      (effect) => {
+        root.toggleAttribute(ARRIVING_ATTR, !!effect);
+        setMode('sidebar', effect);
+        return document.querySelector<HTMLElement>(NAV_ROW);
+      },
+      () => root.removeAttribute(ARRIVING_ATTR)
+    );
+  });
   toNav.id = 'alfred-sidekick-to-nav';
+  // Like the hide button, reaching the caret takes a fresh screenshot.
+  toNav.addEventListener('pointerenter', () => {
+    const bar = document.querySelector<HTMLElement>(BAR);
+    if (bar) prepareMoveEffect(bar);
+  });
 
   // The bar leaves in a random effect, played over it before it is hidden.
   const hide = button('alfred-sidekick-control', 'Hide Sidekick', 'x', () => {
@@ -271,6 +302,7 @@ export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): vo
     unwatch();
     disposeHideEffects();
     apply('default');
+    root.removeAttribute(ARRIVING_ATTR);
     document.removeEventListener('pointerout', onPointerOut, true);
     for (const el of [style, toNav, hide]) el.remove();
   });
