@@ -6,6 +6,8 @@
 ### Hide or Move Sidekick
 Shopify's floating Sidekick bar can now get out of your way. Hover the bar to reveal two buttons at its ends: the arrow moves Sidekick into the admin sidebar, just above Settings, and the × hides it completely.
 
+Watch closely when you hide it: there's a small easter egg, and it's not the same every time.
+
 In the sidebar, click Sidekick to open it as a panel on the right, or use the button beside it to put the floating bar back.
 
 Your choice applies to every admin tab, and you can change it any time under Shopify Admin in Alfred's settings.
