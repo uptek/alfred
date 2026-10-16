@@ -5,7 +5,7 @@
 //
 //   bun scripts/import-supabase-events.ts [since] [rows]
 //
-// Each row writes itself and its two index entries, and D1's daily row write
+// Each row writes itself and its three index entries, and D1's daily row write
 // limit also has to cover the Worker's inserts (AGENTS.md, Analytics). So a run
 // copies at most `rows` rows, oldest first, and prints the command that resumes
 // it. Run it once per UTC day, and not on a day the event-name backfill runs.
@@ -19,7 +19,7 @@ import { upgradeLegacyEvent } from '../utils/analytics-legacy';
 
 const SUPABASE_PROJECT = 'obrjirdnqoiailhbsnmu';
 const PAGE_SIZE = 5000;
-// About 60,000 rows written, leaving the rest of the 100,000 for live traffic
+// About 80,000 rows written, leaving the rest of the 100,000 for live traffic
 const DEFAULT_ROWS = 20_000;
 const ROWS_PER_INSERT = 100;
 
