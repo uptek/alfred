@@ -7,15 +7,18 @@ const INJECTED_ATTR = 'data-alfred-theme-list';
 const THEMES_PATH = /\/themes\/?$/;
 
 /**
- * Layout for the injected copy row. On wide screens the actions row wraps, so the full-width
- * copy row drops below it; `contain: inline-size` keeps it out of the actions row's natural
- * width so the existing buttons stay flush right, and a hidden copy of the "more actions"
- * button lines the copy buttons up under "Edit theme". Shopify moves the actions under the
- * theme and aligns them left at 831px and below for library themes, and at 30.6225em and below
- * for the live theme, so the copy row follows and drops the spacer. The live theme card is
- * dark, so its copy buttons take the card's light text and hover colors.
+ * Layout for the injected copy row. The actions row is forced to wrap, since rollout cards set
+ * it to nowrap, so the full-width copy row drops below it; `contain: inline-size` keeps it out
+ * of the actions row's natural width so the existing buttons stay flush right, and a hidden copy
+ * of the "more actions" button lines the copy buttons up under "Edit theme". Shopify moves the
+ * actions under the theme and aligns them left at 831px and below for library themes, and at
+ * 30.6225em and below for the live theme, so the copy row follows and drops the spacer. The live
+ * theme card is dark, so its copy buttons take the card's light text and hover colors.
  */
 const ROW_STYLES = `
+  .Polaris-InlineStack:has(> [${INJECTED_ATTR}]) {
+    flex-wrap: wrap;
+  }
   [${INJECTED_ATTR}] {
     display: flex;
     flex-basis: 100%;
