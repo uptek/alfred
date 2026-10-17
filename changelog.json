@@ -1,5 +1,19 @@
 [
   {
+    "version": "2026.10.17",
+    "date": "2026-10-17",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Copy Buttons on Theme Rollouts"
+      },
+      {
+        "type": "paragraph",
+        "content": "The ID and Preview URL copy buttons on a scheduled rollout no longer overlap Edit theme. They now sit on their own row below it, like on your other themes."
+      }
+    ]
+  },
+  {
     "version": "2026.10.16",
     "date": "2026-10-16",
     "changes": [
