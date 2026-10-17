@@ -1,0 +1,4 @@
+# Gitignored files copied into every new Orca worktree (literal paths only).
+# Secrets / local config
+.env
+.claude/settings.local.json
