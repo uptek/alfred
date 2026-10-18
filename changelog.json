@@ -1,5 +1,27 @@
 [
   {
+    "version": "2026.10.18",
+    "date": "2026-10-18",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Activity Timeline Is Back"
+      },
+      {
+        "type": "paragraph",
+        "content": "The timeline is back at the bottom of product, collection, page, blog, and blog post screens in the Shopify admin. It shows who changed what and when, marks changes made by apps, and folds bulk publishes into a single row."
+      },
+      {
+        "type": "paragraph",
+        "content": "If you turned it off before, it stays off. Switch it on or off anytime under Shopify Admin in Alfred's settings."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-activity-timeline.mp4"
+      }
+    ]
+  },
+  {
     "version": "2026.10.17",
     "date": "2026-10-17",
     "changes": [
