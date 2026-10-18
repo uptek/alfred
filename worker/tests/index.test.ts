@@ -48,8 +48,7 @@ describe('track worker', () => {
       JSON.stringify({ ...event, action: 'uninstall', metadata: {} }),
       JSON.stringify({ ...event, action: 'system.extension.uninstall', metadata: {} }),
       // Legacy names whose feature is gone, or that no rule recognizes
-      JSON.stringify({ ...event, action: 'timeline_view' }),
-      JSON.stringify({ ...event, action: 'credit_click', metadata: { source: 'timeline' } }),
+      JSON.stringify({ ...event, action: 'toggle_admin_sidebar' }),
       JSON.stringify({ ...event, action: 'credit_click', metadata: {} }),
       JSON.stringify({ ...event, time_saved: '5' }),
       JSON.stringify({ ...event, time_saved: 1.5 }),
@@ -80,6 +79,16 @@ describe('track worker', () => {
     );
     expect(inserts.map((values) => values.slice(1))).toEqual([
       ['u1', 'storefront.shortcuts.preview_url_copy', 40, '2026.10.03', '{"trigger":"popup"}', 'copy_theme_preview_url']
+    ]);
+  });
+
+  it('stores timeline events from builds that predate the rename', async () => {
+    const { inserts, send } = setup();
+    await send(JSON.stringify({ ...event, action: 'timeline_view', time_saved: 30, metadata: { event_count: 3 } }));
+    await send(JSON.stringify({ ...event, action: 'credit_click', metadata: { source: 'timeline' } }));
+    expect(inserts.map((values) => [values[2], values.at(-1)])).toEqual([
+      ['admin.timeline.view', 'timeline_view'],
+      ['admin.timeline.credit_click', 'credit_click']
     ]);
   });
 

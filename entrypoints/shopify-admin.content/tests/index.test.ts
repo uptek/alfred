@@ -19,6 +19,7 @@ const storage = await import('~/utils/storage');
 const settings = await import('~/utils/settings');
 const { Toast } = await import('~/utils/toast');
 const sidekick = await import('../sidekick');
+const timeline = await import('../timeline.util');
 
 const store = new Map<string, unknown>();
 const getItem = spyOn(storage, 'getItem').mockImplementation(async (key: string) => (store.get(key) ?? null) as never);
@@ -29,13 +30,15 @@ const getSettings = spyOn(settings, 'getSettings').mockResolvedValue(settings.de
 const show = spyOn(Toast, 'show').mockImplementation(() => {});
 // Covered by sidekick.test.ts; it needs a real DOM.
 const setupSidekick = spyOn(sidekick, 'setupSidekick').mockImplementation(() => {});
+// Injects into the admin's DOM; its logic is covered by timeline.test.ts.
+const setupTimeline = spyOn(timeline, 'setupTimeline').mockImplementation(() => {});
 const { default: script } = await import('../index');
 
 const LEGACY_KEY = 'admin-sidebar-state';
 const ctx = {} as never;
 
 afterAll(() => {
-  for (const spy of [getItem, removeItem, getSettings, show, setupSidekick]) spy.mockRestore();
+  for (const spy of [getItem, removeItem, getSettings, show, setupSidekick, setupTimeline]) spy.mockRestore();
   for (const [k, v] of saved) g[k] = v;
 });
 
@@ -44,6 +47,15 @@ beforeEach(() => {
   listeners.length = 0;
   location.pathname = '/store/demo/products';
   show.mockClear();
+});
+
+describe('timeline', () => {
+  it('sets up the timeline with the stored settings', async () => {
+    const stored = { ...settings.defaultSettings, admin: { ...settings.defaultSettings.admin, timeline: false } };
+    getSettings.mockResolvedValueOnce(stored);
+    await script.main(ctx);
+    expect(setupTimeline).toHaveBeenCalledWith(stored);
+  });
 });
 
 describe('sidebar toggle farewell', () => {

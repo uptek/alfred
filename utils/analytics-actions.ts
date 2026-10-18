@@ -96,6 +96,8 @@ export const ANALYTICS_ACTIONS = [
   'storefront.cartograph.credit_click',
 
   // Admin
+  'admin.timeline.view',
+  'admin.timeline.credit_click',
   'admin.theme_list.preview_url_copy',
   'admin.theme_list.id_copy',
   'admin.theme_editor.panel_resize',
@@ -232,6 +234,8 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   'storefront.cartograph.variant_switch': 120,
   'storefront.cartograph.json_inspect': 45,
   'storefront.cartograph.credit_click': 0,
+  'admin.timeline.view': 30,
+  'admin.timeline.credit_click': 0,
   'admin.theme_list.preview_url_copy': 10,
   'admin.theme_list.id_copy': 10,
   'admin.theme_editor.panel_resize': 3,
