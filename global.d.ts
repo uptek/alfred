@@ -77,6 +77,7 @@ declare interface AlfredSettings {
   admin?: {
     warnBeforeClosingCodeEditor?: boolean;
     themeListUtils?: boolean;
+    themeListBulkDelete?: boolean;
     timeline?: boolean;
     sidekick?: SidekickMode;
   };

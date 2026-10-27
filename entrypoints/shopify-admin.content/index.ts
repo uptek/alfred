@@ -3,6 +3,7 @@ import { getItem, removeItem } from '~/utils/storage';
 import { Toast } from '~/utils/toast';
 import { setupSidekick } from './sidekick';
 import { setupTimeline } from './timeline.util';
+import { setupThemeDelete } from './theme-delete';
 
 // Collapsed/expanded state stored by Alfred's former admin sidebar toggle.
 // Its presence marks merchants who used the toggle.
@@ -16,6 +17,7 @@ export default defineContentScript({
 
     setupSidekick(ctx, settings.admin.sidekick ?? 'default');
     setupTimeline(settings);
+    setupThemeDelete();
 
     /**
      * Warn before closing the theme code editor page.

@@ -100,6 +100,7 @@ export const ANALYTICS_ACTIONS = [
   'admin.timeline.credit_click',
   'admin.theme_list.preview_url_copy',
   'admin.theme_list.id_copy',
+  'admin.theme_list.theme_remove',
   'admin.theme_editor.panel_resize',
   'admin.theme_editor.inspector_disable',
   'admin.sidekick.placement_switch',
@@ -238,6 +239,8 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   'admin.timeline.credit_click': 0,
   'admin.theme_list.preview_url_copy': 10,
   'admin.theme_list.id_copy': 10,
+  // Covers opening each theme's menu, clicking Delete and confirming by hand, per theme removed.
+  'admin.theme_list.theme_remove': (metadata) => Number(metadata?.count ?? 1) * 15,
   'admin.theme_editor.panel_resize': 3,
   'admin.theme_editor.inspector_disable': 3,
   // Most of the time saved is in admin visits without the floating bar in the

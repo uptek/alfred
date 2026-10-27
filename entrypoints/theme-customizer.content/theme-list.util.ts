@@ -2,9 +2,10 @@ import type { ContentScriptContext } from '#imports';
 import { getSettings, isEnabled } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 import type { AnalyticsAction } from '~/utils/analytics-actions';
+import { collectThemeElements, html, THEMES_PATH, type ThemeElements } from './theme-list-scan.util';
+import { BULK_DELETE_STYLES, clearSelection, injectBulkDelete, removeBulkDelete } from './theme-list-bulk-delete.util';
 
 const INJECTED_ATTR = 'data-alfred-theme-list';
-const THEMES_PATH = /\/themes\/?$/;
 
 /**
  * Layout for the injected copy row. The actions row is forced to wrap, since rollout cards set
@@ -15,7 +16,7 @@ const THEMES_PATH = /\/themes\/?$/;
  * 30.6225em and below for the live theme, so the copy row follows and drops the spacer. The live
  * theme card is dark, so its copy buttons take the card's light text and hover colors.
  */
-const ROW_STYLES = `
+const COPY_ROW_STYLES = `
   .Polaris-InlineStack:has(> [${INJECTED_ATTR}]) {
     flex-wrap: wrap;
   }
@@ -53,41 +54,6 @@ const ROW_STYLES = `
   }
 `;
 
-interface ThemeData {
-  themeId: string;
-  previewUrl: string;
-}
-
-/**
- * Extracts theme ID and preview URL from a theme's "Edit theme" link.
- * The link points at `/themes/:id/editor`, or `/themes/:id/canvas` for Canvas themes.
- * @param editLink - The theme's "Edit theme" `<a>` element.
- * @returns The parsed theme data, or `null` if the link has no theme ID.
- */
-const extractThemeData = (editLink: HTMLAnchorElement): ThemeData | null => {
-  const href = editLink.getAttribute('href') ?? '';
-  const themeId = /\/themes\/(\d+)/.exec(href)?.[1];
-  if (!themeId) {
-    return null;
-  }
-
-  const storeName = /\/store\/([^/]+)\//.exec(href)?.[1] ?? '';
-  const previewUrl = storeName ? `https://${storeName}.myshopify.com/?preview_theme_id=${themeId}` : '';
-
-  return { themeId, previewUrl };
-};
-
-/**
- * Parses an HTML string and returns the first element.
- * @param template - The HTML string to parse.
- * @returns The first child element of the parsed HTML.
- */
-const html = (template: string): HTMLElement => {
-  const container = document.createElement('div');
-  container.innerHTML = template.trim();
-  return container.firstElementChild as HTMLElement;
-};
-
 /**
  * Copies the button's `data-copy-value` to clipboard and briefly swaps the icon to a checkmark.
  * @param e - The click event from an `s-internal-button` element.
@@ -107,65 +73,83 @@ const handleCopyClick = (e: Event) => {
 
 /**
  * Adds copy-ID / copy-preview-URL buttons on their own row below the action buttons of
- * the live theme and each theme in the library, laid out by `ROW_STYLES`.
+ * the live theme and each theme in the library, laid out by `COPY_ROW_STYLES`.
  * Both cards share the "Edit theme" link and its `.Polaris-InlineStack` actions row.
  * The buttons use the page's own `s-internal-button` Polaris element.
- * Themes whose buttons React has re-rendered away get them back on the next scan.
- * @returns `true` if at least one theme was injected, `false` if none were found or all were already processed.
+ * @param themes - Themes found on the current render pass.
+ * @returns `true` if at least one theme got a new copy row.
  */
-export const injectIntoThemeList = () => {
-  const editLinks = document.querySelectorAll<HTMLAnchorElement>('a[class*="ThemeActionButton"][href*="/themes/"]');
-
+const injectCopyRows = (themes: ThemeElements[]): boolean => {
   let injected = false;
 
-  editLinks.forEach((editLink) => {
-    const actions = editLink.closest('.Polaris-InlineStack');
-    if (!actions || actions.querySelector(`[${INJECTED_ATTR}]`)) {
-      return;
-    }
-
-    const data = extractThemeData(editLink);
-    if (!data) {
-      return;
+  for (const theme of themes) {
+    if (theme.actions.querySelector(`[${INJECTED_ATTR}]`)) {
+      continue;
     }
 
     const row = html(`
       <div ${INJECTED_ATTR}>
-        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${data.themeId}" data-track-action="${'admin.theme_list.id_copy' satisfies AnalyticsAction}">ID</s-internal-button>
-        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${data.previewUrl}" data-track-action="${'admin.theme_list.preview_url_copy' satisfies AnalyticsAction}">Preview URL</s-internal-button>
+        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${theme.themeId}" data-track-action="${'admin.theme_list.id_copy' satisfies AnalyticsAction}">ID</s-internal-button>
+        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${theme.previewUrl}" data-track-action="${'admin.theme_list.preview_url_copy' satisfies AnalyticsAction}">Preview URL</s-internal-button>
       </div>
     `);
     row.querySelectorAll('s-internal-button').forEach((btn) => btn.addEventListener('click', handleCopyClick));
 
-    // The inert copy of the "more actions" button is the spacer `ROW_STYLES` hides.
-    const more = actions.querySelector(':scope > button[command]');
-    if (more) {
-      const spacer = more.cloneNode(true) as HTMLElement;
+    // The inert copy of the "more actions" button is the spacer `COPY_ROW_STYLES` hides.
+    if (theme.more) {
+      const spacer = theme.more.cloneNode(true) as HTMLElement;
       spacer.removeAttribute('commandfor');
       spacer.setAttribute('inert', '');
       row.append(spacer);
     }
 
-    actions.append(row);
+    theme.actions.append(row);
     injected = true;
-  });
+  }
 
   return injected;
 };
 
+/** The theme list features the user has turned on in Options. */
+interface ThemeListFeatures {
+  copyRows: boolean;
+  bulkDelete: boolean;
+}
+
 /**
- * Adds the theme list buttons while the frame is on /themes, on first load and after
- * client-side navigation. A MutationObserver covers the list rendering after the URL changes.
+ * Adds the copy buttons for the live theme and each theme in the library, and the bulk-delete
+ * controls (see {@link injectBulkDelete}), each only when turned on. Themes whose injections React
+ * has re-rendered away get them back on the next scan.
+ * @param features - Which features to add.
+ * @returns `true` if at least one theme was newly injected into.
+ */
+export const injectIntoThemeList = ({ copyRows, bulkDelete }: ThemeListFeatures) => {
+  const themes = collectThemeElements();
+
+  const copyRowsInjected = copyRows && injectCopyRows(themes);
+  const checkboxesInjected = bulkDelete && injectBulkDelete(themes);
+
+  return copyRowsInjected || checkboxesInjected;
+};
+
+/**
+ * Adds the theme list features turned on in Options while the frame is on /themes, on first load
+ * and after client-side navigation. A MutationObserver covers the list rendering after the URL
+ * changes.
  * @param ctx - The content script context, used to watch URL changes and clean up.
  */
 export const setupThemeList = async (ctx: ContentScriptContext) => {
   const settings = await getSettings();
-  if (!isEnabled(settings.admin.themeListUtils)) {
+  const features: ThemeListFeatures = {
+    copyRows: isEnabled(settings.admin.themeListUtils),
+    bulkDelete: isEnabled(settings.admin.themeListBulkDelete)
+  };
+  if (!features.copyRows && !features.bulkDelete) {
     return;
   }
 
   const style = document.createElement('style');
-  style.textContent = ROW_STYLES;
+  style.textContent = COPY_ROW_STYLES + BULK_DELETE_STYLES;
   document.head.append(style);
 
   let observer: MutationObserver | undefined;
@@ -174,20 +158,23 @@ export const setupThemeList = async (ctx: ContentScriptContext) => {
     if (!THEMES_PATH.test(pathname)) {
       observer?.disconnect();
       observer = undefined;
+      // A selection made on this page shouldn't still be there on returning to it. A running
+      // delete clears what's left of it once it ends.
+      clearSelection();
       return;
     }
     if (observer) {
       return;
     }
 
-    injectIntoThemeList();
+    injectIntoThemeList(features);
 
     let queued = false;
     observer = new MutationObserver(() => {
       if (queued) return;
       queued = true;
       requestAnimationFrame(() => {
-        injectIntoThemeList();
+        injectIntoThemeList(features);
         queued = false;
       });
     });
@@ -199,5 +186,6 @@ export const setupThemeList = async (ctx: ContentScriptContext) => {
   ctx.onInvalidated(() => {
     observer?.disconnect();
     style.remove();
+    removeBulkDelete();
   });
 };

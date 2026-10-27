@@ -20,6 +20,7 @@ const settings = await import('~/utils/settings');
 const { Toast } = await import('~/utils/toast');
 const sidekick = await import('../sidekick');
 const timeline = await import('../timeline.util');
+const themeDelete = await import('../theme-delete');
 
 const store = new Map<string, unknown>();
 const getItem = spyOn(storage, 'getItem').mockImplementation(async (key: string) => (store.get(key) ?? null) as never);
@@ -32,13 +33,16 @@ const show = spyOn(Toast, 'show').mockImplementation(() => {});
 const setupSidekick = spyOn(sidekick, 'setupSidekick').mockImplementation(() => {});
 // Injects into the admin's DOM; its logic is covered by timeline.test.ts.
 const setupTimeline = spyOn(timeline, 'setupTimeline').mockImplementation(() => {});
+// Listens on browser.runtime; its request is covered by theme-delete.test.ts.
+const setupThemeDelete = spyOn(themeDelete, 'setupThemeDelete').mockImplementation(() => {});
 const { default: script } = await import('../index');
 
 const LEGACY_KEY = 'admin-sidebar-state';
 const ctx = {} as never;
 
 afterAll(() => {
-  for (const spy of [getItem, removeItem, getSettings, show, setupSidekick, setupTimeline]) spy.mockRestore();
+  for (const spy of [getItem, removeItem, getSettings, show, setupSidekick, setupTimeline, setupThemeDelete])
+    spy.mockRestore();
   for (const [k, v] of saved) g[k] = v;
 });
 

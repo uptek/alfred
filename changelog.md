@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026.10.28
+@ 2026-10-28
+
+### Delete Themes in Bulk
+You can now delete themes in bulk. Each theme in your library on the Themes page has a checkbox, so you can pick a few or select them all at once. Your live theme always stays untouched.
+
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-theme-bulk-delete.mp4"></video>
+
 ## 2026.10.18
 @ 2026-10-18
 
@@ -9,7 +18,7 @@ The timeline is back at the bottom of product, collection, page, blog, and blog 
 If you turned it off before, it stays off. Switch it on or off anytime under Shopify Admin in Alfred's settings.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-activity-timeline.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-activity-timeline.mp4"></video>
 
 ## 2026.10.17
 @ 2026-10-17

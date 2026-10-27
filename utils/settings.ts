@@ -47,6 +47,7 @@ export const defaultSettings: ResolvedSettings = {
   admin: {
     warnBeforeClosingCodeEditor: true,
     themeListUtils: true,
+    themeListBulkDelete: true,
     timeline: true,
     sidekick: 'default'
   }

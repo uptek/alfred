@@ -37,7 +37,12 @@ export interface TabActionPayloads {
   scroll_to_heading: { index: number };
   highlight_images: { enabled: boolean };
   scroll_to_image: { index: number };
+  /** Sent to the admin's top frame only, which has the session the delete needs. */
+  delete_theme: { themeId: string };
 }
+
+/** How a `delete_theme` request ended, as answered by the admin's top frame. */
+export type ThemeDeleteResponse = { ok: true } | { ok: false; error: string };
 
 export type TabAction = PayloadlessTabAction | keyof TabActionPayloads;
 
@@ -76,7 +81,12 @@ export type RuntimeMessage =
   /** Screenshot of the sender's tab, as a PNG data URL, or `{ error }` when Chrome refuses. */
   | { type: 'capture_tab' }
   /** Injects the Sidekick glass effect into the sender's frame. */
-  | { type: 'load_sidekick_glass' };
+  | { type: 'load_sidekick_glass' }
+  /**
+   * Deletes a theme for the theme list, which runs in Shopify's Online Store iframe. Relayed to
+   * the admin's top frame of the sender's tab. Answered with a `ThemeDeleteResponse`.
+   */
+  | { type: 'delete_theme'; themeId: string };
 
 /**
  * Sends a typed message to the background service worker. Async so an
