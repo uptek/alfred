@@ -10,7 +10,6 @@ export type ResolvedSettings = {
 export const defaultSettings: ResolvedSettings = {
   general: {
     analytics: true,
-    restoreRightClick: true,
     openChangelogOnUpdate: true
   },
   themeCustomizer: {

@@ -1,4 +1,3 @@
-import { initRestoreRightClick } from '../utils/restore-right-click';
 import { Toast } from '@/utils/toast';
 import { isShopifyStorefront } from '@/utils/shopifyDetection';
 import { createBridgeServer } from '@/utils/mainWorldBridge';
@@ -548,9 +547,6 @@ export default defineUnlistedScript(() => {
     if (data?.type === 'alfred:settings' && data.settings) {
       settings = data.settings;
       win.Alfred.settings = settings;
-
-      // Initialize features that depend on settings
-      if (settings.general?.restoreRightClick) initRestoreRightClick();
     }
   });
 });

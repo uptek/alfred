@@ -38,7 +38,6 @@ declare type SidekickMode = 'default' | 'sidebar' | 'hidden';
 declare interface AlfredSettings {
   general?: {
     analytics?: boolean;
-    restoreRightClick?: boolean;
     openChangelogOnUpdate?: boolean;
   };
   themeCustomizer?: {
