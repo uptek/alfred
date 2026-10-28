@@ -42,7 +42,6 @@
 
   // Hotlink URLs reactively reflect the selected preset handle and the auto-submit checkbox.
   let hotlinkUrl = $derived(hotlinkHandle ? buildHotlinkUrl(hotlinkHandle, hotlinkAutoSubmit) : '');
-  let hotlinkBareUrl = $derived(hotlinkHandle ? buildHotlinkUrl(hotlinkHandle, hotlinkAutoSubmit, { bare: true }) : '');
 
   // Load saved presets from extension storage on mount.
   $effect(() => {
@@ -435,12 +434,7 @@
           </span>
         </span>
       </label>
-      {@render urlField(hotlinkBareUrl, 'URL')}
-      <hr class="divider" />
-      <p class="altair-text" data-altair-role="body-minor" data-altair-tone="secondary">
-        <strong>Mantle</strong>: Use as a Mantle custom action by pasting the following URL into the custom action's URL field.
-      </p>
-      {@render urlField(hotlinkUrl, 'Mantle URL')}
+      {@render urlField(hotlinkUrl, 'URL')}
     </div>
     <div class="altair-modal__footer">
       {@render button('Close', () => hotlinkDialog?.close(), { size: 'default' })}
@@ -622,11 +616,5 @@
 
   .copy-icons > * {
     grid-area: 1 / 1;
-  }
-
-  .divider {
-    margin: 0;
-    border: 0;
-    border-top: var(--ui-border-width-025) solid var(--ui-border);
   }
 </style>
