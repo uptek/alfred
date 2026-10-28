@@ -105,6 +105,26 @@ async function inject(ctx: ContentScriptContext) {
   }
 
   ui.mount();
+  keepPermissionsCardRendered();
+}
+
+/**
+ * Chrome sometimes lays out the permissions card on page load without its
+ * header and content (Alfred or not), leaving an empty box while the
+ * checkboxes are still in the DOM. Rebuilding the card's layout box brings
+ * them back. Observes the card, not the header: an element with no layout box
+ * never reports a size.
+ */
+function keepPermissionsCardRendered() {
+  const card = document.querySelector<HTMLElement>('[data-controller="permissions-tree"]');
+  const header = card?.firstElementChild;
+  if (!card || !header) return;
+  new ResizeObserver(() => {
+    if (header.getClientRects().length || !card.getClientRects().length) return;
+    card.style.display = 'none';
+    void card.offsetHeight;
+    card.style.display = '';
+  }).observe(card);
 }
 
 /** Builds a button with the dashboard's Altair markup so it themes with the page. */
