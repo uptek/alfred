@@ -1,5 +1,39 @@
 [
   {
+    "version": "2026.10.29",
+    "date": "2026-10-29",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Permissions Always Show on Request Access"
+      },
+      {
+        "type": "paragraph",
+        "content": "On the Dev Dashboard's Request access page, the Permissions list sometimes loaded as an empty box. It's a Chrome display glitch on Shopify's page that happens with or without Alfred. With presets on, Alfred now spots the empty card and redraws it, so your permissions are always there to pick from."
+      },
+      {
+        "type": "heading",
+        "content": "Restore Right-Click Retired"
+      },
+      {
+        "type": "paragraph",
+        "content": "Restore right-click has been removed. It re-enabled right-click and text selection on stores that block them, but it reached well beyond Shopify stores and broke more than it fixed."
+      },
+      {
+        "type": "heading",
+        "content": "Farewell, Mantle"
+      },
+      {
+        "type": "paragraph",
+        "content": "Mantle has shut down, so the Mantle URL is gone from the hotlink window. Preset hotlinks started life as Mantle custom actions, letting you request collaborator access straight from your Mantle dashboard. Thank you to the Mantle team for building something so many of us relied on every day."
+      },
+      {
+        "type": "paragraph",
+        "content": "Hotlinks live on: the hotlink window now shows a single link you can bookmark or share anywhere."
+      }
+    ]
+  },
+  {
     "version": "2026.10.28",
     "date": "2026-10-28",
     "changes": [

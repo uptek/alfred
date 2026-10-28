@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026.10.29
+@ 2026-10-29
+
+### Permissions Always Show on Request Access
+On the Dev Dashboard's Request access page, the Permissions list sometimes loaded as an empty box. It's a Chrome display glitch on Shopify's page that happens with or without Alfred. With presets on, Alfred now spots the empty card and redraws it, so your permissions are always there to pick from.
+
+
+### Restore Right-Click Retired
+Restore right-click has been removed. It re-enabled right-click and text selection on stores that block them, but it reached well beyond Shopify stores and broke more than it fixed.
+
+
+### Farewell, Mantle
+Mantle has shut down, so the Mantle URL is gone from the hotlink window. Preset hotlinks started life as Mantle custom actions, letting you request collaborator access straight from your Mantle dashboard. Thank you to the Mantle team for building something so many of us relied on every day.
+
+Hotlinks live on: the hotlink window now shows a single link you can bookmark or share anywhere.
+
+
 ## 2026.10.28
 @ 2026-10-28
 
@@ -7,7 +24,7 @@
 You can now delete themes in bulk. Each theme in your library on the Themes page has a checkbox, so you can pick a few or select them all at once. Your live theme always stays untouched.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-theme-bulk-delete.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-theme-bulk-delete.mp4"></video>
 
 ## 2026.10.18
 @ 2026-10-18

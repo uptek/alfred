@@ -48,31 +48,16 @@ export function generatePresetId(): string {
 }
 
 /**
- * Builds the hotlink URL for a preset using the current partner ID.
+ * Builds the hotlink URL for a preset: the current page URL with the preset params appended.
  * @param handle - The preset handle to include in the hotlink
  * @param autoSubmit - When true, appends the auto-submit param so the request is sent automatically after applying
- * @param options.bare - When true, returns the current page URL with the preset params
- *   appended (for bookmarks/sharing) instead of the Mantle template URL with its
- *   `store_url` placeholder.
  * @returns A collaborator request URL with the preset param appended
  */
-export function buildHotlinkUrl(handle: string, autoSubmit = false, options: { bare?: boolean } = {}): string {
-  if (options.bare) {
-    const bareUrl = new URL(window.location.href);
-    bareUrl.searchParams.set(HOTLINK_PRESET_PARAM, handle);
-    if (autoSubmit) bareUrl.searchParams.set(HOTLINK_AUTOSUBMIT_PARAM, '1');
-    return bareUrl.toString();
-  }
-
+export function buildHotlinkUrl(handle: string, autoSubmit = false): string {
   const url = new URL(window.location.href);
-  const segments = url.pathname.split('/').filter(Boolean);
-  const partnerId = segments[1];
-
-  let hotlink = `${url.host}/dashboard/${partnerId}/stores/collaborations/new?${HOTLINK_PRESET_PARAM}=${handle}&store_url={{ customer.shopifyDomain }}`;
-  if (autoSubmit) {
-    hotlink += `&${HOTLINK_AUTOSUBMIT_PARAM}=1`;
-  }
-  return hotlink;
+  url.searchParams.set(HOTLINK_PRESET_PARAM, handle);
+  if (autoSubmit) url.searchParams.set(HOTLINK_AUTOSUBMIT_PARAM, '1');
+  return url.toString();
 }
 
 /**

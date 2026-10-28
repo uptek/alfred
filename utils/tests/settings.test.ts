@@ -91,7 +91,7 @@ describe('getSettings', () => {
     store.set('local:settings', { general: { analytics: false } });
     const settings = await getSettings();
     expect(settings.general.analytics).toBe(false);
-    expect(settings.general.restoreRightClick).toBe(true);
+    expect(settings.general.openChangelogOnUpdate).toBe(true);
     expect(settings.admin.themeListUtils).toBe(true);
     expect(settings.shortcuts.openInAdmin).toBe(true);
     expect(settings.appStore.compareApps).toBe(true);
