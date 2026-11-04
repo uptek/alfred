@@ -112,7 +112,8 @@ separates the three levels, so `action.split('.')` is always
 
 1. Name it by the rules above, then add it to `ANALYTICS_ACTIONS` and its
    seconds saved to `TIME_SAVINGS` (a function of metadata when variants save
-   different time). TypeScript requires both.
+   different time). TypeScript requires both. Seconds saved also count toward
+   the review nudge (`utils/successNudge.ts`), opted-out users included.
 2. Fire it from where the UI runs:
    - Popup, Options and background: `trackAction(action, metadata)`.
    - Popup tab views: `trackViewOnce(action, ready, metadata)`
@@ -124,8 +125,8 @@ separates the three levels, so `action.split('.')` is always
      `main.content.ts` drops names that are not in the list.
 3. Keep metadata flat: values are strings, numbers, booleans or null. The
    Worker drops events with nested objects, arrays or a body over 16 KB.
-4. Optional: `COOLDOWN_MS` to rate-limit a noisy event, and `STRONG_ACTIONS`
-   (`utils/successNudge.ts`) if it should count toward the review nudge.
+4. Optional: `COOLDOWN_MS` to rate-limit a noisy event. Events it skips
+   count toward neither analytics nor the nudge.
 
 `trackAction` skips users who turned analytics off. In dev it only logs
 `[Dev Mode] Event not sent:` to the console, which is how to check a new event.
