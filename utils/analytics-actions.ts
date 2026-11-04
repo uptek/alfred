@@ -282,5 +282,7 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
 };
 
 export const COOLDOWN_MS: Partial<Record<AnalyticsAction, number>> = {
-  'popup.theme.detect': 5 * 60 * 1000
+  'popup.theme.detect': 5 * 60 * 1000,
+  // Fires on every full admin load; once a day is enough to count who uses each placement.
+  'admin.sidekick.placement_apply': 24 * 60 * 60 * 1000
 };
