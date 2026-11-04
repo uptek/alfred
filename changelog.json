@@ -1,5 +1,42 @@
 [
   {
+    "version": "2026.11.05",
+    "date": "2026-11-05",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Copy App Review Links"
+      },
+      {
+        "type": "paragraph",
+        "content": "Every app listing on the Shopify App Store now has a row of Alfred buttons under Install."
+      },
+      {
+        "type": "list",
+        "content": [
+          "Review link copies the link that opens the app's review form, `#modal-show=WriteReviewModal` and all, ready to send to a merchant.",
+          "Client ID copies the app's client ID."
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": "The Compare button sits in the same row now. Switch the copy buttons on or off anytime with Listing Actions under App Store features in Alfred's settings."
+      },
+      {
+        "type": "video",
+        "content": "https://bucket.alfred.uptek.com/alfred-listing-actions.mp4"
+      },
+      {
+        "type": "heading",
+        "content": "A Lighter Alfred"
+      },
+      {
+        "type": "paragraph",
+        "content": "Hiding Sidekick no longer plays a dust, glass or paper effect. Those easter eggs took up almost half a megabyte, so they're gone to keep Alfred quick to download and load."
+      }
+    ]
+  },
+  {
     "version": "2026.10.29",
     "date": "2026-10-29",
     "changes": [
