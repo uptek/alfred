@@ -2,15 +2,6 @@ import type { ContentScriptContext } from '#imports';
 import { sendTrackEvent } from '~/utils/analytics';
 import { updateSettings, watchSettings } from '~/utils/settings';
 import { Toast } from '~/utils/toast';
-import {
-  disposeHideEffects,
-  playHideEffect,
-  playMoveEffect,
-  prepareHideEffect,
-  prepareMoveEffect,
-  type MoveEffect,
-  type PlayedEffect
-} from './sidekick-effects';
 
 const MODE_ATTR = 'data-alfred-sidekick';
 // Set while the bar flies into the nav, which keeps the new item hidden until the bar lands on it.
@@ -34,10 +25,16 @@ html[${MODE_ATTR}] [data-frame-footer-outlet="center"]:has([data-sidekick-field]
 html[${MODE_ATTR}] [data-component-name="mobile-frame-actions-sidekick"] {
   display: none !important;
 }
+/* The bar controls sit just outside the bar's ends while it is hovered. */
+${BAR} {
+  anchor-name: --alfred-sidekick;
+}
 .alfred-sidekick-control {
   position: fixed;
+  position-anchor: --alfred-sidekick;
+  bottom: calc(anchor(bottom) + 11px);
   z-index: 400;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
@@ -49,42 +46,31 @@ html[${MODE_ATTR}] [data-component-name="mobile-frame-actions-sidekick"] {
   color: rgb(74 74 74);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
   cursor: pointer;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s, visibility 0.15s;
 }
 .alfred-sidekick-control:hover {
   color: rgb(26 26 26);
 }
-/* The bar controls sit just outside the bar's ends while it is hovered. */
-@supports (anchor-name: --a) {
-  ${BAR} {
-    anchor-name: --alfred-sidekick;
-  }
-  .alfred-sidekick-control {
-    display: flex;
-    visibility: hidden;
-    opacity: 0;
-    position-anchor: --alfred-sidekick;
-    bottom: calc(anchor(bottom) + 11px);
-    transition: opacity 0.15s, visibility 0.15s;
-  }
-  /* An invisible margin as tall as the bar fills the gap, so the pointer never
-     leaves both the bar and the control on its way across. */
-  .alfred-sidekick-control::before {
-    content: '';
-    position: absolute;
-    inset: -12px -10px;
-  }
-  #alfred-sidekick-to-nav {
-    right: calc(anchor(left) + 8px);
-  }
-  #alfred-sidekick-hide {
-    left: calc(anchor(right) + 8px);
-  }
-  html:not([${MODE_ATTR}]) .alfred-sidekick-control[data-bar-hover],
-  .alfred-sidekick-control:hover {
-    visibility: visible;
-    opacity: 1;
-    transition-delay: 0.15s;
-  }
+/* An invisible margin as tall as the bar fills the gap, so the pointer never
+   leaves both the bar and the control on its way across. */
+.alfred-sidekick-control::before {
+  content: '';
+  position: absolute;
+  inset: -12px -10px;
+}
+#alfred-sidekick-to-nav {
+  right: calc(anchor(left) + 8px);
+}
+#alfred-sidekick-hide {
+  left: calc(anchor(right) + 8px);
+}
+html:not([${MODE_ATTR}]) .alfred-sidekick-control[data-bar-hover],
+.alfred-sidekick-control:hover {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0.15s;
 }
 /* With no bar to anchor to, the controls go too, even the one still under the pointer. */
 html[${MODE_ATTR}] .alfred-sidekick-control {
@@ -184,6 +170,85 @@ function createNavItem(settings: HTMLLIElement, onRestore: () => void): void {
   settings.before(li);
 }
 
+const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
+// Overshoots its target a little before settling.
+const OVERSHOOT = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+const BAR_SHADOW = '0 0 0 1px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.1)';
+const NO_SHADOW = '0 0 0 1px rgb(0 0 0 / 0), 0 4px 16px rgb(0 0 0 / 0)';
+const WHITE: Keyframe = { backgroundColor: '#fff', boxShadow: BAR_SHADOW };
+
+const center = (r: DOMRect) => `translate(${r.left + r.width / 2}px, ${r.top + r.height / 2}px)`;
+const size = (r: DOMRect, radius: number): Keyframe => ({
+  width: `${r.width}px`,
+  height: `${r.height}px`,
+  borderRadius: `${radius}px`
+});
+
+/** The first opaque background at or behind an element: the nav's own color. */
+function backdrop(el: Element): string {
+  for (let e: Element | null = el; e; e = e.parentElement) {
+    const bg = getComputedStyle(e).backgroundColor;
+    if (bg !== 'transparent' && !bg.endsWith(', 0)')) return bg;
+  }
+  return '#fff';
+}
+
+// The pill in flight, so teardown can remove it.
+let pill: HTMLElement | null = null;
+
+/**
+ * Flies a white pill the bar's size into the nav, where it takes on the look of a hovered row, then the real
+ * row takes its place lit up and settles. `arrive` moves Sidekick into the nav and returns the row the pill
+ * lands as, which must stay invisible until `land`. With motion reduced, or no row on screen to fly to,
+ * `land` follows right away.
+ */
+async function flyToNav(bar: HTMLElement, arrive: () => HTMLElement | null, land: () => void): Promise<void> {
+  // Measured first, since arriving hides the bar.
+  const from = bar.getBoundingClientRect();
+  const row = arrive();
+  // A nav that's off screen, as at mobile widths, has nowhere to land.
+  const to = row?.getBoundingClientRect();
+  const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (reducedMotion || !row || !to?.width || to.right <= 0) return land();
+
+  const el = (pill = document.createElement('div'));
+  try {
+    const radius = Math.min(from.height / 2, parseFloat(getComputedStyle(bar).borderTopLeftRadius) || from.height / 2);
+    const style = getComputedStyle(row);
+    // The row's text color faintly over the nav, like a hovered item, so it suits a light or a dark nav.
+    const fill = `color-mix(in srgb, ${style.color} 14%, ${backdrop(row)})`;
+    el.style.cssText = 'position:fixed;left:0;top:0;z-index:2147483000;pointer-events:none;translate:-50% -50%';
+    document.body.append(el);
+    const anims = [
+      el.animate([{ transform: center(from) }, { transform: center(to) }], {
+        duration: 500,
+        easing: EASE_OUT,
+        fill: 'forwards'
+      }),
+      el.animate([size(from, radius), size(to, parseFloat(style.borderTopLeftRadius) || 8)], {
+        duration: 600,
+        easing: OVERSHOOT,
+        fill: 'forwards'
+      }),
+      el.animate([WHITE, { ...WHITE, offset: 0.15 }, { backgroundColor: fill, boxShadow: NO_SHADOW }], {
+        duration: 420,
+        easing: EASE_OUT,
+        fill: 'forwards'
+      })
+    ];
+    await Promise.all(anims.map((anim) => anim.finished.catch(() => {})));
+    row.animate([{ backgroundColor: fill }, { backgroundColor: 'transparent' }], {
+      duration: 900,
+      delay: 250,
+      easing: EASE_OUT,
+      fill: 'backwards'
+    });
+  } finally {
+    el.remove();
+    land();
+  }
+}
+
 /**
  * Lets merchants move Shopify's floating Sidekick bar out of the way. Controls
  * at the bar's ends hide it or move it into the admin nav, where its item
@@ -194,10 +259,10 @@ function createNavItem(settings: HTMLLIElement, onRestore: () => void): void {
 export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): void {
   const root = document.documentElement;
 
-  const setMode = (next: SidekickMode, effect?: PlayedEffect | MoveEffect) => {
+  const setMode = (next: SidekickMode) => {
     apply(next);
     void updateSettings({ admin: { sidekick: next } });
-    sendTrackEvent('admin.sidekick.placement_switch', effect ? { placement: next, effect } : { placement: next });
+    sendTrackEvent('admin.sidekick.placement_switch', { placement: next });
   };
 
   // Shopify re-renders the nav on some navigations, dropping foreign nodes, and
@@ -247,47 +312,29 @@ export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): vo
   const toNav = button('alfred-sidekick-control', 'Move Sidekick to the sidebar', 'chevron-left', () => {
     const bar = document.querySelector<HTMLElement>(BAR);
     if (!bar) return setMode('sidebar');
-    void playMoveEffect(
+    void flyToNav(
       bar,
-      (effect) => {
-        root.toggleAttribute(ARRIVING_ATTR, !!effect);
-        setMode('sidebar', effect);
+      () => {
+        root.setAttribute(ARRIVING_ATTR, '');
+        setMode('sidebar');
         return document.querySelector<HTMLElement>(NAV_ROW);
       },
       () => root.removeAttribute(ARRIVING_ATTR)
     );
   });
   toNav.id = 'alfred-sidekick-to-nav';
-  // Like the hide button, reaching the caret takes a fresh screenshot.
-  toNav.addEventListener('pointerenter', () => {
-    const bar = document.querySelector<HTMLElement>(BAR);
-    if (bar) prepareMoveEffect(bar);
-  });
 
-  // The bar leaves in a random effect, played over it before it is hidden.
   const hide = button('alfred-sidekick-control', 'Hide Sidekick', 'x', () => {
-    const toast = () => Toast.success('Sidekick hidden. You can toggle it back from Alfred settings.', 6000);
-    const bar = document.querySelector<HTMLElement>(BAR);
-    if (!bar) {
-      setMode('hidden');
-      return toast();
-    }
-    void playHideEffect(bar, (effect) => setMode('hidden', effect)).then((landed) => landed && toast());
+    setMode('hidden');
+    Toast.success('Sidekick hidden. You can toggle it back from Alfred settings.', 6000);
   });
   hide.id = 'alfred-sidekick-hide';
-  // The bar may have changed since the pointer arrived on it, so reaching the button takes a fresh screenshot.
-  hide.addEventListener('pointerenter', () => {
-    const bar = document.querySelector<HTMLElement>(BAR);
-    if (bar) prepareHideEffect(bar);
-  });
 
   // Bar hover is tracked here: a `:has(:hover)` rule on the root would re-match
   // the whole admin page on every pointer move. relatedTarget is the element
-  // the pointer moved into, or null when it left the page. Arriving on the bar
-  // gets the hide effect ready.
+  // the pointer moved into, or null when it left the page.
   const onPointerOut = (e: Event) => {
-    const bar = ((e as PointerEvent).relatedTarget as Element | null)?.closest<HTMLElement>(BAR);
-    if (bar && !hide.hasAttribute('data-bar-hover')) prepareHideEffect(bar);
+    const bar = ((e as PointerEvent).relatedTarget as Element | null)?.closest(BAR);
     for (const el of [toNav, hide]) el.toggleAttribute('data-bar-hover', !!bar);
   };
 
@@ -300,10 +347,9 @@ export function setupSidekick(ctx: ContentScriptContext, mode: SidekickMode): vo
 
   ctx.onInvalidated(() => {
     unwatch();
-    disposeHideEffects();
     apply('default');
     root.removeAttribute(ARRIVING_ATTR);
     document.removeEventListener('pointerout', onPointerOut, true);
-    for (const el of [style, toNav, hide]) el.remove();
+    for (const el of [style, toNav, hide, pill]) el?.remove();
   });
 }

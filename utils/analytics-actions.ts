@@ -132,6 +132,8 @@ export const ANALYTICS_ACTIONS = [
   'apps.compare.export',
   'apps.compare.share',
   'apps.compare.credit_click',
+  'apps.listing_actions.review_link_copy',
+  'apps.listing_actions.client_id_copy',
 
   // Options and system
   'options.review_request.credit_click',
@@ -273,10 +275,14 @@ export const TIME_SAVINGS: Record<AnalyticsAction, number | ((metadata?: Record<
   'apps.compare.export': 60,
   'apps.compare.share': 30,
   'apps.compare.credit_click': 0,
+  'apps.listing_actions.review_link_copy': 15,
+  'apps.listing_actions.client_id_copy': 20,
   'options.review_request.credit_click': 0,
   'system.extension.ping': 0
 };
 
 export const COOLDOWN_MS: Partial<Record<AnalyticsAction, number>> = {
-  'popup.theme.detect': 5 * 60 * 1000
+  'popup.theme.detect': 5 * 60 * 1000,
+  // Fires on every full admin load; once a day is enough to count who uses each placement.
+  'admin.sidekick.placement_apply': 24 * 60 * 60 * 1000
 };

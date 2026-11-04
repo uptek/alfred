@@ -22,7 +22,7 @@ const spies = [
   ),
   spyOn(helpers, 'getUserId').mockImplementation(async () => 'u1'),
   spyOn(helpers, 'getVersion').mockImplementation(() => '2026.10.07'),
-  spyOn(successNudge, 'recordSuccess').mockImplementation(async () => {})
+  spyOn(successNudge, 'recordTimeSaved').mockImplementation(async () => {})
 ];
 
 const SURVEY_URL = 'https://tally.so/r/zx79O8';

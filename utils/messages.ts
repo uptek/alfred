@@ -78,10 +78,6 @@ export type RuntimeMessage =
       metadata?: Record<string, unknown> | undefined;
     }
   | { type: 'check_link_status'; url: string }
-  /** Screenshot of the sender's tab, as a PNG data URL, or `{ error }` when Chrome refuses. */
-  | { type: 'capture_tab' }
-  /** Injects the Sidekick glass effect into the sender's frame. */
-  | { type: 'load_sidekick_glass' }
   /**
    * Deletes a theme for the theme list, which runs in Shopify's Online Store iframe. Relayed to
    * the admin's top frame of the sender's tab. Answered with a `ThemeDeleteResponse`.

@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026.11.05
+@ 2026-11-05
+
+### Copy App Review Links
+Every app listing on the Shopify App Store now has a row of Alfred buttons under Install.
+
+- Review link copies the link that opens the app's review form, `#modal-show=WriteReviewModal` and all, ready to send to a merchant.
+- Client ID copies the app's client ID.
+The Compare button sits in the same row now. Switch the copy buttons on or off anytime with Listing Actions under App Store features in Alfred's settings.
+
+
+<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-listing-actions.mp4"></video>
+
+### A Lighter Alfred
+Hiding Sidekick no longer plays a dust, glass or paper effect. Those easter eggs took up almost half a megabyte, so they're gone to keep Alfred quick to download and load.
+
+
 ## 2026.10.29
 @ 2026-10-29
 

@@ -12,7 +12,7 @@
   import { getSitemaps, analyzeSitemaps } from './utils/sitemaps';
   import { getActiveTab } from './utils/messaging';
   import { trackAction } from '@/utils/analytics';
-  import { onSuccessNudge, recordPassiveValue } from '@/utils/successNudge';
+  import { onSuccessNudge } from '@/utils/successNudge';
   import Theme from './Theme.svelte';
   import Headings from './Headings.svelte';
   import Links from './Links.svelte';
@@ -78,14 +78,6 @@
   $effect(() => {
     onSuccessNudge(() => (showSuccessNudge = true));
     return () => onSuccessNudge(null);
-  });
-
-  // Passive value: dwelling on a tab for 3s means Alfred delivered something
-  // worth reading. Settings doesn't count.
-  $effect(() => {
-    if (activeTab === 'settings') return;
-    const timer = setTimeout(() => recordPassiveValue(), 3000);
-    return () => clearTimeout(timer);
   });
 
   const headingIssues = $derived(analyzeHeadings(rawHeadings));

@@ -6,7 +6,8 @@
   const settingsItems = [
     { key: 'searchIndexing', label: 'Number Search Results', details: 'Displays position numbers next to apps in search results' },
     { key: 'enhancedPartnerPages', label: 'Enhanced Partner Pages', details: 'Adds a table to enrich apps data with sorting and download options for easier comparison and research' },
-    { key: 'compareApps', label: 'Compare Apps', details: 'Adds "Add to compare" buttons to app cards and listings, with a side-by-side comparison view' }
+    { key: 'compareApps', label: 'Compare Apps', details: 'Adds "Add to compare" buttons to app cards and listings, with a side-by-side comparison view' },
+    { key: 'listingActions', label: 'Listing Actions', details: 'Adds a row of buttons to app listings, such as copying the review link and the app\'s client ID' }
   ];
 </script>
 

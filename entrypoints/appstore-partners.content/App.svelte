@@ -278,7 +278,12 @@
               </td>
               <td style="text-align: center">
                 <span class={app.isInstalled ? 'status-success' : 'status-neutral'}>
-                  {app.isInstalled ? '✓' : '—'}
+                  <!-- SVG, not "✓": Inter lacks the glyph and Chrome flashes a hex-code placeholder -->
+                  {#if app.isInstalled}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Installed" style="width:1.1em;height:1.1em;vertical-align:-0.15em"><path d="M5 13l4 4L19 7" /></svg>
+                  {:else}
+                    —
+                  {/if}
                 </span>
               </td>
               <td style="text-align: center">

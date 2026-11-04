@@ -1,7 +1,7 @@
 import { getUserId, getVersion } from './helpers';
 import { getItem, setItem } from './storage';
 import { getSettings, isEnabled } from './settings';
-import { recordSuccess } from './successNudge';
+import { recordTimeSaved } from './successNudge';
 import { sendRuntimeMessage } from './messages';
 import { UNINSTALL_SURVEY_URL } from './constants';
 
@@ -46,9 +46,6 @@ export async function markNudgeShown(): Promise<boolean> {
  * @param metadata - Additional context (e.g. page_url, page_type, shop_domain, app_count)
  */
 export async function trackAction(action: AnalyticsAction, metadata?: Record<string, unknown>): Promise<void> {
-  // Success counting is UX (review nudge), not analytics — runs even when
-  // the user has opted out of tracking or in dev mode.
-  recordSuccess(action).catch(() => {});
   try {
     const cooldown = COOLDOWN_MS[action];
     const cooldownKey = `cooldown_${action}`;
@@ -59,21 +56,24 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       cooldown ? getItem<number>(cooldownKey) : Promise.resolve(null)
     ]);
 
-    // Respect user's privacy opt-out
-    if (!isEnabled(settings.general.analytics)) return;
-
     // Cooldown check — skip the event if fired too recently
     if (cooldown) {
       if (Date.now() - (lastFired ?? 0) < cooldown) return;
       await setItem(cooldownKey, Date.now());
     }
 
+    const timeSaved = getTimeSaved(action, metadata);
+
+    // The review nudge is UX, not analytics: it counts time saved even when
+    // the user has opted out of tracking or in dev mode.
+    recordTimeSaved(timeSaved).catch(() => {});
+
+    // Respect user's privacy opt-out
+    if (!isEnabled(settings.general.analytics)) return;
+
     // Get all required data
     const userId = await getUserId();
     const version = getVersion();
-
-    // Calculate time saved
-    const timeSaved = getTimeSaved(action, metadata);
 
     // Prepare event data
     const eventData = {

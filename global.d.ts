@@ -66,6 +66,7 @@ declare interface AlfredSettings {
     searchIndexing?: boolean;
     enhancedPartnerPages?: boolean;
     compareApps?: boolean;
+    listingActions?: boolean;
   };
   collaboratorAccess?: {
     presets?: boolean;

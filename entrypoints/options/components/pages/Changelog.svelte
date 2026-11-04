@@ -28,6 +28,9 @@
   }
 </script>
 
+<!-- Backtick spans in changelog text render as code, as they do in changelog.md. -->
+{#snippet inline(text: string)}{#each text.split('`') as part, i}{#if i % 2}<code>{part}</code>{:else}{part}{/if}{/each}{/snippet}
+
 <s-stack id="changelog" gap="base">
   <PageHeader title="Changelog" icon="clock" />
   <s-grid gap="base">
@@ -47,11 +50,11 @@
             {#if change.type === 'heading'}
               <s-heading>{change.content}</s-heading>
             {:else if change.type === 'paragraph'}
-              <s-paragraph>{change.content}</s-paragraph>
+              <s-paragraph>{@render inline(change.content as string)}</s-paragraph>
             {:else if change.type === 'list'}
               <s-unordered-list>
                 {#each change.content as item}
-                  <s-list-item>{item}</s-list-item>
+                  <s-list-item>{@render inline(item)}</s-list-item>
                 {/each}
               </s-unordered-list>
             {:else if change.type === 'image'}
@@ -85,3 +88,15 @@
     {/each}
   </s-grid>
 </s-stack>
+
+<style>
+  /* Inline code chip, matching the popup's robots.txt issue messages. Translucent so it suits
+     light and dark themes. */
+  code {
+    font-family: 'SF Mono', ui-monospace, monospace;
+    font-size: 0.88em;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(127, 127, 127, 0.14);
+  }
+</style>
