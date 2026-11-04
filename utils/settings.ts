@@ -37,7 +37,8 @@ export const defaultSettings: ResolvedSettings = {
   appStore: {
     searchIndexing: true,
     enhancedPartnerPages: true,
-    compareApps: true
+    compareApps: true,
+    listingActions: true
   },
   collaboratorAccess: {
     presets: true,

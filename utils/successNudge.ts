@@ -56,6 +56,7 @@ const STRONG_ACTIONS = new Set<AnalyticsAction>([
   'popup.robots.copy',
   'apps.compare.export',
   'apps.partner_table.export',
+  'apps.listing_actions.review_link_copy',
   'storefront.cartograph.discount_apply',
   'storefront.cartograph.item_add',
   'storefront.cartograph.quantity_update',

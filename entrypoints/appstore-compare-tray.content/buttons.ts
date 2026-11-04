@@ -1,4 +1,5 @@
 import { sendTrackEvent } from '@/utils/analytics';
+import { getListingActions, icon, ICON_PATHS, LISTING_ACTION_CLASSES } from '~/utils/listingActions';
 import { addToTray, removeFromTray, getTray, watchTray, COMPARE_TRAY_LIMIT, isAppHandle } from '~/utils/compareTray';
 import { Toast } from '~/utils/toast';
 
@@ -38,12 +39,6 @@ const BUTTON_STYLES = `
     background: #303030;
   }
 
-  .${BUTTON_CLASS}--listing {
-    margin-top: 8px;
-    font-size: 13px;
-    padding: 4px 12px;
-  }
-
   .alfred-compare-fly {
     position: fixed;
     z-index: 2147483001;
@@ -55,6 +50,9 @@ const BUTTON_STYLES = `
     will-change: transform, opacity;
   }
 `;
+
+const PLUS_ICON = icon(ICON_PATHS.plus);
+const CHECK_ICON = icon(ICON_PATHS.check);
 
 let trayHandles = new Set<string>();
 
@@ -70,16 +68,22 @@ function injectStyles() {
 }
 
 function applyButtonState(button: HTMLButtonElement) {
-  const inTray = trayHandles.has(button.dataset.handle ?? '');
-  button.textContent = inTray ? '✓ Compare' : '+ Compare';
-  button.classList.toggle(`${BUTTON_CLASS}--active`, inTray);
+  const inTray = trayHandles.has(button.dataset.alfredCompareHandle ?? '');
+  button.innerHTML = `${inTray ? CHECK_ICON : PLUS_ICON}Compare`;
+  if (button.classList.contains(BUTTON_CLASS)) {
+    button.classList.toggle(`${BUTTON_CLASS}--active`, inTray);
+  } else {
+    // The listing button wears the App Store's own primary/secondary styles
+    button.classList.toggle('tw-button-primary', inTray);
+    button.classList.toggle('tw-button-secondary', !inTray);
+  }
   const label = inTray ? 'Remove from comparison' : 'Add to comparison';
   button.title = label;
   button.setAttribute('aria-label', label);
 }
 
 function refreshButtons() {
-  document.querySelectorAll<HTMLButtonElement>(`.${BUTTON_CLASS}`).forEach(applyButtonState);
+  document.querySelectorAll<HTMLButtonElement>('button[data-alfred-compare-handle]').forEach(applyButtonState);
 }
 
 /**
@@ -156,11 +160,15 @@ function flyToTray(sourceImage: HTMLImageElement | null, iconUrl: string | undef
   animation.oncancel = () => ghost.remove();
 }
 
-function createButton(item: CompareTrayItem, getSourceImage?: () => HTMLImageElement | null): HTMLButtonElement {
+function createButton(
+  item: CompareTrayItem,
+  getSourceImage?: () => HTMLImageElement | null,
+  className = BUTTON_CLASS
+): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = BUTTON_CLASS;
-  button.dataset.handle = item.handle;
+  button.className = className;
+  button.dataset.alfredCompareHandle = item.handle;
   applyButtonState(button);
 
   button.addEventListener('click', async (event) => {
@@ -232,7 +240,7 @@ function getListingIconUrl(): string | undefined {
 function injectListingButton() {
   const hero = document.querySelector('#adp-hero');
 
-  if (!hero || hero.querySelector(`.${BUTTON_CLASS}`)) {
+  if (!hero || hero.querySelector('[data-alfred-compare-handle]')) {
     return;
   }
 
@@ -251,10 +259,12 @@ function injectListingButton() {
       name: h1.textContent?.trim() ?? handle,
       iconUrl: getListingIconUrl()
     },
-    () => hero.querySelector('img')
+    () => hero.querySelector('img'),
+    LISTING_ACTION_CLASSES
   );
-  button.classList.add(`${BUTTON_CLASS}--listing`);
-  h1.parentElement?.appendChild(button);
+  // Last in the row whichever content script runs first
+  button.style.order = '1';
+  getListingActions()?.append(button);
 }
 
 export function initCompareButtons(): () => void {
