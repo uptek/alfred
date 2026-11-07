@@ -1,0 +1,3330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Tab</title>
+    <style>
+      /* Tokens: subset of entrypoints/popup/index.html, light + GitHub soft dark, plus cover art tones. */
+      :root {
+        color-scheme: light;
+        --bg: #fff;
+        --bg-canvas: #fbfcfd;
+        --bg-raised: #f4f6f8;
+        --bg-inset: #eef1f5;
+        --bg-hover: #e9edf3;
+        --border: #e9eaef;
+        --border-subtle: #eef0f3;
+        --border-hover: #ccd0d8;
+        --border-strong: #dadde3;
+        --text: #1d1d22;
+        --text-secondary: #4d515b;
+        --text-muted: #656b78;
+        --text-faint: #828892;
+        --accent: #4f57c4;
+        --accent-tint: #eef0fb;
+        --btn-bg: #1d1d22;
+        --btn-bg-hover: #34343c;
+        --btn-text: #fff;
+        --success-strong: #15783f;
+        --success-bg: #e7f5ec;
+        --warning: #9a5a08;
+        --warning-bg: #f9f0db;
+        --error: #c8362f;
+        --error-strong: #b42f28;
+        --error-bg: #fcebe9;
+        --scrollbar: #d2d5dd;
+        --shadow-sm: 0 1px 2px rgba(28, 28, 46, 0.05);
+        --shadow-md: 0 4px 14px rgba(28, 28, 46, 0.07);
+        --shadow-pop: 0 6px 20px rgba(28, 28, 46, 0.12);
+        --mono: 'SF Mono', ui-monospace, monospace;
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+        --cs: 72%;
+        --cl1: 94%;
+        --cl2: 84%;
+        --cdot: 0.16;
+        --ci-bg: 99%;
+        --ci-fg: 36%;
+        --c-text: 28%;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          color-scheme: dark;
+          --bg: #2a313c;
+          --bg-canvas: #212830;
+          --bg-raised: #1c222b;
+          --bg-inset: #262c36;
+          --bg-hover: #2f3742;
+          --border: #3d444d;
+          --border-subtle: #363d46;
+          --border-hover: #4b535e;
+          --border-strong: #444c56;
+          --text: #d1d7e0;
+          --text-secondary: #b7bdc8;
+          --text-muted: #9198a1;
+          --text-faint: #7a828e;
+          --accent: #478be6;
+          --accent-tint: #253141;
+          --btn-bg: #347d39;
+          --btn-bg-hover: #3b8640;
+          --success-strong: #6bc46d;
+          --success-bg: #23342a;
+          --warning: #c69026;
+          --warning-bg: #36352c;
+          --error: #e5534b;
+          --error-strong: #f47067;
+          --error-bg: #352327;
+          --scrollbar: #3d444d;
+          --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+          --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.35);
+          --shadow-pop: 0 8px 24px rgba(1, 4, 9, 0.5);
+          --cs: 30%;
+          --cl1: 22%;
+          --cl2: 29%;
+          --cdot: 0.22;
+          --ci-bg: 14%;
+          --ci-fg: 76%;
+          --c-text: 80%;
+        }
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --bg: #2a313c;
+        --bg-canvas: #212830;
+        --bg-raised: #1c222b;
+        --bg-inset: #262c36;
+        --bg-hover: #2f3742;
+        --border: #3d444d;
+        --border-subtle: #363d46;
+        --border-hover: #4b535e;
+        --border-strong: #444c56;
+        --text: #d1d7e0;
+        --text-secondary: #b7bdc8;
+        --text-muted: #9198a1;
+        --text-faint: #7a828e;
+        --accent: #478be6;
+        --accent-tint: #253141;
+        --btn-bg: #347d39;
+        --btn-bg-hover: #3b8640;
+        --success-strong: #6bc46d;
+        --success-bg: #23342a;
+        --warning: #c69026;
+        --warning-bg: #36352c;
+        --error: #e5534b;
+        --error-strong: #f47067;
+        --error-bg: #352327;
+        --scrollbar: #3d444d;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.35);
+        --shadow-pop: 0 8px 24px rgba(1, 4, 9, 0.5);
+        --cs: 30%;
+        --cl1: 22%;
+        --cl2: 29%;
+        --cdot: 0.22;
+        --ci-bg: 14%;
+        --ci-fg: 76%;
+        --c-text: 80%;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg-canvas);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      select,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      h1,
+      h2,
+      h3,
+      p,
+      ul,
+      ol {
+        margin: 0;
+        padding: 0;
+      }
+      ul,
+      ol {
+        list-style: none;
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .icon {
+        flex-shrink: 0;
+        display: block;
+      }
+      #stage {
+        padding-bottom: 96px;
+      }
+      .scroll {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar) transparent;
+      }
+      .clamp2,
+      .clamp3 {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .clamp2 {
+        -webkit-line-clamp: 2;
+      }
+      .clamp3 {
+        -webkit-line-clamp: 3;
+      }
+
+      /* Motion: entrances only, ease-out, staggered and capped. Interaction re-renders skip them,
+         except the one element an action just opened or added (.enter). */
+      @keyframes enter {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: scale(0.97);
+        }
+      }
+      @keyframes drop {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+      }
+      @keyframes slide {
+        from {
+          transform: translateX(100%);
+        }
+      }
+      .anim {
+        animation: enter 260ms var(--ease-out) both;
+        animation-delay: calc(min(var(--i, 0), 12) * 24ms);
+      }
+      .static .anim {
+        animation: none;
+      }
+      .static .anim.enter {
+        animation: enter 260ms var(--ease-out) both;
+        animation-delay: 0ms;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          animation-delay: 0ms !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+
+      /* Atoms */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 12.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+        transition:
+          background-color 150ms ease-out,
+          border-color 150ms ease-out;
+      }
+      .btn:hover {
+        background: var(--bg-raised);
+        border-color: var(--border-hover);
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn--primary {
+        background: var(--btn-bg);
+        border-color: transparent;
+        color: var(--btn-text);
+      }
+      .btn--primary:hover {
+        background: var(--btn-bg-hover);
+        border-color: transparent;
+      }
+      .btn--danger {
+        color: var(--error-strong);
+      }
+      .btn--danger:hover {
+        background: var(--error-bg);
+      }
+      .btn--ghost {
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+        color: var(--text-muted);
+      }
+      .btn--ghost:hover {
+        background: var(--bg-hover);
+        border-color: transparent;
+        color: var(--text);
+      }
+      .btn--sm {
+        height: 28px;
+        padding: 0 10px;
+        font-size: 12px;
+      }
+      .iconbtn {
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-faint);
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .iconbtn:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+      .iconbtn:active {
+        transform: scale(0.94);
+      }
+      .iconbtn[aria-pressed='true'],
+      .iconbtn[aria-expanded='true'] {
+        color: var(--accent);
+      }
+      .iconbtn:disabled {
+        opacity: 0.35;
+        cursor: default;
+        background: transparent;
+        transform: none;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 26px;
+        padding: 0 10px;
+        border-radius: 13px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 550;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          border-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .chip:hover {
+        border-color: var(--border-hover);
+        color: var(--text);
+      }
+      .chip:active {
+        transform: scale(0.97);
+      }
+      .chip[aria-pressed='true'] {
+        background: var(--accent-tint);
+        border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+        color: var(--accent);
+      }
+      .select {
+        height: 28px;
+        max-width: 100%;
+        padding: 0 26px 0 10px;
+        border-radius: 14px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23828892' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+          no-repeat right 9px center;
+        appearance: none;
+        font-size: 12px;
+        font-weight: 550;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .select--on {
+        background-color: var(--accent-tint);
+        border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+        color: var(--accent);
+      }
+      .input {
+        width: 100%;
+        height: 34px;
+        padding: 0 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        font-size: 13px;
+      }
+      .input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+      }
+      .input[aria-invalid='true'] {
+        border-color: var(--error);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--error) 18%, transparent);
+      }
+      .switch {
+        appearance: none;
+        flex-shrink: 0;
+        width: 28px;
+        height: 16px;
+        margin: 0;
+        border-radius: 8px;
+        background: var(--border-strong);
+        position: relative;
+        cursor: pointer;
+        transition: background-color 150ms ease-out;
+      }
+      .switch::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(28, 28, 46, 0.2);
+        transition: transform 180ms var(--ease-out);
+      }
+      .switch:checked {
+        background: var(--accent);
+      }
+      .switch:checked::after {
+        transform: translateX(12px);
+      }
+      .switch-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 550;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .seg {
+        display: flex;
+        padding: 2px;
+        gap: 2px;
+        border-radius: 9px;
+        background: var(--bg-inset);
+      }
+      .seg button {
+        flex: 1;
+        height: 28px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: color 150ms ease-out;
+      }
+      .seg button:hover {
+        color: var(--text);
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--bg);
+        color: var(--text);
+        box-shadow: var(--shadow-sm);
+      }
+      .label {
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-faint);
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+      .ctl {
+        display: grid;
+        gap: 8px;
+      }
+      .ctl .label:not(:first-child) {
+        margin-top: 6px;
+      }
+      .hint {
+        font-size: 11.5px;
+        color: var(--text-faint);
+      }
+      .count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        font-size: 10.5px;
+        font-weight: 650;
+        background: var(--accent-tint);
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .count--red {
+        background: var(--error-bg);
+        color: var(--error-strong);
+      }
+      .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+      }
+      .meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-faint);
+        min-width: 0;
+      }
+      .meta b {
+        font-weight: 600;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .tag {
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 18px;
+        padding: 0 7px;
+        border-radius: 6px;
+        background: var(--bg-inset);
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+      .tag--red {
+        background: var(--error-bg);
+        color: var(--error-strong);
+      }
+      .tag--amber {
+        background: var(--warning-bg);
+        color: var(--warning);
+      }
+      .tag--green {
+        background: var(--success-bg);
+        color: var(--success-strong);
+      }
+      .tag--ver {
+        background: var(--accent-tint);
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 10.5px;
+      }
+      .newtag {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--accent);
+        padding: 0 6px;
+      }
+      .srcav {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        display: inline-grid;
+        place-items: center;
+        flex: none;
+        color: #fff;
+        background: linear-gradient(135deg, hsl(var(--h) 60% 52%), hsl(calc(var(--h) + 30) 60% 44%));
+      }
+      .mono {
+        width: 34px;
+        height: 34px;
+        flex: none;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 12px;
+        background: var(--accent-tint);
+        color: var(--accent);
+      }
+      .empty {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        padding: 56px 16px;
+        text-align: center;
+        color: var(--text-muted);
+      }
+      .empty .icon {
+        color: var(--text-faint);
+      }
+      .empty b {
+        color: var(--text);
+        font-size: 14px;
+      }
+      .more {
+        display: flex;
+        justify-content: center;
+        padding: 24px 0 8px;
+      }
+      .x-links {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 12px;
+        font-size: 12px;
+        color: var(--text-faint);
+      }
+      .x-links a {
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+      .x-links a:hover {
+        color: var(--text);
+      }
+
+      /* Search */
+      .search {
+        position: relative;
+        flex: 1;
+        max-width: 560px;
+      }
+      .search input {
+        width: 100%;
+        height: 38px;
+        padding: 0 56px 0 38px;
+        border-radius: 10px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        font-size: 13.5px;
+        transition:
+          border-color 150ms ease-out,
+          box-shadow 150ms ease-out;
+      }
+      .search input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+      }
+      .search > .icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-faint);
+        pointer-events: none;
+      }
+      .kbd {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font: 600 11px var(--mono);
+        padding: 2px 6px;
+        border-radius: 5px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg-raised);
+        color: var(--text-faint);
+        pointer-events: none;
+      }
+      .search--big {
+        max-width: 620px;
+        width: 100%;
+      }
+      .search--big input {
+        height: 50px;
+        border-radius: 25px;
+        padding-left: 48px;
+        font-size: 15px;
+        box-shadow: var(--shadow-md);
+      }
+      .search--big > .icon {
+        left: 18px;
+      }
+      .search--big .kbd {
+        right: 16px;
+      }
+
+      /* Generated cover art: hue from area or source, icon, label, version, action flag. */
+      .cover {
+        position: relative;
+        display: block;
+        aspect-ratio: 16 / 9;
+        border-radius: 12px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 1px 1px, hsl(var(--h) 40% 50% / var(--cdot)) 1px, transparent 0) 0 0 / 14px 14px,
+          radial-gradient(120% 90% at 100% 0%, hsl(calc(var(--h) + 40) var(--cs) var(--cl2)), transparent 62%),
+          linear-gradient(135deg, hsl(var(--h) var(--cs) var(--cl1)), hsl(calc(var(--h) - 24) var(--cs) var(--cl2)));
+        flex: none;
+      }
+      .cover__icon {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 52px;
+        height: 52px;
+        border-radius: 15px;
+        display: grid;
+        place-items: center;
+        background: hsl(var(--h) 60% var(--ci-bg) / 0.72);
+        color: hsl(var(--h) 60% var(--ci-fg));
+        box-shadow: 0 6px 18px hsl(var(--h) 50% 30% / 0.16);
+        transition: transform 250ms var(--ease-out);
+      }
+      a:hover .cover__icon,
+      article:hover .cover__icon {
+        transform: translate(-50%, -50%) scale(1.06);
+      }
+      .cover__label {
+        position: absolute;
+        left: 12px;
+        bottom: 9px;
+        right: 64px;
+        font: 600 10px var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: hsl(var(--h) 40% var(--c-text));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cover__ver {
+        position: absolute;
+        right: 10px;
+        bottom: 8px;
+        font: 600 10px var(--mono);
+        padding: 1px 6px;
+        border-radius: 5px;
+        background: hsl(var(--h) 60% var(--ci-bg) / 0.72);
+        color: hsl(var(--h) 50% var(--c-text));
+      }
+      .cover__flag {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 6px;
+        color: #fff;
+        background: #c8362f;
+      }
+      .cover__flag--amber {
+        background: #9a5a08;
+      }
+      .cover--sm .cover__icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+      }
+      .cover--sm .cover__label,
+      .cover--sm .cover__ver {
+        display: none;
+      }
+      .cover--thumb {
+        width: 120px;
+        border-radius: 10px;
+      }
+      .cover--thumb .cover__icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+      }
+      .cover--thumb .cover__label,
+      .cover--thumb .cover__ver,
+      .cover--thumb .cover__flag {
+        display: none;
+      }
+
+      /* Card action bar */
+      .dbar {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin: 0 -6px;
+      }
+      .dbar .iconbtn,
+      .mcard__actions .iconbtn {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Popover, modal, drawer, toast */
+      .pop {
+        position: fixed;
+        z-index: 40;
+        width: 330px;
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        box-shadow: var(--shadow-pop);
+      }
+      .pop.enter {
+        animation: pop 160ms var(--ease-out);
+      }
+      .pop__close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+      }
+      .scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        background: rgba(12, 14, 20, 0.42);
+      }
+      .scrim.enter {
+        animation: fade 180ms ease-out;
+      }
+      .scrim.enter .modal {
+        animation: pop 220ms var(--ease-out);
+      }
+      .modal {
+        width: min(540px, 100%);
+        max-height: 86vh;
+        overflow: auto;
+        display: grid;
+        gap: 16px;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        box-shadow: var(--shadow-pop);
+      }
+      .modal__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .modal__head h2 {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .modal__foot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .modal__foot .spacer {
+        flex: 1;
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        width: min(360px, 100vw);
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        border-left: 1px solid var(--border);
+        box-shadow: var(--shadow-pop);
+      }
+      .drawer.enter {
+        animation: slide 240ms var(--ease-out);
+      }
+      .drawer__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 12px 14px 18px;
+        border-bottom: 1px solid var(--border);
+      }
+      .drawer__head h2 {
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .drawer__body {
+        flex: 1;
+        overflow: auto;
+        padding: 14px 18px 96px;
+        display: grid;
+        gap: 6px;
+        align-content: start;
+      }
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 6px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .toggle-row:hover {
+        background: var(--bg-raised);
+      }
+      .toggle-row span:nth-child(2) {
+        flex: 1;
+        min-width: 0;
+      }
+      .toggle-row b {
+        display: block;
+        font-weight: 600;
+      }
+      .toggle-row small {
+        display: block;
+        font-size: 11.5px;
+        color: var(--text-faint);
+      }
+      #toast {
+        position: fixed;
+        left: 24px;
+        bottom: 24px;
+        z-index: 70;
+        padding: 9px 14px;
+        border-radius: 10px;
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        font-weight: 600;
+        font-size: 12.5px;
+        box-shadow: var(--shadow-pop);
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition:
+          opacity 180ms ease-out,
+          transform 220ms var(--ease-out);
+      }
+      #toast.show {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* Store snapshot (popovers and Board widget) */
+      .st {
+        display: grid;
+        gap: 12px;
+      }
+      .st__head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-right: 28px;
+      }
+      .st__name {
+        flex: 1;
+        min-width: 0;
+      }
+      .st__name b,
+      .st__name small {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .st__name b {
+        font-weight: 650;
+      }
+      .st__name small {
+        font-size: 11.5px;
+        color: var(--text-faint);
+      }
+      .st__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .st__tile {
+        display: grid;
+        gap: 2px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--bg-raised);
+        border: 1px solid var(--border-subtle);
+      }
+      .st__val {
+        font-size: 18px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+      }
+      .st__key {
+        font-size: 11.5px;
+        color: var(--text-faint);
+      }
+      .st__theme {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .st__theme b {
+        font-weight: 600;
+      }
+      .st__links {
+        display: flex;
+        gap: 6px;
+      }
+      .upd {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--warning);
+        box-shadow: 0 0 0 2px var(--bg);
+      }
+
+      /* ===== Variant 1: Daily ===== */
+      .v-daily {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      .dside {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 14px 10px 24px;
+        background: var(--bg-raised);
+        border-right: 1px solid var(--border);
+      }
+      .dside__brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 8px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .dside__brand img {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+      }
+      .dnav {
+        display: grid;
+        gap: 1px;
+      }
+      .dnav .label {
+        padding: 4px 10px 6px;
+      }
+      .dnav__item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 32px;
+        padding: 4px 10px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-secondary);
+        font-weight: 550;
+        text-align: left;
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .dnav__item:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+      .dnav__item[aria-current='page'] {
+        background: var(--bg);
+        color: var(--text);
+        box-shadow: var(--shadow-sm);
+      }
+      .dnav__item > .icon {
+        color: var(--text-faint);
+      }
+      .dnav__item[aria-current='page'] > .icon {
+        color: var(--accent);
+      }
+      .dnav__item .count {
+        margin-left: auto;
+      }
+      .dnav__text {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .dnav__item small {
+        display: block;
+        font-size: 11px;
+        color: var(--text-faint);
+        font-weight: 500;
+      }
+      .dnav__mono {
+        position: relative;
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        font-size: 9.5px;
+        font-weight: 700;
+        background: var(--accent-tint);
+        color: var(--accent);
+        flex: none;
+      }
+      .dnav__add {
+        color: var(--text-faint);
+      }
+      .dside__foot {
+        margin-top: auto;
+        padding: 0 10px;
+      }
+      .dmain {
+        min-width: 0;
+        padding: 0 32px;
+      }
+      .dtop {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0 12px;
+        background: color-mix(in srgb, var(--bg-canvas) 88%, transparent);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+      }
+      .dtop__end {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .dhead {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 10px 0 18px;
+      }
+      .dhead h1 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 22px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+      }
+      .dhead p {
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+      .dhead__end {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: none;
+      }
+      .hl {
+        margin-bottom: 22px;
+      }
+      .hl__head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font-weight: 650;
+      }
+      .hl__head .icon {
+        color: var(--error);
+      }
+      .hl__row {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(250px, 1fr);
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .hl__card {
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--bg);
+        border: 1px solid color-mix(in srgb, var(--error) 28%, var(--border));
+        box-shadow: inset 3px 0 0 var(--error);
+        transition: border-color 150ms ease-out;
+      }
+      .hl__card:hover {
+        border-color: color-mix(in srgb, var(--error) 50%, var(--border));
+      }
+      .hl__card b {
+        font-weight: 650;
+        line-height: 1.35;
+      }
+      .dgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+        gap: 16px;
+      }
+      .dcard {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        padding: 14px 14px 8px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        transition:
+          border-color 150ms ease-out,
+          box-shadow 200ms ease-out;
+      }
+      .dcard:hover {
+        border-color: var(--border-hover);
+        box-shadow: var(--shadow-md);
+      }
+      .dcard.is-action {
+        border-color: color-mix(in srgb, var(--error) 32%, var(--border));
+      }
+      .dcard__head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 28px;
+      }
+      .dcard__read {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 26px;
+        padding: 0 10px;
+        border-radius: 8px;
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        font-size: 12px;
+        font-weight: 650;
+        opacity: 0;
+        transform: translateY(2px);
+        transition:
+          opacity 150ms ease-out,
+          transform 200ms var(--ease-out);
+      }
+      .dcard:hover .dcard__read,
+      .dcard:focus-within .dcard__read {
+        opacity: 1;
+        transform: none;
+      }
+      .dcard__title {
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.32;
+        letter-spacing: -0.012em;
+      }
+      .dcard__title a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+      }
+      .dcard__title a:focus-visible {
+        outline: none;
+      }
+      .dcard:has(.dcard__title a:focus-visible) {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .is-old .dcard__title,
+      .is-old .drow__title {
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+      .dcard .cover {
+        margin-top: auto;
+      }
+      .dlist {
+        display: grid;
+        gap: 10px;
+      }
+      .drow {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        transition: border-color 150ms ease-out;
+      }
+      .drow:hover {
+        border-color: var(--border-hover);
+      }
+      .drow.is-action {
+        box-shadow: inset 3px 0 0 var(--error);
+      }
+      .drow__body {
+        flex: 1;
+        min-width: 0;
+        display: grid;
+        gap: 4px;
+      }
+      .drow__title {
+        font-size: 14.5px;
+        font-weight: 700;
+        line-height: 1.32;
+      }
+      .drow__title a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+      .drow .dbar {
+        margin: 0;
+        flex-direction: column;
+      }
+      @media (max-width: 860px) {
+        .v-daily {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .dside {
+          display: none;
+        }
+        .dmain {
+          padding: 0 16px;
+        }
+        .dhead {
+          flex-wrap: wrap;
+        }
+        .cover--thumb {
+          width: 84px;
+        }
+      }
+
+      /* ===== Variant 2: Muzli ===== */
+      .v-muz {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 18px 28px 0;
+      }
+      .mtop {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .mtop__brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+      }
+      .mtop__brand img {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+      }
+      .mtop__end {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .mhero {
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+        padding: 30px 0 30px;
+        text-align: center;
+      }
+      .mhero__date {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-faint);
+        margin-bottom: -12px;
+      }
+      .mhero h1 {
+        font-size: 34px;
+        font-weight: 750;
+        letter-spacing: -0.035em;
+      }
+      .shortcuts {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px 8px;
+        max-width: 1120px;
+      }
+      .sc {
+        position: relative;
+        display: grid;
+        justify-items: center;
+        gap: 7px;
+        width: 88px;
+        padding: 8px 4px;
+        border: 0;
+        border-radius: 14px;
+        background: transparent;
+        font-size: 11.5px;
+        font-weight: 550;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: background-color 150ms ease-out;
+      }
+      .sc:hover {
+        background: var(--bg-hover);
+      }
+      .sc__tile {
+        position: relative;
+        width: 48px;
+        height: 48px;
+        border-radius: 15px;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        color: var(--text-secondary);
+        font-weight: 700;
+        font-size: 13px;
+        transition: transform 200ms var(--ease-out);
+      }
+      .sc:hover .sc__tile {
+        transform: translateY(-2px);
+      }
+      .sc__tile--store {
+        background: var(--accent-tint);
+        color: var(--accent);
+        border-color: transparent;
+      }
+      .sc__label {
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .sc__sep {
+        width: 1px;
+        align-self: stretch;
+        margin: 10px 6px;
+        background: var(--border);
+      }
+      .mtabs {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 2px 0 12px;
+      }
+      .mtab {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 34px;
+        padding: 0 14px;
+        border: 1px solid var(--border);
+        border-radius: 17px;
+        background: var(--bg);
+        color: var(--text-secondary);
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          color 150ms ease-out,
+          border-color 150ms ease-out;
+      }
+      .mtab:hover {
+        border-color: var(--border-hover);
+        color: var(--text);
+      }
+      .mtab[aria-selected='true'] {
+        background: var(--text);
+        border-color: var(--text);
+        color: var(--bg);
+      }
+      .mtab[aria-selected='true'] .count {
+        background: color-mix(in srgb, var(--bg) 22%, transparent);
+        color: var(--bg);
+      }
+      .mtabs__end {
+        margin-left: auto;
+        flex: none;
+      }
+      .msec {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin: 14px 0 12px;
+      }
+      .msec h2 {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+      }
+      .picks {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+      .pick {
+        position: relative;
+        display: flex;
+        gap: 14px;
+        padding: 12px;
+        border-radius: 18px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        transition:
+          border-color 150ms ease-out,
+          box-shadow 200ms ease-out;
+      }
+      .pick:hover {
+        border-color: var(--border-hover);
+        box-shadow: var(--shadow-md);
+      }
+      .pick--big {
+        grid-row: span 2;
+        flex-direction: column;
+      }
+      .pick--big .cover {
+        aspect-ratio: 2.4 / 1;
+      }
+      .pick:not(.pick--big) .cover {
+        width: 42%;
+        aspect-ratio: 4 / 3;
+      }
+      .pick__body {
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        min-width: 0;
+        padding: 2px 4px;
+      }
+      .pick__title {
+        font-size: 15.5px;
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: -0.012em;
+      }
+      .pick--big .pick__title {
+        font-size: 21px;
+        letter-spacing: -0.02em;
+      }
+      .pick__title a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 18px;
+      }
+      .pick__ex {
+        color: var(--text-muted);
+      }
+      .mgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+        gap: 22px 16px;
+      }
+      .mcard {
+        position: relative;
+        display: grid;
+        gap: 9px;
+        align-content: start;
+      }
+      .mcard__media {
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        transition: box-shadow 200ms ease-out;
+      }
+      .mcard:hover .mcard__media {
+        box-shadow: var(--shadow-md);
+      }
+      .mcard .cover {
+        aspect-ratio: 4 / 3;
+        border-radius: 14px;
+      }
+      .mcard__over {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 6px;
+        padding: 14px;
+        border-radius: 14px;
+        color: #fff;
+        background: linear-gradient(180deg, transparent 25%, rgba(12, 14, 20, 0.82));
+        opacity: 0;
+        transition: opacity 200ms ease-out;
+        pointer-events: none;
+      }
+      .mcard:hover .mcard__over,
+      .mcard:focus-within .mcard__over {
+        opacity: 1;
+      }
+      .mcard__over p {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .mcard__actions {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 2;
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 150ms ease-out;
+      }
+      .mcard:hover .mcard__actions,
+      .mcard:focus-within .mcard__actions,
+      .mcard__actions:has([aria-pressed='true']) {
+        opacity: 1;
+      }
+      .mcard__actions .iconbtn {
+        background: rgba(255, 255, 255, 0.92);
+        color: #1d1d22;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      }
+      .mcard__actions .iconbtn:hover {
+        background: #fff;
+        color: #1d1d22;
+      }
+      .mcard__actions .iconbtn[aria-pressed='true'] {
+        color: #4f57c4;
+      }
+      .mcard__title {
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.35;
+      }
+      .mcard__title a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+      .mfoot {
+        display: flex;
+        justify-content: center;
+        padding: 28px 0 8px;
+      }
+      @media (max-width: 820px) {
+        .v-muz {
+          padding: 14px 16px 0;
+        }
+        .picks {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .pick--big {
+          grid-row: auto;
+        }
+        .mhero h1 {
+          font-size: 26px;
+        }
+      }
+
+      /* ===== Variant 3: Board ===== */
+      .v-board {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 24px 24px 0;
+      }
+      .btop {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .btop .mtop__brand {
+        font-size: 15px;
+      }
+      .btop__end {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-auto-rows: 150px;
+        grid-auto-flow: dense;
+        gap: 16px;
+      }
+      .size--S {
+        grid-column: span 1;
+        grid-row: span 2;
+      }
+      .size--T {
+        grid-column: span 1;
+        grid-row: span 3;
+      }
+      .size--M {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+      .size--L {
+        grid-column: span 2;
+        grid-row: span 3;
+      }
+      .size--W {
+        grid-column: span 4;
+        grid-row: span 2;
+      }
+      .w {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        container-type: inline-size;
+      }
+      .w__head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 8px 10px 6px 14px;
+        flex: none;
+      }
+      .w__title {
+        font-size: 13.5px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+      }
+      .w__tools {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: none;
+      }
+      .w__sub {
+        padding: 0 14px 8px;
+        font-size: 11.5px;
+        color: var(--text-faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: none;
+      }
+      .w__controls {
+        padding: 4px 14px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        flex: none;
+      }
+      .w__controls.enter,
+      .w__editbar.enter {
+        animation: drop 180ms var(--ease-out);
+      }
+      .w__body {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 0 14px 12px;
+      }
+      .w__grip {
+        color: var(--text-faint);
+        cursor: grab;
+        flex: none;
+      }
+      .w--edit {
+        cursor: grab;
+        border-style: dashed;
+        border-color: var(--border-hover);
+        box-shadow: none;
+      }
+      .w--edit .w__body {
+        opacity: 0.5;
+        pointer-events: none;
+        user-select: none;
+      }
+      .w__editbar {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin: 0 10px 8px 12px;
+        padding: 3px;
+        border-radius: 8px;
+        background: var(--bg-raised);
+        flex: none;
+      }
+      .iseg {
+        display: flex;
+        gap: 1px;
+      }
+      .iseg button {
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--text-faint);
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .iseg button:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+      .iseg button[aria-pressed='true'] {
+        background: var(--bg-inset);
+        color: var(--text);
+      }
+      .tools-sep {
+        width: 1px;
+        height: 14px;
+        background: var(--border-strong);
+        margin: 0 4px;
+      }
+      .dragging {
+        opacity: 0.4;
+      }
+      .drop-target {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 20;
+        width: 320px;
+        padding: 6px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        box-shadow: var(--shadow-pop);
+        transform-origin: top right;
+        display: grid;
+        gap: 2px;
+      }
+      .menu.enter {
+        animation: pop 160ms var(--ease-out);
+      }
+      .menu__item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 150ms ease-out;
+      }
+      .menu__item:hover {
+        background: var(--bg-raised);
+      }
+      .menu__item b {
+        display: block;
+        font-weight: 600;
+      }
+      .menu__item small {
+        display: block;
+        color: var(--text-faint);
+        font-size: 11.5px;
+        line-height: 1.35;
+      }
+      .pop-anchor {
+        position: relative;
+      }
+      .lcar {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 220px;
+        gap: 14px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .lcards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 16px 12px;
+      }
+      .mini {
+        display: grid;
+        gap: 7px;
+        align-content: start;
+        min-width: 0;
+      }
+      .mini__title {
+        font-weight: 650;
+        line-height: 1.35;
+        transition: color 150ms ease-out;
+      }
+      .mini:hover .mini__title,
+      .lrow:hover .lrow__title,
+      .lc:hover .lc__title {
+        color: var(--accent);
+      }
+      .lrow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      li:last-child > .lrow,
+      li:last-child > .lc {
+        border-bottom: 0;
+      }
+      .lrow .cover--thumb {
+        width: 88px;
+      }
+      .lrow__body {
+        flex: 1;
+        min-width: 0;
+        display: grid;
+        gap: 3px;
+      }
+      .lrow__title {
+        font-weight: 650;
+        line-height: 1.35;
+        transition: color 150ms ease-out;
+      }
+      .lc {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .lc__title {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 550;
+        transition: color 150ms ease-out;
+      }
+      .flag {
+        width: 3px;
+        height: 14px;
+        border-radius: 2px;
+        flex: none;
+      }
+      .flag--red {
+        background: var(--error);
+      }
+      .flag--amber {
+        background: var(--warning);
+      }
+      .pinrow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      li:last-child > .pinrow {
+        border-bottom: 0;
+      }
+      .pinrow b,
+      .pinrow small {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pinrow b {
+        font-weight: 600;
+      }
+      .pinrow small {
+        font-size: 11.5px;
+        color: var(--text-faint);
+      }
+      .pinrow:hover b {
+        color: var(--accent);
+      }
+      .pinlist {
+        display: grid;
+        gap: 4px;
+      }
+      .pinlist li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 4px 4px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .pinlist span {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 600;
+        font-size: 12px;
+      }
+      .pinform {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .pinform .input {
+        height: 30px;
+        font-size: 12px;
+        flex: 1 1 120px;
+      }
+      .pinform .input[data-pin='url'] {
+        flex-basis: 200px;
+      }
+      @container (min-width: 520px) {
+        .st__grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 1100px) {
+        .bento {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .size--W {
+          grid-column: span 2;
+        }
+      }
+      @media (max-width: 640px) {
+        .v-board {
+          padding: 16px 16px 0;
+        }
+        .bento {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .bento > * {
+          grid-column: span 1;
+        }
+        .btop .search {
+          display: none;
+        }
+      }
+
+      /* Picker: verbatim from the prototype skill's PICKER.md. */
+      .proto-picker {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 999px;
+        background: rgba(10, 10, 10, 0.82);
+        -webkit-backdrop-filter: blur(12px) saturate(1.4);
+        backdrop-filter: blur(12px) saturate(1.4);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+          0 8px 24px rgba(0, 0, 0, 0.24),
+          0 2px 6px rgba(0, 0, 0, 0.12);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 13px;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .proto-picker-highlight {
+        position: absolute;
+        top: 4px;
+        left: 0;
+        height: 28px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        will-change: transform;
+      }
+      .proto-picker[data-ready] .proto-picker-highlight {
+        transition:
+          transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+          width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .proto-picker[data-ready] .proto-picker-highlight {
+          transition: none;
+        }
+      }
+      .proto-picker-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.55);
+        font: inherit;
+        cursor: pointer;
+        transition: color 150ms ease-out;
+      }
+      .proto-picker-item:hover {
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .proto-picker-item:active {
+        transform: scale(0.97);
+      }
+      .proto-picker-item:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.4);
+        outline-offset: 2px;
+      }
+      .proto-picker-item[data-active] {
+        color: #fff;
+      }
+      .proto-picker-divider {
+        width: 1px;
+        height: 16px;
+        margin: 0 4px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .proto-picker-replay {
+        padding: 0 10px;
+        font-size: 14px;
+      }
+      .proto-picker[data-position='top'] {
+        bottom: auto;
+        top: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <nav class="proto-picker" aria-label="Prototype variants">
+      <span class="proto-picker-highlight" aria-hidden="true"></span>
+      <button class="proto-picker-item" data-active aria-current="true">Daily</button>
+      <button class="proto-picker-item">Muzli</button>
+      <button class="proto-picker-item">Board</button>
+      <span class="proto-picker-divider" aria-hidden="true"></span>
+      <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
+    </nav>
+
+    <!-- Feed snapshot: shopify.dev changelog, Shopify newsroom, Shopify Engineering blog, and three YouTube channels. -->
+    <script id="snapshot" type="application/json">{"taken":"2026-10-01T01:56:51.006Z","items":[{"source":"changelog","stream":"platform","title":"Use app intents for your discount app","link":"https://shopify.dev/changelog/use-app-intents-for-your-discount-app","date":"2026-09-30T13:00:00.000Z","categories":["Platform","New","2026-10"],"excerpt":"Apps that create new discount types using Shopify Functions can now register shopify/Discount app intents. This lets Sidekick launch an app’s create and edit flows and promote them in the disambiguation picker. Apps can…","thumb":null},{"source":"changelog","stream":"platform","title":"More resilient token exchanges when migrating tokens without a user session","link":"https://shopify.dev/changelog/more-resilient-token-exchanges-when-migrating-tokens-without-a-user-session","date":"2026-09-29T16:00:00.000Z","categories":["API","Update","Admin GraphQL API","Admin REST API"],"excerpt":"More resilient token exchanges when migrating to expiring offline access tokens When you migrate an app from non-expiring offline tokens to expiring offline access tokens without a user session, you can now recover a…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify Flow: Flow Trigger Lifecycle Callback extensions now support relative url paths","link":"https://shopify.dev/changelog/shopify-flow-flow-trigger-lifecycle-callback-extensions-now-support-relative-url-paths","date":"2026-09-29T16:00:00.000Z","categories":["Tools","Update"],"excerpt":"Previously, the URL for Flow Trigger Lifecycle Callback extensions were required to be absolute HTTPS URLs pointing to a web server. This required an already hosted system which made it inconvenient to test locally…","thumb":null},{"source":"changelog","stream":"platform","title":"Manage packed product dimensions with the Admin GraphQL API","link":"https://shopify.dev/changelog/manage-packed-product-dimensions-with-the-admin-graphql-api","date":"2026-09-29T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2027-01"],"excerpt":"Starting with the 2027-01 Admin GraphQL API version, apps can read and write packed product dimensions using InventoryItemMeasurement.packedDimensions and InventoryItemMeasurementInput.packedDimensions in the Admin…","thumb":null},{"source":"changelog","stream":"platform","title":"Move existing subscriptions to Shopify App Pricing","link":"https://shopify.dev/changelog/move-existing-subscriptions-to-shopify-app-pricing","date":"2026-09-29T13:00:00.000Z","categories":["App store","New"],"excerpt":"Apps that bill with the Billing API can now move their existing subscriptions to Shopify App Pricing by using the migration tool in the Partner Dashboard or new commands in Shopify CLI. Subscriptions move at the start…","thumb":null},{"source":"changelog","stream":"platform","title":"Sidekick can now invoke app intents without tools","link":"https://shopify.dev/changelog/sidekick-can-now-invoke-app-intents-without-tools","date":"2026-09-28T16:00:00.000Z","categories":["Platform","Update"],"excerpt":"Sidekick now surfaces app extensions that declare only intents, with no tools file. Previously an extension had to declare tools to be eligible for Sidekick, so an admin.app.intent.link or admin.app.intent.render…","thumb":null},{"source":"changelog","stream":"platform","title":"WebMCP support for checkout","link":"https://shopify.dev/changelog/webmcp-support-for-checkout","date":"2026-09-28T14:30:00.000Z","categories":["Platform","New"],"excerpt":"Browser agents can now read and update Shopify checkouts using WebMCP tools for checkout. The tools let agents interact with the active checkout in the buyer’s browser session. When the buyer’s input is required, such…","thumb":null},{"source":"changelog","stream":"platform","title":"AI Toolkit skills have been consolidated to `shopify`","link":"https://shopify.dev/changelog/ai-toolkit-skills-have-been-consolidated","date":"2026-09-25T16:00:00.000Z","categories":["Action Required","AI Toolkit","Update"],"excerpt":"With today's release of AI Toolkit, all existing shopify- skills are consolidated into a single shopify skill. If you use AI Toolkit skills with agents or npx skills, you might need to update your environment. What…","thumb":null},{"source":"changelog","stream":"platform","title":"The new Dev Dashboard: your command center for building","link":"https://shopify.dev/changelog/the-new-dev-dashboard","date":"2026-09-25T15:00:00.000Z","categories":["Dev Dashboard","Update"],"excerpt":"Today we're sharing the newest wave of improvements to the Dev Dashboard. You told us, in the community forums and in support conversations, that common work like managing collaborator access or understanding app health…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify Payments Balance Transaction GraphQL type supports currency conversion type","link":"https://shopify.dev/changelog/shopify-payments-balance-transaction-graphql-type-supports-currency-conversion-type","date":"2026-09-25T13:00:00.000Z","categories":["API","Update","Admin GraphQL API","2026-10"],"excerpt":"As of GraphQL Admin API version 2026-10, ShopifyPaymentsTransactionType now includes CURRENCY_CONVERSION type. Learn more about ShopifyPaymentsTransactionType on Shopify.dev.","thumb":null},{"source":"changelog","stream":"platform","title":"Polaris 2.0 release candidate","link":"https://shopify.dev/changelog/polaris-2-0-release-candidate","date":"2026-09-24T16:30:00.000Z","categories":["Polaris","New"],"excerpt":"The Polaris 2.0 release candidate is now available for embedded App Home interfaces. It includes the Shopify admin’s new visual styles, allowing your app to adopt the new look. The new Shopify admin design began rolling…","thumb":null},{"source":"changelog","stream":"platform","title":"Events subscription query complexity limit is changing to 100 points","link":"https://shopify.dev/changelog/events-subscription-query-complexity-limit-is-changing-to-100-points","date":"2026-09-22T18:00:00.000Z","categories":["Action Required","API","Breaking API Change","Events & webhooks"],"excerpt":"We’re reducing the query complexity limit for Events subscriptions from 250 to 100 points. This change does not affect Classic Webhooks. Shopify assigns each Events query a complexity score based on the fields it…","thumb":null},{"source":"changelog","stream":"platform","title":"Polaris CDN 1.1 is now stable","link":"https://shopify.dev/changelog/polaris-cdn-1-1-is-now-stable","date":"2026-09-22T17:30:00.000Z","categories":["Polaris","New"],"excerpt":"Polaris Web Components 1.1 is now available on the stable Polaris CDN channels. This is the first minor release under the CDN's new semantic versioning model. The following URLs now serve Polaris 1.1 \u003cscript…","thumb":null},{"source":"changelog","stream":"platform","title":"Removing marketCurrencySettingsUpdate mutation","link":"https://shopify.dev/changelog/removing-marketcurrencysettingsupdate-mutation","date":"2026-09-22T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","Admin GraphQL API","2027-01"],"excerpt":"As of GraphQL Admin API version 2027-01, the marketCurrencySettingsUpdate mutation is removed, along with the MarketCurrencySettingsUpdatePayload, MarketCurrencySettingsUserError, and MarketCurrencySettingsUserErrorCode…","thumb":null},{"source":"changelog","stream":"platform","title":"Unlimited private plans and target stores in Shopify App Pricing","link":"https://shopify.dev/changelog/unlimited-private-plans-and-target-stores-in-shopify-app-pricing","date":"2026-09-21T21:00:00.000Z","categories":["App store","New"],"excerpt":"Developers using Shopify App Pricing can now create unlimited private plans per app and add unlimited target stores to each plan, replacing the previous limits of 15 private plans and 20 stores per plan. No action is…","thumb":null},{"source":"changelog","stream":"platform","title":"New translatable boolean field for Metafield GraphQL Object","link":"https://shopify.dev/changelog/is-translatable-metafield-field","date":"2026-09-21T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"API version 2026-10 adds a non-null translatable field to the Metafield object in the GraphQL Admin API. Apps that fetch translatable metafields and migrate to 2026-10 can now see whether a metafield’s value is…","thumb":null},{"source":"changelog","stream":"platform","title":"The `automaticDiscounts` query is removed in API version 2027-01","link":"https://shopify.dev/changelog/automaticdiscounts-query-is-removed-in-api-version-2027-01","date":"2026-09-18T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","Admin GraphQL API","2027-01"],"excerpt":"The deprecated automaticDiscounts query is removed from the GraphQL Admin API in version 2027-01. If your app reads a shop’s automatic discounts through automaticDiscounts, you need to move to the discountNodes query…","thumb":null},{"source":"changelog","stream":"platform","title":"Request a bundle size exception for existing UI extensions","link":"https://shopify.dev/changelog/request-a-bundle-size-exception-for-existing-ui-extensions","date":"2026-09-17T19:30:00.000Z","categories":["API","Update","Admin Extensions","Checkout UI","Customer Accounts","POS Extensions"],"excerpt":"UI extensions using API version 2025-10 or later are limited to a 64 KB compressed JavaScript bundle per extension. Full page customer account extensions may use up to 128 KB. If your extension remains over the limit…","thumb":null},{"source":"changelog","stream":"platform","title":"Adding a canceled receive action to the inventory shipments API","link":"https://shopify.dev/changelog/adding-a-canceled-receive-action-to-the-inventory-shipments-api","date":"2026-09-17T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"The GraphQL Admin API now supports a CANCELED receive action for inventory shipments in version 2026-10. You can mark inventory shipment line item units as canceled when they’ll never arrive, and you can read canceled…","thumb":null},{"source":"changelog","stream":"platform","title":"Removed session.currentSession.staffMemberId from POS UI Extensions (2026-10)","link":"https://shopify.dev/changelog/removed-session-currentsession-staffmemberid-from-pos-ui-extensions-2026-10","date":"2026-09-17T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","POS Extensions","2026-10"],"excerpt":"As of API version 2026-10, the static session.currentSession.staffMemberId field has been removed from the POS UI Extensions Session API. It was deprecated in 2026-07 in favour of session.staffMember, a reactive signal…","thumb":null},{"source":"changelog","stream":"platform","title":"Query market hierarchies with the GraphQL Admin API","link":"https://shopify.dev/changelog/market-relationships","date":"2026-09-17T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"The GraphQL Admin API now includes fields for querying and traversing a store’s market hierarchy in API version 2026-10. Apps that use the read_markets access scope can retrieve parent-child relationships, navigate…","thumb":null},{"source":"changelog","stream":"platform","title":"New Pricing audit trail for contextual product variant prices","link":"https://shopify.dev/changelog/pricing-audit-trail-for-contextual-product-variant-prices","date":"2026-09-17T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"The GraphQL Admin API now includes the auditTrail field on ProductVariantContextualPricing in API version 2026-10. Apps with the read_products access scope can use this field to inspect the ordered adjustments that…","thumb":null},{"source":"changelog","stream":"platform","title":"Updates to Events payloads and subscription configuration","link":"https://shopify.dev/changelog/updates-to-events-payloads-and-subscription-configuration","date":"2026-09-16T18:00:00.000Z","categories":["Action Required","API","Update","Events & webhooks"],"excerpt":"Starting today, we're updating Events payloads, trigger syntax, and delivery headers. Classic Webhook subscriptions are unaffected. What's changed fields_changed now describes how each path changed The flat array…","thumb":null},{"source":"changelog","stream":"platform","title":"Filter Catalog search results by media type","link":"https://shopify.dev/changelog/filter-catalog-search-results-by-media-type","date":"2026-09-15T23:50:00.000Z","categories":["Catalog","New"],"excerpt":"The Catalog API now returns video and 3D model media on products that have it, and supports filtering search results by media type. You can request only products that have video or 3D model media attached, and matching…","thumb":null},{"source":"changelog","stream":"platform","title":"Dynamic complexity cost for `metafieldsSet` mutation","link":"https://shopify.dev/changelog/dynamic-complexity-cost-for-metafieldsset-mutation","date":"2026-09-15T16:00:00.000Z","categories":["API","Update","Admin GraphQL API"],"excerpt":"The metafieldsSet mutation now uses dynamic complexity costing. Instead of a flat cost for every call, a request's cost reflects how many distinct resources metafields were changed. Most apps need no changes, as…","thumb":null},{"source":"changelog","stream":"platform","title":"Prepare your app for the Shopify admin's new look","link":"https://shopify.dev/changelog/prepare-your-app-for-the-shopify-admins-new-look","date":"2026-09-15T16:00:00.000Z","categories":["Polaris","Update"],"excerpt":"Starting September 15, 2026, the Shopify admin has a new look, rolling out progressively to merchants. Apps that use Admin UI extensions and App Home UI extensions pick up the new styles automatically. Apps that render…","thumb":null},{"source":"changelog","stream":"platform","title":"family_name is optional for B2B orders in Payments Apps API requests","link":"https://shopify.dev/changelog/family_name-is-optional-for-b2b-orders-in-payments-apps-api-requests","date":"2026-09-15T16:00:00.000Z","categories":["API","Update","Payments Apps API"],"excerpt":"B2B checkout treats the buyer’s surname as optional, so payment session requests for B2B orders can omit family_name in shipping_address and billing_address. This affects payments apps that handle B2B orders through the…","thumb":null},{"source":"changelog","stream":"platform","title":"Delivery options in Shopify Functions input now expose their metafields","link":"https://shopify.dev/changelog/delivery-options-in-shopify-functions-input-now-expose-their-metafields","date":"2026-09-15T14:00:00.000Z","categories":["API","Update","Functions","2026-10"],"excerpt":"Shopify Functions can now read metafields attached to delivery options in the cart. On API version 2026-10, you can call metafield(namespace:, key:) on any option in cart.deliveryGroups.deliveryOptions. This affects…","thumb":null},{"source":"changelog","stream":"platform","title":"Discounts Allocator Function API developer preview has ended","link":"https://shopify.dev/changelog/discounts-allocator-function-api-developer-preview-has-ended","date":"2026-09-10T16:00:00.000Z","categories":["Action Required","API","Update","Admin GraphQL API","Functions"],"excerpt":"The Discounts Allocator Function API, available only through the Discounts Allocator developer preview, has been removed and won’t be released. The developer preview is closed. Most developers don’t need to take action.…","thumb":null},{"source":"changelog","stream":"platform","title":"Create and delete dev stores in Shopify CLI","link":"https://shopify.dev/changelog/create-and-delete-dev-stores-in-shopify-cli","date":"2026-09-09T13:00:00.000Z","categories":["Shopify CLI","New"],"excerpt":"Shopify CLI 4.8 adds shopify store commands that let you create and manage dev stores from your terminal or coding agent. These commands are available after you update to Shopify CLI 4.8. What changed You can now use…","thumb":null},{"source":"changelog","stream":"platform","title":"Variants now support multiple barcodes","link":"https://shopify.dev/changelog/product-variant-barcode-is-being-replaced-by-barcodes","date":"2026-09-08T17:35:00.000Z","categories":["Action Required","API","Deprecation announcement","Admin GraphQL API","2026-10"],"excerpt":"Merchants often sell the same variant under more than one identifier: a manufacturer UPC alongside a private-label EAN, a GTIN, a reissued ISBN, or an ASIN for a marketplace listing. Until now a variant held a single…","thumb":null},{"source":"changelog","stream":"platform","title":"Customer Address APIs now support countryCode","link":"https://shopify.dev/changelog/customer-address-apis-now-support-countrycode","date":"2026-09-08T16:00:00.000Z","categories":["API","Deprecation announcement","Checkout UI","Customer Account API","Customer Accounts","2026-10"],"excerpt":"Starting with Customer Account API version 2026-10, customer address inputs and objects support countryCode. The existing territoryCode field is deprecated but remains fully supported, so current integrations continue…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify storefronts now support UCP 2026-08-25","link":"https://shopify.dev/changelog/08-25-is-now-supported","date":"2026-09-04T16:00:00.000Z","categories":["UCP","Update"],"excerpt":"Shopify storefronts now advertise support for Universal Commerce Protocol (UCP) version 2026-08-25 in their discovery profiles at /.well-known/ucp. This update adds compatibility with the 2026-08-25 protocol release and…","thumb":null},{"source":"changelog","stream":"platform","title":"Hydrogen developer preview update: September 2, 2026","link":"https://shopify.dev/changelog/hydrogen-developer-preview-update-september-2-2026","date":"2026-09-03T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"The Hydrogen developer preview adds new capabilities to the toolkit and extends the ways developers can build Shopify storefronts: Variant links: Links that name a variant, like the ones Shopify submits to a Google…","thumb":null},{"source":"changelog","stream":"platform","title":"New paymentInstrumentSendAddEmail mutation emails customers a link to add a payment method for a subscription, order, or draft order","link":"https://shopify.dev/changelog/new-paymentinstrumentsendaddemail-mutation","date":"2026-09-03T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"You can now use the paymentInstrumentSendAddEmail mutation in the GraphQL Admin API to email a customer a link for adding a payment method to a specific resource (for example, a subscription contract). This lets you…","thumb":null},{"source":"changelog","stream":"platform","title":"Polaris CDN 1.1 release candidate","link":"https://shopify.dev/changelog/polaris-cdn-1-1-release-candidate","date":"2026-08-31T16:16:00.000Z","categories":["Polaris","New"],"excerpt":"Polaris Web Components loaded from the Shopify CDN are moving to semantic versioning, read more about that change here. You can test out the Polaris CDN 1.1 release candidate by updating the URL you load polaris from to…","thumb":null},{"source":"changelog","stream":"platform","title":"The Polaris CDN is adopting semantic versioning","link":"https://shopify.dev/changelog/the-polaris-cdn-is-adopting-semantic-versioning","date":"2026-08-31T16:15:00.000Z","categories":["Polaris","New"],"excerpt":"Polaris Web Components loaded from the Shopify CDN are moving to semantic versioning. Most apps will continue receiving compatible improvements automatically, while developers can choose when to adopt breaking changes.…","thumb":null},{"source":"changelog","stream":"platform","title":"More resilient refreshes for expiring offline access tokens","link":"https://shopify.dev/changelog/more-resilient-refreshes-for-expiring-offline-access-tokens","date":"2026-08-28T14:00:00.000Z","categories":["API","Update","Admin GraphQL API","Admin REST API"],"excerpt":"Expiring offline access token refreshes now retain the previously used refresh token until an app begins using its replacement. This rollout helps apps recover when a refresh response is lost or isn’t persisted. No…","thumb":null},{"source":"changelog","stream":"platform","title":"Password Protected Shop Dev flows on Shopify Theme CLI v3.83.x and older to be deprecated","link":"https://shopify.dev/changelog/password-protected-shop-dev-flows-on-shopify-theme-cli-v3-83-x-and-older-to-be-deprecated","date":"2026-08-27T16:00:00.000Z","categories":["Action Required","Themes","Deprecation announcement"],"excerpt":"Starting September 23, 2026, Theme commands on Shopify CLI for password protected storefronts will require version 3.84.0 or later. Versions 3.83.x and earlier will no longer be supported for theme development workflows…","thumb":null},{"source":"changelog","stream":"platform","title":"Four additional topics are now available for Events","link":"https://shopify.dev/changelog/four-additional-topics-are-now-available-for-events","date":"2026-08-26T17:00:00.000Z","categories":["API","New","Events & webhooks"],"excerpt":"Apps can now subscribe to events for Metaobject, MetafieldDefinition, MetaobjectDefinition, and InventoryTransfer. Apps can also subscribe to targeted metafield changes on InventoryTransfer. By subscribing to these…","thumb":null},{"source":"changelog","stream":"platform","title":"Build Shopify apps in PHP and Python with new official packages","link":"https://shopify.dev/changelog/build-shopify-apps-in-php-and-python-with-new-official-packages","date":"2026-08-26T16:00:00.000Z","categories":["Tools","New"],"excerpt":"Shopify releases official PHP and Python app packages Shopify now publishes official, open-source packages for building apps in PHP and Python. shopify/shopify-app-php on Packagist and shopifyapp on PyPI have reached…","thumb":null},{"source":"changelog","stream":"platform","title":"GitHub commits now name the last theme editor","link":"https://shopify.dev/changelog/github-commits-now-name-the-last-theme-editor","date":"2026-08-26T16:00:00.000Z","categories":["Themes","Update"],"excerpt":"When you edit a theme in the Shopify admin, the commit Shopify pushes to your connected branch now includes the editor's name in the body: Update from Shopify for theme Dawn Committed from shop: Snowdevil Theme last…","thumb":null},{"source":"changelog","stream":"platform","title":"Oxygen is now available on trial plan stores","link":"https://shopify.dev/changelog/oxygen-is-now-available-on-trial-plan-stores","date":"2026-08-25T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"You can now deploy Hydrogen storefronts to Oxygen from trial plan stores. Previously, Oxygen hosting required a paid plan. Note that trial plan stores don't include public environments, so deployment URLs always require…","thumb":null},{"source":"changelog","stream":"platform","title":"Script tags are deprecated and will stop running on March 1, 2027","link":"https://shopify.dev/changelog/online-store-script-tags-deprecation","date":"2026-08-24T16:00:00.000Z","categories":["Action Required","API","Deprecation announcement","Admin GraphQL API","Admin REST API"],"excerpt":"Starting October 1, 2026, the scriptTagCreate and scriptTagUpdate mutations will return an user error, and the ScriptTag REST Admin API resource will reject POST and PUT. The deprecation applies to all API versions,…","thumb":null},{"source":"changelog","stream":"platform","title":"App intents on `admin.app.intent.link` now open as a full-page navigation","link":"https://shopify.dev/changelog/app-intents-on-admin-app-intent-link-now-open-as-a-full-page-navigation","date":"2026-08-19T16:00:00.000Z","categories":["Platform","Update"],"excerpt":"When Sidekick invokes an app intent declared on the admin.app.intent.link extension target, the Shopify admin now navigates the merchant to your extension's url as a full page, matching how Shopify's own admin intents…","thumb":null},{"source":"changelog","stream":"platform","title":"Hydrogen developer preview update: August 18, 2026","link":"https://shopify.dev/changelog/hydrogen-developer-preview-update-august-18-2026","date":"2026-08-18T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"The Hydrogen developer preview adds new capabilities to the toolkit and extends the ways developers can build Shopify storefronts: Cart session attribution: Carts and Customer Account sessions stay in step, so signed-in…","thumb":null},{"source":"changelog","stream":"platform","title":"Shop Campaigns performance data now available via ShopifyQL","link":"https://shopify.dev/changelog/shop-campaigns-shopifyql","date":"2026-08-10T20:10:00.000Z","categories":["API","Update","Admin GraphQL API"],"excerpt":"The shop_campaign_insights schema is now available in the ShopifyQL. Analytics and reporting apps can query Shop Campaigns performance data on behalf of authorized merchants using the existing shopifyqlQuery field with…","thumb":null},{"source":"changelog","stream":"platform","title":"Standard storefront events and actions now support cart attributes","link":"https://shopify.dev/changelog/events-and-actions-cart-attributes-support","date":"2026-08-06T22:00:00.000Z","categories":["Platform","Update"],"excerpt":"The updateCart standard action now updates cart attributes, and a new shopify:cart:attributes-update event fires whenever an attributes update is initiated. Before this, changing an attribute meant calling the…","thumb":null},{"source":"changelog","stream":"platform","title":"Draft order and transfer/shipment inventory is moving from reserved to committed","link":"https://shopify.dev/changelog/draft-order-and-transfer-shipment-inventory-is-moving-from-reserved-to-committed","date":"2026-08-05T16:00:00.000Z","categories":["API","Update","Admin GraphQL API"],"excerpt":"We're consolidating how in-progress inventory holds are represented. Inventory that was previously tracked under the reserved quantity state for draft orders, transfers, and shipments is being moved to the committed…","thumb":null},{"source":"changelog","stream":"platform","title":"WebMCP support for Liquid and Hydrogen storefronts","link":"https://shopify.dev/changelog/webmcp-liquid-hydrogen","date":"2026-08-05T15:00:00.000Z","categories":["Platform","New"],"excerpt":"Online stores now expose WebMCP tools that AI agents can call. Agents can search your catalog, manage the shopper's cart, and go to checkout on the shopper's behalf, all in the tab they're looking at. The tools work…","thumb":null},{"source":"changelog","stream":"platform","title":"Oxygen is now available on development stores","link":"https://shopify.dev/changelog/oxygen-is-now-available-on-development-stores","date":"2026-08-03T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"You can now deploy Hydrogen storefronts to Oxygen from dev stores. Previously, Oxygen hosting required a paid plan. Note that development stores don't include public environments, so deployment URLs always require a…","thumb":null},{"source":"changelog","stream":"platform","title":"The `orderCreate` mutation now supports multiple tracking numbers for each fulfillment","link":"https://shopify.dev/changelog/order-create-fulfillment-tracking-numbers","date":"2026-08-03T13:00:00.000Z","categories":["API","New","Admin GraphQL API","Admin REST API","2026-10"],"excerpt":"We’ve added a trackingNumbers field to OrderCreateFulfillmentInput, so you can attach multiple tracking numbers to a fulfillment when importing orders. If you use the orderCreate mutation to import orders that ship in…","thumb":null},{"source":"changelog","stream":"platform","title":"Updated Built for Shopify requirements for Fulfillment services apps","link":"https://shopify.dev/changelog/updated-built-for-shopify-requirements-for-fulfillment-services-apps","date":"2026-08-01T16:00:00.000Z","categories":["Built for Shopify","Update"],"excerpt":"We've updated three Built for Shopify requirements for Fulfillment services apps. The updated thresholds better reflect how fulfillment operations run in practice, making Built for Shopify achievable for more…","thumb":null},{"source":"changelog","stream":"platform","title":"Hydrogen developer preview update: July 30, 2026","link":"https://shopify.dev/changelog/hydrogen-developer-preview-update-july-30","date":"2026-07-31T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"The Hydrogen developer preview adds new capabilities to the toolkit and extends the ways developers can build Shopify storefronts: Vue bindings: Build your storefront in Vue with the same Hydrogen APIs you know from…","thumb":null},{"source":"changelog","stream":"platform","title":"New fields for cash management activities and drawers in POS","link":"https://shopify.dev/changelog/new-fields-for-cash-management-activities-and-drawers","date":"2026-07-31T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-07"],"excerpt":"New fields are now available on cash management resources in the GraphQL Admin API, providing more detail about cash drawer balances and cash count activities. What's new Cash Drawer balance The CashDrawer object now…","thumb":null},{"source":"changelog","stream":"platform","title":"Merchants now see partner details on collaborator requests","link":"https://shopify.dev/changelog/partner-details-on-collaborator-requests","date":"2026-07-30T20:00:00.000Z","categories":["Dev Dashboard","New"],"excerpt":"Collaborator access is built on trust. When a merchant approves a request, they're giving a partner access to a live store — and merchants need enough context to make that decision with confidence. Building on identity…","thumb":null},{"source":"changelog","stream":"platform","title":"The shopify-account component for customer accounts is now a Theme Store requirement","link":"https://shopify.dev/changelog/the-shopify-account-component-for-customer-accounts-is-now-a-theme-store-requirement","date":"2026-07-30T18:00:00.000Z","categories":["Themes","New"],"excerpt":"In February 2026, we introduced the shopify-account component, which lets customers sign in and manage their account directly on the storefront. It supports passwordless sign-in, automatic Sign in with Shop recognition,…","thumb":null},{"source":"changelog","stream":"platform","title":"createdAt is now available on the Customer object in Shopify Functions","link":"https://shopify.dev/changelog/createdat-is-now-available-on-the-customer-object-in-shopify-functions","date":"2026-07-30T16:00:00.000Z","categories":["API","New","Functions","2026-10"],"excerpt":"Shopify Functions API version 2026-10 adds a createdAt field to the Customer object. You can now use the date and time a customer account was created in Function logic. This is an additive change; no action is required…","thumb":null},{"source":"changelog","stream":"platform","title":"Updating an order's shipping address recalculates taxes as of API version 2026-10","link":"https://shopify.dev/changelog/updating-an-orders-shipping-address-returns-accurate-financial-data","date":"2026-07-30T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","Admin GraphQL API","Admin REST API","2026-10"],"excerpt":"As of API version 2026-10, changing the shipping address on an unfulfilled order through the orderUpdate GraphQL mutation or the REST Admin API order update endpoint recalculates the order's taxes against the new…","thumb":null},{"source":"changelog","stream":"platform","title":"POS UI extensions can now print directly to hardware receipt printers","link":"https://shopify.dev/changelog/pos-ui-extensions-can-now-print-directly-to-hardware-receipt-printers","date":"2026-07-27T16:00:00.000Z","categories":["API","New","POS Extensions","2026-07"],"excerpt":"POS UI Extensions 2026-07 introduces the Printing API (shopify.printing), which enables extensions to discover hardware printers with getPrinters() and send documents directly to a connected receipt printer with…","thumb":null},{"source":"changelog","stream":"platform","title":"SubscriptionContractCalculation API now available in early access","link":"https://shopify.dev/changelog/subscription-contract-calculation-api-now-available-in-early-access","date":"2026-07-27T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"The new SubscriptionContractCalculation object on the GraphQL Admin API is now available in early access on the 2026-10 release candidate API version. It's the successor to the GraphQL Admin API's SubscriptionDraft…","thumb":null},{"source":"changelog","stream":"platform","title":"Invalid metafield queries now return errors in the GraphQL Admin API","link":"https://shopify.dev/changelog/invalid-metafield-queries-now-return-errors-in-the-graphql-admin-api","date":"2026-07-24T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","Admin GraphQL API","Metafields and metaobjects","2026-10"],"excerpt":"Starting in API version 2026-10, the GraphQL Admin API returns an error when a query filters by a metafield that isn't set up for filtering, instead of silently returning incorrect results. This is a breaking change. It…","thumb":null},{"source":"changelog","stream":"platform","title":"Metafield triggers and additional topics are now available for Events","link":"https://shopify.dev/changelog/metafield-triggers-and-additional-topics-are-now-available-for-events","date":"2026-07-21T20:00:00.000Z","categories":["API","Update","Events & webhooks"],"excerpt":"Apps can now subscribe to events for Order, Collection, InventoryItem, InventoryShipment, Location, and can subscribe to metafield changes on Product, Order, Customer, Collection and Location. ProductVariant metafields…","thumb":null},{"source":"changelog","stream":"platform","title":"Liquid templates can now compose pages with blocks and partials","link":"https://shopify.dev/changelog/developer-preview-liquid-block-and-partial-tags","date":"2026-07-21T17:00:00.000Z","categories":["API","New","Liquid"],"excerpt":"The Liquid July ’26 developer preview introduces a simpler way to build theme pages. Page structure can live directly in a Liquid template, where developers and coding agents can read and edit everything in one place.…","thumb":null},{"source":"changelog","stream":"platform","title":"Full-stack capabilities to power app analytics","link":"https://shopify.dev/changelog/full-stack-capabilities-to-power-app-analytics","date":"2026-07-21T13:00:00.000Z","categories":["API","New","Admin GraphQL API","App Events API","Metafields and metaobjects","ShopifyQL","2026-10"],"excerpt":"For app developers, building merchant-facing analytics has always meant standing up your own stack: a charting library, a data warehouse to sync merchant data into, handling currencies and locales, and a UI that never…","thumb":null},{"source":"changelog","stream":"platform","title":"Physical inventory feature preview","link":"https://shopify.dev/changelog/physical-inventory-feature-preview","date":"2026-07-17T16:00:00.000Z","categories":["API","New","Admin GraphQL API"],"excerpt":"The physical inventory feature preview gives you early access to a new set of inventory APIs in the unstable version of the GraphQL Admin API. Enable it on a development store to build and test against the core…","thumb":null},{"source":"changelog","stream":"platform","title":"Card deposit endpoint now requires mTLS certificate","link":"https://shopify.dev/changelog/card-deposit-endpoint-now-requires-mtls-certificate","date":"2026-07-16T16:00:00.000Z","categories":["API","Update"],"excerpt":"Shopify's card-deposit endpoint now requires a Shopify-issued mTLS client certificate. Apps that store cardholder data with the customerPaymentMethodCreditCardCreate and customerPaymentMethodCreditCardUpdate GraphQL…","thumb":null},{"source":"changelog","stream":"platform","title":"Updated App Store requirements: 4.1.2 Use a unique name for your app","link":"https://shopify.dev/changelog/updated-app-store-requirements-4-1-2-use-a-unique-name-for-your-app","date":"2026-07-15T16:00:00.000Z","categories":["App store","Update"],"excerpt":"Your app's name is what merchants use to discover, identify, and remember your app. We've added requirement 4.1.2, \"Use a unique name for your app,\" to reduce merchant confusion over identical and copycat app names in…","thumb":null},{"source":"changelog","stream":"platform","title":"Storefront API `@inContext` supports `channelId`","link":"https://shopify.dev/changelog/new-channelid-argument-for-incontext-directive-in-storefront-api-2026-10","date":"2026-07-15T16:00:00.000Z","categories":["API","New","Storefront API","2026-10"],"excerpt":"As of Storefront API version 2026-10, the @inContext directive accepts an optional channelId argument. Use channelId to apply a specific sales channel’s context to an entire query, including channel-specific product…","thumb":null},{"source":"changelog","stream":"platform","title":"`productId`, `title`,`variantSku`, and `variantTitle` fields added to `ExchangeLineItem`","link":"https://shopify.dev/changelog/new-fields-on-exchangelineitem","date":"2026-07-15T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"","thumb":null},{"source":"changelog","stream":"platform","title":"POS UI Extensions 2026-07 adds discount allocations to bundle components","link":"https://shopify.dev/changelog/pos-ui-extensions-2026-07-adds-discount-allocations-to-bundle-components","date":"2026-07-15T04:00:00.000Z","categories":["API","Update","POS Extensions","2026-07"],"excerpt":"Starting with POS UI Extensions API version 2026-07, product bundle components in cart line item data include discount allocation details. Apps can access component-level discount allocations from bundle components on a…","thumb":null},{"source":"changelog","stream":"platform","title":"POS Extensions now supports a background extension target","link":"https://shopify.dev/changelog/pos-extensions-now-supports-a-background-extension-target","date":"2026-07-09T19:00:00.000Z","categories":["API","New","POS Extensions","2026-07"],"excerpt":"The pos.app.ready.data target runs for the entire POS session, letting your extension observe POS events and run background logic without rendering any UI surface. Use it for event observation, data storage, and calling…","thumb":null},{"source":"changelog","stream":"platform","title":"Identity verification for Shopify Partners starts today","link":"https://shopify.dev/changelog/identity-verification-for-partners","date":"2026-07-09T17:15:00.000Z","categories":["Action Required","Platform","New"],"excerpt":"Trust is foundational to the Shopify Partner ecosystem. Partners take actions across Shopify that can directly affect merchants, and merchants need confidence when granting access to their stores. We’re introducing…","thumb":null},{"source":"changelog","stream":"platform","title":"Hydrogen developer preview update: July 8, 2026","link":"https://shopify.dev/changelog/hydrogen-developer-preview-update","date":"2026-07-09T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"The Hydrogen developer preview adds new capabilities to the toolkit and extends the ways developers can build Shopify storefronts: Storefront API caching for catalog data: Cache products, collections, and pages at the…","thumb":null},{"source":"changelog","stream":"platform","title":"App Pricing: more plans, no-charge plan testing, and negative and fractional App Events","link":"https://shopify.dev/changelog/app-pricing-more-plans-no-charge-plan-testing-and-negative-and-fractional-app-events","date":"2026-07-09T16:00:00.000Z","categories":["App store","Update"],"excerpt":"We’ve made several updates to App Pricing: Increased plan limits: You can now create up to 8 public plans (previously 4) and 15 private plans (previously 10) per app. No-charge plan testing: Test app billing flows…","thumb":null},{"source":"changelog","stream":"platform","title":"POS UI extensions 2026-07 uses per-unit fixed-amount line item discounts","link":"https://shopify.dev/changelog/pos-ui-extensions-2026-07-uses-per-unit-fixed-amount-line-item-discounts","date":"2026-07-08T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","POS Extensions","2026-07"],"excerpt":"Starting with POS UI extensions API version 2026-07, FixedAmount line item discounts passed to setLineItemDiscount and bulkSetLineItemDiscounts from the Cart API must represent a per-unit discount. Why it's changing In…","thumb":null},{"source":"changelog","stream":"platform","title":"Prepare your app for migration to Shopify App Pricing","link":"https://shopify.dev/changelog/prepare-your-app-for-migration-to-shopify-app-pricing","date":"2026-07-07T16:00:00.000Z","categories":["Platform","Update"],"excerpt":"Developers using the Billing API can now begin preparing their apps to move to Shopify App Pricing. The first part of our migration tool lets you generate, review, edit, and test Shopify App Pricing plans before moving…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify Flow: Changes to Action extensions result in fewer breaking changes","link":"https://shopify.dev/changelog/shopify-flow-changes-to-action-extensions-result-in-fewer-breaking-changes","date":"2026-07-07T16:00:00.000Z","categories":["Tools","Update","2026-07"],"excerpt":"Your server-side code now has more control over how breaking changes to an action’s configuration fields are handled. Instead of failing validation when there’s a field mismatch, workflows that use older versions of an…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify Flow: Action runtime URLs now update automatically","link":"https://shopify.dev/changelog/shopify-flow-action-runtime-urls-now-update-automatically","date":"2026-07-07T16:00:00.000Z","categories":["Tools","Update","2026-07"],"excerpt":"Shopify Flow now resolves an action’s runtime_url on every execution. When the runtime_url is changed and the app is redeployed, the new URL is automatically used by existing workflows the next time they run. Merchants…","thumb":null},{"source":"changelog","stream":"platform","title":"Updated App Store Requirements: 1.3 Always Use Honest and Transparent Review Practices","link":"https://shopify.dev/changelog/updated-app-store-requirements-13-always-use-honest-and-transparent-review-practices","date":"2026-07-06T16:30:00.000Z","categories":["App store","Update"],"excerpt":"All apps published to Shopify’s App Store are subject to policy 1.3 “Always use honest and transparent review practices”. What’s changing: The Shopify App Store requirements policy 1.3 further clarifies our enforcement…","thumb":null},{"source":"news","stream":"news","title":"Here come the late holiday shoppers – our survey reveals who they are","link":"https://shopify.com/news/here-come-the-late-holiday-shoppers-our-survey-reveals-who-they-are","date":"2023-12-07T10:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify merchants drive record-high $9.3 billion in Black Friday-Cyber Monday sales","link":"https://shopify.com/news/shopify-merchants-drive-record-high-9-3-billion-in-black-friday-cyber-monday-sales","date":"2023-11-28T14:02:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"They did it again! Shopify merchants break Black Friday record with $4.1 billion in sales","link":"https://shopify.com/news/they-did-it-again-shopify-merchants-break-black-friday-record-with-4-1-billion-in-sales","date":"2023-11-25T13:49:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify’s BFCM globe brings commerce to life like never before – here's how our engineers built it","link":"https://shopify.com/news/shopify-s-bfcm-globe-brings-commerce-to-life-like-never-before-heres-how-our-engineers-built-it","date":"2023-11-24T13:27:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shaun White's latest trick: WHITESPACE takes flight on Shopify","link":"https://shopify.com/news/shaun-whites-latest-trick-whitespace-takes-flight-on-shopify","date":"2023-11-17T14:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"How AI is helping one inspiring entrepreneur win holiday shopping","link":"https://shopify.com/news/how-ai-is-helping-one-inspiring-entrepreneur-win-holiday-shopping","date":"2023-11-14T14:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"‘Tis the season to treat yourself: New data shows holiday sales go way beyond gifts","link":"https://shopify.com/news/tis-the-season-to-treat-yourself-new-data-shows-holiday-sales-go-way-beyond-gifts","date":"2023-11-07T10:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify Announces Third-Quarter 2023 Financial Results","link":"https://shopify.com/news/shopify-announces-third-quarter-2023-financial-results","date":"2023-11-02T11:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Hot take: B2B is the biggest commerce opportunity of 2024","link":"https://shopify.com/news/hot-take-b2b-is-the-biggest-commerce-opportunity-of-2024","date":"2023-11-30T14:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"7 things you need to know about this year's holiday shoppers","link":"https://shopify.com/news/7-things-you-need-to-know-about-this-years-holiday-shoppers","date":"2023-10-16T09:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify Announces Third-Quarter 2023 Financial Results Conference Call Date and Upcoming Investor Day","link":"https://shopify.com/news/shopify-announces-third-quarter-2023-financial-results-conference-call-date-and-upcoming-investor-day","date":"2023-10-12T11:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Americans say they’re holding firm on holiday shopping – the season starts now","link":"https://shopify.com/news/americans-say-they-re-holding-firm-on-holiday-shopping-the-season-starts-now","date":"2023-10-10T09:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify Audiences supercharges customer acquisition with new Snap, Criteo, and TikTok integrations","link":"https://shopify.com/news/shopify-audiences-supercharges-customer-acquisition-with-new-snap-criteo-and-tiktok-integrations","date":"2023-09-25T13:03:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"eng","stream":"engineering","title":"Helix: The internal tool powering our Shopify app's native migration","link":"https://shopify.engineering/helix","date":"2026-09-21T21:12:33.000Z","categories":[],"excerpt":"We built Helix to help LLMs rebuild the Shopify app in Swift and Kotlin, using small checkpoints and strict quality gates to keep the code shippable.","thumb":null},{"source":"eng","stream":"engineering","title":"Migrating Shop app from React Native to native","link":"https://shopify.engineering/shop-app-migration","date":"2026-09-10T12:27:06.000Z","categories":[],"excerpt":"We migrated the Shop app from React Native to Swift and Kotlin. Assisted by AI, the team was able to go from a proof of concept to a fully rebuilt native app published in the app stores in just 12 weeks.","thumb":null},{"source":"eng","stream":"engineering","title":"Native is now the future of mobile at Shopify","link":"https://shopify.engineering/back-to-native","date":"2026-09-10T12:25:28.000Z","categories":[],"excerpt":"Coding agents changed what it costs to build mobile apps twice. Here’s why Shopify is moving from React Native back to Swift and Kotlin.","thumb":null},{"source":"eng","stream":"engineering","title":"How River takes security work from a fix to merge","link":"https://shopify.engineering/river-vulnerability-remediation","date":"2026-09-02T16:30:45.000Z","categories":[],"excerpt":"River, Shopify’s AI agent in Slack, enables autonomous vulnerability remediation, not just detection.","thumb":null},{"source":"eng","stream":"engineering","title":"Gisting: Compressing LLM Agent context to ↑ throughput and ↓ cost","link":"https://shopify.engineering/gisting","date":"2026-08-19T14:32:58.000Z","categories":[],"excerpt":"Gisting compresses context into a set of learned tokens, preserving its quality while making the model faster and cheaper.","thumb":null},{"source":"eng","stream":"engineering","title":"How we raised mobile end-to-end test stability to 98%","link":"https://shopify.engineering/mobile-e2e-testing","date":"2026-08-12T20:02:35.000Z","categories":[],"excerpt":"We rebuilt our mobile end-to-end testing framework with a strict API and computer vision, raising test stability drastically.","thumb":null},{"source":"eng","stream":"engineering","title":"Sidekick's continual learning loop","link":"https://shopify.engineering/sidekicks-continual-learning-loop","date":"2026-08-05T14:52:54.000Z","categories":[],"excerpt":"How we compress production failures into model weights every day, beat frontier-model quality, and cut serving costs 96%.","thumb":null},{"source":"eng","stream":"engineering","title":"Building an agentic harness that outlasts the model","link":"https://shopify.engineering/building-an-agentic-harness-that-outlasts-the-model","date":"2026-07-29T15:30:00.000Z","categories":[],"excerpt":"We built an agentic code review and test oracle harness that discovers vulnerabilities, proves them with real tests, and provides Shopify-tuned fixes.","thumb":null},{"source":"eng","stream":"engineering","title":"Upgrading Checkout Blocks app to Polaris web components","link":"https://shopify.engineering/upgrading-checkout-blocks-app-to-polaris-web-components","date":"2026-07-16T17:19:40.000Z","categories":[],"excerpt":"We moved five high-traffic checkout extensions to remote-dom and Polaris web components, cutting bundle sizes drastically and making checkout faster.","thumb":null},{"source":"eng","stream":"engineering","title":"Inside Shopify Hack Days: Building a prototype for music-playing pages","link":"https://shopify.engineering/hack-days","date":"2026-07-14T13:55:57.000Z","categories":[],"excerpt":"How a Hack Days team built a music player, custom GLSL visualizers, and an artist toolkit for storefronts, all in three days.","thumb":null},{"source":"eng","stream":"engineering","title":"Clustering billions of products for agentic commerce with Catalog API","link":"https://shopify.engineering/catalog-clustering","date":"2026-06-17T16:54:51.000Z","categories":[],"excerpt":"Building an LLM-powered pipeline to match product listings across millions of merchants into a unified catalog that AI agents can search.","thumb":null},{"source":"eng","stream":"engineering","title":"Teaching Sidekick to say no: automated data curation with LLM judge consensus","link":"https://shopify.engineering/sidekick-curation","date":"2026-06-15T19:30:00.000Z","categories":[],"excerpt":"Production training data only captures successful queries; it can't teach a model when to say no. We built an automated curation pipeline using LLM judge consensus to close that gap.","thumb":null},{"source":"eng","stream":"engineering","title":"Quick: An internal hosting platform for the AI era","link":"https://shopify.engineering/quick","date":"2026-06-10T12:49:23.000Z","categories":[],"excerpt":"Quick lets anyone at Shopify ship a site in seconds. It has changed the culture of how we build and share.","thumb":null},{"source":"eng","stream":"engineering","title":"Under the River","link":"https://shopify.engineering/under-the-river","date":"2026-05-28T12:30:02.000Z","categories":[],"excerpt":"What it took to ship our Slack-native agent River, lessons learned, and the substrate that runs beneath it. Co-authored by River.","thumb":null},{"source":"eng","stream":"engineering","title":"We replaced Redis with MySQL for inventory reservations—and it scaled","link":"https://shopify.engineering/scaling-inventory-reservations","date":"2026-05-12T16:51:53.000Z","categories":[],"excerpt":"How we used SKIP LOCKED, composite primary keys, and connection visibility to hit our scale targets.","thumb":null},{"source":"eng","stream":"engineering","title":"Flow generation through natural language: An agentic modeling approach","link":"https://shopify.engineering/fine-tuning-agent-shopify-flow","date":"2026-04-22T12:32:02.000Z","categories":[],"excerpt":"We fine-tuned Qwen3-32B into a tool-calling agent that generates Flow automations from natural language—faster, cheaper, and more accurate than the frontier model it replaced, with a weekly retraining flywheel built on…","thumb":null},{"source":"eng","stream":"engineering","title":"Autoresearch isn’t just for training models","link":"https://shopify.engineering/autoresearch","date":"2026-04-15T16:19:20.000Z","categories":[],"excerpt":"Tobi and I generalized Karpathy’s Autoresearch to improve 40+ metrics across Shopify, then we open-sourced our project.","thumb":null},{"source":"eng","stream":"engineering","title":"Building a Magic Mirror: AI retail experiences with Remix","link":"https://shopify.engineering/magic-mirror","date":"2026-03-19T12:33:46.000Z","categories":[],"excerpt":"The technical blueprint for an AI-powered mirror that sees customers, analyzes their appearance, and delivers personalized product recommendations in real-time.","thumb":null},{"source":"eng","stream":"engineering","title":"Shopify’s journey to faster breadth-first GraphQL execution","link":"https://shopify.engineering/faster-breadth-first-graphql-execution","date":"2026-03-12T12:19:08.000Z","categories":[],"excerpt":"Conventional GraphQL execution uses depth-first traversal that incurs many hidden costs. We questioned why, rewrote it in a faster breadth-first manner, and saw dramatic results.","thumb":null},{"source":"eng","stream":"engineering","title":"2,000 robots walk into a shop...","link":"https://shopify.engineering/simgym","date":"2026-02-27T18:11:45.000Z","categories":[],"excerpt":"SimGym infrastructure for synthetic customers at scale. A Shopify + NVIDIA collaboration.","thumb":null},{"source":"yt-shopify","stream":"videos","title":"What is Shop? | Shopping designed around you","link":"https://www.youtube.com/watch?v=KsujQDvKdHk","date":"2026-09-01T01:56:51.005Z","ago":"1mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"This is life on Shopify","link":"https://www.youtube.com/watch?v=qajaXseoF7Q","date":"2026-08-02T00:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Spring ’26 Edition rundown","link":"https://www.youtube.com/watch?v=sf7zUi_8bhs","date":"2026-07-02T23:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Build with Catalog API and UCP","link":"https://www.youtube.com/watch?v=mWRMjEIh4hE","date":"2026-07-02T22:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Enhanced inventory management","link":"https://www.youtube.com/watch?v=dsW4E40Y0UI","date":"2026-07-02T21:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Actionable insights for agentic selling","link":"https://www.youtube.com/watch?v=K1nR7pe49cM","date":"2026-07-02T20:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Better context for your store's data","link":"https://www.youtube.com/watch?v=DiJc9gsgzn8","date":"2026-07-02T19:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Online to in person with the Shop app","link":"https://www.youtube.com/watch?v=9LkIxHbr1Ik","date":"2026-07-02T18:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Shopify POS checkout is over a minute faster","link":"https://www.youtube.com/watch?v=37zOjqRl-3Q","date":"2026-07-02T17:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"River: Shopify's Slack-native AI agent","link":"https://www.youtube.com/watch?v=efUbUOO46VI","date":"2026-06-02T16:56:51.005Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Tobi Lütke x Ilya Grigorik: Building the Universal Commerce Protocol","link":"https://www.youtube.com/watch?v=uNOFaCq8RZQ","date":"2026-06-02T15:56:51.005Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Tobi's first Autoresearch encounter","link":"https://www.youtube.com/watch?v=VAlvxLG0RZo","date":"2026-05-03T14:56:51.005Z","ago":"5mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Open-sourcing Shopify's Autoresearch contribution","link":"https://www.youtube.com/watch?v=sqaxqH_GPFQ","date":"2026-05-03T13:56:51.005Z","ago":"5mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Tobi Lütke x Jess Hertz: Invisible Work","link":"https://www.youtube.com/watch?v=08LyYlIMXbY","date":"2026-05-03T12:56:51.005Z","ago":"5mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"When everything feels uncertain, build something yourself","link":"https://www.youtube.com/watch?v=G9rsX4M5CmM","date":"2026-03-04T11:56:51.005Z","ago":"7mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Fireside Chat with Tobias Lütke and Guillermo Rauch | DotDev 2026","link":"https://www.youtube.com/watch?v=9rVN5ChMguc","date":"2026-08-02T01:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Main Stage Keynote with Vanessa Lee | DotDev 2026","link":"https://www.youtube.com/watch?v=235Tn1bPmOI","date":"2026-08-02T00:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Fireside Chat with Tobi Lütke & Harley Finkelstein | DotDev 2026","link":"https://www.youtube.com/watch?v=t5xslC6f7FY","date":"2026-08-01T23:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"DotDev 2026 Welcome with Atlee Clark","link":"https://www.youtube.com/watch?v=s8WQ83l3Rt0","date":"2026-08-01T22:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Shopify Build Awards | DotDev 2026","link":"https://www.youtube.com/watch?v=SNWlu1-k2zo","date":"2026-08-01T21:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"How to Create a Development Store || Shopify Academy","link":"https://www.youtube.com/watch?v=0N3SCe8W3ic","date":"2026-02-02T20:56:51.005Z","ago":"8mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Migrate from the Partner Dashboard","link":"https://www.youtube.com/watch?v=B7XK83NBJAI","date":"2025-09-30T19:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"How to use Shopify Theme Blocks: Full beginners guide || Shopify Academy","link":"https://www.youtube.com/watch?v=0_lDRHL9Wmk","date":"2025-09-30T18:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Understanding Shopify Theme Blocks || Shopify Academy","link":"https://www.youtube.com/watch?v=7w5iyvXdzWU","date":"2025-09-30T17:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Create your own storefront AI agent | Editions.dev 2025","link":"https://www.youtube.com/watch?v=GZCW4r6kNUU","date":"2025-09-30T16:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"All-in-one Customer Accounts | Editions.dev 2025","link":"https://www.youtube.com/watch?v=U79SWJRJHuU","date":"2025-09-30T15:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Building powerful solutions for B2B | Editions.dev 2025","link":"https://www.youtube.com/watch?v=vAFQFDVvdOQ","date":"2025-09-30T14:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Complex Functions made simple | Editions.dev 2025","link":"https://www.youtube.com/watch?v=xAhVm_vN_0w","date":"2025-09-30T13:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Declarative custom data + new app dev = 🔥 | Editions.dev 2025","link":"https://www.youtube.com/watch?v=iQzaT53-sRE","date":"2025-09-30T12:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Horizon under the hood | Editions.dev 2025","link":"https://www.youtube.com/watch?v=71ZgGb-gf5Y","date":"2025-09-30T11:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Ryan van Huuksloot - Flink SQL Toolkit","link":"https://www.youtube.com/watch?v=JMutPPVyqGQ","date":"2026-06-03T01:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Daniel Rossos - Flink Table Source Reuse","link":"https://www.youtube.com/watch?v=UWKeqVsn_dc","date":"2026-06-03T00:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Flink Meetup Presentation Nov 12 2025 UDFs Made Easy","link":"https://www.youtube.com/watch?v=2jctIBi1bbM","date":"2026-06-02T23:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Fireside Chat: Quantum x AI and the Future","link":"https://www.youtube.com/watch?v=yVeHnWwvZZA","date":"2026-06-02T22:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Toronto Tech Week 2026","link":"https://www.youtube.com/watch?v=RkyuGgejOZU","date":"2026-06-02T21:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Dev Tooling in a New World","link":"https://www.youtube.com/watch?v=PanNn-3bg6Q","date":"2026-06-02T20:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"UCP & Agentic Commerce","link":"https://www.youtube.com/watch?v=QbkVrCU8PLM","date":"2026-06-02T19:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"SimGym","link":"https://www.youtube.com/watch?v=MHkGzwn0PG8","date":"2026-06-02T18:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"AI Frontier: Battle for Intelligence & Compute Power | Shopify's Farhan Thawar x Groq's Sunny Madra","link":"https://www.youtube.com/watch?v=x0CXZj7hnKQ","date":"2025-11-04T17:56:51.006Z","ago":"11mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Sidekick Breakout Talk - Toronto Tech Week","link":"https://www.youtube.com/watch?v=S7Omw0zDkyA","date":"2025-09-30T16:56:51.006Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Building at Scale: Fireside Chat (Toronto Tech Week)","link":"https://www.youtube.com/watch?v=F7Pjt806oEw","date":"2025-09-30T15:56:51.006Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Developer Productivity: Fireside with Daniel Doubrovkine and Michael Bachman (Toronto Tech Week)","link":"https://www.youtube.com/watch?v=WMjt0U7b1gI","date":"2025-09-30T14:56:51.006Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Leveraging Multimodal LLMs for Shopify’s Global Catalogue","link":"https://www.youtube.com/watch?v=sGrkxnOe7Zs","date":"2025-09-30T13:56:51.006Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Circlez Coffee Demo","link":"https://www.youtube.com/watch?v=eMJBsCMmq0A","date":"2023-10-01T12:56:51.006Z","ago":"3y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Our Relationship with Rails | Shopify Engineering","link":"https://www.youtube.com/watch?v=FUy64bt54N4","date":"2022-10-01T11:56:51.006Z","ago":"4y ago","categories":[],"excerpt":"","thumb":null}]}</script>
+    <script>
+      const SNAP = JSON.parse(document.getElementById('snapshot').textContent);
+      const NOW = Date.now();
+      const DAY = 864e5;
+      const params = new URLSearchParams(location.search);
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const root = document.documentElement;
+
+      const SOURCES = {
+        changelog: { label: 'Changelog', icon: 'code', h: 255, kind: 'shopify.dev' },
+        news: { label: 'Newsroom', icon: 'news', h: 150, kind: 'shopify.com/news' },
+        eng: { label: 'Engineering blog', icon: 'terminal', h: 205, kind: 'shopify.engineering' },
+        'yt-shopify': { label: 'Shopify', icon: 'video', h: 140, kind: 'YouTube' },
+        'yt-devs': { label: 'ShopifyDevs', icon: 'video', h: 280, kind: 'YouTube' },
+        'yt-eng': { label: 'Shopify Engineering', icon: 'video', h: 190, kind: 'YouTube' }
+      };
+      const VIDEO_SOURCES = ['yt-shopify', 'yt-devs', 'yt-eng'];
+      const TYPES = [
+        ['Action Required', 'Action required', 'red'],
+        ['Breaking API Change', 'Breaking change', 'red'],
+        ['Deprecation announcement', 'Deprecation', 'amber'],
+        ['New', 'New', 'green'],
+        ['Update', 'Update', '']
+      ];
+      const TYPE_OF = new Map(TYPES.map(([key, label, tone]) => [key, { label, tone }]));
+      const ACTION = TYPES.slice(0, 3).map(([key]) => key);
+      const HIDDEN = new Set(['API', 'Platform']);
+      const isVersion = (c) => /^\d{4}-\d{2}$/.test(c);
+      const isArea = (c) => !TYPE_OF.has(c) && !isVersion(c) && !HIDDEN.has(c);
+      const slug = (s) => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      const ITEMS = SNAP.items
+        .map((i) => ({ ...i, t: Date.parse(i.date), action: i.categories.some((c) => ACTION.includes(c)) }))
+        .sort((a, b) => b.t - a.t);
+      const areaCounts = {};
+      ITEMS.filter((i) => i.source === 'changelog').forEach((i) =>
+        i.categories.filter(isArea).forEach((c) => (areaCounts[c] = (areaCounts[c] || 0) + 1))
+      );
+      const AREAS = Object.entries(areaCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([c]) => c);
+      const VERSIONS = [...new Set(ITEMS.flatMap((i) => i.categories.filter(isVersion)))].sort().reverse();
+
+      // Cover art per changelog area: hue and icon.
+      const AREA_ART = {
+        'Admin GraphQL API': [255, 'code'],
+        'Admin REST API': [240, 'code'],
+        'Storefront API': [185, 'store'],
+        Functions: [28, 'fn'],
+        Themes: [330, 'brush'],
+        Liquid: [320, 'brush'],
+        'Checkout UI': [210, 'cart'],
+        'POS Extensions': [165, 'card'],
+        'Payments Apps API': [125, 'card'],
+        'Customer Account API': [140, 'user'],
+        'Customer Accounts': [140, 'user'],
+        'Events & webhooks': [42, 'bolt'],
+        'App Events API': [42, 'bolt'],
+        'App store': [220, 'grid'],
+        'Built for Shopify': [150, 'badge'],
+        'Admin Extensions': [262, 'grid'],
+        Tools: [200, 'terminal'],
+        'Shopify CLI': [200, 'terminal'],
+        Hydrogen: [195, 'drop'],
+        Polaris: [275, 'layers'],
+        'Dev Dashboard': [230, 'gauge'],
+        'AI Toolkit': [295, 'sparkle'],
+        UCP: [305, 'sparkle'],
+        Catalog: [175, 'store'],
+        'Metafields and metaobjects': [35, 'db'],
+        ShopifyQL: [55, 'db']
+      };
+
+      // Sample stores: the real feature reads stores Alfred detected, plus /meta.json from the storefront.
+      const STORES = {
+        'northwind-kitchen': { name: 'Northwind Kitchen', theme: 'Dawn', version: '15.4.0', latest: '15.4.1', products: 248, collections: 18, ships: 32, currency: 'USD', seen: 2 * 36e5 },
+        'trailmark-travel': { name: 'Trailmark Travel Co.', theme: 'Horizon', version: '2.1.0', latest: '2.1.0', products: 1312, collections: 46, ships: 54, currency: 'CAD', seen: 26 * 36e5 },
+        bytebench: { name: 'Bytebench', theme: 'Prestige', version: '10.6.0', latest: '10.8.0', products: 3904, collections: 120, ships: 12, currency: 'GBP', seen: 3 * DAY },
+        'lumen-learning': { name: 'Lumen Learning', theme: 'Sense', version: '15.2.0', latest: '15.4.1', products: 86, collections: 7, ships: 1, currency: 'AUD', seen: 4 * DAY }
+      };
+      const PINS = [
+        ['Northwind orders', 'https://admin.shopify.com/store/northwind-kitchen/orders'],
+        ['Theme editor', 'https://admin.shopify.com/store/northwind-kitchen/themes/current/editor'],
+        ['Bytebench storefront', 'https://bytebench.myshopify.com'],
+        ['API versioning', 'https://shopify.dev/docs/api/usage/versioning'],
+        ['Partner payouts', 'https://partners.shopify.com/current/payouts']
+      ];
+      const X_HANDLES = ['Shopify', 'ShopifyDevs', 'ShopifyEng', 'ShopifyPartners'];
+      const hostPath = (u) => {
+        const url = new URL(u);
+        return (url.hostname + url.pathname).replace(/\/$/, '');
+      };
+      const pinIcon = (u) => {
+        const host = new URL(u).hostname;
+        if (host === 'admin.shopify.com') return 'admin';
+        if (host.endsWith('.myshopify.com')) return 'store';
+        if (host === 'partners.shopify.com') return 'users';
+        if (host === 'shopify.dev') return 'code';
+        return 'link';
+      };
+      const initials = (name) =>
+        name
+          .split(' ')
+          .slice(0, 2)
+          .map((x) => x[0])
+          .join('');
+
+      const FEEDS = {
+        all: { name: 'My feed', icon: 'home', desc: 'Everything from your sources, newest first.', test: () => true },
+        action: { name: 'Needs action', icon: 'alert', desc: 'Action required, breaking changes and deprecations.', test: (i) => i.action },
+        platform: { name: 'Platform updates', icon: 'code', desc: 'Every entry in the shopify.dev changelog.', test: (i) => i.source === 'changelog' },
+        videos: { name: 'Videos', icon: 'video', desc: 'Shopify, ShopifyDevs and Shopify Engineering on YouTube.', test: (i) => i.stream === 'videos' },
+        engineering: { name: 'Engineering', icon: 'terminal', desc: 'Posts from shopify.engineering.', test: (i) => i.source === 'eng' },
+        news: { name: 'Newsroom', icon: 'news', desc: 'Press releases from the Shopify newsroom.', test: (i) => i.source === 'news' }
+      };
+      const LIBRARY = {
+        bookmarks: { name: 'Bookmarks', icon: 'bookmark', desc: 'Posts you saved for later.' },
+        history: { name: 'History', icon: 'history', desc: 'Posts you opened, most recent first.' }
+      };
+      let fid = 0;
+      const feedDef = (o) => ({
+        id: 'f' + ++fid,
+        name: o.name,
+        sources: new Set(o.sources || Object.keys(SOURCES)),
+        types: new Set(o.types || []),
+        area: o.area || '',
+        version: o.version || '',
+        unreadOnly: !!o.unreadOnly
+      });
+      const CUSTOM = [feedDef({ name: 'Admin API', sources: ['changelog'], area: 'Admin GraphQL API' }), feedDef({ name: 'Checkout changes', sources: ['changelog'], area: 'Checkout UI' })];
+
+      const S = {
+        lastVisit: NOW - 7 * DAY,
+        sources: new Set(Object.keys(SOURCES)),
+        bookmarks: new Set(),
+        history: [],
+        q: '',
+        theme: params.get('theme') || 'system',
+        rerender: false
+      };
+      const UI = {};
+      const resetUI = () =>
+        Object.assign(UI, {
+          view: 'all',
+          layout: 'cards',
+          sort: 'new',
+          limit: 24,
+          storePop: null,
+          popPos: null,
+          modal: null,
+          draft: null,
+          drawer: false,
+          editing: false,
+          addOpen: false,
+          enter: null,
+          fresh: null
+        });
+
+      const ICONS = {
+        play: '<polygon points="7 4 20 12 7 20 7 4" fill="currentColor" stroke="none"/>',
+        code: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+        news: '<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8z"/>',
+        terminal: '<polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/>',
+        video: '<rect x="2" y="5" width="20" height="14" rx="3"/><polygon points="10 9 15 12 10 15" fill="currentColor" stroke="none"/>',
+        layers: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+        home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+        alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+        bookmark: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
+        bookmarkFill: '<path fill="currentColor" d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
+        history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+        link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+        search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+        sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+        moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+        monitor: '<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
+        cardsLayout: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+        listLayout: '<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/>',
+        rows: '<line x1="3" x2="21" y1="5" y2="5"/><line x1="3" x2="21" y1="10" y2="10"/><line x1="3" x2="21" y1="15" y2="15"/><line x1="3" x2="21" y1="20" y2="20"/>',
+        carousel: '<rect x="6" y="5" width="12" height="14" rx="1.5"/><path d="M2 7v10"/><path d="M22 7v10"/>',
+        sliders:
+          '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
+        filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+        plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
+        close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+        pencil: '<path d="M21.17 6.81a1 1 0 0 0-3.98-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/>',
+        arrow: '<path d="M7 17 17 7"/><path d="M7 7h10v10"/>',
+        check: '<path d="m5 12 5 5L20 7"/>',
+        chevL: '<path d="m15 18-6-6 6-6"/>',
+        chevR: '<path d="m9 18 6-6-6-6"/>',
+        grip: '<g fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></g>',
+        pin: '<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
+        store: '<path d="M3 9 4.5 4h15L21 9"/><path d="M3 9h18v1.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v8h14v-8"/>',
+        users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+        admin: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 4v5"/>',
+        fn: '<path d="M10 20c-2 0-3-1-3-3"/><path d="M14 4c-2 0-3 1-3 3v10"/><path d="M8 11h7"/>',
+        brush: '<path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/>',
+        cart: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+        card: '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+        user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+        bolt: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+        grid: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+        badge: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+        drop: '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+        gauge: '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+        sparkle: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/>',
+        db: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
+        xlogo:
+          '<path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>'
+      };
+      const icon = (name, size = 16) =>
+        `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+
+      // Feed content is untrusted: every string is escaped and only https links render.
+      const esc = (s) =>
+        String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+      const href = (u) => (/^https:\/\//.test(u) ? esc(u) : '#');
+      // Prototype links open in a new tab so the page and its History survive; the real new tab opens in place.
+      const ext = (i) => `href="${href(i.link)}" target="_blank" rel="noopener" data-visit="${esc(i.link)}"`;
+
+      const unread = (i) => i.t > S.lastVisit;
+      function rel(i) {
+        if (i.ago) return i.ago;
+        const d = NOW - i.t;
+        if (d < 36e5) return `${Math.max(1, Math.round(d / 6e4))}m ago`;
+        if (d < DAY) return `${Math.round(d / 36e5)}h ago`;
+        if (d < 7 * DAY) return `${Math.round(d / DAY)}d ago`;
+        const dt = new Date(i.t);
+        const opts = { month: 'short', day: 'numeric' };
+        if (dt.getFullYear() !== new Date(NOW).getFullYear()) opts.year = 'numeric';
+        return dt.toLocaleDateString('en-US', opts);
+      }
+      const time = (i) =>
+        `<time datetime="${esc(i.date)}" title="${esc(new Date(i.t).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }))}">${esc(rel(i))}</time>`;
+      const srcAv = (id, size = 26) =>
+        `<span class="srcav" style="--h:${SOURCES[id].h};width:${size}px;height:${size}px;border-radius:${Math.round(size / 3.2)}px">${icon(SOURCES[id].icon, Math.round(size * 0.55))}</span>`;
+      const kindOf = (i) => {
+        const c = i.categories.find((c) => ACTION.includes(c));
+        return c ? TYPE_OF.get(c) : null;
+      };
+
+      function tags(i, maxAreas = 2) {
+        const out = [];
+        i.categories
+          .filter((c) => TYPE_OF.has(c) && c !== 'Update')
+          .forEach((c) => {
+            const t = TYPE_OF.get(c);
+            out.push(`<span class="tag tag--${t.tone}">${esc(t.label)}</span>`);
+          });
+        i.categories
+          .filter(isArea)
+          .slice(0, maxAreas)
+          .forEach((a) => out.push(`<span class="tag">#${esc(slug(a))}</span>`));
+        const v = i.categories.find(isVersion);
+        if (v) out.push(`<span class="tag tag--ver">${esc(v)}</span>`);
+        return out.length ? `<div class="tags">${out.join('')}</div>` : '';
+      }
+
+      function art(i) {
+        if (i.stream === 'videos') return [SOURCES[i.source].h, 'play', SOURCES[i.source].label];
+        if (i.source === 'eng') return [205, 'terminal', 'Engineering'];
+        if (i.source === 'news') return [150, 'news', 'Newsroom'];
+        const area = i.categories.find(isArea);
+        const [h, ic] = AREA_ART[area] || [245, 'code'];
+        return [h, ic, area || 'Platform'];
+      }
+      function cover(i, cls = '') {
+        const [h, ic, label] = art(i);
+        const v = i.categories.find(isVersion);
+        const k = kindOf(i);
+        return `<span class="cover ${cls}" style="--h:${h}" aria-hidden="true">
+          <span class="cover__icon">${icon(ic, cls.includes('thumb') ? 14 : 22)}</span>
+          <span class="cover__label">${esc(label)}</span>
+          ${v ? `<span class="cover__ver">${esc(v)}</span>` : ''}
+          ${k ? `<span class="cover__flag ${k.tone === 'amber' ? 'cover__flag--amber' : ''}">${esc(k.label)}</span>` : ''}
+        </span>`;
+      }
+
+      const bookmarkBtn = (i, cls = 'iconbtn') => {
+        const on = S.bookmarks.has(i.link);
+        return `<button class="${cls}" data-act="bookmark" data-v="${esc(i.link)}" data-k="bm-${esc(i.link)}" aria-pressed="${on}" aria-label="${on ? 'Remove bookmark' : 'Bookmark'}" title="${on ? 'Remove bookmark' : 'Bookmark'}">${icon(on ? 'bookmarkFill' : 'bookmark', 16)}</button>`;
+      };
+      const copyBtn = (i, cls = 'iconbtn') =>
+        `<button class="${cls}" data-act="copy" data-v="${esc(i.link)}" aria-label="Copy link" title="Copy link">${icon('link', 16)}</button>`;
+
+      /* ===== Feeds ===== */
+      function matchCustom(f, i) {
+        return (
+          f.sources.has(i.source) &&
+          (i.source !== 'changelog' ||
+            ((!f.types.size || i.categories.some((c) => f.types.has(c))) &&
+              (!f.area || i.categories.includes(f.area)) &&
+              (!f.version || i.categories.includes(f.version)))) &&
+          (!f.unreadOnly || unread(i))
+        );
+      }
+      function baseList(key) {
+        if (key === 'bookmarks') return ITEMS.filter((i) => S.bookmarks.has(i.link));
+        if (key === 'history') return S.history.map((l) => ITEMS.find((i) => i.link === l)).filter(Boolean);
+        const f = CUSTOM.find((c) => c.id === key);
+        return ITEMS.filter((i) => S.sources.has(i.source) && (f ? matchCustom(f, i) : FEEDS[key].test(i)));
+      }
+      function feedList(key) {
+        let list = baseList(key);
+        if (S.q) {
+          const q = S.q.toLowerCase();
+          list = list.filter((i) => (i.title + ' ' + i.excerpt + ' ' + i.categories.join(' ') + ' ' + SOURCES[i.source].label).toLowerCase().includes(q));
+        }
+        if (UI.sort === 'action' && key !== 'history') list = [...list.filter((i) => i.action), ...list.filter((i) => !i.action)];
+        return list;
+      }
+      const recentAction = () => baseList('action').filter((i) => i.t > ITEMS[0].t - 30 * DAY);
+      const unreadIn = (key) => baseList(key).filter(unread).length;
+      const feedMeta = (key) => FEEDS[key] || LIBRARY[key] || { name: CUSTOM.find((c) => c.id === key)?.name, icon: 'layers', desc: customSummary(CUSTOM.find((c) => c.id === key)) };
+      function customSummary(f) {
+        if (!f) return '';
+        const all = f.sources.size === Object.keys(SOURCES).length;
+        return [
+          all ? 'All sources' : [...f.sources].map((id) => SOURCES[id].label).join(', ') || 'No sources',
+          [...f.types].map((t) => TYPE_OF.get(t).label).join(', '),
+          f.area,
+          f.version,
+          f.unreadOnly && 'Unread only'
+        ]
+          .filter(Boolean)
+          .join(' · ');
+      }
+      function emptyState(key) {
+        if (S.q) return `<div class="empty">${icon('search', 26)}<b>No results for “${esc(S.q)}”</b><span>Try another word, or clear the search.</span><button class="btn btn--sm" data-act="clearSearch">Clear search</button></div>`;
+        if (key === 'bookmarks') return `<div class="empty">${icon('bookmark', 26)}<b>No bookmarks yet</b><span>Use the bookmark button on any post to keep it here.</span></div>`;
+        if (key === 'history') return `<div class="empty">${icon('history', 26)}<b>Nothing opened yet</b><span>Posts you open show up here.</span></div>`;
+        return `<div class="empty">${icon('filter', 26)}<b>Nothing matches this feed</b><span>Turn on more sources, or loosen the filters.</span></div>`;
+      }
+      const more = (total) =>
+        total > UI.limit ? `<div class="more"><button class="btn" data-act="more" data-k="more">Load more <span class="hint">${total - UI.limit} left</span></button></div>` : '';
+
+      const THEME_ICON = { system: 'monitor', light: 'sun', dark: 'moon' };
+      const themeBtn = () =>
+        `<button class="iconbtn" data-act="theme" data-k="theme" title="Appearance: ${S.theme}" aria-label="Appearance: ${S.theme}. Change appearance">${icon(THEME_ICON[S.theme], 17)}</button>`;
+      const searchBox = (big = false) =>
+        `<label class="search ${big ? 'search--big' : ''}">${icon('search', big ? 18 : 16)}<input type="search" data-act="search" data-k="search" value="${esc(S.q)}" placeholder="Search Shopify updates" aria-label="Search Shopify updates"><span class="kbd">⌘K</span></label>`;
+      const brand = () => `<span class="mtop__brand"><img src="https://bucket.alfred.uptek.com/logo-settings.png" alt="">Alfred</span>`;
+      const xLinks = () => `<div class="x-links">${icon('xlogo', 12)}${X_HANDLES.map((h) => `<a href="https://x.com/${h}" target="_blank" rel="noopener">@${h}</a>`).join('')}</div>`;
+
+      /* ===== Shared controls ===== */
+      const chip = (key, act, v, label, on) =>
+        `<button class="chip" data-act="${act}" data-w="${key}" data-v="${esc(v)}" data-k="${act}-${key}-${esc(v)}" aria-pressed="${on}">${esc(label)}</button>`;
+      function feedControls(f, key) {
+        return `<div class="ctl">
+          <p class="label">Sources</p>
+          <div class="filters">${Object.keys(SOURCES).map((id) => chip(key, 'fsrc', id, SOURCES[id].label, f.sources.has(id))).join('')}</div>
+          <p class="label">Changelog filters</p>
+          <div class="filters">${TYPES.map(([k, l]) => chip(key, 'ftype', k, l, f.types.has(k))).join('')}</div>
+          <div class="filters">
+            <select class="select ${f.area ? 'select--on' : ''}" data-act="farea" data-w="${key}" data-k="farea-${key}" aria-label="Area">
+              <option value="">All areas</option>${AREAS.map((a) => `<option ${f.area === a ? 'selected' : ''}>${esc(a)}</option>`).join('')}
+            </select>
+            <select class="select ${f.version ? 'select--on' : ''}" data-act="fver" data-w="${key}" data-k="fver-${key}" aria-label="API version">
+              <option value="">Any API version</option>${VERSIONS.map((v) => `<option ${f.version === v ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+            </select>
+            <label class="switch-label"><input type="checkbox" class="switch" data-act="funread" data-w="${key}" data-k="funread-${key}" ${f.unreadOnly ? 'checked' : ''}>Unread only</label>
+          </div>
+          <p class="hint">Type, area and version narrow changelog entries. Other sources show in full.</p>
+        </div>`;
+      }
+      function storeCard(id, { close = false } = {}) {
+        const s = STORES[id];
+        const domain = `${id}.myshopify.com`;
+        const stats = [
+          ['Products', s.products.toLocaleString('en-US')],
+          ['Collections', s.collections.toLocaleString('en-US')],
+          ['Shipping countries', s.ships],
+          ['Currency', s.currency]
+        ];
+        return `<div class="st">
+          <div class="st__head"><span class="mono" aria-hidden="true">${initials(s.name)}</span><span class="st__name"><b>${s.name}</b><small>${domain}</small></span></div>
+          <div class="st__grid">${stats.map(([k, v]) => `<div class="st__tile"><span class="st__val">${v}</span><span class="st__key">${k}</span></div>`).join('')}</div>
+          <div class="st__theme"><span class="st__key">Theme</span><b>${s.theme} ${s.version}</b>${
+            s.latest === s.version ? '<span class="tag tag--green">Up to date</span>' : `<span class="tag tag--amber">${s.latest} available</span>`
+          }</div>
+          <div class="st__links">
+            <a class="btn btn--sm" href="https://${domain}" target="_blank" rel="noopener">${icon('store', 14)} Storefront</a>
+            <a class="btn btn--sm" href="https://admin.shopify.com/store/${id}" target="_blank" rel="noopener">${icon('admin', 14)} Admin</a>
+          </div>
+          <p class="hint">Public storefront data. Detected ${rel({ t: NOW - s.seen })}.</p>
+        </div>`;
+      }
+      const storePopover = () =>
+        `<div class="pop ${UI.enter === 'pop' ? 'enter' : ''}" role="dialog" aria-label="${STORES[UI.storePop].name}" style="left:${UI.popPos.x}px;top:${UI.popPos.y}px;transform-origin:${UI.popPos.origin}">
+          <button class="iconbtn pop__close" data-act="closePop" data-k="closePop" aria-label="Close">${icon('close', 15)}</button>${storeCard(UI.storePop)}
+        </div>`;
+      const pinForm = (key, cta = 'Add link') => `<div class="pinform">
+          <input class="input" data-pin="label" placeholder="Label" aria-label="Link label">
+          <input class="input" data-pin="url" placeholder="https://admin.shopify.com/store/…" aria-label="Link URL">
+          <button class="btn btn--sm" data-act="pinAdd" data-w="${key}" data-k="pinadd-${key}">${icon('plus', 13)} ${cta}</button>
+        </div>`;
+
+      function modal() {
+        if (UI.modal === 'pin')
+          return `<div class="scrim ${UI.enter === 'modal' ? 'enter' : ''}" data-act="closeModal"><div class="modal" role="dialog" aria-modal="true" aria-label="Add a shortcut">
+            <div class="modal__head"><h2>Add a shortcut</h2><button class="iconbtn" data-act="closeModal" data-x="1" aria-label="Close">${icon('close', 16)}</button></div>
+            <p class="hint">Link straight to a store, an admin page, or a doc you open often.</p>
+            ${pinForm('modal', 'Add shortcut')}
+          </div></div>`;
+        const d = UI.draft;
+        const editing = UI.modal !== 'new';
+        const n = ITEMS.filter((i) => S.sources.has(i.source) && matchCustom(d, i)).length;
+        return `<div class="scrim ${UI.enter === 'modal' ? 'enter' : ''}" data-act="closeModal"><div class="modal" role="dialog" aria-modal="true" aria-label="${editing ? 'Edit feed' : 'New custom feed'}">
+          <div class="modal__head"><h2>${editing ? 'Edit feed' : 'New custom feed'}</h2><button class="iconbtn" data-act="closeModal" data-x="1" aria-label="Close">${icon('close', 16)}</button></div>
+          <label class="field"><span class="label">Name</span><input class="input" data-act="draftName" data-k="draftName" value="${esc(d.name)}" placeholder="Checkout changes"></label>
+          ${feedControls(d, 'draft')}
+          <div class="modal__foot">
+            ${editing ? `<button class="btn btn--danger" data-act="deleteFeed" data-k="deleteFeed">Delete feed</button>` : ''}
+            <span class="spacer hint">${n} matching ${n === 1 ? 'post' : 'posts'}</span>
+            <button class="btn" data-act="closeModal" data-x="1">Cancel</button>
+            <button class="btn btn--primary" data-act="saveFeed" data-k="saveFeed">${editing ? 'Save' : 'Create feed'}</button>
+          </div>
+        </div></div>`;
+      }
+
+      /* ===== Variant 1: Daily ===== */
+      function dCard(i, n) {
+        return `<article class="dcard anim ${i.action ? 'is-action' : ''} ${unread(i) ? '' : 'is-old'}" style="--i:${n}">
+          <div class="dcard__head">${srcAv(i.source)}<span class="meta"><b>${esc(SOURCES[i.source].label)}</b></span><span class="dcard__read" aria-hidden="true">Read ${icon('arrow', 12)}</span></div>
+          <h3 class="dcard__title clamp3"><a ${ext(i)}>${esc(i.title)}</a></h3>
+          ${tags(i)}
+          <div class="meta">${time(i)}${i.stream === 'videos' ? '<span>·</span><span>Video</span>' : ''}</div>
+          ${cover(i)}
+          <div class="dbar">${bookmarkBtn(i)}${copyBtn(i)}${unread(i) ? '<span class="newtag">New</span>' : ''}</div>
+        </article>`;
+      }
+      function dRow(i, n) {
+        return `<article class="drow anim ${i.action ? 'is-action' : ''} ${unread(i) ? '' : 'is-old'}" style="--i:${n}">
+          ${cover(i, 'cover--thumb')}
+          <div class="drow__body">
+            <div class="meta">${srcAv(i.source, 18)}<b>${esc(SOURCES[i.source].label)}</b><span>·</span>${time(i)}${unread(i) ? '<span class="newtag" style="margin-left:4px">New</span>' : ''}</div>
+            <h3 class="drow__title clamp2"><a ${ext(i)}>${esc(i.title)}</a></h3>
+            ${tags(i, 3)}
+          </div>
+          <div class="dbar">${bookmarkBtn(i)}${copyBtn(i)}</div>
+        </article>`;
+      }
+      const navItem = (key, { label, ic, count, red } = {}) =>
+        `<button class="dnav__item" data-act="view" data-v="${key}" data-k="nav-${key}" ${UI.view === key ? 'aria-current="page"' : ''}>${icon(ic, 16)}<span class="dnav__text">${esc(label)}</span>${count ? `<span class="count ${red ? 'count--red' : ''}">${count}</span>` : ''}</button>`;
+      function vDaily() {
+        const key = UI.view;
+        const m = feedMeta(key);
+        const list = feedList(key);
+        const custom = CUSTOM.find((c) => c.id === key);
+        const highlights = key === 'all' && !S.q ? recentAction().slice(0, 8) : [];
+        return `<div class="v-daily">
+          <aside class="dside scroll">
+            <div class="dside__brand"><img src="https://bucket.alfred.uptek.com/logo-settings.png" alt="">Shopify updates</div>
+            <nav class="dnav" aria-label="Feeds">
+              ${Object.entries(FEEDS)
+                .map(([k, f]) => navItem(k, { label: f.name, ic: f.icon, count: k === 'action' ? recentAction().length : unreadIn(k), red: k === 'action' }))
+                .join('')}
+            </nav>
+            <nav class="dnav" aria-label="Custom feeds">
+              <p class="label">Custom feeds</p>
+              ${CUSTOM.map((c) => navItem(c.id, { label: c.name, ic: 'layers', count: unreadIn(c.id) })).join('')}
+              <button class="dnav__item dnav__add" data-act="newFeed" data-k="newFeed">${icon('plus', 16)}<span class="dnav__text">New feed</span></button>
+            </nav>
+            <nav class="dnav" aria-label="Library">
+              <p class="label">Library</p>
+              ${Object.entries(LIBRARY)
+                .map(([k, f]) => navItem(k, { label: f.name, ic: f.icon, count: k === 'bookmarks' ? S.bookmarks.size : 0 }))
+                .join('')}
+            </nav>
+            <div class="dnav">
+              <p class="label">Your stores</p>
+              ${Object.entries(STORES)
+                .map(
+                  ([id, s]) =>
+                    `<button class="dnav__item" data-act="storePop" data-v="${id}" data-k="store-${id}" aria-expanded="${UI.storePop === id}"><span class="dnav__mono">${initials(s.name)}${s.latest !== s.version ? '<span class="upd" title="Theme update available"></span>' : ''}</span><span class="dnav__text">${s.name}<small>${s.theme} ${s.version}</small></span></button>`
+                )
+                .join('')}
+            </div>
+            <div class="dnav">
+              <p class="label">Pinned</p>
+              ${PINS.map(([label, url]) => `<a class="dnav__item" href="${href(url)}" target="_blank" rel="noopener" title="${esc(hostPath(url))}">${icon(pinIcon(url), 15)}<span class="dnav__text">${esc(label)}</span></a>`).join('')}
+              <button class="dnav__item dnav__add" data-act="pinModal" data-k="pinModal">${icon('plus', 16)}<span class="dnav__text">Add shortcut</span></button>
+            </div>
+            <div class="dside__foot">${xLinks()}</div>
+          </aside>
+          <main class="dmain">
+            <div class="dtop">${searchBox()}<div class="dtop__end">
+              <div class="seg" role="group" aria-label="Layout">
+                <button data-act="layout" data-v="cards" data-k="layout-cards" aria-pressed="${UI.layout === 'cards'}" title="Cards" aria-label="Cards layout">${icon('cardsLayout', 15)}</button>
+                <button data-act="layout" data-v="list" data-k="layout-list" aria-pressed="${UI.layout === 'list'}" title="List" aria-label="List layout">${icon('listLayout', 15)}</button>
+              </div>
+              <button class="btn btn--ghost btn--sm" data-act="markread" data-k="markread">${icon('check', 14)} Mark all read</button>
+              ${themeBtn()}
+            </div></div>
+            <div class="dhead">
+              <div><h1>${icon(m.icon, 22)}${esc(m.name)}</h1><p>${esc(m.desc)}</p></div>
+              <div class="dhead__end">
+                ${custom ? `<button class="btn btn--sm" data-act="editFeed" data-v="${custom.id}" data-k="editFeed">${icon('sliders', 14)} Edit feed</button>` : ''}
+                ${key !== 'history' ? `<div class="seg" role="group" aria-label="Sort"><button data-act="sort" data-v="new" data-k="sort-new" aria-pressed="${UI.sort === 'new'}">Newest</button><button data-act="sort" data-v="action" data-k="sort-action" aria-pressed="${UI.sort === 'action'}">Action first</button></div>` : ''}
+              </div>
+            </div>
+            ${
+              highlights.length
+                ? `<section class="hl anim"><div class="hl__head">${icon('alert', 16)}Needs your action<span class="count count--red">${highlights.length}</span></div>
+                  <div class="hl__row scroll" data-scroll="hl">${highlights
+                    .map((i) => `<a class="hl__card" ${ext(i)}><span class="tags"><span class="tag tag--${kindOf(i).tone}">${esc(kindOf(i).label)}</span></span><b class="clamp2">${esc(i.title)}</b><span class="meta">${time(i)}</span></a>`)
+                    .join('')}</div></section>`
+                : ''
+            }
+            ${
+              list.length
+                ? UI.layout === 'cards'
+                  ? `<div class="dgrid">${list.slice(0, UI.limit).map(dCard).join('')}</div>`
+                  : `<div class="dlist">${list.slice(0, UI.limit).map(dRow).join('')}</div>`
+                : emptyState(key)
+            }
+            ${more(list.length)}
+          </main>
+        </div>${UI.storePop ? storePopover() : ''}${UI.modal ? modal() : ''}`;
+      }
+
+      /* ===== Variant 2: Muzli ===== */
+      const MTABS = ['all', 'action', 'platform', 'videos', 'engineering', 'news', 'bookmarks'];
+      function mCard(i, n) {
+        return `<article class="mcard anim" style="--i:${n}">
+          <div class="mcard__media">${cover(i)}<div class="mcard__over">${i.excerpt ? `<p class="clamp3">${esc(i.excerpt)}</p>` : ''}<span style="font-size:11.5px;opacity:.8">${esc(rel(i))}</span></div></div>
+          <div class="mcard__actions">${bookmarkBtn(i)}${copyBtn(i)}</div>
+          <div class="meta">${srcAv(i.source, 18)}<b>${esc(SOURCES[i.source].label)}</b>${unread(i) ? '<span class="dot" title="New since your last visit"></span>' : ''}</div>
+          <h3 class="mcard__title clamp2"><a ${ext(i)}>${esc(i.title)}</a></h3>
+        </article>`;
+      }
+      function mPick(i, big, n) {
+        return `<article class="pick ${big ? 'pick--big' : ''} anim" style="--i:${n}">
+          ${cover(i)}
+          <div class="pick__body">
+            <div class="meta">${srcAv(i.source, 20)}<b>${esc(SOURCES[i.source].label)}</b><span>·</span>${time(i)}</div>
+            <h3 class="pick__title ${big ? 'clamp3' : 'clamp3'}"><a ${ext(i)}>${esc(i.title)}</a></h3>
+            ${big && i.excerpt ? `<p class="pick__ex clamp3">${esc(i.excerpt)}</p>` : ''}
+            ${tags(i, big ? 2 : 1)}
+          </div>
+        </article>`;
+      }
+      function sourcesDrawer() {
+        return `<aside class="drawer ${UI.enter === 'drawer' ? 'enter' : ''}" role="dialog" aria-label="Sources">
+          <div class="drawer__head"><h2>Sources</h2><button class="iconbtn" data-act="drawer" data-k="drawer-close" aria-label="Close">${icon('close', 16)}</button></div>
+          <div class="drawer__body scroll">
+            <p class="hint" style="margin-bottom:6px">Pick what shows up in your feed.</p>
+            ${Object.entries(SOURCES)
+              .map(
+                ([id, s]) =>
+                  `<label class="toggle-row">${srcAv(id, 30)}<span><b>${s.label}</b><small>${s.kind}</small></span><input type="checkbox" class="switch" data-act="source" data-v="${id}" data-k="src-${id}" ${S.sources.has(id) ? 'checked' : ''}></label>`
+              )
+              .join('')}
+          </div>
+        </aside>`;
+      }
+      function vMuzli() {
+        const key = UI.view;
+        const list = feedList(key);
+        const picks = !S.q && key !== 'bookmarks' ? list.slice(0, 3) : [];
+        const rest = list.slice(picks.length);
+        const hour = new Date(NOW).getHours();
+        const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+        return `<div class="v-muz">
+          <header class="mtop">${brand()}<div class="mtop__end">
+            <button class="btn btn--ghost btn--sm" data-act="markread" data-k="markread">${icon('check', 14)} Mark all read</button>
+            <button class="btn btn--sm" data-act="drawer" data-k="drawer" aria-expanded="${UI.drawer}">${icon('sliders', 14)} Sources</button>
+            ${themeBtn()}
+          </div></header>
+          <section class="mhero anim">
+            <p class="mhero__date">${new Date(NOW).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+            <h1>${greet}</h1>
+            ${searchBox(true)}
+            <div class="shortcuts">
+              ${PINS.map(
+                ([label, url]) =>
+                  `<a class="sc" href="${href(url)}" target="_blank" rel="noopener" title="${esc(hostPath(url))}"><span class="sc__tile">${icon(pinIcon(url), 19)}</span><span class="sc__label">${esc(label)}</span></a>`
+              ).join('')}
+              <span class="sc__sep" aria-hidden="true"></span>
+              ${Object.entries(STORES)
+                .map(
+                  ([id, s]) =>
+                    `<button class="sc" data-act="storePop" data-v="${id}" data-k="store-${id}" aria-expanded="${UI.storePop === id}"><span class="sc__tile sc__tile--store">${initials(s.name)}${s.latest !== s.version ? '<span class="upd" title="Theme update available"></span>' : ''}</span><span class="sc__label">${s.name}</span></button>`
+                )
+                .join('')}
+              <button class="sc" data-act="pinModal" data-k="pinModal"><span class="sc__tile">${icon('plus', 18)}</span><span class="sc__label">Add shortcut</span></button>
+            </div>
+          </section>
+          <nav class="mtabs scroll" role="tablist" aria-label="Feeds">
+            ${MTABS.map((k) => {
+              const m = feedMeta(k);
+              const c = k === 'bookmarks' ? S.bookmarks.size : unreadIn(k);
+              return `<button class="mtab" role="tab" data-act="view" data-v="${k}" data-k="tab-${k}" aria-selected="${key === k}">${icon(m.icon, 14)}${k === 'all' ? 'For you' : esc(m.name)}${c ? `<span class="count ${k === 'action' ? 'count--red' : ''}">${c}</span>` : ''}</button>`;
+            }).join('')}
+          </nav>
+          ${
+            picks.length
+              ? `<div class="msec"><h2>Top picks</h2><span class="hint">Newest from ${esc(key === 'all' ? 'all sources' : feedMeta(key).name)}</span></div>
+                 <section class="picks">${picks.map((p, n) => mPick(p, n === 0, n)).join('')}</section>`
+              : ''
+          }
+          ${rest.length ? `<div class="msec"><h2>${S.q ? `Results for “${esc(S.q)}”` : 'Latest'}</h2><span class="hint">${list.length} posts</span></div><div class="mgrid">${rest.slice(0, UI.limit).map(mCard).join('')}</div>` : picks.length ? '' : emptyState(key)}
+          ${more(rest.length)}
+          <div class="mfoot">${xLinks()}</div>
+        </div>${UI.drawer ? sourcesDrawer() : ''}${UI.storePop ? storePopover() : ''}${UI.modal ? modal() : ''}`;
+      }
+
+      /* ===== Variant 3: Board ===== */
+      const LAYOUTS = {
+        carousel: ['Carousel', 'carousel'],
+        cards: ['Cards', 'cardsLayout'],
+        list: ['List', 'listLayout'],
+        compact: ['Compact', 'rows'],
+        stats: ['Stats', 'cardsLayout']
+      };
+      const WT = {
+        feed: { name: 'Custom feed', icon: 'layers', desc: 'Mix sources and filter by type, area, or API version.', layouts: ['carousel', 'cards', 'list', 'compact'] },
+        changelog: { name: 'Platform updates', icon: 'code', desc: 'The shopify.dev changelog.', layouts: ['cards', 'carousel', 'list', 'compact'] },
+        videos: { name: 'Videos', icon: 'video', desc: 'Shopify channels on YouTube.', layouts: ['carousel', 'cards', 'list'] },
+        eng: { name: 'Engineering blog', icon: 'terminal', desc: 'Posts from shopify.engineering.', layouts: ['list', 'carousel', 'compact'] },
+        news: { name: 'Newsroom', icon: 'news', desc: 'Shopify press releases.', layouts: ['compact', 'list', 'carousel'] },
+        store: { name: 'Store snapshot', icon: 'store', desc: 'Public stats and theme version for a detected store.', layouts: ['stats'] },
+        pins: { name: 'Pinned links', icon: 'pin', desc: 'Your shortcuts to stores, admin pages and docs.', layouts: ['list'] }
+      };
+      const SIZES = [
+        ['S', 'Small'],
+        ['T', 'Tall'],
+        ['M', 'Medium'],
+        ['L', 'Large'],
+        ['W', 'Wide']
+      ];
+      let wid = 0;
+      function W(type, o = {}) {
+        return {
+          id: 'w' + ++wid,
+          type,
+          title: o.title || (type === 'store' ? STORES[o.store || 'northwind-kitchen'].name : WT[type].name),
+          layout: o.layout || WT[type].layouts[0],
+          size: o.size || 'M',
+          store: o.store || 'northwind-kitchen',
+          channels: new Set(o.channels || VIDEO_SOURCES),
+          open: false,
+          ...feedDef({ sources: o.sources, types: o.types, area: o.area }),
+          id: 'w' + wid
+        };
+      }
+      const BOARD = [
+        W('feed', { title: 'Needs action', layout: 'carousel', size: 'W', sources: ['changelog'], types: ACTION }),
+        W('changelog', { size: 'L' }),
+        W('store', { size: 'T' }),
+        W('pins', { size: 'T' }),
+        W('videos', { size: 'W' }),
+        W('eng', { size: 'M' }),
+        W('news', { size: 'M' })
+      ];
+      const findW = (id) => BOARD.find((w) => w.id === id);
+      function widgetItems(w) {
+        if (w.type === 'videos') return ITEMS.filter((i) => w.channels.has(i.source) && S.sources.has(i.source));
+        if (w.type === 'feed') return ITEMS.filter((i) => S.sources.has(i.source) && matchCustom(w, i));
+        return ITEMS.filter((i) => i.source === w.type && S.sources.has(i.source));
+      }
+      const isFeedType = (w) => !['store', 'pins'].includes(w.type);
+      const hasControls = (w) => ['feed', 'videos', 'store', 'pins'].includes(w.type);
+      const flag = (i) => {
+        const k = kindOf(i);
+        return k ? `<span class="flag flag--${k.tone}" title="${esc(k.label)}"></span>` : '';
+      };
+      function wBody(w) {
+        if (w.type === 'store') return storeCard(w.store);
+        if (w.type === 'pins')
+          return `<ul>${PINS.map(([label, url]) => `<li><a class="pinrow" href="${href(url)}" target="_blank" rel="noopener"><span class="mono" style="width:28px;height:28px">${icon(pinIcon(url), 14)}</span><span style="min-width:0"><b>${esc(label)}</b><small>${esc(hostPath(url))}</small></span></a></li>`).join('')}</ul>`;
+        const list = widgetItems(w).slice(0, 30);
+        if (!list.length) return `<div class="empty" style="padding:24px 8px">Nothing matches these filters.</div>`;
+        const mini = (i) =>
+          `<a class="mini" ${ext(i)}>${cover(i, 'cover--sm')}<span class="mini__title clamp2">${esc(i.title)}</span><span class="meta">${srcAv(i.source, 16)}<b>${esc(SOURCES[i.source].label)}</b><span>·</span>${time(i)}</span></a>`;
+        switch (w.layout) {
+          case 'carousel':
+            return `<div class="lcar scroll" data-scroll="car-${w.id}">${list.map(mini).join('')}</div>`;
+          case 'cards':
+            return `<div class="lcards">${list.map(mini).join('')}</div>`;
+          case 'list':
+            return `<ol>${list.map((i) => `<li><a class="lrow" ${ext(i)}>${cover(i, 'cover--thumb')}<span class="lrow__body"><span class="meta">${unread(i) ? '<span class="dot"></span>' : ''}<b>${esc(SOURCES[i.source].label)}</b><span>·</span>${time(i)}</span><span class="lrow__title clamp2">${esc(i.title)}</span></span></a></li>`).join('')}</ol>`;
+          default:
+            return `<ol>${list.map((i) => `<li><a class="lc" ${ext(i)} title="${esc(i.title)}">${unread(i) ? '<span class="dot"></span>' : '<span class="dot" style="visibility:hidden"></span>'}${flag(i)}<span class="lc__title">${esc(i.title)}</span><span class="meta">${time(i)}</span></a></li>`).join('')}</ol>`;
+        }
+      }
+      function wControls(w) {
+        if (w.type === 'feed') return feedControls(w, w.id);
+        if (w.type === 'videos')
+          return `<div class="ctl"><p class="label">Channels</p><div class="filters">${VIDEO_SOURCES.map((id) => chip(w.id, 'vch', id, SOURCES[id].label, w.channels.has(id))).join('')}</div></div>`;
+        if (w.type === 'store')
+          return `<div class="ctl"><p class="label">Store</p><select class="select" data-act="wstore" data-w="${w.id}" data-k="wstore-${w.id}" aria-label="Store">${Object.entries(STORES)
+            .map(([id, s]) => `<option value="${id}" ${w.store === id ? 'selected' : ''}>${s.name}</option>`)
+            .join('')}</select></div>`;
+        return `<div class="ctl"><p class="label">Links</p><ul class="pinlist">${PINS.map(
+          ([label], k) => `<li><span>${esc(label)}</span><button class="iconbtn" data-act="pinRemove" data-v="${k}" data-k="pinrm-${k}" aria-label="Remove ${esc(label)}">${icon('close', 12)}</button></li>`
+        ).join('')}</ul>${pinForm(w.id)}</div>`;
+      }
+      function boardWidget(w, n, all) {
+        const t = WT[w.type];
+        const cnt = isFeedType(w) ? widgetItems(w).filter(unread).length : 0;
+        const e = UI.editing;
+        const tools = e
+          ? `<button class="iconbtn" data-act="remove" data-w="${w.id}" data-k="rm-${w.id}" aria-label="Remove widget" title="Remove">${icon('close', 14)}</button>`
+          : `${
+              t.layouts.length > 1
+                ? `<div class="iseg" role="group" aria-label="Layout">${t.layouts
+                    .map(
+                      (l) =>
+                        `<button data-act="wlayout" data-w="${w.id}" data-v="${l}" data-k="lay-${w.id}-${l}" aria-pressed="${w.layout === l}" title="${LAYOUTS[l][0]}" aria-label="${LAYOUTS[l][0]} layout">${icon(LAYOUTS[l][1], 14)}</button>`
+                    )
+                    .join('')}</div>`
+                : ''
+            }${hasControls(w) ? `<span class="tools-sep"></span><button class="iconbtn" data-act="wtoggle" data-w="${w.id}" data-k="tg-${w.id}" aria-expanded="${w.open}" aria-label="Widget settings" title="Widget settings">${icon('sliders', 14)}</button>` : ''}`;
+        const editbar = `<div class="w__editbar ${UI.enter === 'edit' ? 'enter' : ''}">
+            <div class="iseg" role="group" aria-label="Size">${SIZES.map(([s, label]) => `<button data-act="size" data-w="${w.id}" data-v="${s}" data-k="size-${w.id}-${s}" aria-pressed="${w.size === s}" title="${label}">${s}</button>`).join('')}</div>
+            <span style="margin-left:auto"></span>
+            <button class="iconbtn" data-act="move" data-w="${w.id}" data-v="-1" data-k="mvl-${w.id}" aria-label="Move earlier" ${n === 0 ? 'disabled' : ''}>${icon('chevL', 14)}</button>
+            <button class="iconbtn" data-act="move" data-w="${w.id}" data-v="1" data-k="mvr-${w.id}" aria-label="Move later" ${n === all - 1 ? 'disabled' : ''}>${icon('chevR', 14)}</button>
+          </div>`;
+        const sub = w.type === 'feed' ? customSummary(w) : w.type === 'videos' ? [...w.channels].map((id) => SOURCES[id].label).join(', ') : '';
+        return `<article class="w size--${w.size} anim ${UI.fresh === w.id ? 'enter' : ''} ${e ? 'w--edit' : ''}" style="--i:${n}" data-drop="${w.id}" ${e ? `draggable="true" data-drag="${w.id}"` : ''}>
+          <header class="w__head">
+            ${e ? `<span class="w__grip">${icon('grip', 14)}</span>` : ''}
+            <span class="srcav" style="--h:${w.type === 'feed' ? 0 : SOURCES[{ changelog: 'changelog', videos: 'yt-devs', eng: 'eng', news: 'news' }[w.type]]?.h ?? 220};width:24px;height:24px;border-radius:7px;${w.type === 'feed' ? 'background:linear-gradient(135deg,#e5534b,#c8362f)' : ''}">${icon(t.icon, 13)}</span>
+            <h2 class="w__title">${esc(w.title)}</h2>${cnt ? `<span class="count ${w.type === 'feed' && w.types.size ? 'count--red' : ''}">${cnt}</span>` : ''}
+            <div class="w__tools">${tools}</div>
+          </header>
+          ${e ? editbar : ''}
+          ${!e && w.open ? `<div class="w__controls ${UI.enter === 'ctl-' + w.id ? 'enter' : ''}">${wControls(w)}</div>` : !e && sub ? `<p class="w__sub">${esc(sub)}</p>` : ''}
+          <div class="w__body scroll" data-scroll="b-${w.id}">${wBody(w)}</div>
+        </article>`;
+      }
+      function vBoard() {
+        return `<div class="v-board">
+          <header class="btop">${brand()}${searchBox()}<div class="btop__end">${
+            UI.editing
+              ? `<div class="pop-anchor"><button class="btn" data-act="addMenu" data-k="addMenu" aria-expanded="${UI.addOpen}">${icon('plus', 14)} Add widget</button>
+                ${UI.addOpen ? `<div class="menu ${UI.enter === 'add' ? 'enter' : ''}" role="menu">${Object.entries(WT).map(([type, t]) => `<button class="menu__item" data-act="add" data-v="${type}" data-k="add-${type}"><span class="srcav" style="--h:220;width:28px;height:28px">${icon(t.icon, 14)}</span><span><b>${t.name}</b><small>${t.desc}</small></span></button>`).join('')}</div>` : ''}</div>
+                <button class="btn btn--primary" data-act="edit" data-k="edit">Done</button>`
+              : `<button class="btn btn--ghost btn--sm" data-act="markread" data-k="markread">${icon('check', 14)} Mark all read</button>${themeBtn()}<button class="btn" data-act="edit" data-k="edit">${icon('pencil', 13)} Edit board</button>`
+          }</div></header>
+          ${S.q ? `<div class="msec"><h2>Results for “${esc(S.q)}”</h2><button class="btn btn--sm" data-act="clearSearch">Clear</button></div><div class="dgrid" style="margin-bottom:28px">${feedList('all').slice(0, 12).map(dCard).join('') || emptyState('all')}</div>` : ''}
+          <div class="bento">${BOARD.map((w, n) => boardWidget(w, n, BOARD.length)).join('')}</div>
+        </div>`;
+      }
+
+      // Each variant runs from the picker's mount (fresh view state) or from rerender (after an interaction).
+      const variants = [vDaily, vMuzli, vBoard].map((render) => () => {
+        if (!S.rerender) resetUI();
+        if (S.theme === 'system') delete root.dataset.theme;
+        else root.dataset.theme = S.theme;
+        const html = render();
+        UI.enter = null;
+        return html;
+      });
+
+      /* Picker wiring: verbatim from the prototype skill's PICKER.md. */
+      const stage = document.getElementById('stage');
+      const picker = document.querySelector('.proto-picker');
+      const highlight = picker.querySelector('.proto-picker-highlight');
+      const items = [...picker.querySelectorAll('.proto-picker-item:not(.proto-picker-replay)')];
+      const replay = picker.querySelector('.proto-picker-replay');
+      let current = 0;
+
+      function moveHighlight() {
+        const el = items[current];
+        highlight.style.width = el.offsetWidth + 'px';
+        highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+      }
+
+      function mount(i) {
+        stage.innerHTML = '';
+        stage.classList.remove('static');
+        // Clear first, render next frame, so entrance animations re-run.
+        requestAnimationFrame(() => {
+          stage.innerHTML = variants[i]();
+        });
+      }
+
+      function setActive(i) {
+        if (i < 0 || i >= variants.length) return;
+        current = i;
+        items.forEach((el, j) => {
+          el.toggleAttribute('data-active', j === i);
+          if (j === i) el.setAttribute('aria-current', 'true');
+          else el.removeAttribute('aria-current');
+        });
+        moveHighlight();
+        const url = new URL(location);
+        url.searchParams.set('v', i + 1);
+        history.replaceState(null, '', url);
+        mount(i);
+      }
+
+      items.forEach((el, i) => el.addEventListener('click', () => setActive(i)));
+      replay?.addEventListener('click', () => mount(current));
+      window.addEventListener('resize', moveHighlight);
+
+      document.addEventListener('keydown', (e) => {
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const num = parseInt(e.key, 10);
+        if (num >= 1 && num <= variants.length) setActive(num - 1);
+        else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
+        else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+        else if (e.key === 'r' || e.key === 'R') mount(current);
+      });
+
+      setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+      // Enable the slide only after first paint, so load doesn't animate.
+      requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));
+
+      /* Interactions: change state, then re-render statically, keeping focus, caret and scroll positions. */
+      function rerender() {
+        const a = document.activeElement;
+        const key = a?.dataset?.k;
+        const caret = a?.tagName === 'INPUT' && /^(text|search)$/.test(a.type) ? [a.selectionStart, a.selectionEnd] : null;
+        const scrolls = [...stage.querySelectorAll('[data-scroll]')].map((el) => [el.dataset.scroll, el.scrollTop, el.scrollLeft]);
+        S.rerender = true;
+        stage.classList.add('static');
+        const fresh = UI.fresh;
+        stage.innerHTML = variants[current]();
+        S.rerender = false;
+        scrolls.forEach(([k, top, left]) => {
+          const el = stage.querySelector(`[data-scroll="${k}"]`);
+          if (el) Object.assign(el, { scrollTop: top, scrollLeft: left });
+        });
+        const el = key && stage.querySelector(`[data-k="${CSS.escape(key)}"]`);
+        if (el) {
+          el.focus({ preventScroll: true });
+          if (caret && el.setSelectionRange) el.setSelectionRange(...caret);
+        }
+        if (UI.focusModal) {
+          stage.querySelector('.modal input, .drawer input')?.focus({ preventScroll: true });
+          UI.focusModal = false;
+        }
+        if (fresh) {
+          stage.querySelector(`[data-drop="${fresh}"]`)?.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+          UI.fresh = null;
+        }
+      }
+
+      const toastEl = document.getElementById('toast');
+      let toastTimer;
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+      }
+
+      function addPin(el) {
+        const form = el.closest('.pinform');
+        const urlInput = form.querySelector('[data-pin="url"]');
+        let url;
+        try {
+          url = new URL(urlInput.value.trim());
+        } catch {}
+        // Shortcuts only accept https links, same rule as feed content.
+        if (!url || url.protocol !== 'https:') {
+          urlInput.setAttribute('aria-invalid', 'true');
+          urlInput.focus();
+          return false;
+        }
+        PINS.push([form.querySelector('[data-pin="label"]').value.trim() || url.hostname, url.href]);
+        toast('Shortcut added');
+        return true;
+      }
+
+      function act(name, el) {
+        const v = el.dataset.v;
+        const w = el.dataset.w === 'draft' ? UI.draft : el.dataset.w && findW(el.dataset.w);
+        const tog = (set, x) => (set.has(x) ? set.delete(x) : set.add(x));
+        switch (name) {
+          case 'view':
+            Object.assign(UI, { view: v, limit: 24, storePop: null });
+            scrollTo({ top: 0 });
+            break;
+          case 'layout':
+            UI.layout = v;
+            break;
+          case 'sort':
+            UI.sort = v;
+            break;
+          case 'more':
+            UI.limit += 24;
+            break;
+          case 'search':
+            S.q = el.value.trim();
+            UI.limit = 24;
+            break;
+          case 'clearSearch':
+            S.q = '';
+            break;
+          case 'theme':
+            S.theme = { system: 'light', light: 'dark', dark: 'system' }[S.theme];
+            toast(`Appearance: ${S.theme}`);
+            break;
+          case 'markread':
+            S.lastVisit = Date.now();
+            toast('All caught up');
+            break;
+          case 'bookmark': {
+            const on = !S.bookmarks.has(v);
+            on ? S.bookmarks.add(v) : S.bookmarks.delete(v);
+            toast(on ? 'Saved to bookmarks' : 'Removed from bookmarks');
+            break;
+          }
+          case 'copy':
+            navigator.clipboard?.writeText(v).then(
+              () => toast('Link copied'),
+              () => toast('Copy failed')
+            );
+            return;
+          case 'storePop': {
+            if (UI.storePop === v) {
+              UI.storePop = null;
+              break;
+            }
+            const r = el.getBoundingClientRect();
+            UI.popPos =
+              current === 0
+                ? { x: r.right + 8, y: Math.max(12, Math.min(r.top - 8, innerHeight - 420)), origin: 'left top' }
+                : { x: Math.max(12, Math.min(r.left + r.width / 2 - 165, innerWidth - 342)), y: r.bottom + 8, origin: 'center top' };
+            UI.storePop = v;
+            UI.enter = 'pop';
+            break;
+          }
+          case 'closePop':
+            UI.storePop = null;
+            break;
+          case 'drawer':
+            UI.drawer = !UI.drawer;
+            UI.enter = UI.drawer ? 'drawer' : null;
+            break;
+          case 'source':
+            el.checked ? S.sources.add(v) : S.sources.delete(v);
+            break;
+          case 'newFeed':
+            UI.draft = feedDef({ name: '', sources: ['changelog'] });
+            Object.assign(UI, { modal: 'new', enter: 'modal', focusModal: true });
+            break;
+          case 'editFeed': {
+            const f = CUSTOM.find((c) => c.id === v);
+            UI.draft = { ...f, sources: new Set(f.sources), types: new Set(f.types) };
+            Object.assign(UI, { modal: v, enter: 'modal', focusModal: true });
+            break;
+          }
+          case 'pinModal':
+            Object.assign(UI, { modal: 'pin', enter: 'modal', focusModal: true });
+            break;
+          case 'closeModal':
+            UI.modal = null;
+            break;
+          case 'draftName':
+            UI.draft.name = el.value;
+            return;
+          case 'saveFeed': {
+            const d = UI.draft;
+            d.name = d.name.trim() || 'Untitled feed';
+            if (UI.modal === 'new') {
+              CUSTOM.push(d);
+              UI.view = d.id;
+              toast(`Created “${d.name}”`);
+            } else {
+              Object.assign(
+                CUSTOM.find((c) => c.id === UI.modal),
+                d
+              );
+              toast('Feed saved');
+            }
+            UI.modal = null;
+            break;
+          }
+          case 'deleteFeed':
+            CUSTOM.splice(
+              CUSTOM.findIndex((c) => c.id === UI.modal),
+              1
+            );
+            Object.assign(UI, { modal: null, view: 'all' });
+            toast('Feed deleted');
+            break;
+          case 'fsrc':
+            tog(w.sources, v);
+            break;
+          case 'ftype':
+            tog(w.types, v);
+            break;
+          case 'farea':
+            w.area = el.value;
+            break;
+          case 'fver':
+            w.version = el.value;
+            break;
+          case 'funread':
+            w.unreadOnly = el.checked;
+            break;
+          case 'vch':
+            tog(w.channels, v);
+            break;
+          case 'wstore':
+            if (w.title === STORES[w.store].name) w.title = STORES[el.value].name;
+            w.store = el.value;
+            break;
+          case 'pinAdd':
+            if (!addPin(el)) return;
+            if (UI.modal === 'pin') UI.modal = null;
+            break;
+          case 'pinRemove':
+            PINS.splice(Number(v), 1);
+            break;
+          case 'wlayout':
+            w.layout = v;
+            break;
+          case 'wtoggle':
+            w.open = !w.open;
+            UI.enter = w.open ? 'ctl-' + w.id : null;
+            break;
+          case 'edit':
+            UI.editing = !UI.editing;
+            UI.addOpen = false;
+            UI.enter = UI.editing ? 'edit' : null;
+            BOARD.forEach((x) => (x.open = false));
+            break;
+          case 'addMenu':
+            UI.addOpen = !UI.addOpen;
+            UI.enter = UI.addOpen ? 'add' : null;
+            break;
+          case 'add': {
+            const nw = W(v, { size: { videos: 'W', changelog: 'L', feed: 'W', store: 'T', pins: 'T' }[v] || 'M' });
+            BOARD.push(nw);
+            Object.assign(UI, { fresh: nw.id, addOpen: false });
+            break;
+          }
+          case 'size':
+            w.size = v;
+            break;
+          case 'move': {
+            const i = BOARD.indexOf(w);
+            const j = i + Number(v);
+            if (j < 0 || j >= BOARD.length) return;
+            BOARD.splice(j, 0, BOARD.splice(i, 1)[0]);
+            break;
+          }
+          case 'remove':
+            BOARD.splice(BOARD.indexOf(w), 1);
+            break;
+        }
+        rerender();
+      }
+
+      stage.addEventListener('click', (e) => {
+        const visit = e.target.closest('[data-visit]');
+        if (visit) S.history = [visit.dataset.visit, ...S.history.filter((l) => l !== visit.dataset.visit)].slice(0, 50);
+        const el = e.target.closest('[data-act]');
+        if (!el || /^(INPUT|SELECT)$/.test(el.tagName)) return;
+        // The scrim closes the modal only on a click outside the dialog.
+        if (el.dataset.act === 'closeModal' && !el.dataset.x && e.target !== el) return;
+        act(el.dataset.act, el);
+      });
+      stage.addEventListener('change', (e) => {
+        const el = e.target.closest('[data-act]');
+        if (el && !['search', 'draftName'].includes(el.dataset.act)) act(el.dataset.act, el);
+      });
+      stage.addEventListener('input', (e) => {
+        const a = e.target.dataset.act;
+        if (a === 'search' || a === 'draftName') act(a, e.target);
+        if (e.target.dataset.pin === 'url') e.target.removeAttribute('aria-invalid');
+      });
+      stage.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.dataset.pin) act('pinAdd', e.target.closest('.pinform').querySelector('[data-act="pinAdd"]'));
+      });
+
+      // Drag to reorder Board widgets in edit mode.
+      let dragId = null;
+      const clearDrag = () => stage.querySelectorAll('.dragging, .drop-target').forEach((x) => x.classList.remove('dragging', 'drop-target'));
+      stage.addEventListener('dragstart', (e) => {
+        const el = e.target.closest?.('[data-drag]');
+        if (!el) return;
+        dragId = el.dataset.drag;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragId);
+        el.classList.add('dragging');
+      });
+      stage.addEventListener('dragover', (e) => {
+        const t = e.target.closest?.('[data-drop]');
+        if (!dragId || !t) return;
+        e.preventDefault();
+        stage.querySelectorAll('.drop-target').forEach((x) => x !== t && x.classList.remove('drop-target'));
+        if (t.dataset.drop !== dragId) t.classList.add('drop-target');
+      });
+      stage.addEventListener('drop', (e) => {
+        const t = e.target.closest?.('[data-drop]');
+        if (!dragId || !t) return;
+        e.preventDefault();
+        const from = BOARD.findIndex((w) => w.id === dragId);
+        const to = BOARD.findIndex((w) => w.id === t.dataset.drop);
+        dragId = null;
+        if (from < 0 || to < 0 || from === to) return clearDrag();
+        BOARD.splice(to, 0, BOARD.splice(from, 1)[0]);
+        rerender();
+      });
+      stage.addEventListener('dragend', () => {
+        dragId = null;
+        clearDrag();
+      });
+
+      document.addEventListener('click', (e) => {
+        let changed = false;
+        if (UI.addOpen && !e.target.closest('.pop-anchor')) (UI.addOpen = false), (changed = true);
+        if (UI.storePop && !e.target.closest('.pop, [data-act="storePop"]')) (UI.storePop = null), (changed = true);
+        if (changed) rerender();
+      });
+      document.addEventListener('keydown', (e) => {
+        const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+        if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && !typing)) {
+          e.preventDefault();
+          stage.querySelector('[data-k="search"]')?.focus();
+          return;
+        }
+        if (e.key !== 'Escape') return;
+        if (UI.modal) UI.modal = null;
+        else if (UI.storePop) UI.storePop = null;
+        else if (UI.addOpen) UI.addOpen = false;
+        else if (UI.drawer) UI.drawer = false;
+        else if (UI.editing) UI.editing = false;
+        else if (S.q && typing) S.q = '';
+        else return;
+        rerender();
+      });
+      addEventListener(
+        'scroll',
+        () => {
+          if (UI.storePop) {
+            UI.storePop = null;
+            rerender();
+          }
+        },
+        { passive: true }
+      );
+    </script>
+  </body>
+</html>

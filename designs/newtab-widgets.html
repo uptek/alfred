@@ -1,0 +1,2828 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Tab</title>
+    <style>
+      /* Tokens: subset of entrypoints/popup/index.html, light + GitHub soft dark. */
+      :root {
+        color-scheme: light;
+        --bg: #fff;
+        --bg-canvas: #fbfcfd;
+        --bg-raised: #f4f6f8;
+        --bg-inset: #eef1f5;
+        --bg-hover: #e9edf3;
+        --border: #e9eaef;
+        --border-subtle: #eef0f3;
+        --border-hover: #ccd0d8;
+        --border-strong: #dadde3;
+        --text: #1d1d22;
+        --text-secondary: #4d515b;
+        --text-muted: #656b78;
+        --text-faint: #828892;
+        --accent: #4f57c4;
+        --accent-tint: #eef0fb;
+        --btn-bg: #1d1d22;
+        --btn-bg-hover: #34343c;
+        --btn-text: #fff;
+        --success-strong: #15783f;
+        --success-bg: #e7f5ec;
+        --warning: #9a5a08;
+        --warning-bg: #f9f0db;
+        --error: #c8362f;
+        --error-strong: #b42f28;
+        --error-bg: #fcebe9;
+        --scrollbar: #d2d5dd;
+        --shadow-sm: 0 1px 2px rgba(28, 28, 46, 0.05);
+        --shadow-md: 0 2px 8px rgba(28, 28, 46, 0.04);
+        --shadow-pop: 0 6px 20px rgba(28, 28, 46, 0.1);
+        --mono: 'SF Mono', ui-monospace, monospace;
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          color-scheme: dark;
+          --bg: #2a313c;
+          --bg-canvas: #212830;
+          --bg-raised: #1c222b;
+          --bg-inset: #262c36;
+          --bg-hover: #2f3742;
+          --border: #3d444d;
+          --border-subtle: #363d46;
+          --border-hover: #4b535e;
+          --border-strong: #444c56;
+          --text: #d1d7e0;
+          --text-secondary: #b7bdc8;
+          --text-muted: #9198a1;
+          --text-faint: #7a828e;
+          --accent: #478be6;
+          --accent-tint: #253141;
+          --btn-bg: #347d39;
+          --btn-bg-hover: #3b8640;
+          --success-strong: #6bc46d;
+          --success-bg: #23342a;
+          --warning: #c69026;
+          --warning-bg: #36352c;
+          --error: #e5534b;
+          --error-strong: #f47067;
+          --error-bg: #352327;
+          --scrollbar: #3d444d;
+          --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+          --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+          --shadow-pop: 0 8px 24px rgba(1, 4, 9, 0.5);
+        }
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --bg: #2a313c;
+        --bg-canvas: #212830;
+        --bg-raised: #1c222b;
+        --bg-inset: #262c36;
+        --bg-hover: #2f3742;
+        --border: #3d444d;
+        --border-subtle: #363d46;
+        --border-hover: #4b535e;
+        --border-strong: #444c56;
+        --text: #d1d7e0;
+        --text-secondary: #b7bdc8;
+        --text-muted: #9198a1;
+        --text-faint: #7a828e;
+        --accent: #478be6;
+        --accent-tint: #253141;
+        --btn-bg: #347d39;
+        --btn-bg-hover: #3b8640;
+        --success-strong: #6bc46d;
+        --success-bg: #23342a;
+        --warning: #c69026;
+        --warning-bg: #36352c;
+        --error: #e5534b;
+        --error-strong: #f47067;
+        --error-bg: #352327;
+        --scrollbar: #3d444d;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+        --shadow-pop: 0 8px 24px rgba(1, 4, 9, 0.5);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg-canvas);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      select,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      h1,
+      h2,
+      p,
+      ul,
+      ol {
+        margin: 0;
+        padding: 0;
+      }
+      ul,
+      ol {
+        list-style: none;
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .icon {
+        flex-shrink: 0;
+        display: block;
+      }
+      #stage {
+        padding-bottom: 96px;
+      }
+      #stage:has(.v-deck) {
+        padding-bottom: 0;
+      }
+      .scroll {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar) transparent;
+      }
+
+      /* Motion: entrances only, ease-out, staggered and capped. Interaction re-renders skip them,
+         except the one element an action just opened or added (.enter). */
+      @keyframes enter {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: scale(0.97) translateY(-4px);
+        }
+      }
+      @keyframes drop {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+      }
+      @keyframes slide {
+        from {
+          transform: translateX(100%);
+        }
+      }
+      .anim {
+        animation: enter 260ms var(--ease-out) both;
+        animation-delay: calc(min(var(--i, 0), 12) * 24ms);
+      }
+      .static .anim {
+        animation: none;
+      }
+      .static .anim.enter {
+        animation: enter 260ms var(--ease-out) both;
+        animation-delay: 0ms;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          animation-delay: 0ms !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+
+      /* Atoms */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        font-size: 10.5px;
+        font-weight: 600;
+        line-height: 16px;
+        padding: 0 7px;
+        border-radius: 20px;
+        white-space: nowrap;
+        background: var(--bg-inset);
+        color: var(--text-muted);
+      }
+      .pill--red {
+        background: var(--error-bg);
+        color: var(--error-strong);
+      }
+      .pill--amber {
+        background: var(--warning-bg);
+        color: var(--warning);
+      }
+      .pill--green {
+        background: var(--success-bg);
+        color: var(--success-strong);
+      }
+      .pill--version {
+        background: var(--accent-tint);
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 10px;
+      }
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 3px;
+      }
+      .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+      }
+      .dot--off {
+        visibility: hidden;
+      }
+      .count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        font-size: 10.5px;
+        font-weight: 650;
+        background: var(--accent-tint);
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 7px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 12.5px;
+        font-weight: 550;
+        white-space: nowrap;
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+        transition:
+          background-color 150ms ease-out,
+          border-color 150ms ease-out;
+      }
+      .btn:hover {
+        background: var(--bg-raised);
+        border-color: var(--border-hover);
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: default;
+        transform: none;
+      }
+      .btn--ghost {
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+        color: var(--text-muted);
+      }
+      .btn--ghost:hover {
+        background: var(--bg-hover);
+        border-color: transparent;
+        color: var(--text);
+      }
+      .btn--primary {
+        background: var(--btn-bg);
+        border-color: transparent;
+        color: var(--btn-text);
+      }
+      .btn--primary:hover {
+        background: var(--btn-bg-hover);
+        border-color: transparent;
+      }
+      .btn--danger {
+        color: var(--error-strong);
+      }
+      .btn--danger:hover {
+        background: var(--error-bg);
+        border-color: color-mix(in srgb, var(--error) 35%, var(--border-strong));
+      }
+      .btn--sm {
+        height: 26px;
+        padding: 0 9px;
+        font-size: 12px;
+      }
+      .btn--block {
+        width: 100%;
+      }
+      .iconbtn {
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text-faint);
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .iconbtn:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+      .iconbtn:active {
+        transform: scale(0.94);
+      }
+      .iconbtn[aria-expanded='true'] {
+        background: var(--accent-tint);
+        color: var(--accent);
+      }
+      .iconbtn:disabled {
+        opacity: 0.35;
+        cursor: default;
+        background: transparent;
+        transform: none;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 9px;
+        border-radius: 12px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        color: var(--text-secondary);
+        font-size: 11.5px;
+        font-weight: 550;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          border-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .chip:hover {
+        border-color: var(--border-hover);
+        color: var(--text);
+      }
+      .chip:active {
+        transform: scale(0.97);
+      }
+      .chip[aria-pressed='true'] {
+        background: var(--accent-tint);
+        border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+        color: var(--accent);
+      }
+      .select {
+        height: 26px;
+        max-width: 100%;
+        padding: 0 24px 0 9px;
+        border-radius: 13px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23828892' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+          no-repeat right 8px center;
+        appearance: none;
+        font-size: 11.5px;
+        font-weight: 550;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .select--on {
+        background-color: var(--accent-tint);
+        border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+        color: var(--accent);
+      }
+      .input {
+        width: 100%;
+        height: 32px;
+        padding: 0 10px;
+        border-radius: 7px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        font-size: 13px;
+      }
+      .input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+      }
+      .switch {
+        appearance: none;
+        flex-shrink: 0;
+        width: 28px;
+        height: 16px;
+        margin: 0;
+        border-radius: 8px;
+        background: var(--border-strong);
+        position: relative;
+        cursor: pointer;
+        transition: background-color 150ms ease-out;
+      }
+      .switch::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(28, 28, 46, 0.2);
+        transition: transform 180ms var(--ease-out);
+      }
+      .switch:checked {
+        background: var(--accent);
+      }
+      .switch:checked::after {
+        transform: translateX(12px);
+      }
+      .switch-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        font-weight: 550;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .seg {
+        display: flex;
+        padding: 2px;
+        gap: 2px;
+        border-radius: 8px;
+        background: var(--bg-inset);
+      }
+      .seg button {
+        flex: 1;
+        height: 26px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 550;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: color 150ms ease-out;
+      }
+      .seg button:hover {
+        color: var(--text);
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--bg);
+        color: var(--text);
+        box-shadow: var(--shadow-sm);
+      }
+      .label {
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-faint);
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px;
+      }
+      .ctl {
+        display: grid;
+        gap: 6px;
+      }
+      .ctl .label:not(:first-child) {
+        margin-top: 4px;
+      }
+      .ctl__hint {
+        font-size: 11px;
+        color: var(--text-faint);
+      }
+      .status {
+        font-size: 12px;
+        color: var(--text-faint);
+        white-space: nowrap;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      .brand img {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+      }
+      .top__end {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      @media (max-width: 640px) {
+        .top {
+          flex-wrap: wrap;
+        }
+        .top .status {
+          display: none;
+        }
+        .v-bento,
+        .v-gal {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+      }
+
+      /* Widget chrome shared by Bento and Gallery */
+      .w {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+      }
+      .w__head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 8px 10px 6px 14px;
+        flex: none;
+      }
+      .w__icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        background: var(--bg-inset);
+        color: var(--text-secondary);
+        flex: none;
+      }
+      .w__title {
+        font-size: 13px;
+        font-weight: 650;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+      }
+      .w__tools {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: none;
+      }
+      .w__sub {
+        padding: 0 14px 8px;
+        font-size: 11.5px;
+        color: var(--text-faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: none;
+      }
+      .w__controls {
+        padding: 4px 14px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        flex: none;
+      }
+      .w__controls.enter,
+      .col__opts.enter {
+        animation: drop 180ms var(--ease-out);
+      }
+      .w__body {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 0 14px 10px;
+      }
+      .w__grip {
+        color: var(--text-faint);
+        cursor: grab;
+        flex: none;
+      }
+      .iseg {
+        display: flex;
+        gap: 1px;
+      }
+      .iseg button {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text-faint);
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .iseg button:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+      .iseg button[aria-pressed='true'] {
+        background: var(--bg-inset);
+        color: var(--text);
+      }
+      .iseg--text button {
+        width: 24px;
+        font-size: 11px;
+        font-weight: 650;
+      }
+      .tools-sep {
+        width: 1px;
+        height: 14px;
+        background: var(--border-strong);
+        margin: 0 3px;
+      }
+      .wempty {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        padding: 28px 8px;
+        text-align: center;
+        color: var(--text-faint);
+      }
+      .dragging {
+        opacity: 0.4;
+      }
+      .drop-target {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      /* Widget layouts */
+      .meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        color: var(--text-faint);
+        min-width: 0;
+      }
+      .meta b {
+        color: var(--text-muted);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .ll__row > a {
+        display: flex;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .ll__row:last-child > a {
+        border-bottom: 0;
+      }
+      .ll__row.is-action > a {
+        box-shadow: inset 3px 0 0 var(--error);
+        padding-left: 12px;
+      }
+      .ll__body {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
+      }
+      .ll__title,
+      .lc__title,
+      .lcard__title,
+      .lfeat__title,
+      .vt__title {
+        transition: color 150ms ease-out;
+      }
+      a:hover .ll__title,
+      a:hover .lc__title,
+      a:hover .lcard__title,
+      a:hover .lfeat__title,
+      a:hover .vt__title {
+        color: var(--accent);
+      }
+      .ll__title {
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+      .is-read .ll__title {
+        font-weight: 550;
+        color: var(--text-secondary);
+      }
+      .ll__ex {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .lc__row > a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 4px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .lc__row:last-child > a {
+        border-bottom: 0;
+      }
+      .lc__title {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 550;
+      }
+      .lc__date,
+      .lc__src {
+        font-size: 11.5px;
+        color: var(--text-faint);
+        white-space: nowrap;
+        flex: none;
+      }
+      .lc__src {
+        font-weight: 600;
+      }
+      .lcards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 10px;
+        padding-top: 2px;
+      }
+      .lcard {
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-canvas);
+        transition: border-color 150ms ease-out;
+      }
+      .lcard:hover {
+        border-color: var(--border-hover);
+      }
+      .lcard.is-action {
+        box-shadow: inset 3px 0 0 var(--error);
+      }
+      .lcard .pills {
+        margin: 0;
+      }
+      .lcard__title {
+        font-weight: 600;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .lcard__ex {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .lfeat {
+        display: grid;
+        gap: 6px;
+        padding: 4px 0 12px;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .lfeat__title {
+        font-size: 16px;
+        font-weight: 650;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+      }
+      .lfeat__ex {
+        color: var(--text-muted);
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .tile {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%),
+          var(--bg-inset);
+        border: 1px solid var(--border-subtle);
+      }
+      .tile--sm {
+        width: 96px;
+        flex: none;
+        align-self: start;
+      }
+      .tile__play {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        box-shadow: var(--shadow-md);
+        color: var(--text);
+        transition: transform 200ms var(--ease-out);
+      }
+      .tile--sm .tile__play {
+        width: 24px;
+        height: 24px;
+      }
+      a:hover .tile__play {
+        transform: scale(1.06);
+      }
+      .lgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 14px 12px;
+        padding-top: 2px;
+      }
+      .vt {
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        min-width: 0;
+      }
+      .vt__title {
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .xl__row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      li:last-child .xl__row {
+        border-bottom: 0;
+      }
+      .xl__logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--text);
+        color: var(--bg);
+        flex: none;
+      }
+      .xl__row b {
+        display: block;
+        font-weight: 600;
+      }
+      .xl__row small {
+        display: block;
+        color: var(--text-faint);
+        font-size: 11.5px;
+      }
+      .xl__row > .icon {
+        margin-left: auto;
+        color: var(--text-faint);
+      }
+      .xl__row:hover b {
+        color: var(--accent);
+      }
+      .xc {
+        display: grid;
+        gap: 8px;
+        padding-top: 2px;
+      }
+      .lk {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+        gap: 8px;
+        padding-top: 2px;
+      }
+      .lk a {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-canvas);
+        font-weight: 600;
+        font-size: 12.5px;
+        transition: border-color 150ms ease-out;
+      }
+      .lk a:hover {
+        border-color: var(--border-hover);
+      }
+      .lk .w__icon,
+      .lkl .w__icon {
+        width: 28px;
+        height: 28px;
+      }
+      .lkl a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .lkl li:last-child a {
+        border-bottom: 0;
+      }
+      .lkl b {
+        font-weight: 600;
+        display: block;
+      }
+      .lkl small {
+        color: var(--text-faint);
+        font-size: 11.5px;
+      }
+
+      .ellipsis {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .input[aria-invalid='true'] {
+        border-color: var(--error);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--error) 18%, transparent);
+      }
+
+      /* Store snapshot */
+      .st {
+        display: grid;
+        gap: 12px;
+        padding-top: 2px;
+      }
+      .st__head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .st__mono {
+        width: 34px;
+        height: 34px;
+        flex: none;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 12px;
+        background: var(--accent-tint);
+        color: var(--accent);
+      }
+      .st__name {
+        flex: 1;
+        min-width: 0;
+      }
+      .st__name b {
+        display: block;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .flag {
+        width: 3px;
+        height: 14px;
+        border-radius: 2px;
+        flex: none;
+      }
+      .flag--red {
+        background: var(--error);
+      }
+      .flag--amber {
+        background: var(--warning);
+      }
+      .st__name small {
+        display: block;
+        font-size: 11.5px;
+        color: var(--text-faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .w,
+      .col {
+        container-type: inline-size;
+      }
+      .st__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      @container (min-width: 520px) {
+        .st__grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+      .st__tile {
+        display: grid;
+        gap: 2px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--bg-raised);
+        border: 1px solid var(--border-subtle);
+      }
+      .st__val {
+        font-size: 18px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+      }
+      .st__key {
+        font-size: 11.5px;
+        color: var(--text-faint);
+      }
+      .st__rows {
+        margin: 0;
+        display: grid;
+      }
+      .st__rows div {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .st__rows dt {
+        color: var(--text-muted);
+      }
+      .st__rows dd {
+        margin: 0;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .st__theme {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .st__theme b {
+        font-weight: 600;
+      }
+
+      /* Pinned links editor */
+      .pinlist {
+        display: grid;
+        gap: 4px;
+      }
+      .pinlist li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 4px 4px 10px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+      }
+      .pinlist__text {
+        flex: 1;
+        min-width: 0;
+      }
+      .pinlist__text b {
+        display: block;
+        font-weight: 600;
+        font-size: 12px;
+      }
+      .pinlist__text small {
+        display: block;
+        font-size: 11px;
+        color: var(--text-faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pinform {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .pinform .input {
+        height: 28px;
+        font-size: 12px;
+        flex: 1 1 120px;
+      }
+      .pinform .input[data-pin='url'] {
+        flex-basis: 200px;
+      }
+
+      /* Layout thumbnails (Gallery inspector and catalog) */
+      .thumb--stats {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+      .thumb--stats i {
+        background:
+          linear-gradient(var(--text-faint) 0 0) 6px 6px / 40% 22% no-repeat,
+          linear-gradient(var(--border-strong) 0 0) 6px calc(100% - 6px) / 60% 14% no-repeat,
+          var(--bg);
+        border: 1px solid var(--border-strong);
+      }
+      .thumb {
+        display: grid;
+        gap: 4px;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        padding: 8px;
+        border-radius: 6px;
+        background: var(--bg-raised);
+        border: 1px solid var(--border-subtle);
+      }
+      .thumb i {
+        display: block;
+        border-radius: 2px;
+      }
+      .thumb--list {
+        grid-template-rows: repeat(3, 1fr);
+      }
+      .thumb--list i {
+        background:
+          linear-gradient(var(--text-faint) 0 0) left top / 62% 34% no-repeat,
+          linear-gradient(var(--border-strong) 0 0) left bottom / 96% 28% no-repeat;
+      }
+      .thumb--list i:nth-child(4),
+      .thumb--featured i:nth-child(4) {
+        display: none;
+      }
+      .thumb--compact {
+        grid-template-rows: repeat(4, 1fr);
+      }
+      .thumb--compact i {
+        background:
+          linear-gradient(var(--text-faint) 0 0) left center / 70% 42% no-repeat,
+          linear-gradient(var(--border-strong) 0 0) right center / 16% 42% no-repeat;
+      }
+      .thumb--cards,
+      .thumb--grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+      .thumb--cards i {
+        background: var(--bg);
+        border: 1px solid var(--border-strong);
+      }
+      .thumb--grid i {
+        background: var(--border-strong);
+        border-radius: 3px;
+      }
+      .thumb--featured {
+        grid-template-rows: 2fr 1fr 1fr;
+      }
+      .thumb--featured i {
+        background: linear-gradient(var(--text-faint) 0 0) left center / 80% 45% no-repeat;
+      }
+      .thumb--featured i:first-child {
+        background: var(--border-strong);
+        border-radius: 3px;
+      }
+
+      /* ===== Variant 1: Bento ===== */
+      .v-bento {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 24px 0;
+      }
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-auto-rows: 150px;
+        grid-auto-flow: dense;
+        gap: 16px;
+      }
+      .size--S {
+        grid-column: span 1;
+        grid-row: span 2;
+      }
+      .size--T {
+        grid-column: span 1;
+        grid-row: span 3;
+      }
+      .size--M {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+      .size--L {
+        grid-column: span 2;
+        grid-row: span 3;
+      }
+      .size--W {
+        grid-column: span 4;
+        grid-row: span 2;
+      }
+      .w--edit {
+        cursor: grab;
+        border-style: dashed;
+        border-color: var(--border-hover);
+        box-shadow: none;
+      }
+      .w--edit:active {
+        cursor: grabbing;
+      }
+      .w__editbar {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin: 0 10px 8px 12px;
+        padding: 3px;
+        border-radius: 8px;
+        background: var(--bg-raised);
+        flex: none;
+      }
+      .w__editbar.enter {
+        animation: drop 180ms var(--ease-out);
+      }
+      .w--edit .w__body {
+        opacity: 0.5;
+        pointer-events: none;
+        user-select: none;
+      }
+      .pop-anchor {
+        position: relative;
+      }
+      .menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 20;
+        width: 320px;
+        padding: 6px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        box-shadow: var(--shadow-pop);
+        transform-origin: top right;
+        display: grid;
+        gap: 2px;
+      }
+      .menu.enter {
+        animation: pop 160ms var(--ease-out);
+      }
+      .menu__item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 150ms ease-out;
+      }
+      .menu__item:hover {
+        background: var(--bg-raised);
+      }
+      .menu__item b {
+        display: block;
+        font-weight: 600;
+      }
+      .menu__item small {
+        display: block;
+        color: var(--text-faint);
+        font-size: 11.5px;
+        line-height: 1.35;
+      }
+      @media (max-width: 1100px) {
+        .bento {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .size--W {
+          grid-column: span 2;
+        }
+      }
+      @media (max-width: 640px) {
+        .bento {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .bento > * {
+          grid-column: span 1;
+        }
+      }
+
+      /* ===== Variant 2: Deck ===== */
+      .v-deck {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+      .rail {
+        flex: none;
+        width: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 0;
+        background: var(--bg-raised);
+        border-right: 1px solid var(--border);
+      }
+      .rail__logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        margin-bottom: 10px;
+      }
+      .rail__cols {
+        display: grid;
+        gap: 4px;
+      }
+      .rail__btn {
+        position: relative;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition:
+          background-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .rail__btn:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+      .rail__btn:active {
+        transform: scale(0.95);
+      }
+      .rail__dot {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 2px var(--bg-raised);
+      }
+      .rail__add {
+        border: 1px dashed var(--border-hover);
+        margin-top: 4px;
+      }
+      .rail__end {
+        margin-top: auto;
+        display: grid;
+        gap: 4px;
+        justify-items: center;
+      }
+      .deck__board {
+        flex: 1;
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .col {
+        flex: 0 0 320px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+      }
+      .col--wide {
+        flex-basis: 440px;
+      }
+      .col__head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 8px 10px 8px 14px;
+        border-bottom: 1px solid var(--border-subtle);
+        cursor: grab;
+        flex: none;
+      }
+      .col__head:active {
+        cursor: grabbing;
+      }
+      .col__opts {
+        display: grid;
+        gap: 12px;
+        padding: 12px 14px 14px;
+        background: var(--bg-raised);
+        border-bottom: 1px solid var(--border);
+        flex: none;
+      }
+      .opt {
+        display: grid;
+        gap: 6px;
+      }
+      .opt__row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .col__body {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 4px 14px 80px;
+      }
+      .col--ghost {
+        flex-basis: 280px;
+        border-style: dashed;
+        border-color: var(--border-hover);
+        background: transparent;
+        box-shadow: none;
+      }
+      .ghost-add {
+        flex: 1;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 8px;
+        border: 0;
+        background: transparent;
+        color: var(--text-muted);
+        font-weight: 600;
+        cursor: pointer;
+        transition: color 150ms ease-out;
+      }
+      .ghost-add:hover {
+        color: var(--text);
+      }
+      .ghost-list {
+        display: grid;
+        gap: 2px;
+        padding: 8px;
+        overflow: auto;
+      }
+      .ghost-list .label {
+        padding: 6px 8px 4px;
+      }
+
+      /* ===== Variant 3: Gallery ===== */
+      .v-gal {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 40px 24px 0;
+      }
+      .v-gal.has-drawer {
+        margin-right: 400px;
+      }
+      .masonry {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .masonry__col {
+        flex: 1;
+        min-width: 0;
+        display: grid;
+        gap: 16px;
+      }
+      .g {
+        transition:
+          outline-color 150ms ease-out,
+          box-shadow 150ms ease-out;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
+      .g.is-sel {
+        outline-color: var(--accent);
+      }
+      .g .w__body {
+        overflow: visible;
+        padding-bottom: 12px;
+      }
+      .g__edit {
+        opacity: 0;
+        transition: opacity 150ms ease-out;
+      }
+      .g:hover .g__edit,
+      .g:focus-within .g__edit,
+      .g.is-sel .g__edit {
+        opacity: 1;
+      }
+      @media (hover: none) {
+        .g__edit {
+          opacity: 1;
+        }
+      }
+      .g__foot {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 9px 14px;
+        border-top: 1px solid var(--border-subtle);
+        font-size: 12px;
+        font-weight: 550;
+        color: var(--text-muted);
+        transition: color 150ms ease-out;
+      }
+      .g__foot:hover {
+        color: var(--accent);
+      }
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        width: min(400px, 100vw);
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        border-left: 1px solid var(--border);
+        box-shadow: var(--shadow-pop);
+      }
+      .drawer.enter {
+        animation: slide 240ms var(--ease-out);
+      }
+      .drawer__head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 12px 12px 16px;
+        border-bottom: 1px solid var(--border);
+        flex: none;
+      }
+      .drawer__head h2 {
+        font-size: 14px;
+        font-weight: 650;
+        flex: 1;
+      }
+      .drawer__head .seg {
+        flex: 1;
+      }
+      .drawer__body {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 16px 16px 96px;
+        display: grid;
+        gap: 18px;
+        align-content: start;
+      }
+      .drawer__hint {
+        font-size: 12px;
+        color: var(--text-faint);
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+      .lays {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .lay {
+        display: grid;
+        gap: 6px;
+        padding: 6px 6px 8px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        font-size: 12px;
+        font-weight: 550;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition:
+          border-color 150ms ease-out,
+          background-color 150ms ease-out;
+      }
+      .lay:hover {
+        border-color: var(--border-hover);
+      }
+      .lay:active {
+        transform: scale(0.97);
+      }
+      .lay[aria-pressed='true'] {
+        border-color: var(--accent);
+        background: var(--accent-tint);
+        color: var(--accent);
+      }
+      .wlist {
+        display: grid;
+        gap: 6px;
+      }
+      .wlist__item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 6px 6px 8px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+      }
+      .wlist__main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 2px 4px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+      }
+      .wlist__main:hover b {
+        color: var(--accent);
+      }
+      .wlist__main b {
+        display: block;
+        font-weight: 600;
+        transition: color 150ms ease-out;
+      }
+      .wlist__main small {
+        display: block;
+        font-size: 11.5px;
+        color: var(--text-faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .wlist__main > span:last-child {
+        min-width: 0;
+      }
+      .catalog {
+        display: grid;
+        gap: 8px;
+      }
+      .cat {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+      .cat .thumb {
+        width: 72px;
+        flex: none;
+      }
+      .cat__body {
+        flex: 1;
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+      .cat__body b {
+        font-weight: 600;
+      }
+      .cat__body small {
+        font-size: 11.5px;
+        color: var(--text-faint);
+        line-height: 1.35;
+      }
+
+      /* Picker: verbatim from the prototype skill's PICKER.md. */
+      .proto-picker {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 999px;
+        background: rgba(10, 10, 10, 0.82);
+        -webkit-backdrop-filter: blur(12px) saturate(1.4);
+        backdrop-filter: blur(12px) saturate(1.4);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+          0 8px 24px rgba(0, 0, 0, 0.24),
+          0 2px 6px rgba(0, 0, 0, 0.12);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 13px;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .proto-picker-highlight {
+        position: absolute;
+        top: 4px;
+        left: 0;
+        height: 28px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        will-change: transform;
+      }
+      .proto-picker[data-ready] .proto-picker-highlight {
+        transition:
+          transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+          width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .proto-picker[data-ready] .proto-picker-highlight {
+          transition: none;
+        }
+      }
+      .proto-picker-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.55);
+        font: inherit;
+        cursor: pointer;
+        transition: color 150ms ease-out;
+      }
+      .proto-picker-item:hover {
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .proto-picker-item:active {
+        transform: scale(0.97);
+      }
+      .proto-picker-item:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.4);
+        outline-offset: 2px;
+      }
+      .proto-picker-item[data-active] {
+        color: #fff;
+      }
+      .proto-picker-divider {
+        width: 1px;
+        height: 16px;
+        margin: 0 4px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .proto-picker-replay {
+        padding: 0 10px;
+        font-size: 14px;
+      }
+      .proto-picker[data-position='top'] {
+        bottom: auto;
+        top: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+
+    <nav class="proto-picker" aria-label="Prototype variants">
+      <span class="proto-picker-highlight" aria-hidden="true"></span>
+      <button class="proto-picker-item" data-active aria-current="true">Bento</button>
+      <button class="proto-picker-item">Deck</button>
+      <button class="proto-picker-item">Gallery</button>
+      <span class="proto-picker-divider" aria-hidden="true"></span>
+      <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
+    </nav>
+
+    <!-- Feed snapshot: shopify.dev changelog, Shopify newsroom, Shopify Engineering blog, and three YouTube channels. -->
+    <script id="snapshot" type="application/json">{"taken":"2026-10-01T01:56:51.006Z","items":[{"source":"changelog","stream":"platform","title":"Use app intents for your discount app","link":"https://shopify.dev/changelog/use-app-intents-for-your-discount-app","date":"2026-09-30T13:00:00.000Z","categories":["Platform","New","2026-10"],"excerpt":"Apps that create new discount types using Shopify Functions can now register shopify/Discount app intents. This lets Sidekick launch an app’s create and edit flows and promote them in the disambiguation picker. Apps can…","thumb":null},{"source":"changelog","stream":"platform","title":"More resilient token exchanges when migrating tokens without a user session","link":"https://shopify.dev/changelog/more-resilient-token-exchanges-when-migrating-tokens-without-a-user-session","date":"2026-09-29T16:00:00.000Z","categories":["API","Update","Admin GraphQL API","Admin REST API"],"excerpt":"More resilient token exchanges when migrating to expiring offline access tokens When you migrate an app from non-expiring offline tokens to expiring offline access tokens without a user session, you can now recover a…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify Flow: Flow Trigger Lifecycle Callback extensions now support relative url paths","link":"https://shopify.dev/changelog/shopify-flow-flow-trigger-lifecycle-callback-extensions-now-support-relative-url-paths","date":"2026-09-29T16:00:00.000Z","categories":["Tools","Update"],"excerpt":"Previously, the URL for Flow Trigger Lifecycle Callback extensions were required to be absolute HTTPS URLs pointing to a web server. This required an already hosted system which made it inconvenient to test locally…","thumb":null},{"source":"changelog","stream":"platform","title":"Manage packed product dimensions with the Admin GraphQL API","link":"https://shopify.dev/changelog/manage-packed-product-dimensions-with-the-admin-graphql-api","date":"2026-09-29T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2027-01"],"excerpt":"Starting with the 2027-01 Admin GraphQL API version, apps can read and write packed product dimensions using InventoryItemMeasurement.packedDimensions and InventoryItemMeasurementInput.packedDimensions in the Admin…","thumb":null},{"source":"changelog","stream":"platform","title":"Move existing subscriptions to Shopify App Pricing","link":"https://shopify.dev/changelog/move-existing-subscriptions-to-shopify-app-pricing","date":"2026-09-29T13:00:00.000Z","categories":["App store","New"],"excerpt":"Apps that bill with the Billing API can now move their existing subscriptions to Shopify App Pricing by using the migration tool in the Partner Dashboard or new commands in Shopify CLI. Subscriptions move at the start…","thumb":null},{"source":"changelog","stream":"platform","title":"Sidekick can now invoke app intents without tools","link":"https://shopify.dev/changelog/sidekick-can-now-invoke-app-intents-without-tools","date":"2026-09-28T16:00:00.000Z","categories":["Platform","Update"],"excerpt":"Sidekick now surfaces app extensions that declare only intents, with no tools file. Previously an extension had to declare tools to be eligible for Sidekick, so an admin.app.intent.link or admin.app.intent.render…","thumb":null},{"source":"changelog","stream":"platform","title":"WebMCP support for checkout","link":"https://shopify.dev/changelog/webmcp-support-for-checkout","date":"2026-09-28T14:30:00.000Z","categories":["Platform","New"],"excerpt":"Browser agents can now read and update Shopify checkouts using WebMCP tools for checkout. The tools let agents interact with the active checkout in the buyer’s browser session. When the buyer’s input is required, such…","thumb":null},{"source":"changelog","stream":"platform","title":"AI Toolkit skills have been consolidated to `shopify`","link":"https://shopify.dev/changelog/ai-toolkit-skills-have-been-consolidated","date":"2026-09-25T16:00:00.000Z","categories":["Action Required","AI Toolkit","Update"],"excerpt":"With today's release of AI Toolkit, all existing shopify- skills are consolidated into a single shopify skill. If you use AI Toolkit skills with agents or npx skills, you might need to update your environment. What…","thumb":null},{"source":"changelog","stream":"platform","title":"The new Dev Dashboard: your command center for building","link":"https://shopify.dev/changelog/the-new-dev-dashboard","date":"2026-09-25T15:00:00.000Z","categories":["Dev Dashboard","Update"],"excerpt":"Today we're sharing the newest wave of improvements to the Dev Dashboard. You told us, in the community forums and in support conversations, that common work like managing collaborator access or understanding app health…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify Payments Balance Transaction GraphQL type supports currency conversion type","link":"https://shopify.dev/changelog/shopify-payments-balance-transaction-graphql-type-supports-currency-conversion-type","date":"2026-09-25T13:00:00.000Z","categories":["API","Update","Admin GraphQL API","2026-10"],"excerpt":"As of GraphQL Admin API version 2026-10, ShopifyPaymentsTransactionType now includes CURRENCY_CONVERSION type. Learn more about ShopifyPaymentsTransactionType on Shopify.dev.","thumb":null},{"source":"changelog","stream":"platform","title":"Polaris 2.0 release candidate","link":"https://shopify.dev/changelog/polaris-2-0-release-candidate","date":"2026-09-24T16:30:00.000Z","categories":["Polaris","New"],"excerpt":"The Polaris 2.0 release candidate is now available for embedded App Home interfaces. It includes the Shopify admin’s new visual styles, allowing your app to adopt the new look. The new Shopify admin design began rolling…","thumb":null},{"source":"changelog","stream":"platform","title":"Events subscription query complexity limit is changing to 100 points","link":"https://shopify.dev/changelog/events-subscription-query-complexity-limit-is-changing-to-100-points","date":"2026-09-22T18:00:00.000Z","categories":["Action Required","API","Breaking API Change","Events & webhooks"],"excerpt":"We’re reducing the query complexity limit for Events subscriptions from 250 to 100 points. This change does not affect Classic Webhooks. Shopify assigns each Events query a complexity score based on the fields it…","thumb":null},{"source":"changelog","stream":"platform","title":"Polaris CDN 1.1 is now stable","link":"https://shopify.dev/changelog/polaris-cdn-1-1-is-now-stable","date":"2026-09-22T17:30:00.000Z","categories":["Polaris","New"],"excerpt":"Polaris Web Components 1.1 is now available on the stable Polaris CDN channels. This is the first minor release under the CDN's new semantic versioning model. The following URLs now serve Polaris 1.1 \u003cscript…","thumb":null},{"source":"changelog","stream":"platform","title":"Removing marketCurrencySettingsUpdate mutation","link":"https://shopify.dev/changelog/removing-marketcurrencysettingsupdate-mutation","date":"2026-09-22T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","Admin GraphQL API","2027-01"],"excerpt":"As of GraphQL Admin API version 2027-01, the marketCurrencySettingsUpdate mutation is removed, along with the MarketCurrencySettingsUpdatePayload, MarketCurrencySettingsUserError, and MarketCurrencySettingsUserErrorCode…","thumb":null},{"source":"changelog","stream":"platform","title":"Unlimited private plans and target stores in Shopify App Pricing","link":"https://shopify.dev/changelog/unlimited-private-plans-and-target-stores-in-shopify-app-pricing","date":"2026-09-21T21:00:00.000Z","categories":["App store","New"],"excerpt":"Developers using Shopify App Pricing can now create unlimited private plans per app and add unlimited target stores to each plan, replacing the previous limits of 15 private plans and 20 stores per plan. No action is…","thumb":null},{"source":"changelog","stream":"platform","title":"New translatable boolean field for Metafield GraphQL Object","link":"https://shopify.dev/changelog/is-translatable-metafield-field","date":"2026-09-21T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"API version 2026-10 adds a non-null translatable field to the Metafield object in the GraphQL Admin API. Apps that fetch translatable metafields and migrate to 2026-10 can now see whether a metafield’s value is…","thumb":null},{"source":"changelog","stream":"platform","title":"The `automaticDiscounts` query is removed in API version 2027-01","link":"https://shopify.dev/changelog/automaticdiscounts-query-is-removed-in-api-version-2027-01","date":"2026-09-18T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","Admin GraphQL API","2027-01"],"excerpt":"The deprecated automaticDiscounts query is removed from the GraphQL Admin API in version 2027-01. If your app reads a shop’s automatic discounts through automaticDiscounts, you need to move to the discountNodes query…","thumb":null},{"source":"changelog","stream":"platform","title":"Request a bundle size exception for existing UI extensions","link":"https://shopify.dev/changelog/request-a-bundle-size-exception-for-existing-ui-extensions","date":"2026-09-17T19:30:00.000Z","categories":["API","Update","Admin Extensions","Checkout UI","Customer Accounts","POS Extensions"],"excerpt":"UI extensions using API version 2025-10 or later are limited to a 64 KB compressed JavaScript bundle per extension. Full page customer account extensions may use up to 128 KB. If your extension remains over the limit…","thumb":null},{"source":"changelog","stream":"platform","title":"Adding a canceled receive action to the inventory shipments API","link":"https://shopify.dev/changelog/adding-a-canceled-receive-action-to-the-inventory-shipments-api","date":"2026-09-17T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"The GraphQL Admin API now supports a CANCELED receive action for inventory shipments in version 2026-10. You can mark inventory shipment line item units as canceled when they’ll never arrive, and you can read canceled…","thumb":null},{"source":"changelog","stream":"platform","title":"Removed session.currentSession.staffMemberId from POS UI Extensions (2026-10)","link":"https://shopify.dev/changelog/removed-session-currentsession-staffmemberid-from-pos-ui-extensions-2026-10","date":"2026-09-17T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","POS Extensions","2026-10"],"excerpt":"As of API version 2026-10, the static session.currentSession.staffMemberId field has been removed from the POS UI Extensions Session API. It was deprecated in 2026-07 in favour of session.staffMember, a reactive signal…","thumb":null},{"source":"changelog","stream":"platform","title":"Query market hierarchies with the GraphQL Admin API","link":"https://shopify.dev/changelog/market-relationships","date":"2026-09-17T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"The GraphQL Admin API now includes fields for querying and traversing a store’s market hierarchy in API version 2026-10. Apps that use the read_markets access scope can retrieve parent-child relationships, navigate…","thumb":null},{"source":"changelog","stream":"platform","title":"New Pricing audit trail for contextual product variant prices","link":"https://shopify.dev/changelog/pricing-audit-trail-for-contextual-product-variant-prices","date":"2026-09-17T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"The GraphQL Admin API now includes the auditTrail field on ProductVariantContextualPricing in API version 2026-10. Apps with the read_products access scope can use this field to inspect the ordered adjustments that…","thumb":null},{"source":"changelog","stream":"platform","title":"Updates to Events payloads and subscription configuration","link":"https://shopify.dev/changelog/updates-to-events-payloads-and-subscription-configuration","date":"2026-09-16T18:00:00.000Z","categories":["Action Required","API","Update","Events & webhooks"],"excerpt":"Starting today, we're updating Events payloads, trigger syntax, and delivery headers. Classic Webhook subscriptions are unaffected. What's changed fields_changed now describes how each path changed The flat array…","thumb":null},{"source":"changelog","stream":"platform","title":"Filter Catalog search results by media type","link":"https://shopify.dev/changelog/filter-catalog-search-results-by-media-type","date":"2026-09-15T23:50:00.000Z","categories":["Catalog","New"],"excerpt":"The Catalog API now returns video and 3D model media on products that have it, and supports filtering search results by media type. You can request only products that have video or 3D model media attached, and matching…","thumb":null},{"source":"changelog","stream":"platform","title":"Dynamic complexity cost for `metafieldsSet` mutation","link":"https://shopify.dev/changelog/dynamic-complexity-cost-for-metafieldsset-mutation","date":"2026-09-15T16:00:00.000Z","categories":["API","Update","Admin GraphQL API"],"excerpt":"The metafieldsSet mutation now uses dynamic complexity costing. Instead of a flat cost for every call, a request's cost reflects how many distinct resources metafields were changed. Most apps need no changes, as…","thumb":null},{"source":"changelog","stream":"platform","title":"Prepare your app for the Shopify admin's new look","link":"https://shopify.dev/changelog/prepare-your-app-for-the-shopify-admins-new-look","date":"2026-09-15T16:00:00.000Z","categories":["Polaris","Update"],"excerpt":"Starting September 15, 2026, the Shopify admin has a new look, rolling out progressively to merchants. Apps that use Admin UI extensions and App Home UI extensions pick up the new styles automatically. Apps that render…","thumb":null},{"source":"changelog","stream":"platform","title":"family_name is optional for B2B orders in Payments Apps API requests","link":"https://shopify.dev/changelog/family_name-is-optional-for-b2b-orders-in-payments-apps-api-requests","date":"2026-09-15T16:00:00.000Z","categories":["API","Update","Payments Apps API"],"excerpt":"B2B checkout treats the buyer’s surname as optional, so payment session requests for B2B orders can omit family_name in shipping_address and billing_address. This affects payments apps that handle B2B orders through the…","thumb":null},{"source":"changelog","stream":"platform","title":"Delivery options in Shopify Functions input now expose their metafields","link":"https://shopify.dev/changelog/delivery-options-in-shopify-functions-input-now-expose-their-metafields","date":"2026-09-15T14:00:00.000Z","categories":["API","Update","Functions","2026-10"],"excerpt":"Shopify Functions can now read metafields attached to delivery options in the cart. On API version 2026-10, you can call metafield(namespace:, key:) on any option in cart.deliveryGroups.deliveryOptions. This affects…","thumb":null},{"source":"changelog","stream":"platform","title":"Discounts Allocator Function API developer preview has ended","link":"https://shopify.dev/changelog/discounts-allocator-function-api-developer-preview-has-ended","date":"2026-09-10T16:00:00.000Z","categories":["Action Required","API","Update","Admin GraphQL API","Functions"],"excerpt":"The Discounts Allocator Function API, available only through the Discounts Allocator developer preview, has been removed and won’t be released. The developer preview is closed. Most developers don’t need to take action.…","thumb":null},{"source":"changelog","stream":"platform","title":"Create and delete dev stores in Shopify CLI","link":"https://shopify.dev/changelog/create-and-delete-dev-stores-in-shopify-cli","date":"2026-09-09T13:00:00.000Z","categories":["Shopify CLI","New"],"excerpt":"Shopify CLI 4.8 adds shopify store commands that let you create and manage dev stores from your terminal or coding agent. These commands are available after you update to Shopify CLI 4.8. What changed You can now use…","thumb":null},{"source":"changelog","stream":"platform","title":"Variants now support multiple barcodes","link":"https://shopify.dev/changelog/product-variant-barcode-is-being-replaced-by-barcodes","date":"2026-09-08T17:35:00.000Z","categories":["Action Required","API","Deprecation announcement","Admin GraphQL API","2026-10"],"excerpt":"Merchants often sell the same variant under more than one identifier: a manufacturer UPC alongside a private-label EAN, a GTIN, a reissued ISBN, or an ASIN for a marketplace listing. Until now a variant held a single…","thumb":null},{"source":"changelog","stream":"platform","title":"Customer Address APIs now support countryCode","link":"https://shopify.dev/changelog/customer-address-apis-now-support-countrycode","date":"2026-09-08T16:00:00.000Z","categories":["API","Deprecation announcement","Checkout UI","Customer Account API","Customer Accounts","2026-10"],"excerpt":"Starting with Customer Account API version 2026-10, customer address inputs and objects support countryCode. The existing territoryCode field is deprecated but remains fully supported, so current integrations continue…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify storefronts now support UCP 2026-08-25","link":"https://shopify.dev/changelog/08-25-is-now-supported","date":"2026-09-04T16:00:00.000Z","categories":["UCP","Update"],"excerpt":"Shopify storefronts now advertise support for Universal Commerce Protocol (UCP) version 2026-08-25 in their discovery profiles at /.well-known/ucp. This update adds compatibility with the 2026-08-25 protocol release and…","thumb":null},{"source":"changelog","stream":"platform","title":"Hydrogen developer preview update: September 2, 2026","link":"https://shopify.dev/changelog/hydrogen-developer-preview-update-september-2-2026","date":"2026-09-03T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"The Hydrogen developer preview adds new capabilities to the toolkit and extends the ways developers can build Shopify storefronts: Variant links: Links that name a variant, like the ones Shopify submits to a Google…","thumb":null},{"source":"changelog","stream":"platform","title":"New paymentInstrumentSendAddEmail mutation emails customers a link to add a payment method for a subscription, order, or draft order","link":"https://shopify.dev/changelog/new-paymentinstrumentsendaddemail-mutation","date":"2026-09-03T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"You can now use the paymentInstrumentSendAddEmail mutation in the GraphQL Admin API to email a customer a link for adding a payment method to a specific resource (for example, a subscription contract). This lets you…","thumb":null},{"source":"changelog","stream":"platform","title":"Polaris CDN 1.1 release candidate","link":"https://shopify.dev/changelog/polaris-cdn-1-1-release-candidate","date":"2026-08-31T16:16:00.000Z","categories":["Polaris","New"],"excerpt":"Polaris Web Components loaded from the Shopify CDN are moving to semantic versioning, read more about that change here. You can test out the Polaris CDN 1.1 release candidate by updating the URL you load polaris from to…","thumb":null},{"source":"changelog","stream":"platform","title":"The Polaris CDN is adopting semantic versioning","link":"https://shopify.dev/changelog/the-polaris-cdn-is-adopting-semantic-versioning","date":"2026-08-31T16:15:00.000Z","categories":["Polaris","New"],"excerpt":"Polaris Web Components loaded from the Shopify CDN are moving to semantic versioning. Most apps will continue receiving compatible improvements automatically, while developers can choose when to adopt breaking changes.…","thumb":null},{"source":"changelog","stream":"platform","title":"More resilient refreshes for expiring offline access tokens","link":"https://shopify.dev/changelog/more-resilient-refreshes-for-expiring-offline-access-tokens","date":"2026-08-28T14:00:00.000Z","categories":["API","Update","Admin GraphQL API","Admin REST API"],"excerpt":"Expiring offline access token refreshes now retain the previously used refresh token until an app begins using its replacement. This rollout helps apps recover when a refresh response is lost or isn’t persisted. No…","thumb":null},{"source":"changelog","stream":"platform","title":"Password Protected Shop Dev flows on Shopify Theme CLI v3.83.x and older to be deprecated","link":"https://shopify.dev/changelog/password-protected-shop-dev-flows-on-shopify-theme-cli-v3-83-x-and-older-to-be-deprecated","date":"2026-08-27T16:00:00.000Z","categories":["Action Required","Themes","Deprecation announcement"],"excerpt":"Starting September 23, 2026, Theme commands on Shopify CLI for password protected storefronts will require version 3.84.0 or later. Versions 3.83.x and earlier will no longer be supported for theme development workflows…","thumb":null},{"source":"changelog","stream":"platform","title":"Four additional topics are now available for Events","link":"https://shopify.dev/changelog/four-additional-topics-are-now-available-for-events","date":"2026-08-26T17:00:00.000Z","categories":["API","New","Events & webhooks"],"excerpt":"Apps can now subscribe to events for Metaobject, MetafieldDefinition, MetaobjectDefinition, and InventoryTransfer. Apps can also subscribe to targeted metafield changes on InventoryTransfer. By subscribing to these…","thumb":null},{"source":"changelog","stream":"platform","title":"Build Shopify apps in PHP and Python with new official packages","link":"https://shopify.dev/changelog/build-shopify-apps-in-php-and-python-with-new-official-packages","date":"2026-08-26T16:00:00.000Z","categories":["Tools","New"],"excerpt":"Shopify releases official PHP and Python app packages Shopify now publishes official, open-source packages for building apps in PHP and Python. shopify/shopify-app-php on Packagist and shopifyapp on PyPI have reached…","thumb":null},{"source":"changelog","stream":"platform","title":"GitHub commits now name the last theme editor","link":"https://shopify.dev/changelog/github-commits-now-name-the-last-theme-editor","date":"2026-08-26T16:00:00.000Z","categories":["Themes","Update"],"excerpt":"When you edit a theme in the Shopify admin, the commit Shopify pushes to your connected branch now includes the editor's name in the body: Update from Shopify for theme Dawn Committed from shop: Snowdevil Theme last…","thumb":null},{"source":"changelog","stream":"platform","title":"Oxygen is now available on trial plan stores","link":"https://shopify.dev/changelog/oxygen-is-now-available-on-trial-plan-stores","date":"2026-08-25T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"You can now deploy Hydrogen storefronts to Oxygen from trial plan stores. Previously, Oxygen hosting required a paid plan. Note that trial plan stores don't include public environments, so deployment URLs always require…","thumb":null},{"source":"changelog","stream":"platform","title":"Script tags are deprecated and will stop running on March 1, 2027","link":"https://shopify.dev/changelog/online-store-script-tags-deprecation","date":"2026-08-24T16:00:00.000Z","categories":["Action Required","API","Deprecation announcement","Admin GraphQL API","Admin REST API"],"excerpt":"Starting October 1, 2026, the scriptTagCreate and scriptTagUpdate mutations will return an user error, and the ScriptTag REST Admin API resource will reject POST and PUT. The deprecation applies to all API versions,…","thumb":null},{"source":"changelog","stream":"platform","title":"App intents on `admin.app.intent.link` now open as a full-page navigation","link":"https://shopify.dev/changelog/app-intents-on-admin-app-intent-link-now-open-as-a-full-page-navigation","date":"2026-08-19T16:00:00.000Z","categories":["Platform","Update"],"excerpt":"When Sidekick invokes an app intent declared on the admin.app.intent.link extension target, the Shopify admin now navigates the merchant to your extension's url as a full page, matching how Shopify's own admin intents…","thumb":null},{"source":"changelog","stream":"platform","title":"Hydrogen developer preview update: August 18, 2026","link":"https://shopify.dev/changelog/hydrogen-developer-preview-update-august-18-2026","date":"2026-08-18T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"The Hydrogen developer preview adds new capabilities to the toolkit and extends the ways developers can build Shopify storefronts: Cart session attribution: Carts and Customer Account sessions stay in step, so signed-in…","thumb":null},{"source":"changelog","stream":"platform","title":"Shop Campaigns performance data now available via ShopifyQL","link":"https://shopify.dev/changelog/shop-campaigns-shopifyql","date":"2026-08-10T20:10:00.000Z","categories":["API","Update","Admin GraphQL API"],"excerpt":"The shop_campaign_insights schema is now available in the ShopifyQL. Analytics and reporting apps can query Shop Campaigns performance data on behalf of authorized merchants using the existing shopifyqlQuery field with…","thumb":null},{"source":"changelog","stream":"platform","title":"Standard storefront events and actions now support cart attributes","link":"https://shopify.dev/changelog/events-and-actions-cart-attributes-support","date":"2026-08-06T22:00:00.000Z","categories":["Platform","Update"],"excerpt":"The updateCart standard action now updates cart attributes, and a new shopify:cart:attributes-update event fires whenever an attributes update is initiated. Before this, changing an attribute meant calling the…","thumb":null},{"source":"changelog","stream":"platform","title":"Draft order and transfer/shipment inventory is moving from reserved to committed","link":"https://shopify.dev/changelog/draft-order-and-transfer-shipment-inventory-is-moving-from-reserved-to-committed","date":"2026-08-05T16:00:00.000Z","categories":["API","Update","Admin GraphQL API"],"excerpt":"We're consolidating how in-progress inventory holds are represented. Inventory that was previously tracked under the reserved quantity state for draft orders, transfers, and shipments is being moved to the committed…","thumb":null},{"source":"changelog","stream":"platform","title":"WebMCP support for Liquid and Hydrogen storefronts","link":"https://shopify.dev/changelog/webmcp-liquid-hydrogen","date":"2026-08-05T15:00:00.000Z","categories":["Platform","New"],"excerpt":"Online stores now expose WebMCP tools that AI agents can call. Agents can search your catalog, manage the shopper's cart, and go to checkout on the shopper's behalf, all in the tab they're looking at. The tools work…","thumb":null},{"source":"changelog","stream":"platform","title":"Oxygen is now available on development stores","link":"https://shopify.dev/changelog/oxygen-is-now-available-on-development-stores","date":"2026-08-03T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"You can now deploy Hydrogen storefronts to Oxygen from dev stores. Previously, Oxygen hosting required a paid plan. Note that development stores don't include public environments, so deployment URLs always require a…","thumb":null},{"source":"changelog","stream":"platform","title":"The `orderCreate` mutation now supports multiple tracking numbers for each fulfillment","link":"https://shopify.dev/changelog/order-create-fulfillment-tracking-numbers","date":"2026-08-03T13:00:00.000Z","categories":["API","New","Admin GraphQL API","Admin REST API","2026-10"],"excerpt":"We’ve added a trackingNumbers field to OrderCreateFulfillmentInput, so you can attach multiple tracking numbers to a fulfillment when importing orders. If you use the orderCreate mutation to import orders that ship in…","thumb":null},{"source":"changelog","stream":"platform","title":"Updated Built for Shopify requirements for Fulfillment services apps","link":"https://shopify.dev/changelog/updated-built-for-shopify-requirements-for-fulfillment-services-apps","date":"2026-08-01T16:00:00.000Z","categories":["Built for Shopify","Update"],"excerpt":"We've updated three Built for Shopify requirements for Fulfillment services apps. The updated thresholds better reflect how fulfillment operations run in practice, making Built for Shopify achievable for more…","thumb":null},{"source":"changelog","stream":"platform","title":"Hydrogen developer preview update: July 30, 2026","link":"https://shopify.dev/changelog/hydrogen-developer-preview-update-july-30","date":"2026-07-31T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"The Hydrogen developer preview adds new capabilities to the toolkit and extends the ways developers can build Shopify storefronts: Vue bindings: Build your storefront in Vue with the same Hydrogen APIs you know from…","thumb":null},{"source":"changelog","stream":"platform","title":"New fields for cash management activities and drawers in POS","link":"https://shopify.dev/changelog/new-fields-for-cash-management-activities-and-drawers","date":"2026-07-31T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-07"],"excerpt":"New fields are now available on cash management resources in the GraphQL Admin API, providing more detail about cash drawer balances and cash count activities. What's new Cash Drawer balance The CashDrawer object now…","thumb":null},{"source":"changelog","stream":"platform","title":"Merchants now see partner details on collaborator requests","link":"https://shopify.dev/changelog/partner-details-on-collaborator-requests","date":"2026-07-30T20:00:00.000Z","categories":["Dev Dashboard","New"],"excerpt":"Collaborator access is built on trust. When a merchant approves a request, they're giving a partner access to a live store — and merchants need enough context to make that decision with confidence. Building on identity…","thumb":null},{"source":"changelog","stream":"platform","title":"The shopify-account component for customer accounts is now a Theme Store requirement","link":"https://shopify.dev/changelog/the-shopify-account-component-for-customer-accounts-is-now-a-theme-store-requirement","date":"2026-07-30T18:00:00.000Z","categories":["Themes","New"],"excerpt":"In February 2026, we introduced the shopify-account component, which lets customers sign in and manage their account directly on the storefront. It supports passwordless sign-in, automatic Sign in with Shop recognition,…","thumb":null},{"source":"changelog","stream":"platform","title":"createdAt is now available on the Customer object in Shopify Functions","link":"https://shopify.dev/changelog/createdat-is-now-available-on-the-customer-object-in-shopify-functions","date":"2026-07-30T16:00:00.000Z","categories":["API","New","Functions","2026-10"],"excerpt":"Shopify Functions API version 2026-10 adds a createdAt field to the Customer object. You can now use the date and time a customer account was created in Function logic. This is an additive change; no action is required…","thumb":null},{"source":"changelog","stream":"platform","title":"Updating an order's shipping address recalculates taxes as of API version 2026-10","link":"https://shopify.dev/changelog/updating-an-orders-shipping-address-returns-accurate-financial-data","date":"2026-07-30T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","Admin GraphQL API","Admin REST API","2026-10"],"excerpt":"As of API version 2026-10, changing the shipping address on an unfulfilled order through the orderUpdate GraphQL mutation or the REST Admin API order update endpoint recalculates the order's taxes against the new…","thumb":null},{"source":"changelog","stream":"platform","title":"POS UI extensions can now print directly to hardware receipt printers","link":"https://shopify.dev/changelog/pos-ui-extensions-can-now-print-directly-to-hardware-receipt-printers","date":"2026-07-27T16:00:00.000Z","categories":["API","New","POS Extensions","2026-07"],"excerpt":"POS UI Extensions 2026-07 introduces the Printing API (shopify.printing), which enables extensions to discover hardware printers with getPrinters() and send documents directly to a connected receipt printer with…","thumb":null},{"source":"changelog","stream":"platform","title":"SubscriptionContractCalculation API now available in early access","link":"https://shopify.dev/changelog/subscription-contract-calculation-api-now-available-in-early-access","date":"2026-07-27T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"The new SubscriptionContractCalculation object on the GraphQL Admin API is now available in early access on the 2026-10 release candidate API version. It's the successor to the GraphQL Admin API's SubscriptionDraft…","thumb":null},{"source":"changelog","stream":"platform","title":"Invalid metafield queries now return errors in the GraphQL Admin API","link":"https://shopify.dev/changelog/invalid-metafield-queries-now-return-errors-in-the-graphql-admin-api","date":"2026-07-24T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","Admin GraphQL API","Metafields and metaobjects","2026-10"],"excerpt":"Starting in API version 2026-10, the GraphQL Admin API returns an error when a query filters by a metafield that isn't set up for filtering, instead of silently returning incorrect results. This is a breaking change. It…","thumb":null},{"source":"changelog","stream":"platform","title":"Metafield triggers and additional topics are now available for Events","link":"https://shopify.dev/changelog/metafield-triggers-and-additional-topics-are-now-available-for-events","date":"2026-07-21T20:00:00.000Z","categories":["API","Update","Events & webhooks"],"excerpt":"Apps can now subscribe to events for Order, Collection, InventoryItem, InventoryShipment, Location, and can subscribe to metafield changes on Product, Order, Customer, Collection and Location. ProductVariant metafields…","thumb":null},{"source":"changelog","stream":"platform","title":"Liquid templates can now compose pages with blocks and partials","link":"https://shopify.dev/changelog/developer-preview-liquid-block-and-partial-tags","date":"2026-07-21T17:00:00.000Z","categories":["API","New","Liquid"],"excerpt":"The Liquid July ’26 developer preview introduces a simpler way to build theme pages. Page structure can live directly in a Liquid template, where developers and coding agents can read and edit everything in one place.…","thumb":null},{"source":"changelog","stream":"platform","title":"Full-stack capabilities to power app analytics","link":"https://shopify.dev/changelog/full-stack-capabilities-to-power-app-analytics","date":"2026-07-21T13:00:00.000Z","categories":["API","New","Admin GraphQL API","App Events API","Metafields and metaobjects","ShopifyQL","2026-10"],"excerpt":"For app developers, building merchant-facing analytics has always meant standing up your own stack: a charting library, a data warehouse to sync merchant data into, handling currencies and locales, and a UI that never…","thumb":null},{"source":"changelog","stream":"platform","title":"Physical inventory feature preview","link":"https://shopify.dev/changelog/physical-inventory-feature-preview","date":"2026-07-17T16:00:00.000Z","categories":["API","New","Admin GraphQL API"],"excerpt":"The physical inventory feature preview gives you early access to a new set of inventory APIs in the unstable version of the GraphQL Admin API. Enable it on a development store to build and test against the core…","thumb":null},{"source":"changelog","stream":"platform","title":"Card deposit endpoint now requires mTLS certificate","link":"https://shopify.dev/changelog/card-deposit-endpoint-now-requires-mtls-certificate","date":"2026-07-16T16:00:00.000Z","categories":["API","Update"],"excerpt":"Shopify's card-deposit endpoint now requires a Shopify-issued mTLS client certificate. Apps that store cardholder data with the customerPaymentMethodCreditCardCreate and customerPaymentMethodCreditCardUpdate GraphQL…","thumb":null},{"source":"changelog","stream":"platform","title":"Updated App Store requirements: 4.1.2 Use a unique name for your app","link":"https://shopify.dev/changelog/updated-app-store-requirements-4-1-2-use-a-unique-name-for-your-app","date":"2026-07-15T16:00:00.000Z","categories":["App store","Update"],"excerpt":"Your app's name is what merchants use to discover, identify, and remember your app. We've added requirement 4.1.2, \"Use a unique name for your app,\" to reduce merchant confusion over identical and copycat app names in…","thumb":null},{"source":"changelog","stream":"platform","title":"Storefront API `@inContext` supports `channelId`","link":"https://shopify.dev/changelog/new-channelid-argument-for-incontext-directive-in-storefront-api-2026-10","date":"2026-07-15T16:00:00.000Z","categories":["API","New","Storefront API","2026-10"],"excerpt":"As of Storefront API version 2026-10, the @inContext directive accepts an optional channelId argument. Use channelId to apply a specific sales channel’s context to an entire query, including channel-specific product…","thumb":null},{"source":"changelog","stream":"platform","title":"`productId`, `title`,`variantSku`, and `variantTitle` fields added to `ExchangeLineItem`","link":"https://shopify.dev/changelog/new-fields-on-exchangelineitem","date":"2026-07-15T16:00:00.000Z","categories":["API","New","Admin GraphQL API","2026-10"],"excerpt":"","thumb":null},{"source":"changelog","stream":"platform","title":"POS UI Extensions 2026-07 adds discount allocations to bundle components","link":"https://shopify.dev/changelog/pos-ui-extensions-2026-07-adds-discount-allocations-to-bundle-components","date":"2026-07-15T04:00:00.000Z","categories":["API","Update","POS Extensions","2026-07"],"excerpt":"Starting with POS UI Extensions API version 2026-07, product bundle components in cart line item data include discount allocation details. Apps can access component-level discount allocations from bundle components on a…","thumb":null},{"source":"changelog","stream":"platform","title":"POS Extensions now supports a background extension target","link":"https://shopify.dev/changelog/pos-extensions-now-supports-a-background-extension-target","date":"2026-07-09T19:00:00.000Z","categories":["API","New","POS Extensions","2026-07"],"excerpt":"The pos.app.ready.data target runs for the entire POS session, letting your extension observe POS events and run background logic without rendering any UI surface. Use it for event observation, data storage, and calling…","thumb":null},{"source":"changelog","stream":"platform","title":"Identity verification for Shopify Partners starts today","link":"https://shopify.dev/changelog/identity-verification-for-partners","date":"2026-07-09T17:15:00.000Z","categories":["Action Required","Platform","New"],"excerpt":"Trust is foundational to the Shopify Partner ecosystem. Partners take actions across Shopify that can directly affect merchants, and merchants need confidence when granting access to their stores. We’re introducing…","thumb":null},{"source":"changelog","stream":"platform","title":"Hydrogen developer preview update: July 8, 2026","link":"https://shopify.dev/changelog/hydrogen-developer-preview-update","date":"2026-07-09T16:00:00.000Z","categories":["API","Update","Hydrogen"],"excerpt":"The Hydrogen developer preview adds new capabilities to the toolkit and extends the ways developers can build Shopify storefronts: Storefront API caching for catalog data: Cache products, collections, and pages at the…","thumb":null},{"source":"changelog","stream":"platform","title":"App Pricing: more plans, no-charge plan testing, and negative and fractional App Events","link":"https://shopify.dev/changelog/app-pricing-more-plans-no-charge-plan-testing-and-negative-and-fractional-app-events","date":"2026-07-09T16:00:00.000Z","categories":["App store","Update"],"excerpt":"We’ve made several updates to App Pricing: Increased plan limits: You can now create up to 8 public plans (previously 4) and 15 private plans (previously 10) per app. No-charge plan testing: Test app billing flows…","thumb":null},{"source":"changelog","stream":"platform","title":"POS UI extensions 2026-07 uses per-unit fixed-amount line item discounts","link":"https://shopify.dev/changelog/pos-ui-extensions-2026-07-uses-per-unit-fixed-amount-line-item-discounts","date":"2026-07-08T16:00:00.000Z","categories":["Action Required","API","Breaking API Change","POS Extensions","2026-07"],"excerpt":"Starting with POS UI extensions API version 2026-07, FixedAmount line item discounts passed to setLineItemDiscount and bulkSetLineItemDiscounts from the Cart API must represent a per-unit discount. Why it's changing In…","thumb":null},{"source":"changelog","stream":"platform","title":"Prepare your app for migration to Shopify App Pricing","link":"https://shopify.dev/changelog/prepare-your-app-for-migration-to-shopify-app-pricing","date":"2026-07-07T16:00:00.000Z","categories":["Platform","Update"],"excerpt":"Developers using the Billing API can now begin preparing their apps to move to Shopify App Pricing. The first part of our migration tool lets you generate, review, edit, and test Shopify App Pricing plans before moving…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify Flow: Changes to Action extensions result in fewer breaking changes","link":"https://shopify.dev/changelog/shopify-flow-changes-to-action-extensions-result-in-fewer-breaking-changes","date":"2026-07-07T16:00:00.000Z","categories":["Tools","Update","2026-07"],"excerpt":"Your server-side code now has more control over how breaking changes to an action’s configuration fields are handled. Instead of failing validation when there’s a field mismatch, workflows that use older versions of an…","thumb":null},{"source":"changelog","stream":"platform","title":"Shopify Flow: Action runtime URLs now update automatically","link":"https://shopify.dev/changelog/shopify-flow-action-runtime-urls-now-update-automatically","date":"2026-07-07T16:00:00.000Z","categories":["Tools","Update","2026-07"],"excerpt":"Shopify Flow now resolves an action’s runtime_url on every execution. When the runtime_url is changed and the app is redeployed, the new URL is automatically used by existing workflows the next time they run. Merchants…","thumb":null},{"source":"changelog","stream":"platform","title":"Updated App Store Requirements: 1.3 Always Use Honest and Transparent Review Practices","link":"https://shopify.dev/changelog/updated-app-store-requirements-13-always-use-honest-and-transparent-review-practices","date":"2026-07-06T16:30:00.000Z","categories":["App store","Update"],"excerpt":"All apps published to Shopify’s App Store are subject to policy 1.3 “Always use honest and transparent review practices”. What’s changing: The Shopify App Store requirements policy 1.3 further clarifies our enforcement…","thumb":null},{"source":"news","stream":"news","title":"Here come the late holiday shoppers – our survey reveals who they are","link":"https://shopify.com/news/here-come-the-late-holiday-shoppers-our-survey-reveals-who-they-are","date":"2023-12-07T10:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify merchants drive record-high $9.3 billion in Black Friday-Cyber Monday sales","link":"https://shopify.com/news/shopify-merchants-drive-record-high-9-3-billion-in-black-friday-cyber-monday-sales","date":"2023-11-28T14:02:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"They did it again! Shopify merchants break Black Friday record with $4.1 billion in sales","link":"https://shopify.com/news/they-did-it-again-shopify-merchants-break-black-friday-record-with-4-1-billion-in-sales","date":"2023-11-25T13:49:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify’s BFCM globe brings commerce to life like never before – here's how our engineers built it","link":"https://shopify.com/news/shopify-s-bfcm-globe-brings-commerce-to-life-like-never-before-heres-how-our-engineers-built-it","date":"2023-11-24T13:27:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shaun White's latest trick: WHITESPACE takes flight on Shopify","link":"https://shopify.com/news/shaun-whites-latest-trick-whitespace-takes-flight-on-shopify","date":"2023-11-17T14:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"How AI is helping one inspiring entrepreneur win holiday shopping","link":"https://shopify.com/news/how-ai-is-helping-one-inspiring-entrepreneur-win-holiday-shopping","date":"2023-11-14T14:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"‘Tis the season to treat yourself: New data shows holiday sales go way beyond gifts","link":"https://shopify.com/news/tis-the-season-to-treat-yourself-new-data-shows-holiday-sales-go-way-beyond-gifts","date":"2023-11-07T10:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify Announces Third-Quarter 2023 Financial Results","link":"https://shopify.com/news/shopify-announces-third-quarter-2023-financial-results","date":"2023-11-02T11:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Hot take: B2B is the biggest commerce opportunity of 2024","link":"https://shopify.com/news/hot-take-b2b-is-the-biggest-commerce-opportunity-of-2024","date":"2023-11-30T14:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"7 things you need to know about this year's holiday shoppers","link":"https://shopify.com/news/7-things-you-need-to-know-about-this-years-holiday-shoppers","date":"2023-10-16T09:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify Announces Third-Quarter 2023 Financial Results Conference Call Date and Upcoming Investor Day","link":"https://shopify.com/news/shopify-announces-third-quarter-2023-financial-results-conference-call-date-and-upcoming-investor-day","date":"2023-10-12T11:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Americans say they’re holding firm on holiday shopping – the season starts now","link":"https://shopify.com/news/americans-say-they-re-holding-firm-on-holiday-shopping-the-season-starts-now","date":"2023-10-10T09:00:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"news","stream":"news","title":"Shopify Audiences supercharges customer acquisition with new Snap, Criteo, and TikTok integrations","link":"https://shopify.com/news/shopify-audiences-supercharges-customer-acquisition-with-new-snap-criteo-and-tiktok-integrations","date":"2023-09-25T13:03:00.000Z","categories":[],"excerpt":"","thumb":null},{"source":"eng","stream":"engineering","title":"Helix: The internal tool powering our Shopify app's native migration","link":"https://shopify.engineering/helix","date":"2026-09-21T21:12:33.000Z","categories":[],"excerpt":"We built Helix to help LLMs rebuild the Shopify app in Swift and Kotlin, using small checkpoints and strict quality gates to keep the code shippable.","thumb":null},{"source":"eng","stream":"engineering","title":"Migrating Shop app from React Native to native","link":"https://shopify.engineering/shop-app-migration","date":"2026-09-10T12:27:06.000Z","categories":[],"excerpt":"We migrated the Shop app from React Native to Swift and Kotlin. Assisted by AI, the team was able to go from a proof of concept to a fully rebuilt native app published in the app stores in just 12 weeks.","thumb":null},{"source":"eng","stream":"engineering","title":"Native is now the future of mobile at Shopify","link":"https://shopify.engineering/back-to-native","date":"2026-09-10T12:25:28.000Z","categories":[],"excerpt":"Coding agents changed what it costs to build mobile apps twice. Here’s why Shopify is moving from React Native back to Swift and Kotlin.","thumb":null},{"source":"eng","stream":"engineering","title":"How River takes security work from a fix to merge","link":"https://shopify.engineering/river-vulnerability-remediation","date":"2026-09-02T16:30:45.000Z","categories":[],"excerpt":"River, Shopify’s AI agent in Slack, enables autonomous vulnerability remediation, not just detection.","thumb":null},{"source":"eng","stream":"engineering","title":"Gisting: Compressing LLM Agent context to ↑ throughput and ↓ cost","link":"https://shopify.engineering/gisting","date":"2026-08-19T14:32:58.000Z","categories":[],"excerpt":"Gisting compresses context into a set of learned tokens, preserving its quality while making the model faster and cheaper.","thumb":null},{"source":"eng","stream":"engineering","title":"How we raised mobile end-to-end test stability to 98%","link":"https://shopify.engineering/mobile-e2e-testing","date":"2026-08-12T20:02:35.000Z","categories":[],"excerpt":"We rebuilt our mobile end-to-end testing framework with a strict API and computer vision, raising test stability drastically.","thumb":null},{"source":"eng","stream":"engineering","title":"Sidekick's continual learning loop","link":"https://shopify.engineering/sidekicks-continual-learning-loop","date":"2026-08-05T14:52:54.000Z","categories":[],"excerpt":"How we compress production failures into model weights every day, beat frontier-model quality, and cut serving costs 96%.","thumb":null},{"source":"eng","stream":"engineering","title":"Building an agentic harness that outlasts the model","link":"https://shopify.engineering/building-an-agentic-harness-that-outlasts-the-model","date":"2026-07-29T15:30:00.000Z","categories":[],"excerpt":"We built an agentic code review and test oracle harness that discovers vulnerabilities, proves them with real tests, and provides Shopify-tuned fixes.","thumb":null},{"source":"eng","stream":"engineering","title":"Upgrading Checkout Blocks app to Polaris web components","link":"https://shopify.engineering/upgrading-checkout-blocks-app-to-polaris-web-components","date":"2026-07-16T17:19:40.000Z","categories":[],"excerpt":"We moved five high-traffic checkout extensions to remote-dom and Polaris web components, cutting bundle sizes drastically and making checkout faster.","thumb":null},{"source":"eng","stream":"engineering","title":"Inside Shopify Hack Days: Building a prototype for music-playing pages","link":"https://shopify.engineering/hack-days","date":"2026-07-14T13:55:57.000Z","categories":[],"excerpt":"How a Hack Days team built a music player, custom GLSL visualizers, and an artist toolkit for storefronts, all in three days.","thumb":null},{"source":"eng","stream":"engineering","title":"Clustering billions of products for agentic commerce with Catalog API","link":"https://shopify.engineering/catalog-clustering","date":"2026-06-17T16:54:51.000Z","categories":[],"excerpt":"Building an LLM-powered pipeline to match product listings across millions of merchants into a unified catalog that AI agents can search.","thumb":null},{"source":"eng","stream":"engineering","title":"Teaching Sidekick to say no: automated data curation with LLM judge consensus","link":"https://shopify.engineering/sidekick-curation","date":"2026-06-15T19:30:00.000Z","categories":[],"excerpt":"Production training data only captures successful queries; it can't teach a model when to say no. We built an automated curation pipeline using LLM judge consensus to close that gap.","thumb":null},{"source":"eng","stream":"engineering","title":"Quick: An internal hosting platform for the AI era","link":"https://shopify.engineering/quick","date":"2026-06-10T12:49:23.000Z","categories":[],"excerpt":"Quick lets anyone at Shopify ship a site in seconds. It has changed the culture of how we build and share.","thumb":null},{"source":"eng","stream":"engineering","title":"Under the River","link":"https://shopify.engineering/under-the-river","date":"2026-05-28T12:30:02.000Z","categories":[],"excerpt":"What it took to ship our Slack-native agent River, lessons learned, and the substrate that runs beneath it. Co-authored by River.","thumb":null},{"source":"eng","stream":"engineering","title":"We replaced Redis with MySQL for inventory reservations—and it scaled","link":"https://shopify.engineering/scaling-inventory-reservations","date":"2026-05-12T16:51:53.000Z","categories":[],"excerpt":"How we used SKIP LOCKED, composite primary keys, and connection visibility to hit our scale targets.","thumb":null},{"source":"eng","stream":"engineering","title":"Flow generation through natural language: An agentic modeling approach","link":"https://shopify.engineering/fine-tuning-agent-shopify-flow","date":"2026-04-22T12:32:02.000Z","categories":[],"excerpt":"We fine-tuned Qwen3-32B into a tool-calling agent that generates Flow automations from natural language—faster, cheaper, and more accurate than the frontier model it replaced, with a weekly retraining flywheel built on…","thumb":null},{"source":"eng","stream":"engineering","title":"Autoresearch isn’t just for training models","link":"https://shopify.engineering/autoresearch","date":"2026-04-15T16:19:20.000Z","categories":[],"excerpt":"Tobi and I generalized Karpathy’s Autoresearch to improve 40+ metrics across Shopify, then we open-sourced our project.","thumb":null},{"source":"eng","stream":"engineering","title":"Building a Magic Mirror: AI retail experiences with Remix","link":"https://shopify.engineering/magic-mirror","date":"2026-03-19T12:33:46.000Z","categories":[],"excerpt":"The technical blueprint for an AI-powered mirror that sees customers, analyzes their appearance, and delivers personalized product recommendations in real-time.","thumb":null},{"source":"eng","stream":"engineering","title":"Shopify’s journey to faster breadth-first GraphQL execution","link":"https://shopify.engineering/faster-breadth-first-graphql-execution","date":"2026-03-12T12:19:08.000Z","categories":[],"excerpt":"Conventional GraphQL execution uses depth-first traversal that incurs many hidden costs. We questioned why, rewrote it in a faster breadth-first manner, and saw dramatic results.","thumb":null},{"source":"eng","stream":"engineering","title":"2,000 robots walk into a shop...","link":"https://shopify.engineering/simgym","date":"2026-02-27T18:11:45.000Z","categories":[],"excerpt":"SimGym infrastructure for synthetic customers at scale. A Shopify + NVIDIA collaboration.","thumb":null},{"source":"yt-shopify","stream":"videos","title":"What is Shop? | Shopping designed around you","link":"https://www.youtube.com/watch?v=KsujQDvKdHk","date":"2026-09-01T01:56:51.005Z","ago":"1mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"This is life on Shopify","link":"https://www.youtube.com/watch?v=qajaXseoF7Q","date":"2026-08-02T00:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Spring ’26 Edition rundown","link":"https://www.youtube.com/watch?v=sf7zUi_8bhs","date":"2026-07-02T23:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Build with Catalog API and UCP","link":"https://www.youtube.com/watch?v=mWRMjEIh4hE","date":"2026-07-02T22:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Enhanced inventory management","link":"https://www.youtube.com/watch?v=dsW4E40Y0UI","date":"2026-07-02T21:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Actionable insights for agentic selling","link":"https://www.youtube.com/watch?v=K1nR7pe49cM","date":"2026-07-02T20:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Better context for your store's data","link":"https://www.youtube.com/watch?v=DiJc9gsgzn8","date":"2026-07-02T19:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Online to in person with the Shop app","link":"https://www.youtube.com/watch?v=9LkIxHbr1Ik","date":"2026-07-02T18:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Shopify POS checkout is over a minute faster","link":"https://www.youtube.com/watch?v=37zOjqRl-3Q","date":"2026-07-02T17:56:51.005Z","ago":"3mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"River: Shopify's Slack-native AI agent","link":"https://www.youtube.com/watch?v=efUbUOO46VI","date":"2026-06-02T16:56:51.005Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Tobi Lütke x Ilya Grigorik: Building the Universal Commerce Protocol","link":"https://www.youtube.com/watch?v=uNOFaCq8RZQ","date":"2026-06-02T15:56:51.005Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Tobi's first Autoresearch encounter","link":"https://www.youtube.com/watch?v=VAlvxLG0RZo","date":"2026-05-03T14:56:51.005Z","ago":"5mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Open-sourcing Shopify's Autoresearch contribution","link":"https://www.youtube.com/watch?v=sqaxqH_GPFQ","date":"2026-05-03T13:56:51.005Z","ago":"5mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"Tobi Lütke x Jess Hertz: Invisible Work","link":"https://www.youtube.com/watch?v=08LyYlIMXbY","date":"2026-05-03T12:56:51.005Z","ago":"5mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-shopify","stream":"videos","title":"When everything feels uncertain, build something yourself","link":"https://www.youtube.com/watch?v=G9rsX4M5CmM","date":"2026-03-04T11:56:51.005Z","ago":"7mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Fireside Chat with Tobias Lütke and Guillermo Rauch | DotDev 2026","link":"https://www.youtube.com/watch?v=9rVN5ChMguc","date":"2026-08-02T01:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Main Stage Keynote with Vanessa Lee | DotDev 2026","link":"https://www.youtube.com/watch?v=235Tn1bPmOI","date":"2026-08-02T00:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Fireside Chat with Tobi Lütke & Harley Finkelstein | DotDev 2026","link":"https://www.youtube.com/watch?v=t5xslC6f7FY","date":"2026-08-01T23:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"DotDev 2026 Welcome with Atlee Clark","link":"https://www.youtube.com/watch?v=s8WQ83l3Rt0","date":"2026-08-01T22:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Shopify Build Awards | DotDev 2026","link":"https://www.youtube.com/watch?v=SNWlu1-k2zo","date":"2026-08-01T21:56:51.005Z","ago":"2mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"How to Create a Development Store || Shopify Academy","link":"https://www.youtube.com/watch?v=0N3SCe8W3ic","date":"2026-02-02T20:56:51.005Z","ago":"8mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Migrate from the Partner Dashboard","link":"https://www.youtube.com/watch?v=B7XK83NBJAI","date":"2025-09-30T19:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"How to use Shopify Theme Blocks: Full beginners guide || Shopify Academy","link":"https://www.youtube.com/watch?v=0_lDRHL9Wmk","date":"2025-09-30T18:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Understanding Shopify Theme Blocks || Shopify Academy","link":"https://www.youtube.com/watch?v=7w5iyvXdzWU","date":"2025-09-30T17:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Create your own storefront AI agent | Editions.dev 2025","link":"https://www.youtube.com/watch?v=GZCW4r6kNUU","date":"2025-09-30T16:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"All-in-one Customer Accounts | Editions.dev 2025","link":"https://www.youtube.com/watch?v=U79SWJRJHuU","date":"2025-09-30T15:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Building powerful solutions for B2B | Editions.dev 2025","link":"https://www.youtube.com/watch?v=vAFQFDVvdOQ","date":"2025-09-30T14:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Complex Functions made simple | Editions.dev 2025","link":"https://www.youtube.com/watch?v=xAhVm_vN_0w","date":"2025-09-30T13:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Declarative custom data + new app dev = 🔥 | Editions.dev 2025","link":"https://www.youtube.com/watch?v=iQzaT53-sRE","date":"2025-09-30T12:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-devs","stream":"videos","title":"Horizon under the hood | Editions.dev 2025","link":"https://www.youtube.com/watch?v=71ZgGb-gf5Y","date":"2025-09-30T11:56:51.005Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Ryan van Huuksloot - Flink SQL Toolkit","link":"https://www.youtube.com/watch?v=JMutPPVyqGQ","date":"2026-06-03T01:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Daniel Rossos - Flink Table Source Reuse","link":"https://www.youtube.com/watch?v=UWKeqVsn_dc","date":"2026-06-03T00:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Flink Meetup Presentation Nov 12 2025 UDFs Made Easy","link":"https://www.youtube.com/watch?v=2jctIBi1bbM","date":"2026-06-02T23:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Fireside Chat: Quantum x AI and the Future","link":"https://www.youtube.com/watch?v=yVeHnWwvZZA","date":"2026-06-02T22:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Toronto Tech Week 2026","link":"https://www.youtube.com/watch?v=RkyuGgejOZU","date":"2026-06-02T21:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Dev Tooling in a New World","link":"https://www.youtube.com/watch?v=PanNn-3bg6Q","date":"2026-06-02T20:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"UCP & Agentic Commerce","link":"https://www.youtube.com/watch?v=QbkVrCU8PLM","date":"2026-06-02T19:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"SimGym","link":"https://www.youtube.com/watch?v=MHkGzwn0PG8","date":"2026-06-02T18:56:51.006Z","ago":"4mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"AI Frontier: Battle for Intelligence & Compute Power | Shopify's Farhan Thawar x Groq's Sunny Madra","link":"https://www.youtube.com/watch?v=x0CXZj7hnKQ","date":"2025-11-04T17:56:51.006Z","ago":"11mo ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Sidekick Breakout Talk - Toronto Tech Week","link":"https://www.youtube.com/watch?v=S7Omw0zDkyA","date":"2025-09-30T16:56:51.006Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Building at Scale: Fireside Chat (Toronto Tech Week)","link":"https://www.youtube.com/watch?v=F7Pjt806oEw","date":"2025-09-30T15:56:51.006Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Developer Productivity: Fireside with Daniel Doubrovkine and Michael Bachman (Toronto Tech Week)","link":"https://www.youtube.com/watch?v=WMjt0U7b1gI","date":"2025-09-30T14:56:51.006Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Leveraging Multimodal LLMs for Shopify’s Global Catalogue","link":"https://www.youtube.com/watch?v=sGrkxnOe7Zs","date":"2025-09-30T13:56:51.006Z","ago":"1y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Circlez Coffee Demo","link":"https://www.youtube.com/watch?v=eMJBsCMmq0A","date":"2023-10-01T12:56:51.006Z","ago":"3y ago","categories":[],"excerpt":"","thumb":null},{"source":"yt-eng","stream":"videos","title":"Our Relationship with Rails | Shopify Engineering","link":"https://www.youtube.com/watch?v=FUy64bt54N4","date":"2022-10-01T11:56:51.006Z","ago":"4y ago","categories":[],"excerpt":"","thumb":null}]}</script>
+    <script>
+      const SNAP = JSON.parse(document.getElementById('snapshot').textContent);
+      const NOW = Date.now();
+      const DAY = 864e5;
+      const params = new URLSearchParams(location.search);
+      // ?theme=dark | light overrides the system appearance.
+      if (params.get('theme')) document.documentElement.dataset.theme = params.get('theme');
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const SOURCES = {
+        changelog: { label: 'Changelog' },
+        news: { label: 'Newsroom' },
+        eng: { label: 'Engineering blog' },
+        'yt-shopify': { label: 'Shopify' },
+        'yt-devs': { label: 'ShopifyDevs' },
+        'yt-eng': { label: 'Shopify Engineering' }
+      };
+      const VIDEO_SOURCES = ['yt-shopify', 'yt-devs', 'yt-eng'];
+      const TYPES = [
+        ['Action Required', 'Action required', 'red'],
+        ['Breaking API Change', 'Breaking change', 'red'],
+        ['Deprecation announcement', 'Deprecation', 'amber'],
+        ['New', 'New', 'green'],
+        ['Update', 'Update', '']
+      ];
+      const TYPE_OF = new Map(TYPES.map(([key, label, tone]) => [key, { label, tone }]));
+      const ACTION = TYPES.slice(0, 3).map(([key]) => key);
+      const HIDDEN = new Set(['API', 'Platform']);
+      const isVersion = (c) => /^\d{4}-\d{2}$/.test(c);
+      const isArea = (c) => !TYPE_OF.has(c) && !isVersion(c) && !HIDDEN.has(c);
+
+      const ITEMS = SNAP.items
+        .map((i) => ({ ...i, t: Date.parse(i.date), action: i.categories.some((c) => ACTION.includes(c)) }))
+        .sort((a, b) => b.t - a.t);
+      const areaCounts = {};
+      ITEMS.filter((i) => i.source === 'changelog').forEach((i) =>
+        i.categories.filter(isArea).forEach((c) => (areaCounts[c] = (areaCounts[c] || 0) + 1))
+      );
+      const AREAS = Object.entries(areaCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([c]) => c);
+      const VERSIONS = [...new Set(ITEMS.flatMap((i) => i.categories.filter(isVersion)))].sort().reverse();
+
+      const LINKS = [
+        ['Shopify admin', 'admin.shopify.com', 'https://admin.shopify.com', 'store'],
+        ['Partner Dashboard', 'partners.shopify.com', 'https://partners.shopify.com', 'users'],
+        ['Dev Dashboard', 'dev.shopify.com', 'https://dev.shopify.com', 'grid'],
+        ['Developer docs', 'shopify.dev/docs', 'https://shopify.dev/docs', 'book'],
+        ['Changelog', 'shopify.dev/changelog', 'https://shopify.dev/changelog', 'clock'],
+        ['Shopify Status', 'shopifystatus.com', 'https://www.shopifystatus.com', 'activity']
+      ];
+      const X_ACCOUNTS = [
+        ['Shopify', 'Company news and launches'],
+        ['ShopifyDevs', 'Developer platform updates'],
+        ['ShopifyEng', 'Engineering at Shopify'],
+        ['ShopifyPartners', 'Partner program news'],
+        ['ShopifySupport', 'Help and incident updates']
+      ];
+
+      // Sample stores: the real widget reads stores Alfred detected, plus /meta.json from the storefront.
+      const STORES = {
+        'northwind-kitchen': { name: 'Northwind Kitchen', theme: 'Dawn', version: '15.4.0', latest: '15.4.1', products: 248, collections: 18, ships: 32, currency: 'USD', seen: 2 * 36e5 },
+        'trailmark-travel': { name: 'Trailmark Travel Co.', theme: 'Horizon', version: '2.1.0', latest: '2.1.0', products: 1312, collections: 46, ships: 54, currency: 'CAD', seen: 26 * 36e5 },
+        bytebench: { name: 'Bytebench', theme: 'Prestige', version: '10.6.0', latest: '10.8.0', products: 3904, collections: 120, ships: 12, currency: 'GBP', seen: 3 * DAY },
+        'lumen-learning': { name: 'Lumen Learning', theme: 'Sense', version: '15.2.0', latest: '15.4.1', products: 86, collections: 7, ships: 1, currency: 'AUD', seen: 4 * DAY }
+      };
+      const DEFAULT_PINS = [
+        ['Northwind orders', 'https://admin.shopify.com/store/northwind-kitchen/orders'],
+        ['Northwind theme editor', 'https://admin.shopify.com/store/northwind-kitchen/themes/current/editor'],
+        ['Bytebench storefront', 'https://bytebench.myshopify.com'],
+        ['API versioning docs', 'https://shopify.dev/docs/api/usage/versioning'],
+        ['Partner payouts', 'https://partners.shopify.com/current/payouts']
+      ];
+      const hostPath = (u) => {
+        const url = new URL(u);
+        return (url.hostname + url.pathname).replace(/\/$/, '');
+      };
+
+      const LAYOUTS = {
+        list: ['List', 'list'],
+        compact: ['Compact', 'rows'],
+        cards: ['Cards', 'cards'],
+        featured: ['Featured', 'featured'],
+        grid: ['Grid', 'tiles'],
+        stats: ['Stats', 'cards']
+      };
+      const WT = {
+        feed: { name: 'Custom feed', icon: 'layers', desc: 'Mix any sources and filter by type, area, or API version.', layouts: ['list', 'compact'] },
+        changelog: {
+          name: 'Platform updates',
+          icon: 'code',
+          desc: 'Every entry from the shopify.dev changelog.',
+          home: ['shopify.dev/changelog', 'https://shopify.dev/changelog'],
+          layouts: ['list', 'compact', 'cards']
+        },
+        videos: {
+          name: 'Videos',
+          icon: 'video',
+          desc: 'Shopify, ShopifyDevs and Shopify Engineering on YouTube.',
+          home: ['YouTube', 'https://www.youtube.com/channel/UCcYsEEKJtpxoO9T-keJZrEw'],
+          layouts: ['grid', 'list', 'featured']
+        },
+        eng: {
+          name: 'Engineering blog',
+          icon: 'terminal',
+          desc: 'Posts from shopify.engineering.',
+          home: ['shopify.engineering', 'https://shopify.engineering'],
+          layouts: ['featured', 'list', 'compact']
+        },
+        news: {
+          name: 'Newsroom',
+          icon: 'news',
+          desc: 'Press releases from the Shopify newsroom.',
+          home: ['shopify.com/news', 'https://www.shopify.com/news'],
+          layouts: ['list', 'compact', 'featured']
+        },
+        store: { name: 'Store snapshot', icon: 'store', desc: 'Public stats for a store Alfred detected: products, collections, theme version.', layouts: ['stats', 'compact'] },
+        pins: { name: 'Pinned links', icon: 'pin', desc: 'Your own shortcuts to specific stores, admin pages, or docs.', layouts: ['list', 'grid'] },
+        x: { name: 'Shopify on X', icon: 'xlogo', desc: 'Official accounts. X has no public feed, so these link out.', layouts: ['list', 'compact'] },
+        links: { name: 'Quick links', icon: 'link', desc: 'Admin, dashboards, docs and status.', layouts: ['grid', 'list'] }
+      };
+
+      let uid = 0;
+      function W(type, o = {}) {
+        const store = o.store || 'northwind-kitchen';
+        return {
+          id: 'w' + ++uid,
+          type,
+          title: o.title || (type === 'store' ? STORES[store].name : WT[type].name),
+          store,
+          pins: (o.pins || DEFAULT_PINS).map((p) => [...p]),
+          layout: o.layout || WT[type].layouts[0],
+          size: o.size || 'M',
+          width: o.width || 'narrow',
+          count: o.count || 6,
+          sources: new Set(o.sources || ['changelog', 'news', 'eng', 'yt-devs']),
+          types: new Set(o.types || []),
+          area: o.area || '',
+          version: '',
+          unreadOnly: !!o.unreadOnly,
+          channels: new Set(o.channels || VIDEO_SOURCES),
+          open: false
+        };
+      }
+      const needsAction = { title: 'Needs action', layout: 'compact', sources: ['changelog'], types: ACTION };
+      // One board per variant; boards survive variant switches and replays, a reload resets them.
+      const BOARDS = [
+        [
+          W('changelog', { size: 'L' }),
+          W('feed', { ...needsAction, size: 'T' }),
+          W('eng', { layout: 'featured', size: 'T' }),
+          W('videos', { size: 'W' }),
+          W('news', { size: 'M' }),
+          W('x', { size: 'M' }),
+          W('store', { size: 'M' }),
+          W('pins', { size: 'M' })
+        ],
+        [
+          W('feed', needsAction),
+          W('changelog', { width: 'wide' }),
+          W('store', { store: 'bytebench' }),
+          W('videos', { layout: 'list' }),
+          W('feed', { title: 'Admin API', layout: 'list', sources: ['changelog'], area: 'Admin GraphQL API' }),
+          W('eng', { layout: 'featured' }),
+          W('news', { layout: 'compact' }),
+          W('pins'),
+          W('x')
+        ],
+        [
+          W('feed', { ...needsAction, count: 6 }),
+          W('store'),
+          W('changelog', { count: 4 }),
+          W('pins'),
+          W('videos', { count: 4 }),
+          W('eng', { layout: 'featured', count: 4 }),
+          W('links'),
+          W('news', { layout: 'compact', count: 5 }),
+          W('x', { layout: 'compact' })
+        ]
+      ];
+
+      const S = { lastVisit: NOW - 7 * DAY, rerender: false };
+      const UI = {};
+      const resetUI = () => Object.assign(UI, { editing: false, addOpen: false, deckAdd: false, drawer: false, tab: 'list', sel: null, enter: null, fresh: null, focusDrawer: false });
+      const board = () => BOARDS[current];
+      const findW = (id) => board().find((w) => w.id === id);
+
+      const ICONS = {
+        play: '<polygon points="7 4 20 12 7 20 7 4" fill="currentColor" stroke="none"/>',
+        code: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+        news: '<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8z"/>',
+        terminal: '<polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/>',
+        video: '<rect x="2" y="5" width="20" height="14" rx="3"/><polygon points="10 9 15 12 10 15" fill="currentColor" stroke="none"/>',
+        layers: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+        link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+        xlogo:
+          '<path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
+        list: '<line x1="9" x2="21" y1="6" y2="6"/><line x1="9" x2="21" y1="12" y2="12"/><line x1="9" x2="21" y1="18" y2="18"/><line x1="4" x2="4.01" y1="6" y2="6"/><line x1="4" x2="4.01" y1="12" y2="12"/><line x1="4" x2="4.01" y1="18" y2="18"/>',
+        rows: '<line x1="3" x2="21" y1="5" y2="5"/><line x1="3" x2="21" y1="10" y2="10"/><line x1="3" x2="21" y1="15" y2="15"/><line x1="3" x2="21" y1="20" y2="20"/>',
+        cards: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+        featured: '<rect x="3" y="3" width="18" height="10" rx="1.5"/><line x1="3" x2="21" y1="17" y2="17"/><line x1="3" x2="14" y1="21" y2="21"/>',
+        tiles: '<rect x="3" y="4" width="8" height="6" rx="1"/><rect x="13" y="4" width="8" height="6" rx="1"/><rect x="3" y="14" width="8" height="6" rx="1"/><rect x="13" y="14" width="8" height="6" rx="1"/>',
+        grip: '<g fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></g>',
+        plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
+        close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+        filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+        pencil: '<path d="M21.17 6.81a1 1 0 0 0-3.98-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/>',
+        trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+        sliders:
+          '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
+        arrow: '<path d="M7 17 17 7"/><path d="M7 7h10v10"/>',
+        check: '<path d="m5 12 5 5L20 7"/>',
+        refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+        chevL: '<path d="m15 18-6-6 6-6"/>',
+        chevR: '<path d="m9 18 6-6-6-6"/>',
+        chevU: '<path d="m18 15-6-6-6 6"/>',
+        chevD: '<path d="m6 9 6 6 6-6"/>',
+        store: '<path d="M3 9 4.5 4h15L21 9"/><path d="M3 9h18v1.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v8h14v-8"/>',
+        users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+        grid: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+        book: '<path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>',
+        clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        admin: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 4v5"/>',
+        pin: '<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
+        activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'
+      };
+      const icon = (name, size = 16) =>
+        `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+
+      // Feed content is untrusted: every string is escaped and only https links render.
+      const esc = (s) =>
+        String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+      const href = (u) => (/^https:\/\//.test(u) ? esc(u) : '#');
+
+      const unread = (i) => i.t > S.lastVisit;
+      function rel(i) {
+        if (i.ago) return i.ago;
+        const d = NOW - i.t;
+        if (d < 36e5) return `${Math.max(1, Math.round(d / 6e4))}m ago`;
+        if (d < DAY) return `${Math.round(d / 36e5)}h ago`;
+        if (d < 7 * DAY) return `${Math.round(d / DAY)}d ago`;
+        return short(i.t);
+      }
+      function short(t) {
+        const dt = new Date(t);
+        const opts = { month: 'short', day: 'numeric' };
+        if (dt.getFullYear() !== new Date(NOW).getFullYear()) opts.year = 'numeric';
+        return dt.toLocaleDateString('en-US', opts);
+      }
+      const time = (i) =>
+        `<time datetime="${esc(i.date)}" title="${esc(new Date(i.t).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }))}">${esc(rel(i))}</time>`;
+      const src = (i) => SOURCES[i.source].label;
+
+      function pills(i, maxAreas = 2) {
+        const types = i.categories.filter((c) => TYPE_OF.has(c)).map((c) => TYPE_OF.get(c));
+        const areas = i.categories.filter(isArea);
+        const version = i.categories.find(isVersion);
+        return [
+          ...types.map((t) => `<span class="pill ${t.tone ? 'pill--' + t.tone : ''}">${esc(t.label)}</span>`),
+          ...areas.slice(0, maxAreas).map((a) => `<span class="pill">${esc(a)}</span>`),
+          maxAreas && areas.length > maxAreas ? `<span class="pill">+${areas.length - maxAreas}</span>` : '',
+          version ? `<span class="pill pill--version">${esc(version)}</span>` : ''
+        ].join('');
+      }
+
+      /* ===== Widget data and layouts (shared by every variant) ===== */
+      function widgetItems(w) {
+        if (w.type === 'videos') return ITEMS.filter((i) => w.channels.has(i.source));
+        if (w.type !== 'feed') return ITEMS.filter((i) => i.source === w.type);
+        return ITEMS.filter(
+          (i) =>
+            w.sources.has(i.source) &&
+            (i.source !== 'changelog' ||
+              ((!w.types.size || i.categories.some((c) => w.types.has(c))) &&
+                (!w.area || i.categories.includes(w.area)) &&
+                (!w.version || i.categories.includes(w.version)))) &&
+            (!w.unreadOnly || unread(i))
+        );
+      }
+      const isFeedType = (w) => !['x', 'links', 'store', 'pins'].includes(w.type);
+      const unreadCount = (w) => (isFeedType(w) ? widgetItems(w).filter(unread).length : 0);
+      function feedSummary(w) {
+        if (w.type === 'store') return `${w.store}.myshopify.com`;
+        if (w.type === 'pins') return `${w.pins.length} ${w.pins.length === 1 ? 'link' : 'links'}`;
+        if (w.type === 'videos') return w.channels.size === VIDEO_SOURCES.length ? 'All channels' : [...w.channels].map((id) => SOURCES[id].label).join(', ');
+        if (w.type !== 'feed') return WT[w.type].desc;
+        const all = w.sources.size === Object.keys(SOURCES).length;
+        return [
+          all ? 'All sources' : [...w.sources].map((id) => SOURCES[id].label).join(', ') || 'No sources',
+          [...w.types].map((t) => TYPE_OF.get(t).label).join(', '),
+          w.area,
+          w.version,
+          w.unreadOnly && 'Unread only'
+        ]
+          .filter(Boolean)
+          .join(' · ');
+      }
+
+      const tile = (small) => `<span class="tile ${small ? 'tile--sm' : ''}"><span class="tile__play">${icon('play', small ? 10 : 13)}</span></span>`;
+      const dot = (i) => `<span class="dot ${unread(i) ? '' : 'dot--off'}" ${unread(i) ? 'title="New since your last visit"' : ''}></span>`;
+
+      function llRow(i, showSource) {
+        const video = i.stream === 'videos';
+        return `<li class="ll__row ${i.action ? 'is-action' : ''} ${unread(i) ? '' : 'is-read'}"><a href="${href(i.link)}">
+          ${video ? tile(true) : ''}
+          <span class="ll__body">
+            <span class="meta">${unread(i) ? dot(i) : ''}${showSource ? `<b>${esc(src(i))}</b><span aria-hidden="true">·</span>` : ''}${time(i)}</span>
+            <span class="ll__title">${esc(i.title)}</span>
+            ${i.excerpt ? `<span class="ll__ex">${esc(i.excerpt)}</span>` : ''}
+            ${i.categories.length ? `<span class="pills">${pills(i)}</span>` : ''}
+          </span>
+        </a></li>`;
+      }
+      // Compact rows flag action items with a colored mark instead of a pill, so titles keep the width.
+      function actionFlag(i) {
+        const c = i.categories.find((c) => ACTION.includes(c));
+        if (!c) return '';
+        const t = TYPE_OF.get(c);
+        return `<span class="flag flag--${t.tone}" title="${esc(t.label)}" aria-label="${esc(t.label)}"></span>`;
+      }
+      function lcRow(i, showSource) {
+        return `<li class="lc__row"><a href="${href(i.link)}" title="${esc(i.title)}">
+          ${dot(i)}${actionFlag(i)}<span class="lc__title">${esc(i.title)}</span>
+          ${showSource ? `<span class="lc__src">${esc(src(i))}</span>` : ''}<span class="lc__date">${time(i)}</span>
+        </a></li>`;
+      }
+      function lCard(i) {
+        return `<a class="lcard ${i.action ? 'is-action' : ''}" href="${href(i.link)}">
+          ${i.categories.length ? `<span class="pills">${pills(i, 1)}</span>` : ''}
+          <span class="lcard__title">${esc(i.title)}</span>
+          ${i.excerpt ? `<span class="lcard__ex">${esc(i.excerpt)}</span>` : ''}
+          <span class="meta">${unread(i) ? dot(i) : ''}${time(i)}</span>
+        </a>`;
+      }
+      function vt(i, showSource = true) {
+        return `<a class="vt" href="${href(i.link)}">${tile()}<span class="vt__title">${esc(i.title)}</span><span class="meta">${showSource ? `<b>${esc(src(i))}</b><span aria-hidden="true">·</span>` : ''}${time(i)}</span></a>`;
+      }
+      function lFeat(i, showSource) {
+        if (i.stream === 'videos') return `<div class="lfeat">${vt(i, showSource)}</div>`;
+        return `<a class="lfeat" href="${href(i.link)}">
+          <span class="meta">${unread(i) ? dot(i) : ''}${showSource ? `<b>${esc(src(i))}</b><span aria-hidden="true">·</span>` : ''}${time(i)}</span>
+          <span class="lfeat__title">${esc(i.title)}</span>
+          ${i.excerpt ? `<span class="lfeat__ex">${esc(i.excerpt)}</span>` : ''}
+        </a>`;
+      }
+
+      function storeBody(w) {
+        const s = STORES[w.store];
+        const domain = `${w.store}.myshopify.com`;
+        const stats = [
+          ['Products', s.products.toLocaleString('en-US')],
+          ['Collections', s.collections.toLocaleString('en-US')],
+          ['Shipping countries', s.ships],
+          ['Currency', s.currency]
+        ];
+        const theme = `<div class="st__theme"><span class="st__key">Theme</span><b>${s.theme} ${s.version}</b>${
+          s.latest === s.version ? '<span class="pill pill--green">Up to date</span>' : `<span class="pill pill--amber">${s.latest} available</span>`
+        }</div>`;
+        return `<div class="st">
+          <div class="st__head">
+            <span class="st__mono" aria-hidden="true">${s.name
+              .split(' ')
+              .slice(0, 2)
+              .map((x) => x[0])
+              .join('')}</span>
+            <span class="st__name"><b>${domain}</b><small>Detected ${rel({ t: NOW - s.seen })}</small></span>
+            <a class="iconbtn" href="https://${domain}" title="Open storefront" aria-label="Open ${s.name} storefront">${icon('store', 14)}</a>
+            <a class="iconbtn" href="https://admin.shopify.com/store/${w.store}" title="Open admin" aria-label="Open ${s.name} admin">${icon('admin', 14)}</a>
+          </div>
+          ${
+            w.layout === 'compact'
+              ? `<dl class="st__rows">${stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`
+              : `<div class="st__grid">${stats.map(([k, v]) => `<div class="st__tile"><span class="st__val">${v}</span><span class="st__key">${k}</span></div>`).join('')}</div>`
+          }
+          ${theme}
+          <p class="ctl__hint">Public storefront data from /meta.json, refreshed when the tab opens.</p>
+        </div>`;
+      }
+      function pinsBody(w) {
+        if (!w.pins.length) return `<div class="wempty"><p>No pinned links yet.</p></div>`;
+        if (w.layout === 'grid')
+          return `<div class="lk">${w.pins.map(([label, url]) => `<a href="${href(url)}" title="${esc(hostPath(url))}"><span class="w__icon">${icon('pin', 14)}</span>${esc(label)}</a>`).join('')}</div>`;
+        return `<ul class="lkl">${w.pins
+          .map(([label, url]) => `<li><a href="${href(url)}"><span class="w__icon">${icon('pin', 14)}</span><span style="min-width:0"><b>${esc(label)}</b><small class="ellipsis">${esc(hostPath(url))}</small></span></a></li>`)
+          .join('')}</ul>`;
+      }
+
+      function body(w, limit) {
+        if (w.type === 'store') return storeBody(w);
+        if (w.type === 'pins') return pinsBody(w);
+        if (w.type === 'x') {
+          if (w.layout === 'compact')
+            return `<div class="xc"><div class="filters">${X_ACCOUNTS.map(([h]) => `<a class="chip" href="https://x.com/${h}">@${h}</a>`).join('')}</div><p class="ctl__hint">X has no public feed, so accounts open on x.com.</p></div>`;
+          return `<ul>${X_ACCOUNTS.map(
+            ([h, d]) => `<li><a class="xl__row" href="https://x.com/${h}"><span class="xl__logo">${icon('xlogo', 13)}</span><span><b>@${h}</b><small>${d}</small></span>${icon('arrow', 13)}</a></li>`
+          ).join('')}</ul>`;
+        }
+        if (w.type === 'links') {
+          if (w.layout === 'list')
+            return `<ul class="lkl">${LINKS.map(([name, host, url, ic]) => `<li><a href="${url}"><span class="w__icon">${icon(ic, 15)}</span><span><b>${name}</b><small>${host}</small></span></a></li>`).join('')}</ul>`;
+          return `<div class="lk">${LINKS.map(([name, , url, ic]) => `<a href="${url}"><span class="w__icon">${icon(ic, 15)}</span>${name}</a>`).join('')}</div>`;
+        }
+        const list = widgetItems(w);
+        if (!list.length)
+          return `<div class="wempty"><p>${w.type === 'feed' ? 'Nothing matches these filters.' : 'No channels selected.'}</p></div>`;
+        const items = list.slice(0, limit);
+        const showSource = (w.type === 'feed' && w.sources.size > 1) || (w.type === 'videos' && w.channels.size > 1);
+        switch (w.layout) {
+          case 'compact':
+            return `<ol>${items.map((i) => lcRow(i, showSource)).join('')}</ol>`;
+          case 'cards':
+            return `<div class="lcards">${items.map(lCard).join('')}</div>`;
+          case 'grid':
+            return `<div class="lgrid">${items.map((i) => vt(i, showSource)).join('')}</div>`;
+          case 'featured': {
+            const [first, ...rest] = items;
+            return lFeat(first, showSource) + `<ol>${rest.map((i) => lcRow(i, showSource)).join('')}</ol>`;
+          }
+          default:
+            return `<ol>${items.map((i) => llRow(i, showSource)).join('')}</ol>`;
+        }
+      }
+
+      /* ===== Shared controls: feed selections and filters, video channels ===== */
+      const showSub = (w) => w.type === "feed" || w.type === "videos";
+      const hasControls = (w) => ['feed', 'videos', 'store', 'pins'].includes(w.type);
+      const chip = (w, act, v, label, on) =>
+        `<button class="chip" data-act="${act}" data-w="${w.id}" data-v="${esc(v)}" data-k="${act}-${w.id}-${esc(v)}" aria-pressed="${on}">${esc(label)}</button>`;
+      function controls(w) {
+        if (w.type === 'store')
+          return `<div class="ctl"><p class="label">Store</p>
+            <select class="select" data-act="store" data-w="${w.id}" data-k="store-${w.id}" aria-label="Store">${Object.entries(STORES)
+              .map(([id, s]) => `<option value="${id}" ${w.store === id ? 'selected' : ''}>${s.name}</option>`)
+              .join('')}</select>
+            <p class="ctl__hint">Stores Alfred detected while you browsed.</p></div>`;
+        if (w.type === 'pins')
+          return `<div class="ctl"><p class="label">Links</p>
+            <ul class="pinlist">${w.pins
+              .map(
+                ([label, url], k) =>
+                  `<li><span class="pinlist__text"><b>${esc(label)}</b><small>${esc(hostPath(url))}</small></span><button class="iconbtn" data-act="pinRemove" data-w="${w.id}" data-v="${k}" data-k="pinrm-${w.id}-${k}" aria-label="Remove ${esc(label)}">${icon('close', 12)}</button></li>`
+              )
+              .join('')}</ul>
+            <div class="pinform">
+              <input class="input" data-pin="label" placeholder="Label" aria-label="Link label">
+              <input class="input" data-pin="url" placeholder="https://admin.shopify.com/store/…" aria-label="Link URL">
+              <button class="btn btn--sm" data-act="pinAdd" data-w="${w.id}" data-k="pinadd-${w.id}">${icon('plus', 13)} Add link</button>
+            </div></div>`;
+        if (w.type === 'videos')
+          return `<div class="ctl"><p class="label">Channels</p><div class="filters">${VIDEO_SOURCES.map((id) => chip(w, 'vch', id, SOURCES[id].label, w.channels.has(id))).join('')}</div></div>`;
+        if (w.type !== 'feed') return '';
+        return `<div class="ctl">
+          <p class="label">Sources</p>
+          <div class="filters">${Object.keys(SOURCES).map((id) => chip(w, 'fsrc', id, SOURCES[id].label, w.sources.has(id))).join('')}</div>
+          <p class="label">Changelog filters</p>
+          <div class="filters">${TYPES.map(([k, l]) => chip(w, 'ftype', k, l, w.types.has(k))).join('')}</div>
+          <div class="filters">
+            <select class="select ${w.area ? 'select--on' : ''}" data-act="farea" data-w="${w.id}" data-k="farea-${w.id}" aria-label="Area">
+              <option value="">All areas</option>${AREAS.map((a) => `<option ${w.area === a ? 'selected' : ''}>${esc(a)}</option>`).join('')}
+            </select>
+            <select class="select ${w.version ? 'select--on' : ''}" data-act="fver" data-w="${w.id}" data-k="fver-${w.id}" aria-label="API version">
+              <option value="">Any API version</option>${VERSIONS.map((v) => `<option ${w.version === v ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+            </select>
+            <label class="switch-label"><input type="checkbox" class="switch" data-act="funread" data-w="${w.id}" data-k="funread-${w.id}" ${w.unreadOnly ? 'checked' : ''}>Unread only</label>
+          </div>
+          <p class="ctl__hint">Type, area and version narrow changelog entries. Other sources show in full.</p>
+        </div>`;
+      }
+      const layoutIcons = (w) =>
+        `<div class="iseg" role="group" aria-label="Layout">${WT[w.type].layouts
+          .map(
+            (l) =>
+              `<button data-act="layout" data-w="${w.id}" data-v="${l}" data-k="lay-${w.id}-${l}" aria-pressed="${w.layout === l}" title="${LAYOUTS[l][0]}" aria-label="${LAYOUTS[l][0]} layout">${icon(LAYOUTS[l][1], 13)}</button>`
+          )
+          .join('')}</div>`;
+      const layoutSeg = (w) =>
+        `<div class="seg">${WT[w.type].layouts
+          .map((l) => `<button data-act="layout" data-w="${w.id}" data-v="${l}" data-k="lay-${w.id}-${l}" aria-pressed="${w.layout === l}">${LAYOUTS[l][0]}</button>`)
+          .join('')}</div>`;
+      const catalogItems = (cls) =>
+        Object.entries(WT)
+          .map(
+            ([type, t]) =>
+              `<button class="${cls}" data-act="add" data-v="${type}" data-k="add-${type}"><span class="w__icon">${icon(t.icon, 14)}</span><span><b>${t.name}</b><small>${t.desc}</small></span></button>`
+          )
+          .join('');
+      const status = () => `<span class="status">Updated 4 min ago</span>`;
+      const brand = () => `<div class="brand"><img src="https://bucket.alfred.uptek.com/logo-settings.png" alt=""><span>Shopify updates</span></div>`;
+
+      /* ===== Variant 1: Bento ===== */
+      const SIZES = [
+        ['S', 'Small'],
+        ['T', 'Tall'],
+        ['M', 'Medium'],
+        ['L', 'Large'],
+        ['W', 'Wide']
+      ];
+      function bentoWidget(w, n, all) {
+        const t = WT[w.type];
+        const cnt = unreadCount(w);
+        const e = UI.editing;
+        const tools = e
+          ? `<button class="iconbtn" data-act="remove" data-w="${w.id}" data-k="rm-${w.id}" aria-label="Remove widget" title="Remove">${icon('close', 14)}</button>`
+          : `${layoutIcons(w)}${hasControls(w) ? `<span class="tools-sep"></span><button class="iconbtn" data-act="toggle" data-w="${w.id}" data-k="tg-${w.id}" aria-expanded="${w.open}" aria-label="Widget settings" title="Widget settings">${icon('filter', 13)}</button>` : ''}`;
+        const editbar = `<div class="w__editbar ${UI.enter === "edit" ? "enter" : ""}">
+            <div class="iseg iseg--text" role="group" aria-label="Size">${SIZES.map(
+              ([s, label]) =>
+                `<button data-act="size" data-w="${w.id}" data-v="${s}" data-k="size-${w.id}-${s}" aria-pressed="${w.size === s}" title="${label}">${s}</button>`
+            ).join('')}</div>
+            <span style="margin-left:auto"></span>
+            <button class="iconbtn" data-act="move" data-w="${w.id}" data-v="-1" data-k="mvl-${w.id}" aria-label="Move earlier" ${n === 0 ? 'disabled' : ''}>${icon('chevL', 14)}</button>
+            <button class="iconbtn" data-act="move" data-w="${w.id}" data-v="1" data-k="mvr-${w.id}" aria-label="Move later" ${n === all - 1 ? 'disabled' : ''}>${icon('chevR', 14)}</button>
+          </div>`;
+        return `<article class="w size--${w.size} anim ${UI.fresh === w.id ? 'enter' : ''} ${e ? 'w--edit' : ''}" style="--i:${n}" data-drop="${w.id}" ${e ? `draggable="true" data-drag="${w.id}"` : ''}>
+          <header class="w__head">
+            ${e ? `<span class="w__grip">${icon('grip', 14)}</span>` : ''}
+            <span class="w__icon">${icon(t.icon, 13)}</span>
+            <h2 class="w__title">${esc(w.title)}</h2>${cnt ? `<span class="count">${cnt}</span>` : ''}
+            <div class="w__tools">${tools}</div>
+          </header>
+          ${e ? editbar : ''}
+          ${!e && w.open ? `<div class="w__controls ${UI.enter === 'ctl-' + w.id ? 'enter' : ''}">${controls(w)}</div>` : !e && showSub(w) ? `<p class="w__sub">${esc(feedSummary(w))}</p>` : ''}
+          <div class="w__body scroll" data-scroll="b-${w.id}">${body(w, 40)}</div>
+        </article>`;
+      }
+      function vBento() {
+        const B = board();
+        return `<div class="v-bento">
+          <header class="top">
+            ${brand()}
+            <div class="top__end">${
+              UI.editing
+                ? `<span class="status">Drag widgets to reorder</span>
+              <div class="pop-anchor"><button class="btn" data-act="addMenu" data-k="addMenu" aria-expanded="${UI.addOpen}">${icon('plus', 14)} Add widget</button>
+                ${UI.addOpen ? `<div class="menu ${UI.enter === 'add' ? 'enter' : ''}" role="menu">${catalogItems('menu__item')}</div>` : ''}</div>
+              <button class="btn btn--primary" data-act="edit" data-k="edit">Done</button>`
+                : `${status()}<button class="btn btn--ghost btn--sm" data-act="markread" data-k="markread">${icon('check', 14)} Mark all read</button>
+              <button class="btn" data-act="edit" data-k="edit">${icon('pencil', 13)} Edit dashboard</button>`
+            }</div>
+          </header>
+          <div class="bento">${B.map((w, n) => bentoWidget(w, n, B.length)).join('')}</div>
+        </div>`;
+      }
+
+      /* ===== Variant 2: Deck ===== */
+      function deckCol(w, n, all) {
+        const t = WT[w.type];
+        const cnt = unreadCount(w);
+        return `<section class="col ${w.width === 'wide' ? 'col--wide' : ''} anim ${UI.fresh === w.id ? 'enter' : ''}" style="--i:${n}" id="col-${w.id}" data-drop="${w.id}">
+          <header class="col__head" draggable="true" data-drag="${w.id}" title="Drag to reorder">
+            <span class="w__icon">${icon(t.icon, 13)}</span>
+            <h2 class="w__title">${esc(w.title)}</h2>${cnt ? `<span class="count">${cnt}</span>` : ''}
+            <div class="w__tools"><button class="iconbtn" data-act="toggle" data-w="${w.id}" data-k="tg-${w.id}" aria-expanded="${w.open}" aria-label="Column options" title="Column options">${icon('sliders', 14)}</button></div>
+          </header>
+          ${
+            w.open
+              ? `<div class="col__opts ${UI.enter === 'ctl-' + w.id ? 'enter' : ''}">
+            <div class="opt"><span class="label">Layout</span>${layoutSeg(w)}</div>
+            <div class="opt"><span class="label">Width</span><div class="seg">${['narrow', 'wide']
+              .map((x) => `<button data-act="width" data-w="${w.id}" data-v="${x}" data-k="wd-${w.id}-${x}" aria-pressed="${w.width === x}">${x[0].toUpperCase() + x.slice(1)}</button>`)
+              .join('')}</div></div>
+            ${controls(w)}
+            <div class="opt__row">
+              <button class="btn btn--sm" data-act="move" data-w="${w.id}" data-v="-1" data-k="mvl-${w.id}" ${n === 0 ? 'disabled' : ''}>${icon('chevL', 13)} Move left</button>
+              <button class="btn btn--sm" data-act="move" data-w="${w.id}" data-v="1" data-k="mvr-${w.id}" ${n === all - 1 ? 'disabled' : ''}>Move right ${icon('chevR', 13)}</button>
+              <button class="btn btn--sm btn--danger" data-act="remove" data-w="${w.id}" data-k="rm-${w.id}">${icon('trash', 13)} Remove</button>
+            </div>
+          </div>`
+              : showSub(w)
+                ? `<p class="w__sub" style="padding-top:8px">${esc(feedSummary(w))}</p>`
+                : ''
+          }
+          <div class="col__body scroll" data-scroll="b-${w.id}">${body(w, 40)}</div>
+        </section>`;
+      }
+      function vDeck() {
+        const B = board();
+        return `<div class="v-deck">
+          <nav class="rail" aria-label="Columns">
+            <img class="rail__logo" src="https://bucket.alfred.uptek.com/logo-settings.png" alt="Alfred">
+            <div class="rail__cols">${B.map(
+              (w) =>
+                `<button class="rail__btn" data-act="jump" data-w="${w.id}" data-k="jump-${w.id}" title="${esc(w.title)}" aria-label="Go to ${esc(w.title)}">${icon(WT[w.type].icon, 17)}${unreadCount(w) ? '<span class="rail__dot"></span>' : ''}</button>`
+            ).join('')}</div>
+            <button class="rail__btn rail__add" data-act="deckAdd" data-k="deckAdd-rail" title="Add column" aria-label="Add column">${icon('plus', 16)}</button>
+            <div class="rail__end">
+              <button class="rail__btn" data-act="markread" data-k="markread" title="Mark all as read" aria-label="Mark all as read">${icon('check', 17)}</button>
+              <span class="rail__btn" title="Updated 4 min ago" style="cursor:default">${icon('refresh', 15)}</span>
+            </div>
+          </nav>
+          <div class="deck__board scroll" data-scroll="board">
+            ${B.map((w, n) => deckCol(w, n, B.length)).join('')}
+            <section class="col col--ghost anim" style="--i:${B.length}" id="col-add">${
+              UI.deckAdd
+                ? `<div class="col__head" style="cursor:default"><h2 class="w__title">Add column</h2><div class="w__tools"><button class="iconbtn" data-act="deckAdd" data-k="deckAdd-close" aria-label="Cancel">${icon('close', 14)}</button></div></div>
+                   <div class="ghost-list scroll">${catalogItems('menu__item')}</div>`
+                : `<button class="ghost-add" data-act="deckAdd" data-k="deckAdd">${icon('plus', 20)}<span>Add column</span></button>`
+            }</section>
+          </div>
+        </div>`;
+      }
+
+      /* ===== Variant 3: Gallery ===== */
+      const thumb = (l) => `<span class="thumb thumb--${l}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`;
+      const galleryCols = () => {
+        const room = innerWidth - (UI.drawer ? 400 : 0);
+        return room > 1180 ? 3 : room > 760 ? 2 : 1;
+      };
+      function galWidget(w, n) {
+        const t = WT[w.type];
+        const cnt = unreadCount(w);
+        return `<article class="w g anim ${UI.fresh === w.id ? 'enter' : ''} ${UI.sel === w.id ? 'is-sel' : ''}" style="--i:${n}" data-drop="${w.id}">
+          <header class="w__head">
+            <span class="w__icon">${icon(t.icon, 13)}</span>
+            <h2 class="w__title">${esc(w.title)}</h2>${cnt ? `<span class="count">${cnt}</span>` : ''}
+            <div class="w__tools"><button class="iconbtn g__edit" data-act="inspect" data-w="${w.id}" data-k="ed-${w.id}" aria-label="Edit ${esc(w.title)}" title="Edit widget">${icon('pencil', 13)}</button></div>
+          </header>
+          ${showSub(w) ? `<p class="w__sub">${esc(feedSummary(w))}</p>` : ''}
+          <div class="w__body">${body(w, w.count)}</div>
+          ${t.home ? `<a class="g__foot" href="${t.home[1]}">${t.home[0]} ${icon('arrow', 12)}</a>` : ''}
+        </article>`;
+      }
+      function inspector(w) {
+        const t = WT[w.type];
+        return `<label class="field"><span class="label">Title</span><input class="input" data-act="rename" data-w="${w.id}" data-k="rename-${w.id}" value="${esc(w.title)}" placeholder="${esc(t.name)}"></label>
+          <div class="field"><span class="label">Layout</span><div class="lays">${t.layouts
+            .map((l) => `<button class="lay" data-act="layout" data-w="${w.id}" data-v="${l}" data-k="lay-${w.id}-${l}" aria-pressed="${w.layout === l}">${thumb(l)}<span>${LAYOUTS[l][0]}</span></button>`)
+            .join('')}</div></div>
+          ${
+            !isFeedType(w)
+              ? ''
+              : `<div class="field"><span class="label">Show</span><div class="seg">${[4, 6, 10]
+                  .map((c) => `<button data-act="count" data-w="${w.id}" data-v="${c}" data-k="cnt-${w.id}-${c}" aria-pressed="${w.count === c}">${c} items</button>`)
+                  .join('')}</div></div>`
+          }
+          ${controls(w)}
+          <button class="btn btn--danger btn--block" data-act="remove" data-w="${w.id}" data-k="rm-${w.id}">${icon('trash', 14)} Remove widget</button>`;
+      }
+      function drawer() {
+        const w = UI.sel && findW(UI.sel);
+        const B = board();
+        const head = w
+          ? `<button class="iconbtn" data-act="back" data-k="back" aria-label="Back to all widgets">${icon('chevL', 16)}</button><h2>Edit widget</h2>`
+          : `<div class="seg">${[
+              ['list', 'Your widgets'],
+              ['add', 'Add widgets']
+            ]
+              .map(([id, label]) => `<button data-act="tab" data-v="${id}" data-k="tab-${id}" aria-pressed="${UI.tab === id}">${label}</button>`)
+              .join('')}</div>`;
+        const content = w
+          ? inspector(w)
+          : UI.tab === 'list'
+            ? `<p class="drawer__hint">Drag to reorder, or pick a widget to change its layout and filters.</p>
+              <ol class="wlist">${B.map(
+                (x, i) => `<li class="wlist__item" draggable="true" data-drag="${x.id}" data-drop="${x.id}">
+                <span class="w__grip">${icon('grip', 14)}</span>
+                <button class="wlist__main" data-act="inspect" data-w="${x.id}" data-k="ins-${x.id}"><span class="w__icon">${icon(WT[x.type].icon, 13)}</span><span><b>${esc(x.title)}</b><small>${LAYOUTS[x.layout][0]} · ${esc(feedSummary(x))}</small></span></button>
+                <button class="iconbtn" data-act="move" data-w="${x.id}" data-v="-1" data-k="mvu-${x.id}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('chevU', 14)}</button>
+                <button class="iconbtn" data-act="move" data-w="${x.id}" data-v="1" data-k="mvd-${x.id}" aria-label="Move down" ${i === B.length - 1 ? 'disabled' : ''}>${icon('chevD', 14)}</button>
+              </li>`
+              ).join('')}</ol>`
+            : `<div class="catalog">${Object.entries(WT)
+                .map(
+                  ([type, t]) => `<div class="cat">${thumb(t.layouts[0])}<div class="cat__body"><b>${t.name}</b><small>${t.desc}</small><small>${t.layouts.map((l) => LAYOUTS[l][0]).join(' · ')}</small></div>
+                  <button class="btn btn--sm" data-act="add" data-v="${type}" data-k="add-${type}">${icon('plus', 13)} Add</button></div>`
+                )
+                .join('')}</div>`;
+        return `<aside class="drawer ${UI.enter === 'drawer' ? 'enter' : ''}" role="dialog" aria-label="Customize new tab">
+          <div class="drawer__head">${head}<button class="iconbtn" data-act="closeDrawer" data-k="closeDrawer" aria-label="Close">${icon('close', 16)}</button></div>
+          <div class="drawer__body scroll" data-scroll="drawer">${content}</div>
+        </aside>`;
+      }
+      function vGallery() {
+        const n = galleryCols();
+        const cols = Array.from({ length: n }, () => []);
+        board().forEach((w, i) => cols[i % n].push(galWidget(w, i)));
+        return `<div class="v-gal ${UI.drawer ? 'has-drawer' : ''}">
+          <header class="top">
+            ${brand()}
+            <div class="top__end">${status()}
+              <button class="btn btn--ghost btn--sm" data-act="markread" data-k="markread">${icon('check', 14)} Mark all read</button>
+              <button class="btn" data-act="customize" data-k="customize" aria-expanded="${UI.drawer}">${icon('sliders', 14)} Customize</button>
+            </div>
+          </header>
+          <div class="masonry">${cols.map((c) => `<div class="masonry__col">${c.join('')}</div>`).join('')}</div>
+        </div>${UI.drawer ? drawer() : ''}`;
+      }
+
+      // Each variant runs from the picker's mount (fresh view state) or from rerender (after an interaction).
+      const variants = [vBento, vDeck, vGallery].map((render) => () => {
+        if (!S.rerender) resetUI();
+        const html = render();
+        UI.enter = null;
+        return html;
+      });
+
+      /* Picker wiring: verbatim from the prototype skill's PICKER.md. */
+      const stage = document.getElementById('stage');
+      const picker = document.querySelector('.proto-picker');
+      const highlight = picker.querySelector('.proto-picker-highlight');
+      const items = [...picker.querySelectorAll('.proto-picker-item:not(.proto-picker-replay)')];
+      const replay = picker.querySelector('.proto-picker-replay');
+      let current = 0;
+
+      function moveHighlight() {
+        const el = items[current];
+        highlight.style.width = el.offsetWidth + 'px';
+        highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+      }
+
+      function mount(i) {
+        stage.innerHTML = '';
+        stage.classList.remove('static');
+        // Clear first, render next frame, so entrance animations re-run.
+        requestAnimationFrame(() => {
+          stage.innerHTML = variants[i]();
+        });
+      }
+
+      function setActive(i) {
+        if (i < 0 || i >= variants.length) return;
+        current = i;
+        items.forEach((el, j) => {
+          el.toggleAttribute('data-active', j === i);
+          if (j === i) el.setAttribute('aria-current', 'true');
+          else el.removeAttribute('aria-current');
+        });
+        moveHighlight();
+        const url = new URL(location);
+        url.searchParams.set('v', i + 1);
+        history.replaceState(null, '', url);
+        mount(i);
+      }
+
+      items.forEach((el, i) => el.addEventListener('click', () => setActive(i)));
+      replay?.addEventListener('click', () => mount(current));
+      window.addEventListener('resize', moveHighlight);
+
+      document.addEventListener('keydown', (e) => {
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const num = parseInt(e.key, 10);
+        if (num >= 1 && num <= variants.length) setActive(num - 1);
+        else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
+        else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+        else if (e.key === 'r' || e.key === 'R') mount(current);
+      });
+
+      setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+      // Enable the slide only after first paint, so load doesn't animate.
+      requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));
+
+      /* Interactions: change state, then re-render statically, keeping focus, caret and scroll positions. */
+      function rerender() {
+        const a = document.activeElement;
+        const key = a?.dataset?.k;
+        const caret = a?.tagName === 'INPUT' && a.type !== 'checkbox' ? [a.selectionStart, a.selectionEnd] : null;
+        const scrolls = [...stage.querySelectorAll('[data-scroll]')].map((el) => [el.dataset.scroll, el.scrollTop, el.scrollLeft]);
+        S.rerender = true;
+        stage.classList.add('static');
+        const fresh = UI.fresh;
+        stage.innerHTML = variants[current]();
+        S.rerender = false;
+        scrolls.forEach(([k, top, left]) => {
+          const el = stage.querySelector(`[data-scroll="${k}"]`);
+          if (el) Object.assign(el, { scrollTop: top, scrollLeft: left });
+        });
+        const el = key && stage.querySelector(`[data-k="${CSS.escape(key)}"]`);
+        if (el) {
+          el.focus({ preventScroll: true });
+          if (caret && el.setSelectionRange) el.setSelectionRange(...caret);
+        }
+        if (UI.focusDrawer) {
+          stage.querySelector('.drawer .drawer__body button, .drawer .drawer__body input')?.focus({ preventScroll: true });
+          UI.focusDrawer = false;
+        }
+        if (fresh) {
+          stage.querySelector(`[data-drop="${fresh}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+          UI.fresh = null;
+        }
+      }
+
+      function act(name, el) {
+        const v = el.dataset.v;
+        const w = el.dataset.w && findW(el.dataset.w);
+        const B = board();
+        const tog = (set, x) => (set.has(x) ? set.delete(x) : set.add(x));
+        switch (name) {
+          case 'layout':
+            w.layout = v;
+            break;
+          case 'size':
+            w.size = v;
+            break;
+          case 'width':
+            w.width = v;
+            break;
+          case 'count':
+            w.count = Number(v);
+            break;
+          case 'toggle':
+            w.open = !w.open;
+            UI.enter = w.open ? 'ctl-' + w.id : null;
+            break;
+          case 'remove':
+            B.splice(B.indexOf(w), 1);
+            if (UI.sel === w.id) UI.sel = null;
+            break;
+          case 'move': {
+            const i = B.indexOf(w);
+            const j = i + Number(v);
+            if (j < 0 || j >= B.length) return;
+            B.splice(j, 0, B.splice(i, 1)[0]);
+            break;
+          }
+          case 'add': {
+            const nw = W(v, { size: { videos: 'W', changelog: 'L', store: 'M', pins: 'M' }[v] || 'S', count: 6 });
+            B.push(nw);
+            UI.fresh = nw.id;
+            UI.addOpen = false;
+            UI.deckAdd = false;
+            if (current === 1) {
+              nw.open = true;
+              UI.enter = 'ctl-' + nw.id;
+            }
+            if (current === 2) UI.sel = nw.id;
+            break;
+          }
+          case 'fsrc':
+            tog(w.sources, v);
+            break;
+          case 'ftype':
+            tog(w.types, v);
+            break;
+          case 'farea':
+            w.area = el.value;
+            break;
+          case 'fver':
+            w.version = el.value;
+            break;
+          case 'funread':
+            w.unreadOnly = el.checked;
+            break;
+          case 'vch':
+            tog(w.channels, v);
+            break;
+          case 'store':
+            // Keep a custom title; follow the store name otherwise.
+            if (w.title === STORES[w.store].name) w.title = STORES[el.value].name;
+            w.store = el.value;
+            break;
+          case 'pinRemove':
+            w.pins.splice(Number(v), 1);
+            break;
+          case 'pinAdd': {
+            const form = el.closest('.pinform');
+            const urlInput = form.querySelector('[data-pin="url"]');
+            let url;
+            try {
+              url = new URL(urlInput.value.trim());
+            } catch {}
+            // Pins only accept https links, same rule as feed content.
+            if (!url || url.protocol !== 'https:') {
+              urlInput.setAttribute('aria-invalid', 'true');
+              urlInput.focus();
+              return;
+            }
+            w.pins.push([form.querySelector('[data-pin="label"]').value.trim() || url.hostname, url.href]);
+            break;
+          }
+          case 'rename':
+            w.title = el.value;
+            break;
+          case 'edit':
+            UI.editing = !UI.editing;
+            UI.enter = UI.editing ? "edit" : null;
+            UI.addOpen = false;
+            B.forEach((x) => (x.open = false));
+            break;
+          case 'addMenu':
+            UI.addOpen = !UI.addOpen;
+            UI.enter = UI.addOpen ? 'add' : null;
+            break;
+          case 'deckAdd':
+            UI.deckAdd = !UI.deckAdd;
+            if (UI.deckAdd) UI.fresh = 'add';
+            break;
+          case 'jump':
+            document.getElementById('col-' + w.id)?.scrollIntoView({ inline: 'start', block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+            return;
+          case 'customize':
+            if (UI.drawer && !UI.sel) UI.drawer = false;
+            else {
+              UI.enter = UI.drawer ? null : 'drawer';
+              Object.assign(UI, { drawer: true, sel: null, tab: 'list', focusDrawer: true });
+            }
+            break;
+          case 'inspect':
+            UI.enter = UI.drawer ? null : 'drawer';
+            Object.assign(UI, { drawer: true, sel: w.id, focusDrawer: true });
+            break;
+          case 'tab':
+            UI.tab = v;
+            break;
+          case 'back':
+            UI.sel = null;
+            UI.focusDrawer = true;
+            break;
+          case 'closeDrawer':
+            Object.assign(UI, { drawer: false, sel: null });
+            break;
+          case 'markread':
+            S.lastVisit = Date.now();
+            break;
+        }
+        rerender();
+      }
+
+      stage.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-act]');
+        if (!el || /^(INPUT|SELECT)$/.test(el.tagName)) return;
+        act(el.dataset.act, el);
+      });
+      stage.addEventListener('change', (e) => {
+        const el = e.target.closest('[data-act]');
+        if (el && el.dataset.act !== 'rename') act(el.dataset.act, el);
+      });
+      stage.addEventListener('input', (e) => {
+        if (e.target.dataset.act === 'rename') act('rename', e.target);
+        if (e.target.dataset.pin === 'url') e.target.removeAttribute('aria-invalid');
+      });
+      stage.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.dataset.pin) act('pinAdd', e.target.closest('.pinform').querySelector('[data-act="pinAdd"]'));
+      });
+
+      // Drag to reorder: widgets in Bento edit mode, column headers in Deck, the widget list in Gallery's drawer.
+      let dragId = null;
+      const clearDrag = () => stage.querySelectorAll('.dragging, .drop-target').forEach((x) => x.classList.remove('dragging', 'drop-target'));
+      stage.addEventListener('dragstart', (e) => {
+        const el = e.target.closest?.('[data-drag]');
+        if (!el) return;
+        dragId = el.dataset.drag;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragId);
+        el.closest('[data-drop]')?.classList.add('dragging');
+      });
+      stage.addEventListener('dragover', (e) => {
+        const t = e.target.closest?.('[data-drop]');
+        if (!dragId || !t) return;
+        e.preventDefault();
+        stage.querySelectorAll('.drop-target').forEach((x) => x !== t && x.classList.remove('drop-target'));
+        if (t.dataset.drop !== dragId) t.classList.add('drop-target');
+      });
+      stage.addEventListener('drop', (e) => {
+        const t = e.target.closest?.('[data-drop]');
+        if (!dragId || !t) return;
+        e.preventDefault();
+        const B = board();
+        const from = B.findIndex((w) => w.id === dragId);
+        const to = B.findIndex((w) => w.id === t.dataset.drop);
+        dragId = null;
+        if (from < 0 || to < 0 || from === to) return clearDrag();
+        B.splice(to, 0, B.splice(from, 1)[0]);
+        rerender();
+      });
+      stage.addEventListener('dragend', () => {
+        dragId = null;
+        clearDrag();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (UI.addOpen && !e.target.closest('.pop-anchor')) {
+          UI.addOpen = false;
+          rerender();
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (UI.addOpen) UI.addOpen = false;
+        else if (UI.deckAdd) UI.deckAdd = false;
+        else if (UI.drawer) Object.assign(UI, { drawer: false, sel: null });
+        else if (UI.editing) UI.editing = false;
+        else return;
+        rerender();
+      });
+      let lastCols = 0;
+      addEventListener('resize', () => {
+        if (current === 2 && galleryCols() !== lastCols) rerender();
+        lastCols = galleryCols();
+      });
+    </script>
+  </body>
+</html>

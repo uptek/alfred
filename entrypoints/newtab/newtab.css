@@ -1,0 +1,1356 @@
+/* Tokens: digg.com's light and dark palettes. */
+:root {
+  color-scheme: light;
+  --bg: #fdfdff;
+  --side: #f8f8fb;
+  --side-text: #161617;
+  --surface: #fff;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-2: #e5e5e5;
+  --hover: #f0f0f5;
+  --press: #e5e5ea;
+  --text: #161617;
+  --text-2: #3d3d40;
+  --muted: #5b5b5c;
+  --faint: #8a8a8b;
+  --accent: #1c66eb;
+  --tint: #ebf1fd;
+  --tint-line: #d0defb;
+  --attn: #cc434d;
+  --ok: #1f8a4c;
+  --warn: #b26a00;
+  --shadow-pop: 0 0 0 1px rgba(22, 22, 23, 0.06), 0 12px 32px rgba(22, 22, 23, 0.14);
+  --sans: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'SF Mono', ui-monospace, Menlo, monospace;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Where the page starts, right of the sidebar. Phones hide the sidebar. */
+  --side-w: 0px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #161617;
+    --side: #0f0f10;
+    --side-text: #ccccce;
+    --surface: #1c1c1f;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-2: #39393a;
+    --hover: #242429;
+    --press: #2f2f34;
+    --text: #fdfdff;
+    --text-2: #ccccce;
+    --muted: #b8b8b9;
+    --faint: #7c7c7e;
+    --tint: #172030;
+    --tint-line: #172541;
+    --attn: #f47067;
+    --ok: #3fb950;
+    --warn: #d29b3a;
+    --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #161617;
+  --side: #0f0f10;
+  --side-text: #ccccce;
+  --surface: #1c1c1f;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: #39393a;
+  --hover: #242429;
+  --press: #2f2f34;
+  --text: #fdfdff;
+  --text-2: #ccccce;
+  --muted: #b8b8b9;
+  --faint: #7c7c7e;
+  --tint: #172030;
+  --tint-line: #172541;
+  --attn: #f47067;
+  --ok: #3fb950;
+  --warn: #d29b3a;
+  --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 400 14px/20px var(--sans);
+  letter-spacing: -0.0065em;
+  -webkit-font-smoothing: antialiased;
+}
+button {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+a {
+  color: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+code {
+  font: 500 0.88em var(--mono);
+  background: var(--hover);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.e {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ---------- Sidebar ---------- */
+.side {
+  position: sticky;
+  top: 0;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  width: var(--side-w);
+  height: 100vh;
+  padding: 18px 12px 16px;
+  background: var(--side);
+  border-right: 1px solid var(--line);
+  color: var(--side-text);
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 200ms var(--ease-out);
+}
+@media (min-width: 861px) {
+  :root {
+    --side-w: 256px;
+  }
+  :root:has(.side.mini) {
+    --side-w: 77px;
+  }
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px 24px;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+}
+.logo img {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+.nav {
+  display: grid;
+  gap: 8px;
+}
+.nav-i {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  text-align: left;
+  transition: background-color 120ms ease-out;
+}
+.nav-i .e {
+  width: 28px;
+  font-size: 22px;
+  text-align: center;
+}
+.nav-i .e svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin: auto;
+}
+/* Sets Saved apart from the feeds above it. */
+.nav-sep {
+  height: 1px;
+  margin: 4px 12px;
+  border: 0;
+  background: var(--line);
+}
+.nav-i:hover {
+  background: var(--hover);
+}
+.nav-i[aria-current='page'] {
+  background: var(--hover);
+}
+.nav-i small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.side-foot {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+}
+.soft {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--hover);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 120ms ease-out;
+}
+.soft:hover {
+  background: var(--press);
+}
+.soft svg {
+  width: 20px;
+  height: 20px;
+}
+/* Theme switcher above the sidebar toggle. Collapsed, both shrink to their icons in place. */
+.side .side-foot .soft {
+  position: relative;
+  overflow: hidden;
+}
+/* The icon keeps its spot, so the button shrinks around it. */
+.side .side-foot svg {
+  position: absolute;
+  left: 16.5px;
+}
+/* The label stays centered on the expanded button's width (sidebar minus padding), so the narrowing button clips it rather than sliding it over the icon. */
+.side .side-foot span {
+  position: absolute;
+  left: 0;
+  width: 232px;
+  text-align: center;
+}
+/* Collapsed: one column of icons. Everything keeps its left edge, so nothing shifts. */
+.side .nav-i {
+  overflow: hidden;
+}
+.side .nav-i .e {
+  flex: none;
+}
+/* Words fade out while the sidebar narrows over them. */
+.logo span,
+.side .nav-i small,
+.side .side-foot span {
+  transition: opacity 150ms ease-out;
+}
+.side.mini .logo span,
+.side.mini .nav-i small,
+.side.mini .side-foot span {
+  opacity: 0;
+}
+
+/* Phone bar replaces the sidebar. */
+.mbar {
+  display: none;
+}
+
+/* ---------- Icon button ---------- */
+.ib {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: var(--text-2);
+  transition: background-color 120ms ease-out;
+}
+.ib:hover {
+  background: var(--press);
+}
+.ib svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- Story row ---------- */
+/* Rows bleed past the column so their hover fill has room; hairlines sit between them. */
+.st {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  margin: 0 -16px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: background-color 100ms ease-out;
+}
+.st:hover {
+  background: var(--hover);
+}
+.st:hover .st-t {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.st + .st::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 16px;
+  left: 16px;
+  border-top: 1px solid var(--line);
+}
+.st:is(:hover, [aria-current='true'])::before,
+.st:is(:hover, [aria-current='true']) + .st::before {
+  border-color: transparent;
+}
+.st:focus-visible {
+  outline-offset: -2px;
+}
+.st-b {
+  flex: 1;
+  min-width: 0;
+}
+.st-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+.flag {
+  font-weight: 600;
+}
+.flag.attn {
+  color: var(--attn);
+}
+.flag.warn {
+  color: var(--warn);
+}
+.st-t {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.0075em;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+.st-d {
+  display: -webkit-box;
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.st-f {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 10px;
+  color: var(--muted);
+}
+.st-f b {
+  font-weight: 600;
+}
+.st-th {
+  flex: none;
+  width: 108px;
+  height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--hover);
+  outline: 1px solid var(--line);
+  outline-offset: -1px;
+}
+
+/* Save pill, shaped like Digg's vote pill. */
+.dig {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 4px;
+  border: 1px solid var(--tint-line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  transition: transform 120ms var(--ease-out);
+}
+.dig:active {
+  transform: scale(0.97);
+}
+.dig i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 24px;
+  border-radius: 999px;
+  font-style: normal;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+.dig:hover i {
+  background: var(--tint);
+}
+.dig svg {
+  width: 18px;
+  height: 18px;
+}
+.dig[aria-pressed='true'] i {
+  background: var(--accent);
+  color: #fff;
+}
+.dig[aria-pressed='true'] svg path {
+  fill: currentColor;
+}
+.face {
+  position: relative;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #fff;
+}
+.face img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 3px;
+  object-fit: cover;
+}
+
+/* ---------- Index ---------- */
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+.fp-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 696px) 376px;
+  justify-content: center;
+  gap: 48px;
+  padding: 0 32px 120px;
+}
+/* Without the rail, the feed takes the middle on its own. */
+.fp-main:not(:has(.rail)) {
+  grid-template-columns: minmax(0, 696px);
+}
+.feed {
+  min-width: 0;
+  padding-top: 12px;
+}
+/* Home search: the field wears the focus ring, since the input inside it is borderless. */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  margin: 4px 0 16px;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: text;
+}
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.search svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+}
+.search input::placeholder {
+  color: var(--faint);
+}
+.search:focus-within kbd {
+  display: none;
+}
+.search-n {
+  margin: -8px 4px 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.more {
+  display: block;
+  height: 40px;
+  margin: 20px auto 0;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--hover);
+  font-weight: 500;
+}
+.more:hover {
+  background: var(--press);
+}
+.empty {
+  padding: 64px 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 15px;
+}
+.empty .e {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 40px;
+}
+
+/* The rail stays in view while the feed scrolls, and scrolls on its own when it's taller than the window. */
+.rail {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: grid;
+  gap: 12px;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 12px 0 24px;
+  scrollbar-width: thin;
+}
+.card {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+.card h3 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.0075em;
+}
+
+.card-p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+.src {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.src img {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--hover);
+}
+.src h3 {
+  margin: 0;
+}
+.src small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.stats {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.stats div {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--hover);
+}
+.stats dt {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.stats dd {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* API calendar: the next version, and how far the quarter has run toward it. */
+.ver {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.ver b {
+  font: 700 28px/32px var(--mono);
+  letter-spacing: -0.02em;
+}
+.ver span {
+  color: var(--muted);
+}
+.bar {
+  height: 6px;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  background: var(--hover);
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+.arow {
+  display: grid;
+  text-decoration: none;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+.arow:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+/* Shopify status: one dot for the whole platform, then one per service. */
+.status-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.status-h h3 {
+  margin: 0;
+}
+.status-h a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: none;
+}
+.status-h a svg {
+  width: 14px;
+  height: 14px;
+}
+.status-h a:hover {
+  text-decoration: underline;
+}
+.status-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-weight: 600;
+}
+.status-now i,
+.comps i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.status-now.minor i,
+.comps .degraded_performance i {
+  background: var(--warn);
+}
+.status-now:is(.major, .critical) i,
+.comps :is(.partial_outage, .major_outage) i {
+  background: var(--attn);
+}
+.status-now.maintenance i,
+.comps .under_maintenance i {
+  background: var(--accent);
+}
+.comps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 18px;
+}
+.comps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.rail-note {
+  margin: 0 8px;
+  color: var(--faint);
+  font-size: 12px;
+}
+.rail-note button {
+  color: var(--accent);
+  font-weight: 500;
+}
+.rail-note button:hover {
+  text-decoration: underline;
+}
+
+.vrow {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 6px 0;
+  text-decoration: none;
+}
+.vrow img {
+  width: 84px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--hover);
+}
+.vrow b,
+.arow b {
+  display: -webkit-box;
+  overflow: hidden;
+  font-weight: 500;
+  line-height: 19px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.vrow small,
+.arow small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.vrow:hover b,
+.arow:hover b {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/* ---------- Reader ---------- */
+/* The feed steps aside into a column, and the open story fills the rest. The window still scrolls the feed. */
+.fp-main.reading {
+  grid-template-columns: 400px minmax(0, 1fr);
+  justify-content: stretch;
+  gap: 0;
+  padding: 0;
+}
+.reading .feed {
+  padding: 0 24px 120px;
+  border-right: 1px solid var(--line);
+}
+/* Keeps a row scrolled into view clear of the sticky header. */
+.reading .st {
+  scroll-margin-top: 60px;
+}
+.st[aria-current='true'] {
+  background: var(--press);
+}
+.rd-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 -24px 8px;
+  padding: 14px 16px 12px 18px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.rd-head h2 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.0075em;
+}
+.rd-detail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  background: var(--bg);
+  view-transition-name: reader;
+}
+.rd-top {
+  padding: 12px 24px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rd-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+.rd-bar .st-top {
+  flex: 1;
+  margin: 0;
+}
+.rd-top h1 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.rd-top .st-f {
+  margin: 12px 0 14px;
+}
+.frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--surface);
+}
+.frame-wait {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  font-size: 13px;
+}
+.frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+.frame iframe.on {
+  opacity: 1;
+}
+.only-m {
+  display: none;
+}
+.keys {
+  color: var(--faint);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.keys kbd,
+.search kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  font: 500 11px var(--mono);
+}
+
+/* ---------- Videos ---------- */
+/* One column, clipped at the sidebar so the player's glow can't spill over it. */
+.fp-main.wide {
+  display: block;
+  overflow-x: clip;
+}
+.vids {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+.vhead {
+  padding-top: 40px;
+}
+.vhead h1 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.vhead p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.tabs {
+  display: flex;
+  gap: 28px;
+  margin-top: 28px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+.tab {
+  position: relative;
+  flex: none;
+  padding-bottom: 14px;
+  color: var(--muted);
+  font-weight: 600;
+  transition: color 120ms ease-out;
+}
+.tab:hover,
+.tab[aria-pressed='true'] {
+  color: var(--text);
+}
+.tab[aria-pressed='true']::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--text);
+}
+.vgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 44px 28px;
+  padding-top: 32px;
+}
+.vc {
+  position: relative;
+  min-width: 0;
+}
+.vc-a {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+.vc-a:focus-visible {
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+.vc b {
+  display: -webkit-box;
+  margin-top: 12px;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: -0.0075em;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.vc small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.vth {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--hover);
+}
+.vth img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 200ms var(--ease-out);
+}
+.vplay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: auto;
+  border-radius: 50%;
+  background: rgba(12, 12, 16, 0.72);
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms var(--ease-out);
+}
+.vplay svg {
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+}
+@media (hover: hover) {
+  .vc-a:hover .vth img {
+    transform: scale(1.03);
+  }
+  .vc-a:hover .vplay {
+    opacity: 1;
+    transform: none;
+  }
+  .vc-a:hover b {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+}
+.vc-a:focus-visible .vplay {
+  opacity: 1;
+  transform: none;
+}
+/* Save sits on the thumbnail: shown on hover, on focus, and once saved. */
+.vsave {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(12, 12, 16, 0.72);
+  color: #fff;
+  opacity: 0;
+  transition:
+    opacity 150ms ease-out,
+    transform 120ms var(--ease-out);
+}
+.vsave svg {
+  width: 18px;
+  height: 18px;
+}
+.vsave:active {
+  transform: scale(0.94);
+}
+.vc:hover .vsave,
+.vsave:focus-visible,
+.vsave[aria-pressed='true'] {
+  opacity: 1;
+}
+.vsave[aria-pressed='true'] svg path,
+.act[aria-pressed='true'] svg path {
+  fill: currentColor;
+}
+@media (hover: none) {
+  .vsave {
+    opacity: 1;
+  }
+  /* Touch screens have no "/" key to press. */
+  .search kbd {
+    display: none;
+  }
+}
+
+/* Watch page. */
+.vbar {
+  padding: 12px 0;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px 0 12px;
+  border-radius: 999px;
+  background: var(--hover);
+  font-weight: 500;
+  transition: background-color 120ms ease-out;
+}
+.back:hover {
+  background: var(--press);
+}
+.back svg {
+  width: 20px;
+  height: 20px;
+}
+/* As wide as the page allows while the title under the player stays on screen. */
+.vfit {
+  position: relative;
+  width: min(100%, calc((100vh - 230px) * 16 / 9));
+  margin-inline: auto;
+}
+/* Behind everything on the page, so cards and the sidebar stay clean. */
+.glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(72px) saturate(1.7);
+  opacity: 0.5;
+  transform: scale(1.06);
+  pointer-events: none;
+  animation: glow-in 300ms ease-out;
+}
+@keyframes glow-in {
+  from {
+    opacity: 0;
+  }
+}
+.player {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #000;
+  view-transition-name: player;
+}
+.player img,
+.player iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+.player iframe {
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+.player iframe.on {
+  opacity: 1;
+}
+.vinfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 32px 0 28px;
+  border-bottom: 1px solid var(--line);
+}
+.vinfo h1 {
+  margin: 3px 0 0;
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.vinfo p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.acts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-top: 6px;
+}
+.act {
+  flex: none;
+  padding: 0 16px 0 13px;
+}
+.act:active {
+  transform: scale(0.97);
+}
+.act[aria-pressed='true'] {
+  background: var(--accent);
+  color: #fff;
+}
+.vnext {
+  margin: 28px 0 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.0075em;
+}
+.vnext + .vgrid {
+  padding-top: 20px;
+}
+/* A card's thumbnail grows into the player, and the player shrinks back into it. */
+::view-transition-group(player) {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: ease-out;
+}
+/* Opening or closing a story crossfades the page in place, and the story pane eases in from just beside its spot. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-new(reader) {
+    animation: pane-in 200ms var(--ease-out) both;
+  }
+  ::view-transition-old(reader) {
+    animation: pane-out 150ms var(--ease-out) both;
+  }
+}
+@keyframes pane-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+/* Its own keyframes: played in reverse, the ease-out curve would start slow. */
+@keyframes pane-out {
+  to {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dig,
+  .side,
+  .logo span,
+  .nav-i small,
+  .side-foot span,
+  .vth img,
+  .vplay,
+  .vsave,
+  .act,
+  .player iframe {
+    transition: none;
+  }
+  .glow {
+    animation: none;
+  }
+  /* Page changes crossfade in place. */
+  ::view-transition-group(*) {
+    animation: none;
+  }
+}
+@media (max-width: 1180px) {
+  .fp-main {
+    grid-template-columns: minmax(0, 696px);
+  }
+  .fp-main .rail {
+    display: none;
+  }
+  .fp-main.reading {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+  .vinfo {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .acts {
+    margin-left: 0;
+  }
+}
+@media (max-width: 860px) {
+  .side {
+    display: none;
+  }
+  .mbar {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .mbar .logo {
+    flex: none;
+    padding: 0;
+    font-size: 20px;
+  }
+  .mbar .logo img {
+    width: 24px;
+    height: 24px;
+  }
+  .mbar nav {
+    display: flex;
+    gap: 4px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .mbar .nav-i {
+    flex: none;
+    height: 36px;
+    gap: 6px;
+    padding: 0 12px;
+  }
+  .mbar .nav-i .e {
+    width: auto;
+    font-size: 16px;
+  }
+  .mbar .nav-i .e svg {
+    width: 18px;
+    height: 18px;
+  }
+  .mbar .nav-sep {
+    flex: none;
+    width: 1px;
+    height: 20px;
+    margin: 0 4px;
+    align-self: center;
+  }
+  .app {
+    flex-direction: column;
+  }
+  .fp-main {
+    padding: 0 16px 120px;
+  }
+  .st-th {
+    width: 84px;
+    height: 64px;
+  }
+  /* Phones show the feed or the open story, not both. */
+  .fp-main.reading {
+    display: block;
+  }
+  .reading .feed {
+    padding: 0 16px 120px;
+    border-right: 0;
+  }
+  /* The phone bar holds the top, so the header scrolls with the feed. */
+  .rd-head {
+    position: static;
+    margin: 0 -16px 8px;
+  }
+  .rd-detail {
+    display: none;
+  }
+  .rd-top {
+    padding: 10px 16px 0;
+  }
+  .m-open .mbar,
+  .m-open .feed {
+    display: none;
+  }
+  .m-open .rd-detail {
+    display: flex;
+  }
+  .only-m {
+    display: grid;
+  }
+  .keys {
+    display: none;
+  }
+}

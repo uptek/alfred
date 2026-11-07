@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Alfred new tab prototype",
+  "version": "0.0.1",
+  "description": "Static prototype of the Alfred new tab, packed so community threads can load in Reader.",
+  "permissions": [
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "https://community.shopify.dev/*",
+    "https://www.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "action": {
+    "default_title": "Open the new tab prototype"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}

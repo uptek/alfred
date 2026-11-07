@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Alfred new tab MVP prototype",
+  "version": "0.0.1",
+  "description": "Static MVP prototype of the Alfred new tab.",
+  "permissions": [
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "https://community.shopify.dev/*",
+    "https://www.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}

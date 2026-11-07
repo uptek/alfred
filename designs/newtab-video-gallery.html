@@ -1,0 +1,1437 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alfred new tab: Video gallery</title>
+    <link rel="icon" href="../assets/icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet" />
+    <style>
+      /* ---------- Tokens and base, same as entrypoints/newtab/newtab.css ---------- */
+      :root {
+        color-scheme: light;
+        --bg: #fcfcfd;
+        --side: #f6f6f8;
+        --surface: #fff;
+        --line: #ececf0;
+        --line-2: #dcdde3;
+        --hover: #f0f0f4;
+        --press: #e7e7ed;
+        --text: #121216;
+        --text-2: #3d3e46;
+        --muted: #6c6d78;
+        --faint: #9b9ca6;
+        --accent: #4f57c4;
+        --tint: #eef0fd;
+        --tint-line: #d9ddf7;
+        --shadow-pop: 0 0 0 1px rgba(17, 17, 22, 0.06), 0 12px 32px rgba(17, 17, 22, 0.14);
+        --sans: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          color-scheme: dark;
+          --bg: #1b2027;
+          --side: #212830;
+          --surface: #232a33;
+          --line: #2e353f;
+          --line-2: #3d4550;
+          --hover: #29303a;
+          --press: #323a45;
+          --text: #e3e6ec;
+          --text-2: #c0c5ce;
+          --muted: #9198a1;
+          --faint: #6e7681;
+          --accent: #8d95f0;
+          --tint: #2a2f4d;
+          --tint-line: #3a4170;
+          --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 12px 32px rgba(0, 0, 0, 0.45);
+        }
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --bg: #1b2027;
+        --side: #212830;
+        --surface: #232a33;
+        --line: #2e353f;
+        --line-2: #3d4550;
+        --hover: #29303a;
+        --press: #323a45;
+        --text: #e3e6ec;
+        --text-2: #c0c5ce;
+        --muted: #9198a1;
+        --faint: #6e7681;
+        --accent: #8d95f0;
+        --tint: #2a2f4d;
+        --tint-line: #3a4170;
+        --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 12px 32px rgba(0, 0, 0, 0.45);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font: 400 14px/1.45 var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      svg {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .e {
+        font-size: 13px;
+        line-height: 1;
+      }
+
+      /* ---------- Sidebar (context, not a contestant) ---------- */
+      .fp {
+        display: flex;
+        min-height: 100vh;
+      }
+      .side {
+        position: sticky;
+        top: 0;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        width: 256px;
+        height: 100vh;
+        padding: 18px 12px 16px;
+        background: var(--side);
+        border-right: 1px solid var(--line);
+        overflow: hidden;
+        white-space: nowrap;
+        transition: width 200ms var(--ease-out);
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 12px 24px;
+        font-size: 23px;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+      }
+      .logo img {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+      }
+      .nav {
+        display: grid;
+        gap: 4px;
+      }
+      .nav-i {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 44px;
+        padding: 0 14px;
+        overflow: hidden;
+        border-radius: 14px;
+        font-size: 14.5px;
+        font-weight: 500;
+        transition: background-color 120ms ease-out;
+      }
+      .nav-i .e {
+        flex: none;
+        width: 26px;
+        font-size: 21px;
+        text-align: center;
+      }
+      .nav-i:hover {
+        background: var(--hover);
+      }
+      .nav-i[aria-current='page'] {
+        background: var(--press);
+        font-weight: 600;
+      }
+      .nav-i small {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .side-foot {
+        display: flex;
+        gap: 8px;
+        margin-top: auto;
+      }
+      .soft {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 38px;
+        border-radius: 999px;
+        background: var(--hover);
+        font-size: 14px;
+        font-weight: 500;
+        transition:
+          background-color 120ms ease-out,
+          transform 120ms var(--ease-out);
+      }
+      .soft:hover {
+        background: var(--press);
+      }
+      .soft:active {
+        transform: scale(0.97);
+      }
+      .soft:disabled {
+        opacity: 0.4;
+        pointer-events: none;
+      }
+      .soft svg {
+        width: 15px;
+        height: 15px;
+      }
+      .side .side-btn {
+        flex: none;
+        width: 54px;
+      }
+      .side.mini {
+        width: 79px;
+      }
+      .side.mini .logo {
+        width: 40px;
+        padding-right: 0;
+        overflow: hidden;
+      }
+      .side.mini .side-foot {
+        flex-direction: column-reverse;
+      }
+      .side.mini .side-foot .soft {
+        flex: none;
+        width: 54px;
+      }
+      .side.mini #theme-btn span {
+        display: none;
+      }
+
+      /* ---------- Shared pieces ---------- */
+      .vp {
+        flex: 1;
+        min-width: 0;
+        padding: 0 32px 120px;
+      }
+      .vp-in {
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+      .vh {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 14px 0 12px;
+        background: var(--bg);
+      }
+      .vh h1 {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .ib {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        color: var(--text-2);
+        transition: background-color 120ms ease-out;
+      }
+      .ib:hover {
+        background: var(--press);
+      }
+      .ib:disabled {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+      .ib svg {
+        width: 17px;
+        height: 17px;
+      }
+      .st-top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .flag.sub {
+        color: var(--muted);
+      }
+      .st-f {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 10px;
+        color: var(--muted);
+        font-size: 13.5px;
+      }
+      .dig {
+        display: inline-flex;
+        align-items: center;
+        height: 32px;
+        padding: 3px;
+        border: 1px solid var(--tint-line);
+        border-radius: 999px;
+        background: var(--surface);
+        transition:
+          transform 120ms var(--ease-out),
+          border-color 120ms ease-out;
+      }
+      .dig:hover {
+        border-color: var(--accent);
+      }
+      .dig:active {
+        transform: scale(0.97);
+      }
+      .dig i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        height: 24px;
+        border-radius: 999px;
+        background: var(--tint);
+        color: var(--accent);
+        transition:
+          background-color 150ms ease-out,
+          color 150ms ease-out;
+      }
+      .dig svg {
+        width: 13px;
+        height: 13px;
+      }
+      .dig[aria-pressed='true'] i {
+        background: var(--accent);
+        color: #fff;
+      }
+      .dig[aria-pressed='true'] svg path {
+        fill: currentColor;
+      }
+
+      /* A 16:9 thumbnail with a play disc that shows on hover or focus. */
+      .th16 {
+        position: relative;
+        display: block;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border-radius: 12px;
+        background: var(--hover);
+      }
+      .th16 img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 200ms var(--ease-out);
+      }
+      .pg {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        margin: auto;
+        border-radius: 50%;
+        background: rgba(12, 12, 16, 0.72);
+        color: #fff;
+        opacity: 0;
+        transform: scale(0.9);
+        transition:
+          opacity 150ms ease-out,
+          transform 150ms var(--ease-out);
+      }
+      .pg svg {
+        width: 18px;
+        height: 18px;
+        margin-left: 2px;
+      }
+      .pg.big {
+        width: 68px;
+        height: 68px;
+        opacity: 1;
+        transform: none;
+      }
+      .pg.big svg {
+        width: 26px;
+        height: 26px;
+      }
+
+      /* Starts at the top of its cell: a stretched button would center a short title. */
+      .vc {
+        display: block;
+        align-self: start;
+        min-width: 0;
+        text-align: left;
+      }
+      .vc b {
+        display: -webkit-box;
+        margin-top: 10px;
+        overflow: hidden;
+        font-size: 14.5px;
+        font-weight: 600;
+        line-height: 20px;
+        letter-spacing: -0.005em;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .vc small {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      @media (hover: hover) {
+        .vc:hover b {
+          text-decoration: underline;
+          text-decoration-thickness: 1px;
+          text-underline-offset: 3px;
+          text-decoration-color: var(--faint);
+        }
+      }
+
+      .player {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border-radius: 16px;
+        background: #000;
+      }
+      .player iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      /* ---------- Shared by the galleries ---------- */
+      /* Clips the watch page's full-bleed stage and glow at the sidebar without making a scroll container. */
+      .vp {
+        overflow-x: clip;
+      }
+      .vc {
+        position: relative;
+      }
+      .vc-a {
+        display: block;
+      }
+      .vc-a:focus-visible {
+        outline-offset: 4px;
+        border-radius: 12px;
+      }
+      @media (hover: hover) {
+        .vc-a:hover .th16 img {
+          transform: scale(1.03);
+        }
+        .vc-a:hover .pg {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .vc-a:focus-visible .pg {
+        opacity: 1;
+        transform: none;
+      }
+      /* Save sits on the thumbnail: shown on hover, on focus, and once saved. */
+      .wl {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(12, 12, 16, 0.72);
+        color: #fff;
+        opacity: 0;
+        transition:
+          opacity 150ms ease-out,
+          transform 120ms var(--ease-out);
+      }
+      .wl svg {
+        width: 15px;
+        height: 15px;
+      }
+      .wl:active {
+        transform: scale(0.94);
+      }
+      .vc:hover .wl,
+      .wl:focus-visible,
+      .wl[aria-pressed='true'] {
+        opacity: 1;
+      }
+      .wl[aria-pressed='true'] svg path,
+      .act[aria-pressed='true'] svg path {
+        fill: currentColor;
+      }
+      @media (hover: none) {
+        .wl {
+          opacity: 1;
+        }
+      }
+
+      /* The poster holds the frame until the player has loaded over it. */
+      .player > img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .player iframe {
+        opacity: 0;
+        transition: opacity 200ms ease-out;
+      }
+      .player iframe.on {
+        opacity: 1;
+      }
+      /* As wide as the page allows while the title under the player stays on screen. */
+      .fit {
+        width: min(100%, calc((100vh - 230px) * 16 / 9));
+        margin-inline: auto;
+      }
+      .bar {
+        padding: 12px 0;
+      }
+      .back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 16px 0 10px;
+        border-radius: 999px;
+        background: var(--hover);
+        font-weight: 500;
+        transition: background-color 120ms ease-out;
+      }
+      .back:hover {
+        background: var(--press);
+      }
+      .back svg {
+        width: 16px;
+        height: 16px;
+      }
+      .acts {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .soft.act {
+        flex: none;
+        padding: 0 16px 0 13px;
+      }
+      .act[aria-pressed='true'] {
+        background: var(--tint);
+        color: var(--accent);
+      }
+      .av {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--hover);
+        font-size: 17px;
+        line-height: 1;
+      }
+
+      /* ---------- 1. Stream ---------- */
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: var(--hover);
+        font-size: 13.5px;
+        font-weight: 500;
+        transition: background-color 120ms ease-out;
+      }
+      .chip:hover {
+        background: var(--press);
+      }
+      .chip[aria-pressed='true'] {
+        background: var(--text);
+        color: var(--bg);
+      }
+      .chip small {
+        font-size: 12px;
+        opacity: 0.6;
+      }
+      .s-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 32px 16px;
+        padding-top: 10px;
+      }
+      .s-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .s-row > span:last-child {
+        min-width: 0;
+      }
+      .s-row b {
+        margin-top: 0;
+      }
+      .s-row small {
+        margin-top: 4px;
+      }
+      .s-watch h1 {
+        margin: 18px 0 0;
+        font-size: 22px;
+        line-height: 28px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+      }
+      .s-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 14px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--line);
+      }
+      .s-meta .av {
+        width: 40px;
+        height: 40px;
+        font-size: 19px;
+      }
+      .s-meta b {
+        display: block;
+        font-size: 14.5px;
+        font-weight: 600;
+      }
+      .s-meta small {
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      .s-meta .acts {
+        margin-left: auto;
+      }
+      .s-next {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px 0 8px;
+      }
+      .s-next h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      /* ---------- 2. Cinema ---------- */
+      .c-head {
+        padding-top: 40px;
+      }
+      .c-head h1 {
+        margin: 0;
+        font-size: 36px;
+        line-height: 40px;
+        font-weight: 800;
+        letter-spacing: -0.035em;
+      }
+      .c-head p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .tabs {
+        display: flex;
+        gap: 28px;
+        margin-top: 28px;
+        border-bottom: 1px solid var(--line);
+      }
+      .tab {
+        position: relative;
+        padding-bottom: 14px;
+        color: var(--muted);
+        font-size: 14.5px;
+        font-weight: 600;
+        transition: color 120ms ease-out;
+      }
+      .tab:hover,
+      .tab[aria-pressed='true'] {
+        color: var(--text);
+      }
+      .tab[aria-pressed='true']::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        bottom: -1px;
+        left: 0;
+        height: 2px;
+        background: var(--text);
+      }
+      .c-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 44px 28px;
+        padding-top: 32px;
+      }
+      .c-grid .th16 {
+        border-radius: 10px;
+      }
+      .c-grid .vc b {
+        margin-top: 14px;
+        font-size: 16.5px;
+        line-height: 23px;
+        letter-spacing: -0.012em;
+      }
+      .c-grid .vc small {
+        margin-top: 5px;
+        font-size: 13px;
+      }
+      /* The stage runs edge to edge and stays dark in both themes. */
+      .c-stage {
+        margin: 0 -32px;
+        padding: 14px 32px 36px;
+        background: #0b0c0f;
+      }
+      .c-stage .back {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+      .c-stage .back:hover {
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .c-stage .fit {
+        margin-top: 14px;
+      }
+      .c-stage .player {
+        border-radius: 10px;
+        view-transition-name: player;
+      }
+      .c-info {
+        display: flex;
+        align-items: flex-start;
+        gap: 32px;
+        padding: 28px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .c-info h1 {
+        margin: 8px 0 0;
+        font-size: 30px;
+        line-height: 36px;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        text-wrap: balance;
+      }
+      .c-info p {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+      .c-info .acts {
+        margin-left: auto;
+        padding-top: 6px;
+      }
+      .c-next {
+        margin: 28px 0 0;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .c-next + .c-grid {
+        padding-top: 20px;
+      }
+      /* The clicked thumbnail grows into the player, and shrinks back on the way out. */
+      ::view-transition-group(player) {
+        animation-duration: 280ms;
+        animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation-duration: 200ms;
+        animation-timing-function: ease-out;
+      }
+
+      /* ---------- 3. Mosaic ---------- */
+      .segt {
+        display: flex;
+        margin-left: auto;
+        padding: 3px;
+        border-radius: 999px;
+        background: var(--hover);
+      }
+      .segt button {
+        height: 30px;
+        padding: 0 14px;
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .segt button[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+      /* Every ninth tile is a feature, alternating sides. Dense flow packs four small tiles beside it. */
+      .m-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-auto-flow: dense;
+        gap: 28px 20px;
+        padding-top: 10px;
+      }
+      .m-grid .big {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+      .m-grid .big.r {
+        grid-column: 3 / span 2;
+      }
+      .big .th16 {
+        border-radius: 18px;
+      }
+      .big .pg {
+        width: 60px;
+        height: 60px;
+      }
+      .big .pg svg {
+        width: 24px;
+        height: 24px;
+      }
+      .big .wl {
+        top: 12px;
+        right: 12px;
+        width: 36px;
+        height: 36px;
+      }
+      .vc.big .st-top {
+        margin-top: 16px;
+      }
+      .vc.big b {
+        margin-top: 8px;
+        font-size: 24px;
+        line-height: 30px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .vc.big small {
+        margin-top: 6px;
+        font-size: 13.5px;
+      }
+      /* The thumbnail, blurred, spills the video's colors onto the page around the player. */
+      .amb-wrap {
+        position: relative;
+      }
+      .amb {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: blur(72px) saturate(1.7);
+        opacity: 0.5;
+        transform: scale(1.06);
+        pointer-events: none;
+        /* Behind everything on the page, so cards and the sidebar stay clean. */
+        z-index: -1;
+        animation: amb-in 300ms ease-out;
+      }
+      @keyframes amb-in {
+        from {
+          opacity: 0;
+        }
+      }
+      .m-grid.below {
+        padding-top: 36px;
+      }
+      /* What is playing takes the first feature slot of the grid under the player. */
+      .m-info {
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: var(--surface);
+      }
+      .m-info h1 {
+        margin: 10px 0 0;
+        font-size: 28px;
+        line-height: 34px;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        text-wrap: balance;
+      }
+      .m-info p {
+        margin: 10px 0 0;
+        color: var(--muted);
+      }
+      .m-info .acts {
+        margin-top: auto;
+        padding-top: 24px;
+      }
+
+      /* ---------- 4. Cinema Glow ---------- */
+      .g-watch .player {
+        border-radius: 14px;
+        view-transition-name: player;
+      }
+      .g-watch .c-info {
+        padding-top: 32px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .side,
+        .soft,
+        .th16 img,
+        .pg,
+        .wl,
+        .player iframe {
+          transition: none;
+        }
+        .amb {
+          animation: none;
+        }
+      }
+      @media (max-width: 1180px) {
+        .m-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .m-grid .big,
+        .m-grid .big.r {
+          grid-column: 1 / -1;
+          grid-row: auto;
+        }
+        .c-info {
+          flex-direction: column;
+          gap: 16px;
+        }
+        .c-info .acts {
+          margin-left: 0;
+        }
+      }
+      @media (max-width: 860px) {
+        .side {
+          display: none;
+        }
+        .vp {
+          padding: 0 16px 120px;
+        }
+        .c-stage {
+          margin: 0 -16px;
+          padding: 12px 16px 24px;
+        }
+        .s-meta {
+          flex-wrap: wrap;
+        }
+      }
+
+      /* ---------- Prototype picker: harness chrome, verbatim from the prototype skill ---------- */
+      .proto-picker {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 999px;
+        background: rgba(10, 10, 10, 0.82);
+        -webkit-backdrop-filter: blur(12px) saturate(1.4);
+        backdrop-filter: blur(12px) saturate(1.4);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+          0 8px 24px rgba(0, 0, 0, 0.24),
+          0 2px 6px rgba(0, 0, 0, 0.12);
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        font-size: 13px;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .proto-picker-highlight {
+        position: absolute;
+        top: 4px;
+        left: 0;
+        height: 28px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        will-change: transform;
+      }
+      /* The slide is enabled only after first paint (data-ready), so load doesn't animate. */
+      .proto-picker[data-ready] .proto-picker-highlight {
+        transition:
+          transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+          width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .proto-picker[data-ready] .proto-picker-highlight {
+          transition: none;
+        }
+      }
+      .proto-picker-item {
+        position: relative; /* sits above the highlight */
+        display: flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.55);
+        font: inherit;
+        cursor: pointer;
+        transition: color 150ms ease-out;
+      }
+      .proto-picker-item:hover {
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .proto-picker-item:active {
+        transform: scale(0.97);
+      }
+      .proto-picker-item:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.4);
+        outline-offset: 2px;
+      }
+      .proto-picker-item[data-active] {
+        color: #fff;
+      }
+      .proto-picker-divider {
+        width: 1px;
+        height: 16px;
+        margin: 0 4px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .proto-picker-replay {
+        padding: 0 10px;
+        font-size: 14px;
+      }
+      .proto-picker[data-position='top'] {
+        bottom: auto;
+        top: 24px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="fp">
+      <aside class="side" id="side">
+        <a class="logo" href="newtab-digg.html"><img src="../assets/icon.png" alt="" />alfred.</a>
+        <nav class="nav" aria-label="Sections">
+          <a class="nav-i" href="newtab-digg.html"><span class="e">🏠</span>Home</a>
+          <a class="nav-i" href="newtab-digg.html"><span class="e">🧩</span>Platform updates</a>
+          <a class="nav-i" href="newtab-digg.html"><span class="e">💬</span>Community</a>
+          <a class="nav-i" href="newtab-digg.html"><span class="e">⚙️</span>Engineering</a>
+          <a class="nav-i" href="" aria-current="page"><span class="e">📹</span>Videos</a>
+          <a class="nav-i" href="newtab-digg.html"><span class="e">🔖</span>Saved<small id="saved-n"></small></a>
+        </nav>
+        <div class="side-foot">
+          <button class="soft side-btn" id="side-btn" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M9 4v16" /></svg>
+          </button>
+          <button class="soft" id="theme-btn"></button>
+        </div>
+      </aside>
+      <main class="vp" id="stage"></main>
+    </div>
+
+    <nav class="proto-picker" aria-label="Prototype variants">
+      <span class="proto-picker-highlight" aria-hidden="true"></span>
+      <button class="proto-picker-item" data-active aria-current="true">Stream</button>
+      <button class="proto-picker-item">Cinema</button>
+      <button class="proto-picker-item">Mosaic</button>
+      <button class="proto-picker-item">Cinema Glow</button>
+    </nav>
+
+    <script>
+      // The 45 videos in entrypoints/newtab/data.json: [YouTube id, title, channel, date], newest first.
+      const RAW = [["KsujQDvKdHk","What is Shop? | Shopping designed around you",2,"2026-09-01"],["9rVN5ChMguc","Fireside Chat with Tobias Lütke and Guillermo Rauch | DotDev 2026",0,"2026-08-02"],["qajaXseoF7Q","This is life on Shopify",2,"2026-08-02"],["235Tn1bPmOI","Main Stage Keynote with Vanessa Lee | DotDev 2026",0,"2026-08-02"],["t5xslC6f7FY","Fireside Chat with Tobi Lütke & Harley Finkelstein | DotDev 2026",0,"2026-08-01"],["s8WQ83l3Rt0","DotDev 2026 Welcome with Atlee Clark",0,"2026-08-01"],["SNWlu1-k2zo","Shopify Build Awards | DotDev 2026",0,"2026-08-01"],["sf7zUi_8bhs","Spring ’26 Edition rundown",2,"2026-07-02"],["mWRMjEIh4hE","Build with Catalog API and UCP",2,"2026-07-02"],["dsW4E40Y0UI","Enhanced inventory management",2,"2026-07-02"],["K1nR7pe49cM","Actionable insights for agentic selling",2,"2026-07-02"],["DiJc9gsgzn8","Better context for your store's data",2,"2026-07-02"],["9LkIxHbr1Ik","Online to in person with the Shop app",2,"2026-07-02"],["37zOjqRl-3Q","Shopify POS checkout is over a minute faster",2,"2026-07-02"],["JMutPPVyqGQ","Ryan van Huuksloot - Flink SQL Toolkit",1,"2026-06-03"],["UWKeqVsn_dc","Daniel Rossos - Flink Table Source Reuse",1,"2026-06-03"],["2jctIBi1bbM","Flink Meetup Presentation Nov 12 2025 UDFs Made Easy",1,"2026-06-02"],["yVeHnWwvZZA","Fireside Chat: Quantum x AI and the Future",1,"2026-06-02"],["RkyuGgejOZU","Toronto Tech Week 2026",1,"2026-06-02"],["PanNn-3bg6Q","Dev Tooling in a New World",1,"2026-06-02"],["QbkVrCU8PLM","UCP & Agentic Commerce",1,"2026-06-02"],["MHkGzwn0PG8","SimGym",1,"2026-06-02"],["efUbUOO46VI","River: Shopify's Slack-native AI agent",2,"2026-06-02"],["uNOFaCq8RZQ","Tobi Lütke x Ilya Grigorik: Building the Universal Commerce Protocol",2,"2026-06-02"],["VAlvxLG0RZo","Tobi's first Autoresearch encounter",2,"2026-05-03"],["sqaxqH_GPFQ","Open-sourcing Shopify's Autoresearch contribution",2,"2026-05-03"],["08LyYlIMXbY","Tobi Lütke x Jess Hertz: Invisible Work",2,"2026-05-03"],["G9rsX4M5CmM","When everything feels uncertain, build something yourself",2,"2026-03-04"],["0N3SCe8W3ic","How to Create a Development Store || Shopify Academy",0,"2026-02-02"],["x0CXZj7hnKQ","AI Frontier: Battle for Intelligence & Compute Power | Shopify's Farhan Thawar x Groq's Sunny Madra",1,"2025-11-04"],["B7XK83NBJAI","Migrate from the Partner Dashboard",0,"2025-09-30"],["0_lDRHL9Wmk","How to use Shopify Theme Blocks: Full beginners guide || Shopify Academy",0,"2025-09-30"],["7w5iyvXdzWU","Understanding Shopify Theme Blocks || Shopify Academy",0,"2025-09-30"],["S7Omw0zDkyA","Sidekick Breakout Talk - Toronto Tech Week",1,"2025-09-30"],["GZCW4r6kNUU","Create your own storefront AI agent | Editions.dev 2025",0,"2025-09-30"],["F7Pjt806oEw","Building at Scale: Fireside Chat (Toronto Tech Week)",1,"2025-09-30"],["U79SWJRJHuU","All-in-one Customer Accounts | Editions.dev 2025",0,"2025-09-30"],["WMjt0U7b1gI","Developer Productivity: Fireside with Daniel Doubrovkine and Michael Bachman (Toronto Tech Week)",1,"2025-09-30"],["vAFQFDVvdOQ","Building powerful solutions for B2B | Editions.dev 2025",0,"2025-09-30"],["sGrkxnOe7Zs","Leveraging Multimodal LLMs for Shopify’s Global Catalogue",1,"2025-09-30"],["xAhVm_vN_0w","Complex Functions made simple | Editions.dev 2025",0,"2025-09-30"],["iQzaT53-sRE","Declarative custom data + new app dev = 🔥 | Editions.dev 2025",0,"2025-09-30"],["71ZgGb-gf5Y","Horizon under the hood | Editions.dev 2025",0,"2025-09-30"],["eMJBsCMmq0A","Circlez Coffee Demo",1,"2023-10-01"],["FUy64bt54N4","Our Relationship with Rails | Shopify Engineering",1,"2022-10-01"]];
+      const TAKEN = +new Date('2026-10-03T21:30:26.967Z');
+      const CH = [
+        { n: 'Shopify Developers', e: '🧩' },
+        { n: 'Shopify Engineering', e: '⚙️' },
+        { n: 'Shopify', e: '🛍️' }
+      ];
+      // ponytail: the series comes from a fixed list of title suffixes; a live feed needs playlists or a looser rule.
+      const V = RAW.map(([id, raw, c, date], i) => {
+        const m = raw.match(/^(.*?)\s*\|+\s*(DotDev 2026|Editions\.dev 2025|Shopify Academy)$/);
+        return { i, id, title: m ? m[1] : raw, series: m?.[2], c, ch: CH[c], date };
+      });
+
+      const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const SMOOTH = REDUCE ? 'auto' : 'smooth';
+      const $ = (sel) => document.querySelector(sel);
+      const esc = (s) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+      const plural = (n) => `${n} video${n === 1 ? '' : 's'}`;
+
+      function ago(date) {
+        const days = Math.max(1, Math.round((TAKEN - +new Date(date)) / 864e5));
+        if (days < 7) return days + 'd ago';
+        if (days < 30) return Math.round(days / 7) + 'w ago';
+        return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: days > 300 ? 'numeric' : undefined });
+      }
+
+      const svg = (paths) => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
+      const I = {
+        save: svg('<path d="M6.5 4h11v16L12 16l-5.5 4z"/>'),
+        out: svg('<path d="M7 17 17 7M8 7h9v9"/>'),
+        prev: svg('<path d="m14 6-6 6 6 6"/>'),
+        next: svg('<path d="m10 6 6 6-6 6"/>'),
+        close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
+        play: svg('<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>'),
+        light: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+        dark: svg('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'),
+        system: svg('<circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"/>')
+      };
+
+      // ---------- Shared markup ----------
+      I.back = svg('<path d="M19 12H5m6-6-6 6 6 6"/>');
+      const saved = new Set();
+      // Channel shown in the grid: an index into CH, or -1 for all.
+      let channel = -1;
+      /** The video being watched, read from the URL (#w12), or null on the gallery. */
+      const playing = () => V[+(location.hash.match(/^#w(\d+)$/)?.[1] ?? -1)] ?? null;
+      const inChannel = (v) => channel < 0 || v.c === channel;
+      /** Every other video, the playing one's channel first. */
+      const upNext = (now) => [...V.filter((v) => v !== now && v.c === now.c), ...V.filter((v) => v.c !== now.c)];
+
+      const thumb = (v, size = 'mqdefault') => `<img src="https://i.ytimg.com/vi/${v.id}/${size}.jpg" alt="" loading="lazy">`;
+      // YouTube answers a missing maxres image with a 120px placeholder, so fall back on size.
+      const bigThumb = (v) =>
+        `<img src="https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg" alt="" onload="if(this.naturalWidth<200)this.src='https://i.ytimg.com/vi/${v.id}/hqdefault.jpg'">`;
+      const player = (v) =>
+        `<div class="player">${bigThumb(v)}<iframe src="https://www.youtube.com/embed/${v.id}?rel=0&autoplay=1" title="${esc(v.title)}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen onload="this.classList.add('on')"></iframe></div>`;
+      const saveLabel = (v) => (saved.has(v.i) ? 'Saved' : 'Save');
+      const saveOver = (v) =>
+        `<button class="wl" data-save="${v.i}" aria-pressed="${saved.has(v.i)}" title="${saveLabel(v)}" aria-label="${saveLabel(v)}">${I.save}</button>`;
+      const acts = (v) =>
+        `<div class="acts"><button class="soft act" data-save="${v.i}" aria-pressed="${saved.has(v.i)}">${I.save}<span>${saveLabel(v)}</span></button><a class="soft act" href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">${I.out}YouTube</a></div>`;
+      const back = `<a class="back" href="#" data-back>${I.back}Videos</a>`;
+      const topLine = (v) =>
+        `<div class="st-top"><span class="e">${v.ch.e}</span>${v.ch.n}${v.series ? `<span class="flag sub">· ${v.series}</span>` : ''}</div>`;
+      // The series shows only where the card is wide enough to keep the line single.
+      const meta = (v, series) => [v.ch.n, series && v.series, ago(v.date)].filter(Boolean).join(' · ');
+      /** A card links to its watch page, so the browser's back button and new-tab clicks work. */
+      const card = (v, body, cls = '', img = thumb(v)) =>
+        `<div class="vc ${cls}"><a class="vc-a" href="#w${v.i}"><span class="th16">${img}<span class="pg">${I.play}</span></span>${body}</a>${saveOver(v)}</div>`;
+      const filters = (cls, names, counts) =>
+        [['All', -1], ...names.map((name, c) => [name, c])]
+          .map(
+            ([name, c]) =>
+              `<button class="${cls}" data-channel="${c}" aria-pressed="${c === channel}">${name}${counts ? `<small>${V.filter((v) => c < 0 || v.c === c).length}</small>` : ''}</button>`
+          )
+          .join('');
+      const NAMES = CH.map((ch) => ch.n);
+
+      // ---------- 1. Stream: YouTube's anatomy. Dense uniform grid, the watch page is the same grid under a player ----------
+      const stream = {
+        filters: () => filters('chip', NAMES, true),
+        grid() {
+          const now = playing();
+          return V.filter((v) => v !== now && inChannel(v))
+            .map((v) =>
+              card(
+                v,
+                `<span class="s-row"><span class="av">${v.ch.e}</span><span><b>${esc(v.title)}</b><small>${meta(v)}</small></span></span>`
+              )
+            )
+            .join('');
+        },
+        page() {
+          const now = playing();
+          const chips = `<div class="chips" id="filters" role="group" aria-label="Channel">${this.filters()}</div>`;
+          const grid = `<div class="s-grid" id="grid">${this.grid()}</div>`;
+          if (!now) return `<div class="vp-in"><div class="vh"><h1>Videos</h1>${chips}</div>${grid}</div>`;
+          return `<div class="vp-in s-watch">
+            <div class="bar">${back}</div>
+            <div class="fit">${player(now)}</div>
+            <h1>${esc(now.title)}</h1>
+            <div class="s-meta">
+              <span class="av">${now.ch.e}</span>
+              <span><b>${now.ch.n}</b><small>${[now.series, ago(now.date)].filter(Boolean).join(' · ')}</small></span>
+              ${acts(now)}
+            </div>
+            <div class="s-next"><h2>More videos</h2>${chips}</div>
+            ${grid}
+          </div>`;
+        }
+      };
+
+      // ---------- 2. Cinema: Vimeo's anatomy. Roomy grid, a dark edge-to-edge stage, the thumbnail grows into the player ----------
+      const cinema = {
+        morph: true,
+        filters: () => filters('tab', NAMES),
+        grid() {
+          const now = playing();
+          return (now ? upNext(now) : V.filter(inChannel))
+            .map((v) => card(v, `<b>${esc(v.title)}</b><small>${meta(v, true)}</small>`, '', thumb(v, 'hqdefault')))
+            .join('');
+        },
+        page() {
+          const now = playing();
+          const grid = `<div class="c-grid" id="grid">${this.grid()}</div>`;
+          if (!now)
+            return `<div class="vp-in">
+              <header class="c-head">
+                <h1>Videos</h1>
+                <p>${V.length} keynotes, talks and demos from Shopify</p>
+                <div class="tabs" id="filters" role="group" aria-label="Channel">${this.filters()}</div>
+              </header>
+              ${grid}
+            </div>`;
+          return `<section class="c-stage"><div class="vp-in">${back}<div class="fit">${player(now)}</div></div></section>
+            <div class="vp-in">
+              <div class="c-info">
+                <div>${topLine(now)}<h1>${esc(now.title)}</h1><p>${ago(now.date)}</p></div>
+                ${acts(now)}
+              </div>
+              <h2 class="c-next">Up next</h2>
+              ${grid}
+            </div>`;
+        }
+      };
+
+      // ---------- 3. Mosaic: a grid with hierarchy. Feature tiles, a glow around the player, the title as a tile ----------
+      const mosaic = {
+        filters: () => filters('', ['Developers', 'Engineering', 'Shopify']),
+        grid() {
+          const now = playing();
+          // `slot` counts grid positions: every ninth is a feature tile, on alternating sides.
+          const tile = (v, slot) =>
+            slot % 9
+              ? card(v, `<b>${esc(v.title)}</b><small>${meta(v)}</small>`)
+              : card(v, `${topLine(v)}<b>${esc(v.title)}</b><small>${ago(v.date)}</small>`, slot % 18 ? 'big r' : 'big', bigThumb(v));
+          if (!now) return V.filter(inChannel).map(tile).join('');
+          return (
+            `<section class="m-info big">${topLine(now)}<h1>${esc(now.title)}</h1><p>${ago(now.date)}</p>${acts(now)}</section>` +
+            upNext(now)
+              .map((v, k) => tile(v, k + 1))
+              .join('')
+          );
+        },
+        page() {
+          const now = playing();
+          if (!now)
+            return `<div class="vp-in">
+              <div class="vh"><h1>Videos</h1><div class="segt" id="filters" role="group" aria-label="Channel">${this.filters()}</div></div>
+              <div class="m-grid" id="grid">${this.grid()}</div>
+            </div>`;
+          return `<div class="vp-in">
+            <div class="bar">${back}</div>
+            <div class="fit amb-wrap"><img class="amb" src="https://i.ytimg.com/vi/${now.id}/mqdefault.jpg" alt="">${player(now)}</div>
+            <div class="m-grid below" id="grid">${this.grid()}</div>
+          </div>`;
+        }
+      };
+
+      // ---------- 4. Cinema Glow: Cinema's gallery and motion, with Mosaic's glow in place of the dark stage ----------
+      const glow = {
+        ...cinema,
+        page() {
+          const now = playing();
+          if (!now) return cinema.page.call(this);
+          return `<div class="vp-in g-watch">
+            <div class="bar">${back}</div>
+            <div class="fit amb-wrap"><img class="amb" src="https://i.ytimg.com/vi/${now.id}/mqdefault.jpg" alt="">${player(now)}</div>
+            <div class="c-info">
+              <div>${topLine(now)}<h1>${esc(now.title)}</h1><p>${ago(now.date)}</p></div>
+              ${acts(now)}
+            </div>
+            <h2 class="c-next">Up next</h2>
+            <div class="c-grid" id="grid">${this.grid()}</div>
+          </div>`;
+        }
+      };
+
+      // ---------- Harness ----------
+      const VIEWS = [stream, cinema, mosaic, glow];
+      const variants = VIEWS.map((view) => () => view.page());
+
+      // ---------- Picker wiring, verbatim from the prototype skill ----------
+      const stage = document.getElementById('stage');
+      const picker = document.querySelector('.proto-picker');
+      const highlight = picker.querySelector('.proto-picker-highlight');
+      const items = [...picker.querySelectorAll('.proto-picker-item:not(.proto-picker-replay)')];
+      const replay = picker.querySelector('.proto-picker-replay');
+      let current = 0;
+
+      function moveHighlight() {
+        const el = items[current];
+        highlight.style.width = el.offsetWidth + 'px';
+        highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+      }
+
+      function mount(i) {
+        stage.innerHTML = '';
+        // Clear first, render next frame, so entrance animations re-run.
+        requestAnimationFrame(() => { stage.innerHTML = variants[i](); });
+      }
+
+      function setActive(i) {
+        if (i < 0 || i >= variants.length) return;
+        current = i;
+        items.forEach((el, j) => {
+          el.toggleAttribute('data-active', j === i);
+          if (j === i) el.setAttribute('aria-current', 'true');
+          else el.removeAttribute('aria-current');
+        });
+        moveHighlight();
+        const url = new URL(location);
+        url.searchParams.set('v', i + 1);
+        history.replaceState(null, '', url);
+        mount(i);
+      }
+
+      items.forEach((el, i) => el.addEventListener('click', () => setActive(i)));
+      replay?.addEventListener('click', () => mount(current));
+      window.addEventListener('resize', moveHighlight);
+
+      document.addEventListener('keydown', (e) => {
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const num = parseInt(e.key, 10);
+        if (num >= 1 && num <= variants.length) setActive(num - 1);
+        else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
+        else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+        else if (e.key === 'r' || e.key === 'R') mount(current);
+      });
+
+      setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+      // Enable the slide only after first paint, so load doesn't animate.
+      requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));
+
+      // ---------- Events shared by the variants ----------
+      // Where the gallery was scrolled when a video opened, restored on the way back.
+      let galleryY = 0;
+      let shown = playing();
+
+      stage.addEventListener('click', (e) => {
+        const save = e.target.closest('[data-save]');
+        const filter = e.target.closest('[data-channel]');
+        const link = e.target.closest('a[href^="#w"]');
+        if (save) {
+          const v = V[+save.dataset.save];
+          if (!saved.delete(v.i)) saved.add(v.i);
+          for (const el of document.querySelectorAll(`[data-save="${v.i}"]`)) {
+            el.setAttribute('aria-pressed', saved.has(v.i));
+            const text = el.querySelector('span');
+            if (text) text.textContent = saveLabel(v);
+            else el.title = el.ariaLabel = saveLabel(v);
+          }
+          $('#saved-n').textContent = saved.size || '';
+        } else if (filter) {
+          channel = +filter.dataset.channel;
+          $('#filters').innerHTML = VIEWS[current].filters();
+          $('#grid').innerHTML = VIEWS[current].grid();
+          if (!playing()) scrollTo(0, 0);
+        } else if (e.target.closest('[data-back]')) {
+          e.preventDefault();
+          location.hash = '';
+        } else if (link && !playing()) {
+          galleryY = scrollY;
+          for (const named of stage.querySelectorAll('.th16[style]')) named.style.viewTransitionName = '';
+          if (VIEWS[current].morph) link.querySelector('.th16').style.viewTransitionName = 'player';
+        }
+      });
+
+      // The URL decides between gallery and watch page, so back, forward and reload all work.
+      addEventListener('hashchange', () => {
+        const from = shown;
+        const now = (shown = playing());
+        let landed;
+        const update = () => {
+          stage.innerHTML = variants[current]();
+          scrollTo(0, now ? 0 : galleryY);
+          // Back on the gallery, the player shrinks into the card it came from.
+          landed = !now && from && VIEWS[current].morph && stage.querySelector(`a[href="#w${from.i}"] .th16`);
+          if (landed) landed.style.viewTransitionName = 'player';
+        };
+        if (!VIEWS[current].morph || REDUCE || !document.startViewTransition) return update();
+        document.startViewTransition(update).finished.then(() => {
+          if (landed) landed.style.viewTransitionName = '';
+        });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && playing()) location.hash = '';
+      });
+
+      // ---------- Sidebar chrome ----------
+      const THEMES = ['system', 'light', 'dark'];
+      let theme = 0;
+      function showTheme() {
+        const name = THEMES[theme];
+        const label = name[0].toUpperCase() + name.slice(1);
+        if (name === 'system') delete document.documentElement.dataset.theme;
+        else document.documentElement.dataset.theme = name;
+        $('#theme-btn').innerHTML = `${I[name]}<span>${label}</span>`;
+        $('#theme-btn').title = 'Theme: ' + label;
+      }
+      $('#theme-btn').onclick = () => {
+        theme = (theme + 1) % THEMES.length;
+        showTheme();
+      };
+      showTheme();
+      $('#side-btn').onclick = (e) => {
+        const open = !$('#side').classList.toggle('mini');
+        e.currentTarget.setAttribute('aria-expanded', open);
+        e.currentTarget.title = (open ? 'Collapse' : 'Expand') + ' sidebar';
+        e.currentTarget.setAttribute('aria-label', e.currentTarget.title);
+      };
+    </script>
+  </body>
+</html>
