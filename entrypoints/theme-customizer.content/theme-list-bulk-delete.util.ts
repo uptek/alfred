@@ -75,15 +75,16 @@ const isCheckboxChecked = (checkbox: CheckboxElement) => checkboxInput(checkbox)
 const pendingClicks = new WeakSet<Element>();
 
 /**
- * Firefox's way to check or uncheck an `s-checkbox` from code. There a click from code on the
- * inner input also reaches the host, whose own handler clicks the input again a microtask
- * later, so the checkbox toggles twice and ends where it started. The host is clicked instead,
- * once, and not again until that click has landed. The attribute is only for a checkbox that
- * hasn't rendered its input yet: set together with a click, it leaves the checkbox unchecked.
+ * Checks or unchecks an `s-checkbox` from code. A click from code on the inner input also
+ * reaches the host, whose own handler clicks the input again a microtask later, so the checkbox
+ * toggles twice and ends where it started. The host is clicked instead, once, and not again
+ * until that click has landed. The attribute is only for a checkbox that hasn't rendered its
+ * input yet: set together with a click, it leaves the checkbox unchecked. Nothing is written
+ * when the state already matches, so a sync pass with nothing to change mutates nothing.
  * @param checkbox - An `s-checkbox` host element.
  * @param checked - Its new state.
  */
-const setCheckboxCheckedInFirefox = (checkbox: CheckboxElement, checked: boolean) => {
+const setCheckboxChecked = (checkbox: CheckboxElement, checked: boolean) => {
   const input = checkboxInput(checkbox);
   if (!input) {
     checkbox.toggleAttribute('checked', checked);
@@ -95,31 +96,6 @@ const setCheckboxCheckedInFirefox = (checkbox: CheckboxElement, checked: boolean
   pendingClicks.add(checkbox);
   checkbox.click();
   queueMicrotask(() => pendingClicks.delete(checkbox));
-};
-
-/**
- * Checks or unchecks an `s-checkbox` from code. The checkmark is drawn from the component's own
- * state, not the inner input, so writing only the input changes nothing visible. The `checked`
- * property and attribute set it on a checkbox the user hasn't touched, but like a native input
- * it stops following them once clicked, so one still showing the wrong state is clicked, the
- * same way a user would, which goes through the component's own handling. Everything is
- * written only when it differs, so a sync pass with nothing to change mutates nothing.
- * @param checkbox - An `s-checkbox` host element.
- * @param checked - Its new state.
- */
-const setCheckboxChecked = (checkbox: CheckboxElement, checked: boolean) => {
-  if (import.meta.env.FIREFOX) {
-    setCheckboxCheckedInFirefox(checkbox, checked);
-    return;
-  }
-  if (checkbox.checked !== checked) {
-    checkbox.checked = checked;
-  }
-  checkbox.toggleAttribute('checked', checked);
-  const input = checkboxInput(checkbox);
-  if (input && input.checked !== checked) {
-    input.click();
-  }
 };
 
 /** Theme IDs currently checked for bulk delete. The live theme is never eligible. */

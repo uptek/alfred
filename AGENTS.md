@@ -13,6 +13,11 @@ running `copy(document.body.outerHTML)` in DevTools with that frame selected.
 The iframe navigates client-side, so per-page features re-check the path on
 `wxt:locationchange`.
 
+A click from code on the input inside Shopify's `s-checkbox` toggles it twice:
+the click also reaches the component's host handler, which clicks the input
+again a microtask later. Click the host instead (`setCheckboxChecked` in
+`theme-list-bulk-delete.util.ts`).
+
 ## Dev & Build
 
 - `bun run dev` launches `CHROME_TESTING_BINARY` (from `.env`) against the
@@ -46,10 +51,6 @@ The iframe navigates client-side, so per-page features re-check the path on
   shortcuts fall back to the content script, which holds `clipboardWrite`
   (Firefox manifest only) and writes once per menu click (`createCopyGate` in
   `utils/mainWorldBridge.ts`).
-- A click from code on the input inside one of Shopify's web components can
-  toggle twice: the click also reaches the component's host handler, which
-  clicks the input again. Click the host instead (`setCheckboxCheckedInFirefox`
-  in `theme-list-bulk-delete.util.ts`).
 - Analytics needs Firefox's own data-collection consent
   (`data_collection_permissions` in the manifest, `hasDataConsent` in
   `utils/analytics.ts`), and events leave without page URLs or domains.
