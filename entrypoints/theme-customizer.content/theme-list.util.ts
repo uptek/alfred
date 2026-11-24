@@ -89,11 +89,15 @@ const injectCopyRows = (themes: ThemeElements[]): boolean => {
 
     const row = html(`
       <div ${INJECTED_ATTR}>
-        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${theme.themeId}" data-track-action="${'admin.theme_list.id_copy' satisfies AnalyticsAction}">ID</s-internal-button>
-        <s-internal-button variant="tertiary" icon="clipboard" data-copy-value="${theme.previewUrl}" data-track-action="${'admin.theme_list.preview_url_copy' satisfies AnalyticsAction}">Preview URL</s-internal-button>
+        <s-internal-button variant="tertiary" icon="clipboard" data-track-action="${'admin.theme_list.id_copy' satisfies AnalyticsAction}">ID</s-internal-button>
+        <s-internal-button variant="tertiary" icon="clipboard" data-track-action="${'admin.theme_list.preview_url_copy' satisfies AnalyticsAction}">Preview URL</s-internal-button>
       </div>
     `);
-    row.querySelectorAll('s-internal-button').forEach((btn) => btn.addEventListener('click', handleCopyClick));
+    const buttons = row.querySelectorAll('s-internal-button');
+    // Set as attributes, not in the markup: both values are read from the page.
+    buttons[0]?.setAttribute('data-copy-value', theme.themeId);
+    buttons[1]?.setAttribute('data-copy-value', theme.previewUrl);
+    buttons.forEach((btn) => btn.addEventListener('click', handleCopyClick));
 
     // The inert copy of the "more actions" button is the spacer `COPY_ROW_STYLES` hides.
     if (theme.more) {
