@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.11.24
+@ 2026-11-24
+
+### Alfred is now available for Firefox!
+
+### Fixes
+Shopify updated parts of its admin, which broke two things in Alfred. Both are fixed:
+
+- Select all, Deselect all and the clear button on the Themes page.
+- The Theme inspector setting for the theme editor.
+
 ## 2026.11.05
 @ 2026-11-05
 
@@ -11,7 +22,7 @@ Every app listing on the Shopify App Store now has a row of Alfred buttons under
 The Compare button sits in the same row now. Switch the copy buttons on or off anytime with Listing Actions under App Store features in Alfred's settings.
 
 
-<video controls autoplay loop muted playsinline src="https://bucket.alfred.uptek.com/alfred-listing-actions.mp4"></video>
+<video controls muted playsinline src="https://bucket.alfred.uptek.com/alfred-listing-actions.mp4"></video>
 
 ### A Lighter Alfred
 Hiding Sidekick no longer plays a dust, glass or paper effect. Those easter eggs took up almost half a megabyte, so they're gone to keep Alfred quick to download and load.

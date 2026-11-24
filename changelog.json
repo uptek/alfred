@@ -1,5 +1,30 @@
 [
   {
+    "version": "2026.11.24",
+    "date": "2026-11-24",
+    "changes": [
+      {
+        "type": "heading",
+        "content": "Alfred is now available for Firefox!"
+      },
+      {
+        "type": "heading",
+        "content": "Fixes"
+      },
+      {
+        "type": "paragraph",
+        "content": "Shopify updated parts of its admin, which broke two things in Alfred. Both are fixed:"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Select all, Deselect all and the clear button on the Themes page.",
+          "The Theme inspector setting for the theme editor."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2026.11.05",
     "date": "2026-11-05",
     "changes": [
