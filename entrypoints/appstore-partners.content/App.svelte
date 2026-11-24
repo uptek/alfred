@@ -189,7 +189,8 @@
             <tr>
               <td>
                 {#if app.iconFigure}
-                  <span>{@html app.iconFigure.outerHTML}</span>
+                  {@const figure = app.iconFigure}
+                  <span {@attach (node) => node.replaceChildren(figure)}></span>
                 {:else}
                   <img src={app.iconUrl} alt="{app.name} icon" class="app-icon" />
                 {/if}
