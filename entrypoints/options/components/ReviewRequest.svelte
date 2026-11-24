@@ -1,10 +1,10 @@
 <script lang="ts">
   import { trackAction } from '@/utils/analytics';
-  import { CWS_REVIEW_URL } from '@/utils/constants';
+  import { STORE_REVIEW_URL } from '@/utils/constants';
 
   function openReview() {
     trackAction('options.review_request.credit_click');
-    window.open(CWS_REVIEW_URL, '_blank');
+    window.open(STORE_REVIEW_URL, '_blank');
   }
 </script>
 

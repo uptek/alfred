@@ -1,7 +1,7 @@
 <script lang="ts">
   import { sendTrackEvent } from '@/utils/analytics';
   import type { AnalyticsAction } from '@/utils/analytics-actions';
-  import { CWS_REVIEW_URL } from '@/utils/constants';
+  import { STORE_REVIEW_URL } from '@/utils/constants';
   import alfredIcon from '@/assets/icon.png';
 
   let { action, variant = 'chip' }: { action: AnalyticsAction; variant?: 'chip' | 'plain' } = $props();
@@ -10,7 +10,7 @@
 <a
   class="credit-chip"
   class:plain={variant === 'plain'}
-  href={CWS_REVIEW_URL}
+  href={STORE_REVIEW_URL}
   target="_blank"
   rel="noopener"
   onclick={() => sendTrackEvent(action)}>

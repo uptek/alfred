@@ -496,7 +496,9 @@ describe('theme toggle keyboard', () => {
     for (const btn of toggle.querySelectorAll('button')) {
       Object.defineProperty(btn, 'tabIndex', {
         get: () => Number(btn.getAttribute('tabindex')),
-        set: (value: number) => btn.setAttribute('tabindex', String(value))
+        set: (value: number) => {
+          btn.setAttribute('tabindex', String(value));
+        }
       });
     }
     return toggle;

@@ -53,7 +53,7 @@ who got tired of clicking through endless menus.
 ### Prerequisites
 
 - [Bun](https://bun.sh/) (v1.4+)
-- Chrome
+- Chrome, or Firefox 147+ for the Firefox build
 
 ### Setup
 
@@ -68,14 +68,16 @@ This opens Chrome with Alfred loaded and hot-reloading on file changes.
 
 ### Available Commands
 
-| Command             | Description               |
-| ------------------- | ------------------------- |
-| `bun run dev`       | Development mode (Chrome) |
-| `bun run build`     | Production build          |
-| `bun run lint`      | Run linter (oxlint)       |
-| `bun run format`    | Format code (oxfmt)       |
-| `bun run typecheck` | TypeScript validation     |
-| `bun test`          | Run unit tests            |
+| Command                 | Description                                  |
+| ----------------------- | -------------------------------------------- |
+| `bun run dev`           | Development mode (Chrome)                    |
+| `bun run dev:firefox`   | Development mode (Firefox)                   |
+| `bun run build`         | Production build (Chrome, also runs in Edge) |
+| `bun run build:firefox` | Production build (Firefox)                   |
+| `bun run lint`          | Run linter (oxlint)                          |
+| `bun run format`        | Format code (oxfmt)                          |
+| `bun run typecheck`     | TypeScript validation                        |
+| `bun test`              | Run unit tests                               |
 
 ### Project Structure
 

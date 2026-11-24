@@ -30,6 +30,9 @@ jobs:
 
       - run: bun run build
 
+      # Firefox ships its own MV3 manifest, so lint it with Mozilla's validator
+      - run: bun run build:firefox && bunx web-ext lint -s .output/firefox-mv3
+
       # Bundles the Worker without credentials, so a change that breaks it fails here, not after merge
       - run: bunx wrangler deploy --dry-run -c worker/wrangler.jsonc
 

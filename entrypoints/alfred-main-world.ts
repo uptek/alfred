@@ -1,6 +1,6 @@
 import { Toast } from '@/utils/toast';
 import { isShopifyStorefront } from '@/utils/shopifyDetection';
-import { createBridgeServer } from '@/utils/mainWorldBridge';
+import { COPY_BRIDGE, createBridgeClient, createBridgeServer, type CopyBridgeMethods } from '@/utils/mainWorldBridge';
 import type { AnalyticsAction } from '@/utils/analytics-actions';
 
 export default defineUnlistedScript(() => {
@@ -8,6 +8,8 @@ export default defineUnlistedScript(() => {
   let settings: AlfredSettings = {};
 
   const alfredWin = () => window as unknown as WindowWithAlfred;
+
+  const copyBridge = createBridgeClient<CopyBridgeMethods>(COPY_BRIDGE, 2000);
 
   /** Dispatches an analytics event for the content script to relay. */
   const track = (action: AnalyticsAction, metadata?: Record<string, unknown>) => {
@@ -172,21 +174,24 @@ export default defineUnlistedScript(() => {
           window.focus();
         }
 
-        // Use a fallback method if clipboard.writeText fails
         try {
           await navigator.clipboard.writeText(text);
           return true;
         } catch {
-          // Fallback: Create a textarea, select it, and use document.execCommand
+          // Firefox refuses once the page's user activation has run out, which the time spent
+          // in the context menu can do. The content script may still write there.
+          if (await copyBridge.call('copy', text).catch(() => false)) return true;
+
+          // Last resort: select the text in a textarea and use document.execCommand
           const textArea = document.createElement('textarea');
           textArea.value = text;
           textArea.style.position = 'fixed';
           textArea.style.opacity = '0';
           document.body.appendChild(textArea);
           textArea.select();
-          document.execCommand('copy');
+          const copied = document.execCommand('copy');
           document.body.removeChild(textArea);
-          return true;
+          return copied;
         }
       } catch (error) {
         console.error('Error writing to clipboard:', error);

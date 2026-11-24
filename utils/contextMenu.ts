@@ -3,6 +3,7 @@ import { type Browser } from 'wxt/browser';
 // State to be shared across functions
 const menus = new Map<string, ContextMenu.ClickHandler>();
 let initialized = false;
+let registration: Promise<unknown> = Promise.resolve();
 const contexts = ['page', 'selection', 'image', 'video', 'audio', 'link', 'editable', 'frame'];
 
 /**
@@ -11,15 +12,23 @@ const contexts = ['page', 'selection', 'image', 'video', 'audio', 'link', 'edita
 function initialize(): void {
   if (initialized) return;
 
-  // Set up the click listener
+  // A click can be what wakes the background, arriving before its menus are registered again,
+  // so the handler lookup waits for the registration in flight.
   browser.contextMenus.onClicked.addListener((info, tab) => {
-    const handler = menus.get(info.menuItemId as string);
-    if (handler) {
-      handler(info, tab);
-    }
+    const dispatch = () => menus.get(info.menuItemId as string)?.(info, tab);
+    void registration.then(dispatch, dispatch);
   });
 
   initialized = true;
+}
+
+/**
+ * Hold clicks until an in-flight menu registration settles.
+ * @param pending - The registration that creates the menu items and their handlers.
+ */
+export function holdClicksUntil<T>(pending: Promise<T>): Promise<T> {
+  registration = pending;
+  return pending;
 }
 
 /**

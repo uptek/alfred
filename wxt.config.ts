@@ -18,15 +18,34 @@ export default defineConfig({
       }
     }
   },
-  manifest: {
+  // Firefox defaults to MV2, where WXT inlines injected scripts and page CSP blocks them
+  manifestVersion: 3,
+  hooks: {
+    'build:manifestGenerated': (wxt, manifest) => {
+      // Firefox rejects version parts with a leading zero (2026.11.05)
+      if (wxt.config.browser === 'firefox') manifest.version = manifest.version.split('.').map(Number).join('.');
+    }
+  },
+  manifest: ({ browser }) => ({
     name: 'Alfred - Shopify Theme Detector',
     description:
       'Instantly detect themes on any Shopify store. Streamline your workflow with smart shortcuts and Shopify productivity tools.',
-    version: '2026.11.05',
+    version: '2026.11.24',
     action: {
       default_title: 'Alfred'
     },
-    permissions: ['alarms', 'contextMenus', 'scripting', 'tabs', 'activeTab', 'storage', 'webNavigation'],
+    permissions: [
+      'alarms',
+      'contextMenus',
+      'scripting',
+      'tabs',
+      'activeTab',
+      'storage',
+      'webNavigation',
+      // Firefox expires a page's user activation while the context menu is open, so the
+      // "Copy ..." shortcuts write through the content script, which needs this to do so
+      ...(browser === 'firefox' ? ['clipboardWrite'] : [])
+    ],
     host_permissions: ['<all_urls>'],
     web_accessible_resources: [
       {
@@ -49,8 +68,19 @@ export default defineConfig({
         resources: ['content-scripts/cartograph.css'],
         matches: ['<all_urls>']
       }
-    ]
-  },
+    ],
+    ...(browser === 'firefox' && {
+      browser_specific_settings: {
+        gecko: {
+          id: 'alfred@alfredext.com',
+          // CSS anchor positioning (tooltips in the Dev Dashboard and admin) landed in 147
+          strict_min_version: '147.0',
+          // Analytics events are sent only once the user grants technicalAndInteraction
+          data_collection_permissions: { required: ['none'], optional: ['technicalAndInteraction'] }
+        }
+      }
+    })
+  }),
   vite: () => ({
     plugins: [tailwindcss()]
   }),

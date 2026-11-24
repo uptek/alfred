@@ -122,6 +122,8 @@ class FakeCheckbox extends dom.HTMLElement {
   #shown = false;
   #touched = false;
   #input: HTMLInputElement | null = null;
+  /** A user's click on the checkbox: one toggle. */
+  userClick = () => {};
   get checked() {
     return this.#shown;
   }
@@ -137,13 +139,21 @@ class FakeCheckbox extends dom.HTMLElement {
     input.checked = this.#shown;
     // linkedom has no click activation behavior; this is what a browser's does for a checkbox,
     // plus the component's own handling: take the new state and re-dispatch change on the host.
-    input.click = () => {
+    const toggle = () => {
       if (this.hasAttribute('disabled')) return;
       input.checked = !input.checked;
       this.#touched = true;
       this.#shown = input.checked;
       this.dispatchEvent(new dom.Event('change', { bubbles: true }));
     };
+    this.userClick = toggle;
+    // A click from code on the inner input also reaches the real component's host handler,
+    // which clicks the input again a microtask later.
+    input.click = () => {
+      toggle();
+      queueMicrotask(toggle);
+    };
+    this.addEventListener('click', () => queueMicrotask(toggle));
     this.#input = input;
     this.attachShadow({ mode: 'open' }).append(input);
   }
@@ -165,14 +175,11 @@ const ALFRED_SELECTOR =
   '[data-alfred-theme-list], [data-alfred-theme-checkbox], [data-alfred-bulk-toolbar], [data-alfred-select-all]';
 const injected = () => [...document.querySelectorAll('[data-alfred-theme-list]')];
 const checkboxes = () => [...document.querySelectorAll<HTMLElement>('[data-alfred-theme-checkbox]')];
-// The real toggle state lives on the <input> inside the checkbox's shadow root, same as production.
-const checkboxInput = (checkbox: HTMLElement) =>
-  checkbox.shadowRoot!.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
 // What the user sees: the checkmark the component draws from its own state.
 const shownChecked = (checkbox: HTMLElement) => (checkbox as HTMLElement & { checked: boolean }).checked;
 // A user's click, if the checkbox isn't already showing `value`.
 const toggleCheckbox = (checkbox: HTMLElement, value: boolean) => {
-  if (shownChecked(checkbox) !== value) checkboxInput(checkbox).click();
+  if (shownChecked(checkbox) !== value) (checkbox as FakeCheckbox).userClick();
 };
 const toolbar = () => document.querySelector<HTMLElement>('[data-alfred-bulk-toolbar]');
 const selectAll = () => document.querySelector<HTMLElement>('[data-alfred-select-all]');
@@ -404,11 +411,13 @@ describe('bulk delete', () => {
     expectIdle(0);
   });
 
-  it('The clear button deselects every theme and hides the toolbar without deleting anything', () => {
+  it('The clear button deselects every theme and hides the toolbar without deleting anything', async () => {
     select('Alpha', 'Beta', 'Gamma');
     expectIdle(3);
 
     click(button('clear'));
+
+    await tick();
 
     expect(checkedNames()).toEqual([]);
     expectIdle(0);
@@ -416,23 +425,29 @@ describe('bulk delete', () => {
     expect(deleteRequests).toEqual([]);
   });
 
-  it('Select all checks every library theme (never the live one), and toggles to Deselect all', () => {
+  it('Select all checks every library theme (never the live one), and toggles to Deselect all', async () => {
     select('Alpha');
 
     click(button('select-all'));
+
+    await tick();
     expect(checkedNames()).toEqual(NAMES);
     expectIdle(3);
 
     click(button('select-all'));
+
+    await tick();
     expect(checkedNames()).toEqual([]);
     expectIdle(0);
   });
 
-  it("Select all leaves out themes behind Shopify's Show all, and adds them once they're shown", () => {
+  it("Select all leaves out themes behind Shopify's Show all, and adds them once they're shown", async () => {
     const gamma = card('Gamma')!;
     gamma.remove(); // the list starts collapsed, without its later themes
 
     click(button('select-all'));
+
+    await tick();
     expect(checkedNames()).toEqual(['Alpha', 'Beta']);
     expectIdle(2);
 
@@ -441,11 +456,13 @@ describe('bulk delete', () => {
     expectIdle(2);
 
     click(button('select-all'));
+
+    await tick();
     expect(checkedNames()).toEqual(NAMES);
     expectIdle(3);
   });
 
-  it('Select all, Deselect all and the clear button also move checkboxes the user clicked by hand', () => {
+  it('Select all, Deselect all and the clear button also move checkboxes the user clicked by hand', async () => {
     // Regression: once clicked, s-checkbox stops following `checked` set from code, so boxes
     // the user had clicked kept their checkmark through Select all / Deselect all.
     select('Alpha');
@@ -453,25 +470,48 @@ describe('bulk delete', () => {
     toggleCheckbox(checkboxOf('Beta'), false);
 
     click(button('select-all'));
+
+    await tick();
     expect(checkedNames()).toEqual(NAMES);
     expectIdle(3);
 
     click(button('select-all'));
+
+    await tick();
     expect(checkedNames()).toEqual([]);
     expectIdle(0);
 
     select('Alpha', 'Gamma');
     click(button('select-all'));
+    await tick();
     click(button('clear'));
+    await tick();
     expect(checkedNames()).toEqual([]);
     expectIdle(0);
   });
 
-  it('keeps a checkbox checked when React re-renders it away and Alfred adds it back', () => {
+  it('checks and unchecks from code with one click on the host', async () => {
+    // Clicked by hand first: from then on the checkboxes only move by a click.
+    select(...NAMES);
+    NAMES.forEach((name) => toggleCheckbox(checkboxOf(name), false));
+
+    click(button('select-all'));
+    await tick();
+    expect(checkedNames()).toEqual(NAMES);
+    expectIdle(3);
+
+    click(button('clear'));
+    await tick();
+    expect(checkedNames()).toEqual([]);
+    expectIdle(0);
+  });
+
+  it('keeps a checkbox checked when React re-renders it away and Alfred adds it back', async () => {
     select('Beta');
     checkboxOf('Beta').remove();
 
     injectIntoThemeList(ALL_FEATURES);
+    await tick();
 
     expect(checkedNames()).toEqual(['Beta']);
     expectIdle(1);
@@ -585,6 +625,7 @@ describe('bulk delete', () => {
     list().insertAdjacentHTML('beforeend', extra.join(''));
     injectIntoThemeList(ALL_FEATURES);
     click(button('select-all'));
+    await tick();
     respondToDelete = () => Promise.reject(new Error('Could not establish connection'));
 
     click(button('delete'));
@@ -610,6 +651,7 @@ describe('bulk delete', () => {
     toggleCheckbox(checkboxOf('Beta'), false);
     toggleCheckbox(checkboxOf('Gamma'), true);
     click(button('clear'));
+    await tick();
     expect(checkedNames()).toEqual(['Alpha', 'Beta']);
     expect(countText()).toBe('Deleting 1 of 2…');
 
@@ -633,6 +675,7 @@ describe('bulk delete', () => {
 
     expect(remaining()).toEqual(['Beta', 'Gamma']);
     click(button('select-all'));
+    await tick();
     expect(countText()).toBe('Delete 2 themes');
   });
 
@@ -645,6 +688,7 @@ describe('bulk delete', () => {
     select('Beta', 'Gamma');
     expectIdle(2);
     click(button('clear'));
+    await tick();
     expect(checkedNames()).toEqual([]);
     expectIdle(0);
 

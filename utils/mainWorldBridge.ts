@@ -139,3 +139,34 @@ export function createBridgeServer<M extends BridgeMethods>(namespace: string, m
       );
   });
 }
+
+/**
+ * Methods the content script serves to the main world, the reverse of the usual direction.
+ * `copy` writes to the clipboard for a "Copy ..." shortcut whose page-side write was refused.
+ */
+export type CopyBridgeMethods = { copy(text: string): Promise<boolean> };
+export const COPY_BRIDGE = 'alfred_copy';
+
+/**
+ * The content script's side of `copy`. Any page script can post the request, so a write is
+ * honored only once per `arm()`, which the background calls just before a "Copy ..." shortcut
+ * runs, and only within `windowMs` of it.
+ * ponytail: an arm the page's own write made unnecessary stays open until the window ends.
+ * The page already supplies what these shortcuts copy; disarm from the background when the
+ * shortcut settles if that ever stops being true.
+ * @param write - Writes the text to the clipboard, rejecting when it can't.
+ */
+export function createCopyGate(write: (text: string) => Promise<void>, windowMs = 10_000) {
+  let armedUntil = 0;
+  return {
+    arm: () => void (armedUntil = Date.now() + windowMs),
+    copy: async (text: unknown): Promise<boolean> => {
+      if (typeof text !== 'string' || Date.now() > armedUntil) return false;
+      armedUntil = 0;
+      return write(text).then(
+        () => true,
+        () => false
+      );
+    }
+  };
+}
