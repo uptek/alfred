@@ -139,9 +139,8 @@ separates the three levels, so `action.split('.')` is always
 - Never rename a shipped event without adding its old name to
   `LEGACY_ACTIONS` (`utils/analytics-legacy.ts`). Installed builds keep sending
   old names, so the Worker upgrades them on arrival and keeps the original in
-  `events.legacy_action`. The same rules drive `scripts/backfill-event-names.ts`
-  and the Supabase import. To count across a rename, match `action` or
-  `legacy_action`.
+  `events.legacy_action`. The same rules drive `scripts/backfill-event-names.ts`.
+  To count across a rename, match `action` or `legacy_action`.
 
 ### Adding an event
 

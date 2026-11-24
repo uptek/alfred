@@ -2,9 +2,8 @@
 // name it has now. Builds already installed keep sending old names until Chrome
 // updates them, so the track Worker upgrades them on arrival. Names of retired
 // features map too, so stored history reads one way, but the Worker drops them.
-// The same rules drive the D1 backfill (scripts/backfill-event-names.ts) and the
-// Supabase import. Only the Worker and scripts import this file, never the
-// extension.
+// The same rules drive the D1 backfill (scripts/backfill-event-names.ts). Only
+// the Worker and scripts import this file, never the extension.
 
 /**
  * One way an old event upgrades. A list's first rule whose `when` matches wins;
