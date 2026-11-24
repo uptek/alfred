@@ -701,6 +701,18 @@
     height: 1px;
   }
 
+  /* Firefox resolves the card's 100% against the cell's own 1px and collapses the row.
+     There a percentage cell height in a 1px row does the stretching. */
+  @supports (-moz-appearance: none) {
+    .compare-table thead tr {
+      height: 1px;
+    }
+
+    .compare-app {
+      height: 100%;
+    }
+  }
+
   .compare-app-card {
     display: flex;
     flex-direction: column;

@@ -119,6 +119,8 @@ Object.assign(g, {
 // user clicks it (like a native input's dirty checkedness), a click toggles it, and writes to
 // the inner input from code don't show at all.
 class FakeCheckbox extends dom.HTMLElement {
+  /** Behave like the real component does in Firefox. */
+  static firefox = false;
   #shown = false;
   #touched = false;
   #input: HTMLInputElement | null = null;
@@ -137,13 +139,22 @@ class FakeCheckbox extends dom.HTMLElement {
     input.checked = this.#shown;
     // linkedom has no click activation behavior; this is what a browser's does for a checkbox,
     // plus the component's own handling: take the new state and re-dispatch change on the host.
-    input.click = () => {
+    const toggle = () => {
       if (this.hasAttribute('disabled')) return;
       input.checked = !input.checked;
       this.#touched = true;
       this.#shown = input.checked;
       this.dispatchEvent(new dom.Event('change', { bubbles: true }));
     };
+    // In Firefox a click from code on the inner input also reaches the real component's host
+    // handler, which clicks the input again a microtask later.
+    input.click = () => {
+      toggle();
+      if (FakeCheckbox.firefox) queueMicrotask(toggle);
+    };
+    this.addEventListener('click', () => {
+      if (FakeCheckbox.firefox) queueMicrotask(toggle);
+    });
     this.#input = input;
     this.attachShadow({ mode: 'open' }).append(input);
   }
@@ -465,6 +476,29 @@ describe('bulk delete', () => {
     click(button('clear'));
     expect(checkedNames()).toEqual([]);
     expectIdle(0);
+  });
+
+  it('in Firefox, checks and unchecks from code with one click on the host', async () => {
+    // Clicked by hand first: from then on the checkboxes only move by a click.
+    select(...NAMES);
+    NAMES.forEach((name) => toggleCheckbox(checkboxOf(name), false));
+    // import.meta.env is process.env under bun
+    process.env.FIREFOX = '1';
+    FakeCheckbox.firefox = true;
+    try {
+      click(button('select-all'));
+      await tick();
+      expect(checkedNames()).toEqual(NAMES);
+      expectIdle(3);
+
+      click(button('clear'));
+      await tick();
+      expect(checkedNames()).toEqual([]);
+      expectIdle(0);
+    } finally {
+      delete process.env.FIREFOX;
+      FakeCheckbox.firefox = false;
+    }
   });
 
   it('keeps a checkbox checked when React re-renders it away and Alfred adds it back', () => {

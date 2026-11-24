@@ -3,7 +3,13 @@ import { getSettings } from '~/utils/settings';
 import { waitForElement } from '~/utils/helpers';
 import { sendTrackEvent } from '~/utils/analytics';
 
-const INSPECTOR_BUTTON_SELECTOR = 'div[class*="SidekickToggle"] + div button';
+// The inspector toggle has no hook of its own. In the editor's top bar it sits right after the
+// Sidekick toggle and right before the mobile preview toggle, which both do, so either finds it.
+const SIDEKICK_SOURCE = '[data-component-extra-ui_interaction_source="sidekick"]';
+const INSPECTOR_BUTTON_SELECTOR = [
+  `span:has(> button${SIDEKICK_SOURCE}) + span > button[aria-pressed]`,
+  `span:has(+ span > button s-internal-icon[type="mobile"]) > button[aria-pressed]:not(${SIDEKICK_SOURCE})`
+].join(', ');
 const INSPECTOR_STATE_KEY = 'theme-inspector-state';
 
 export async function setupInspector(): Promise<void> {

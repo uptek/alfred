@@ -299,6 +299,14 @@
         -moz-osx-font-smoothing: grayscale;
       }
 
+      /* Firefox has no ::-webkit-scrollbar, so its scrollers get the standard slim thumb */
+      @supports not selector(::-webkit-scrollbar) {
+        * {
+          scrollbar-width: thin;
+          scrollbar-color: var(--scrollbar) transparent;
+        }
+      }
+
       /* Accessibility: visible keyboard focus on interactive elements */
       :focus-visible {
         outline: 2px solid var(--accent);

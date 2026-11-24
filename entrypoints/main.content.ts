@@ -5,7 +5,13 @@ import { handleReturnUrlRedirect } from '@/utils/storefrontPasswordRedirect';
 import { sniffShopifyDom } from '@/utils/shopifyDetection';
 import { Toast } from '@/utils/toast';
 import type { TabMessage } from '@/utils/messages';
-import { createBridgeClient } from '@/utils/mainWorldBridge';
+import {
+  COPY_BRIDGE,
+  createBridgeClient,
+  createBridgeServer,
+  createCopyGate,
+  type CopyBridgeMethods
+} from '@/utils/mainWorldBridge';
 import { headingText } from './popup/utils/headings';
 import type { FragmentTargets } from './popup/utils/links';
 import { classifyLink, isBrokenAnchor, isDofollow, isInsecureHttp, linkText, relFlags } from './popup/utils/links';
@@ -214,6 +220,12 @@ export default defineContentScript({
       return true;
     };
 
+    // Firefox refuses a clipboard write from a page whose user activation ran out while the
+    // context menu was open. This script holds the clipboardWrite permission there, so it
+    // writes on the page's behalf.
+    const copyGate = createCopyGate((text) => navigator.clipboard.writeText(text));
+    createBridgeServer<CopyBridgeMethods>(COPY_BRIDGE, { copy: copyGate.copy });
+
     // Listen for tracking events from the main world. The event detail crosses
     // a world boundary, so validate the action instead of trusting the cast.
     window.addEventListener('alfred:track', (event: Event) => {
@@ -246,6 +258,11 @@ export default defineContentScript({
       if (request.action === 'alfred_toast') {
         const { message, toastType } = request;
         if (message) Toast.show(message, toastType === 'success' ? 'success' : 'error');
+        return false;
+      }
+
+      if (request.action === 'arm_copy') {
+        copyGate.arm();
         return false;
       }
 

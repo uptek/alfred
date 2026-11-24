@@ -1,4 +1,4 @@
-import { CWS_REVIEW_URL } from '~/utils/constants';
+import { STORE_REVIEW_URL } from '~/utils/constants';
 import { isEnabled, type ResolvedSettings } from '~/utils/settings';
 import { sendTrackEvent } from '~/utils/analytics';
 import {
@@ -452,7 +452,7 @@ const injectTimeline = (): void => {
 
   const creditLink = document.createElement('a');
   creditLink.className = 'alfred-timeline__credit-link';
-  creditLink.href = CWS_REVIEW_URL;
+  creditLink.href = STORE_REVIEW_URL;
   creditLink.target = '_blank';
   creditLink.rel = 'noopener';
   creditLink.textContent = 'Alfred';

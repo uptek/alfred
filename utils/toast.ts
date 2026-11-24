@@ -152,6 +152,10 @@ export class Toast {
   `;
 
   private static getCustomElementRegistry(): CustomElementRegistry | null {
+    // A Firefox content script reaches the page's registry through an Xray wrapper. An element
+    // defined from there throws "Permission denied" for the page's own scripts, so the toast
+    // stays a plain element, as it does in Chrome's isolated world (which has no registry).
+    if ('wrappedJSObject' in globalThis) return null;
     return globalThis.customElements ?? document.defaultView?.customElements ?? null;
   }
 

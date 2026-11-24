@@ -562,6 +562,15 @@
     padding: 20px;
   }
 
+  /* Firefox has no ::-webkit-scrollbar, so its scrollers get the standard slim thumb */
+  @supports not selector(::-webkit-scrollbar) {
+    .content,
+    .content :global(*) {
+      scrollbar-width: thin;
+      scrollbar-color: var(--cs-border) transparent;
+    }
+  }
+
   .content::-webkit-scrollbar {
     width: 6px;
   }

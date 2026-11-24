@@ -38,6 +38,28 @@ export async function markNudgeShown(): Promise<boolean> {
   return true;
 }
 
+// --- Consent ---
+
+const DATA_CONSENT = { data_collection: ['technicalAndInteraction'] } as Browser.permissions.Permissions;
+
+// Firefox's consent covers technical and interaction data, not which pages a user visits
+const BROWSING_KEYS = new Set(['page_url', 'shop_domain', 'domain']);
+
+/**
+ * Whether the browser lets Alfred send analytics. Firefox asks the user itself, at install
+ * or from its add-on manager, and nothing may be sent until they agree. Other browsers
+ * have no such gate, so the analytics setting alone decides.
+ */
+export async function hasDataConsent(): Promise<boolean> {
+  if (!import.meta.env.FIREFOX) return true;
+  return browser.permissions.contains(DATA_CONSENT);
+}
+
+/** Shows Firefox's consent prompt. Call it from a click handler: Firefox rejects it otherwise. */
+export function requestDataConsent(): Promise<boolean> {
+  return browser.permissions.request(DATA_CONSENT);
+}
+
 // --- Tracking ---
 
 /**
@@ -69,7 +91,7 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
     recordTimeSaved(timeSaved).catch(() => {});
 
     // Respect user's privacy opt-out
-    if (!isEnabled(settings.general.analytics)) return;
+    if (!isEnabled(settings.general.analytics) || !(await hasDataConsent())) return;
 
     // Get all required data
     const userId = await getUserId();
@@ -81,7 +103,9 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
       action,
       time_saved: timeSaved,
       version,
-      metadata: metadata ?? {}
+      metadata: import.meta.env.FIREFOX
+        ? Object.fromEntries(Object.entries(metadata ?? {}).filter(([key]) => !BROWSING_KEYS.has(key)))
+        : (metadata ?? {})
     };
 
     // Disable analytics in development
@@ -110,7 +134,9 @@ export async function trackAction(action: AnalyticsAction, metadata?: Record<str
 export async function getUninstallUrl(): Promise<string> {
   try {
     const settings = await getSettings();
-    if (import.meta.env.DEV || !isEnabled(settings.general.analytics)) return UNINSTALL_SURVEY_URL;
+    if (import.meta.env.DEV || !isEnabled(settings.general.analytics) || !(await hasDataConsent())) {
+      return UNINSTALL_SURVEY_URL;
+    }
     const params = new URLSearchParams({ user_id: await getUserId(), version: getVersion() ?? '' });
     return `${UNINSTALL_ENDPOINT}?${params}`;
   } catch {

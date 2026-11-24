@@ -25,6 +25,40 @@ The iframe navigates client-side, so per-page features re-check the path on
 - `bun run build` starts with `rm -rf .output`, which also deletes the dev
   build (`.output/chrome-mv3-dev`) that Chrome may have loaded unpacked
 
+## Firefox
+
+`bun run build:firefox` writes `.output/firefox-mv3`; Chrome and Edge share
+`.output/chrome-mv3`. Code that must differ branches on
+`import.meta.env.FIREFOX`. What Firefox does differently:
+
+- It builds as MV3 (`manifestVersion: 3` in `wxt.config.ts`). WXT's MV2 default
+  inlines `injectScript()` code, which a strict page CSP blocks.
+- Content scripts see the page through Xray wrappers. An element class they
+  register with `customElements.define` throws "Permission denied" for the
+  page's own scripts, and properties the page sets on elements (web component
+  props, React internals) are invisible. Use attributes and events, or the
+  main-world bridge (`utils/mainWorldBridge.ts`).
+- The background is an event page that Firefox can suspend. Listeners register
+  synchronously at startup, and a context menu click that wakes it waits for
+  the menus to register again (`holdClicksUntil` in `utils/contextMenu.ts`).
+- A page's user activation runs out while the context menu is open, so a
+  main-world `navigator.clipboard.writeText` can be refused. The "Copy ..."
+  shortcuts fall back to the content script, which holds `clipboardWrite`
+  (Firefox manifest only) and writes once per menu click (`createCopyGate` in
+  `utils/mainWorldBridge.ts`).
+- A click from code on the input inside one of Shopify's web components can
+  toggle twice: the click also reaches the component's host handler, which
+  clicks the input again. Click the host instead (`setCheckboxCheckedInFirefox`
+  in `theme-list-bulk-delete.util.ts`).
+- Analytics needs Firefox's own data-collection consent
+  (`data_collection_permissions` in the manifest, `hasDataConsent` in
+  `utils/analytics.ts`), and events leave without page URLs or domains.
+- `-webkit-` only CSS does nothing: scrollbars get `scrollbar-width`, and a
+  layout that leans on Chrome's table or flex quirks needs a look in Firefox.
+- The manifest version drops leading zeros (`2026.11.5`), which AMO requires.
+- `bunx web-ext lint -s .output/firefox-mv3` runs Mozilla's validator, as CI
+  does.
+
 ## Testing
 
 - Unit tests use Bun's built-in test runner: `bun test` (no package.json script

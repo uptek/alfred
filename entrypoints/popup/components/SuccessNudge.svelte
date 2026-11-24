@@ -1,7 +1,7 @@
 <script lang="ts">
   import { trackAction } from '@/utils/analytics';
   import { nudgeRated, nudgeDeferred, getNudgeStats } from '@/utils/successNudge';
-  import { CWS_REVIEW_URL, FEEDBACK_URL } from '@/utils/constants';
+  import { STORE_REVIEW_URL, FEEDBACK_URL } from '@/utils/constants';
   import alfredIcon from '@/assets/icon.png';
 
   let { onDismiss }: { onDismiss: () => void } = $props();
@@ -149,7 +149,7 @@
   function handleRate(rating: number) {
     trackAction('popup.review_nudge.credit_click', { rating, variant, ...stats });
     nudgeRated();
-    browser.tabs.create({ url: rating === 5 ? CWS_REVIEW_URL : FEEDBACK_URL });
+    browser.tabs.create({ url: rating === 5 ? STORE_REVIEW_URL : FEEDBACK_URL });
     onDismiss();
   }
 

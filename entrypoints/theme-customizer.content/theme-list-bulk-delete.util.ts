@@ -71,6 +71,32 @@ const checkboxInput = (checkbox: Element): HTMLInputElement | null =>
  */
 const isCheckboxChecked = (checkbox: CheckboxElement) => checkboxInput(checkbox)?.checked ?? !!checkbox.checked;
 
+/** Checkboxes whose click from code hasn't reached their inner input yet. */
+const pendingClicks = new WeakSet<Element>();
+
+/**
+ * Firefox's way to check or uncheck an `s-checkbox` from code. There a click from code on the
+ * inner input also reaches the host, whose own handler clicks the input again a microtask
+ * later, so the checkbox toggles twice and ends where it started. The host is clicked instead,
+ * once, and not again until that click has landed. The attribute is only for a checkbox that
+ * hasn't rendered its input yet: set together with a click, it leaves the checkbox unchecked.
+ * @param checkbox - An `s-checkbox` host element.
+ * @param checked - Its new state.
+ */
+const setCheckboxCheckedInFirefox = (checkbox: CheckboxElement, checked: boolean) => {
+  const input = checkboxInput(checkbox);
+  if (!input) {
+    checkbox.toggleAttribute('checked', checked);
+    return;
+  }
+  if (input.checked === checked || pendingClicks.has(checkbox)) {
+    return;
+  }
+  pendingClicks.add(checkbox);
+  checkbox.click();
+  queueMicrotask(() => pendingClicks.delete(checkbox));
+};
+
 /**
  * Checks or unchecks an `s-checkbox` from code. The checkmark is drawn from the component's own
  * state, not the inner input, so writing only the input changes nothing visible. The `checked`
@@ -82,6 +108,10 @@ const isCheckboxChecked = (checkbox: CheckboxElement) => checkboxInput(checkbox)
  * @param checked - Its new state.
  */
 const setCheckboxChecked = (checkbox: CheckboxElement, checked: boolean) => {
+  if (import.meta.env.FIREFOX) {
+    setCheckboxCheckedInFirefox(checkbox, checked);
+    return;
+  }
   if (checkbox.checked !== checked) {
     checkbox.checked = checked;
   }

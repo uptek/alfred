@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import { createBridgeClient, createBridgeServer } from '../mainWorldBridge';
+import { createBridgeClient, createBridgeServer, createCopyGate } from '../mainWorldBridge';
 
 type Listener = (event: { source: unknown; data: unknown }) => void;
 
@@ -138,5 +138,31 @@ describe('bridge isolation', () => {
   it('ignores traffic from a different namespace', async () => {
     createBridgeServer<Methods>('other', { ping: () => 'other-pong' } as Methods);
     expect(await serve().call('ping')).toBe('pong');
+  });
+});
+
+describe('copy gate', () => {
+  it('writes once per arm and refuses unarmed, expired or non-text requests', async () => {
+    const written: string[] = [];
+    const gate = createCopyGate(async (text) => void written.push(text), 1000);
+
+    expect(await gate.copy('unarmed')).toBe(false);
+
+    gate.arm();
+    expect(await gate.copy({ not: 'text' })).toBe(false);
+    expect(await gate.copy('first')).toBe(true);
+    expect(await gate.copy('second')).toBe(false);
+
+    const expired = createCopyGate(async (text) => void written.push(text), -1);
+    expired.arm();
+    expect(await expired.copy('late')).toBe(false);
+
+    expect(written).toEqual(['first']);
+  });
+
+  it('reports a refused write as false', async () => {
+    const gate = createCopyGate(() => Promise.reject(new Error('NotAllowedError')));
+    gate.arm();
+    expect(await gate.copy('text')).toBe(false);
   });
 });

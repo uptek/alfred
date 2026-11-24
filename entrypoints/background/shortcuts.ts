@@ -1,4 +1,4 @@
-import { create, createSeparator, removeAll } from '@/utils/contextMenu';
+import { create, createSeparator, holdClicksUntil, removeAll } from '@/utils/contextMenu';
 import { getSettings, isEnabled, mergeSettings } from '@/utils/settings';
 import { trackAction } from '@/utils/analytics';
 import { sendTabMessage } from '@/utils/messages';
@@ -21,6 +21,8 @@ type AlfredMainWorldMethod =
 
 /** Invoke a no-arg Alfred main-world method in the given tab. */
 const execInMain = async (tabId: number, method: AlfredMainWorldMethod) => {
+  // Lets the content script write to the clipboard if the page itself is refused
+  if (method.startsWith('copy')) await sendTabMessage(tabId, 'arm_copy').catch(() => {});
   await browser.scripting.executeScript({
     target: { tabId },
     func: (m: string) => {
@@ -136,7 +138,10 @@ const registerItems = (
  * @param providedSettings - Pass when the caller already has fresh settings
  *   (e.g. a storage watcher) to avoid a redundant read.
  */
-export const registerShortcuts = async (providedSettings?: AlfredSettings | null) => {
+export const registerShortcuts = (providedSettings?: AlfredSettings | null) =>
+  holdClicksUntil(buildShortcuts(providedSettings));
+
+const buildShortcuts = async (providedSettings?: AlfredSettings | null) => {
   // Remove all context menus
   removeAll();
 

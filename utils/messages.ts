@@ -11,6 +11,8 @@ import type { AnalyticsAction } from './analytics-actions';
 /** Tab-directed actions that carry no payload. */
 type PayloadlessTabAction =
   | 'open_cartograph'
+  /** Lets the page ask the content script for one clipboard write (see `copyBridge`). */
+  | 'arm_copy'
   | 'get_theme'
   | 'get_shopify_context'
   | 'sniff_shopify'
