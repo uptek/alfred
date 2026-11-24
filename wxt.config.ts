@@ -57,10 +57,6 @@ export default defineConfig({
         matches: ['<all_urls>']
       },
       {
-        resources: ['alfred-toast.js'],
-        matches: ['<all_urls>']
-      },
-      {
         resources: ['libs/shopify-polaris.js'],
         matches: ['<all_urls>']
       },
