@@ -34,7 +34,8 @@ again a microtask later. Click the host instead (`setCheckboxChecked` in
 
 `bun run build:firefox` writes `.output/firefox-mv3`; Chrome and Edge share
 `.output/chrome-mv3`. Code that must differ branches on
-`import.meta.env.FIREFOX`. What Firefox does differently:
+`import.meta.env.FIREFOX`. Edge has no build flag: `utils/constants.ts` picks its
+store URL from the user agent. What Firefox does differently:
 
 - It builds as MV3 (`manifestVersion: 3` in `wxt.config.ts`). WXT's MV2 default
   inlines `injectScript()` code, which a strict page CSP blocks.
