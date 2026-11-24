@@ -26,6 +26,10 @@ export default defineConfig({
       if (wxt.config.browser === 'firefox') manifest.version = manifest.version.split('.').map(Number).join('.');
     }
   },
+  zip: {
+    // The sources zip goes to Mozilla's reviewers: keep untracked local files out of it
+    excludeSources: ['temp/**', '*.tsbuildinfo']
+  },
   manifest: ({ browser }) => ({
     name: 'Alfred - Shopify Theme Detector',
     description:
