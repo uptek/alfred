@@ -41,7 +41,7 @@ jobs:
     needs: [lint-and-build, deploy-worker]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    concurrency: chrome-web-store
+    concurrency: publish
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,9 +64,10 @@ jobs:
         run: bun install --frozen-lockfile
 
       - if: steps.version.outputs.changed
-        run: bun run changelog:gen && bunx wxt zip
+        run: bun run changelog:gen && bunx wxt zip && bunx wxt zip -b firefox
 
-      - if: steps.version.outputs.changed
+      - name: Submit to the Chrome Web Store
+        if: steps.version.outputs.changed
         run: bunx wxt submit --chrome-zip .output/*-chrome.zip
         env:
           CHROME_API_VERSION: v2
@@ -75,6 +76,30 @@ jobs:
           CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
           CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
           CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+
+      # Each store submits in its own step, so one store's failure does not hide another's result
+      - name: Submit to Microsoft Edge Add-ons
+        if: ${{ !cancelled() && steps.version.outputs.changed }}
+        # Edge runs the Chrome build
+        run: |
+          if [ -z "$EDGE_PRODUCT_ID" ]; then echo "Edge secrets not set, skipping"; exit 0; fi
+          bunx wxt submit --edge-zip .output/*-chrome.zip
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+
+      - name: Submit to Firefox Add-ons
+        if: ${{ !cancelled() && steps.version.outputs.changed }}
+        run: |
+          if [ -z "$FIREFOX_JWT_ISSUER" ]; then echo "Firefox secrets not set, skipping"; exit 0; fi
+          bunx wxt submit --firefox-zip .output/*-firefox.zip --firefox-sources-zip .output/*-sources.zip
+        env:
+          FIREFOX_EXTENSION_ID: alfred@alfredext.com
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+          # Desktop only: nothing is tested on Firefox for Android
+          FIREFOX_COMPATIBILITY: firefox
 
   # The Worker imports utils/analytics-actions.ts as its allowlist, so any merge can change what it accepts.
   deploy-worker:
